@@ -24,6 +24,7 @@ final class StoreStockAuditRequest extends FormRequest
             'name' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string', 'max:1000'],
             'audit_type' => ['required', 'in:full,cycle,spot'],
+            'warehouse_id' => ['nullable', 'integer', Rule::exists('warehouses', 'id')->where('organization_id', $this->user()->organization_id)->whereNull('deleted_at')],
             'warehouse_location_id' => ['nullable', 'integer', Rule::exists('product_locations', 'id')->where('organization_id', $organizationId)->whereNull('deleted_at')],
             'notes' => ['nullable', 'string', 'max:2000'],
             'product_ids' => ['nullable', 'array', 'max:5000'],

@@ -176,6 +176,8 @@ const saveCount = async (item) => {
 // In "add one" mode each scan counts one more unit on the matched line;
 // in "enter count" mode the scan opens that line's count input instead.
 const showScanner = ref(false);
+const scanLocationId = ref('');
+const scanLocations = computed(() => [...new Map((props.audit.items || []).filter(item => item.location).map(item => [item.location.id, item.location])).values()]);
 const scanMode = ref('increment'); // 'increment' | 'enter'
 const scanMessage = ref('');
 const scanMessageTone = ref('info');
@@ -187,16 +189,15 @@ const setScanMessage = (message, tone = 'info') => {
     scanMessageTone.value = tone;
 };
 
-// A variant barcode matches the line for that variant. A product code matches
-// the product's own line (no variant), falling back to its first line.
+// An ambiguous scan must not count the first matching bin or variant.
+const matchingAuditLines = (product, variant) => (props.audit.items || []).filter(item =>
+    item.product_id === product.id
+    && (!variant || item.product_variant_id === variant.id)
+    && (!scanLocationId.value || item.location_id === Number(scanLocationId.value))
+);
 const findAuditLine = (product, variant) => {
-    const items = props.audit.items || [];
-    if (variant) {
-        return items.find(item => item.product_variant_id === variant.id) || null;
-    }
-    return items.find(item => item.product_id === product.id && !item.product_variant_id)
-        || items.find(item => item.product_id === product.id)
-        || null;
+    const matches = matchingAuditLines(product, variant);
+    return matches.length === 1 ? matches[0] : null;
 };
 
 const focusLine = async (item) => {
@@ -228,6 +229,12 @@ const incrementLine = async (item) => {
 const onScannedProduct = async (product, variant = null) => {
     showScanner.value = false;
     if (!canCount.value) return;
+    const matches = matchingAuditLines(product, variant);
+    if (matches.length > 1) {
+        await focusLine(matches[0]);
+        setScanMessage(t('scanning.enterCountFor', { name: product.name }), 'warning');
+        return;
+    }
     const item = findAuditLine(product, variant);
     if (!item) {
         setScanMessage(t('scanning.notInAudit', { name: variant?.title ? `${product.name} (${variant.title})` : product.name }), 'warning');
@@ -366,7 +373,7 @@ const thClass = 'px-6 py-3 text-left text-xs font-medium uppercase tracking-wide
                     <div>
                         <p class="mb-1 text-xs text-text-tertiary">{{ t('stockAudits.columns.location') }}</p>
                         <p class="text-sm font-medium text-text-primary">
-                            {{ audit.warehouse_location?.name || t('products.allLocations') }}
+                            {{ audit.warehouse_location?.name || audit.warehouse?.name || t('products.allLocations') }}
                         </p>
                     </div>
                     <div>
@@ -412,6 +419,10 @@ const thClass = 'px-6 py-3 text-left text-xs font-medium uppercase tracking-wide
                 <!-- Scan to count -->
                 <div v-if="canCount" class="mt-4 rounded-lg border border-border-subtle bg-surface-sunken p-3">
                     <div class="flex flex-wrap items-center gap-3">
+                        <select v-if="scanLocations.length > 1" v-model="scanLocationId" :aria-label="t('products.location')" class="min-h-11 rounded-md border border-border-subtle bg-surface-canvas px-3 text-sm ds-focus-ring">
+                            <option value="">{{ t('products.create.selectLocation') }}</option>
+                            <option v-for="location in scanLocations" :key="location.id" :value="location.id">{{ location.name }}</option>
+                        </select>
                         <Button size="lg" class="min-h-11" @click="showScanner = true">
                             <ScanLine :size="18" />
                             {{ t('scanning.scan') }}
@@ -476,7 +487,7 @@ const thClass = 'px-6 py-3 text-left text-xs font-medium uppercase tracking-wide
                             <tr v-if="editingItemId !== item.id" :id="`audit-item-${item.id}`" class="border-b border-border-subtle transition-colors last:border-b-0 hover:bg-surface-overlay" :class="{ 'bg-brand-soft': highlightedItemId === item.id }">
                                 <td class="px-6 py-4 text-sm text-text-primary">
                                     <div class="font-medium">{{ item.product?.name || '-' }}</div>
-                                    <div class="text-xs text-text-tertiary">SKU: {{ item.product?.sku || '-' }}</div>
+                                    <div class="text-xs text-text-tertiary">{{ item.variant?.title || '' }} {{ item.location?.name || '' }} | SKU: {{ item.variant?.sku || item.product?.sku || '-' }}</div>
                                 </td>
                                 <td class="whitespace-nowrap px-6 py-4 text-sm text-text-secondary">
                                     {{ item.location?.name || '-' }}
@@ -512,7 +523,7 @@ const thClass = 'px-6 py-3 text-left text-xs font-medium uppercase tracking-wide
                             <tr v-else :id="`audit-item-${item.id}`" class="border-b border-border-subtle bg-brand-soft last:border-b-0">
                                 <td class="px-6 py-4 text-sm text-text-primary">
                                     <div class="font-medium">{{ item.product?.name || '-' }}</div>
-                                    <div class="text-xs text-text-tertiary">SKU: {{ item.product?.sku || '-' }}</div>
+                                    <div class="text-xs text-text-tertiary">{{ item.variant?.title || '' }} {{ item.location?.name || '' }} | SKU: {{ item.variant?.sku || item.product?.sku || '-' }}</div>
                                 </td>
                                 <td class="whitespace-nowrap px-6 py-4 text-sm text-text-secondary">
                                     {{ item.location?.name || '-' }}

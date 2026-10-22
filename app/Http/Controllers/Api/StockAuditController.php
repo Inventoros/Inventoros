@@ -39,10 +39,10 @@ class StockAuditController extends Controller
     {
         $organizationId = $request->user()->organization_id;
 
-        $query = StockAudit::with(['warehouseLocation', 'creator'])
+        $query = StockAudit::with(['warehouseLocation', 'warehouse', 'creator'])
             ->withCount('items')
             ->forOrganization($organizationId)
-            ->tap(fn ($q) => app(WarehouseAccessService::class)->scopeByLocation($q, $request->user(), 'warehouse_location_id'))
+            ->tap(fn ($q) => app(WarehouseAccessService::class)->scopeStockAudits($q, $request->user()))
             ->when($request->input('status'), function ($query, $status) {
                 $query->byStatus($status);
             })
@@ -78,12 +78,12 @@ class StockAuditController extends Controller
             ], 404);
         }
 
-        app(WarehouseAccessService::class)->authorizeLocation($request->user(), $stockAudit->warehouse_location_id);
+        app(WarehouseAccessService::class)->authorizeStockAudit($request->user(), $stockAudit);
 
         $stockAudit->load([
-            'warehouseLocation',
+            'warehouseLocation', 'warehouse',
             'creator',
-            'items.product',
+            'items.product', 'items.variant',
             'items.variant',
             'items.location',
             'items.countedByUser',
@@ -176,6 +176,6 @@ class StockAuditController extends Controller
 
     private function loaded(StockAudit $audit): StockAudit
     {
-        return $audit->load(['warehouseLocation', 'creator', 'items.product', 'items.location', 'items.countedByUser']);
+        return $audit->load(['warehouseLocation', 'warehouse', 'creator', 'items.product', 'items.variant', 'items.location', 'items.countedByUser']);
     }
 }
