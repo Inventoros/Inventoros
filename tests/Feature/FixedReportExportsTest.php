@@ -230,7 +230,7 @@ class FixedReportExportsTest extends TestCase
 
         $balanceQueries = [];
         DB::listen(function ($query) use (&$balanceQueries) {
-            if (str_contains(strtolower($query->sql), 'sum(pls.quantity) as on_hand')) {
+            if (str_contains(strtolower($query->sql), 'sum(b.quantity) as on_hand')) {
                 $balanceQueries[] = $query->sql;
             }
         });
