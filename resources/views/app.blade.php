@@ -3,15 +3,23 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="application-name" content="{{ config('app.name', 'Inventoros') }}">
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
         <title data-inertia>{{ config('app.name', 'Inventoros') }}</title>
 
+        @php
+            $iconUrl = static function (string $path): string {
+                $file = public_path($path);
+                $version = is_file($file) ? substr(hash_file('sha256', $file), 0, 12) : null;
+                return asset($path).($version ? '?v='.$version : '');
+            };
+        @endphp
         <!-- Favicon & app icons -->
-        <link rel="icon" href="/favicon.ico" sizes="any">
-        <link rel="icon" type="image/png" sizes="32x32" href="/images/brand/favicon-32.png">
-        <link rel="icon" type="image/png" sizes="16x16" href="/images/brand/favicon-16.png">
-        <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+        <link rel="icon" href="{{ $iconUrl('favicon.ico') }}" sizes="any">
+        <link rel="icon" type="image/png" sizes="32x32" href="{{ $iconUrl('images/brand/favicon-32.png') }}">
+        <link rel="icon" type="image/png" sizes="16x16" href="{{ $iconUrl('images/brand/favicon-16.png') }}">
+        <link rel="apple-touch-icon" href="{{ $iconUrl('apple-touch-icon.png') }}">
         <meta name="theme-color" content="#2563eb">
 
         <!-- Fonts -->
