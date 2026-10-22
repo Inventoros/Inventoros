@@ -6,6 +6,7 @@ namespace App\GraphQL\Queries;
 
 use App\GraphQL\Concerns\RequiresPermissions;
 use App\Models\Inventory\Product;
+use App\Services\StockReservationService;
 use Closure;
 use GraphQL\Type\Definition\ResolveInfo;
 use GraphQL\Type\Definition\Type;
@@ -120,6 +121,11 @@ class ProductsQuery extends Query
 
         $limit = min($args['limit'] ?? 50, 100);
 
-        return $query->limit($limit)->get();
+        $products = $query->limit($limit)->get();
+
+        // reserved_stock / available_stock for the list in one query.
+        app(StockReservationService::class)->preloadReserved($products);
+
+        return $products;
     }
 }

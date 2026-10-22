@@ -16,7 +16,7 @@ class StockTransfersQuery extends Query
     use RequiresPermissions;
 
     /** Relations every transfer field may touch, loaded once per query. */
-    public const WITH = ['fromLocation', 'toLocation', 'transferredBy', 'items.product'];
+    public const WITH = ['fromLocation', 'toLocation', 'transferredBy', 'items.product', 'items.variant'];
 
     protected $attributes = [
         'name' => 'stockTransfers',

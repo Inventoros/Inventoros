@@ -131,6 +131,7 @@
     }
   },
   "common": {
+    "pagination": "ترقيم الصفحات",
     "save": "حفظ",
     "saveChanges": "حفظ التغييرات",
     "saving": "جارٍ الحفظ...",
@@ -237,6 +238,7 @@
     "webhooks": "Webhooks",
     "warehouses": "المستودعات",
     "workOrders": "أوامر العمل",
+    "reservations": "الحجوزات",
     "account": "الحساب",
     "profile": "الملف الشخصي",
     "logOut": "تسجيل الخروج",
@@ -435,6 +437,10 @@
       "variantCount": "{count} متغيرات",
       "variantStockTracked": "يتم تتبع المخزون لكل متغير. إجمالي مخزون المتغيرات",
       "stockInfo": "معلومات المخزون",
+      "reservedStock": "محجوز",
+      "availableStock": "متاح",
+      "reservationsHint": "الوحدات المحجوزة مخصصة ولا يمكن لأي شخص آخر بيعها أو نقلها أو شطبها.",
+      "viewReservations": "عرض الحجوزات",
       "currentStock": "المخزون الحالي",
       "minStock": "الحد الأدنى للمخزون",
       "maxStock": "الحد الأقصى للمخزون",
@@ -469,7 +475,10 @@
         "updateQuantityFailed": "تعذّر تحديث الكمية",
         "confirmRemove": "هل تريد إزالة هذا المكوّن من قائمة المواد؟",
         "removeFailed": "تعذّرت إزالة المكوّن"
-      }
+      },
+      "prepareTransfer": "تجهيز المخزون",
+      "shipTransfer": "شحن التحويل",
+      "receiveTransfer": "استلام التحويل"
     },
     "quickAddCategory": {
       "title": "إضافة فئة سريعة",
@@ -1409,7 +1418,8 @@
         "processing": "قيد المعالجة",
         "completed": "مكتمل",
         "failed": "فشل",
-        "expired": "منتهي الصلاحية"
+        "expired": "منتهي الصلاحية",
+        "prepared": "تم التجهيز"
       }
     }
   },
@@ -2543,6 +2553,8 @@
       "sku": "SKU",
       "price": "السعر",
       "stock": "المخزون",
+      "reserved": "محجوز",
+      "available": "متاح",
       "noVariants": "لم يتم العثور على متغيرات",
       "totalVariants": "إجمالي المتغيرات",
       "totalStock": "إجمالي المخزون"
@@ -3736,6 +3748,42 @@
     "licensedUnder": "مرخّص بموجب {license}",
     "sourceCode": "الشيفرة المصدرية"
   },
+  "reservations": {
+    "title": "حجوزات المخزون",
+    "subtitle": "وحدات متوفرة مخصصة لطلب أو إضافة أو حجز، لذا فهي غير متاحة للبيع أو النقل.",
+    "searchPlaceholder": "البحث بالمرجع",
+    "owner": "المالك",
+    "allOwners": "جميع المالكين",
+    "filter": "تصفية",
+    "product": "المنتج",
+    "quantity": "المحجوز",
+    "heldIn": "محجوز في",
+    "productTotal": "إجمالي المنتج",
+    "serial": "الرقم التسلسلي {number}",
+    "batch": "الدفعة {number}",
+    "reference": "المرجع",
+    "expires": "ينتهي",
+    "noExpiry": "بلا انتهاء",
+    "release": "تحرير",
+    "confirmRelease": "تحرير الحجز {reference} الخاص بـ {owner}؟ ستصبح الوحدات متاحة مرة أخرى.",
+    "empty": "لا توجد حجوزات مطابقة.",
+    "forProduct": "حجوزات {product}",
+    "allProducts": "جميع المنتجات",
+    "showing": "عرض {from} إلى {to} من {total}",
+    "statuses": {
+      "active": "نشط",
+      "expired": "منتهي",
+      "consumed": "مستهلك",
+      "released": "محرر",
+      "all": "الكل"
+    },
+    "reasons": {
+      "released": "حرره المالك",
+      "admin": "حرره مسؤول",
+      "expired": "منتهي",
+      "uninstalled": "أزيلت الإضافة"
+    }
+  },
   "stockTransfers": {
     "title": "تحويلات المخزون",
     "subtitle": "نقل المخزون بين المواقع.",
@@ -3795,5 +3843,9 @@
     "amount": "مبلغ الضريبة",
     "rate": "النسبة",
     "rateHint": "اختياري: أدخل نسبة الضريبة لحساب المبلغ من المجموع الفرعي بعد الخصومات. يتم حفظ المبلغ فقط."
+  },
+  "warehouseStock": {
+    "title": "المخزون حسب المستودع",
+    "includeZero": "تضمين الأرصدة الصفرية"
   }
 }

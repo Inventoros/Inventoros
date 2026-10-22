@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\GraphQL\Mutations\ApproveReturnOrderMutation;
 use App\GraphQL\Mutations\CompleteStockTransferMutation;
+use App\GraphQL\Mutations\TransitionStockTransferMutation;
 use App\GraphQL\Mutations\CreateCustomerMutation;
 use App\GraphQL\Mutations\CreateOrderMutation;
 use App\GraphQL\Mutations\CreateProductMutation;
@@ -174,6 +175,7 @@ return [
                 'receiveReturnOrder' => ReceiveReturnOrderMutation::class,
                 'createStockTransfer' => CreateStockTransferMutation::class,
                 'completeStockTransfer' => CompleteStockTransferMutation::class,
+                'transitionStockTransfer' => TransitionStockTransferMutation::class,
                 'createPurchaseOrder' => CreatePurchaseOrderMutation::class,
                 'updatePurchaseOrder' => UpdatePurchaseOrderMutation::class,
                 'receivePurchaseOrder' => ReceivePurchaseOrderMutation::class,

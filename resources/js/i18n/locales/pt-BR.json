@@ -131,6 +131,7 @@
     }
   },
   "common": {
+    "pagination": "Paginação",
     "save": "Salvar",
     "saveChanges": "Salvar Alterações",
     "saving": "Salvando...",
@@ -237,6 +238,7 @@
     "webhooks": "Webhooks",
     "warehouses": "Depósitos",
     "workOrders": "Ordens de Produção",
+    "reservations": "Reservas",
     "account": "Conta",
     "profile": "Perfil",
     "logOut": "Sair",
@@ -435,6 +437,10 @@
       "variantCount": "{count} variantes",
       "variantStockTracked": "O estoque é rastreado por variante. Estoque total de variantes",
       "stockInfo": "Informações de Estoque",
+      "reservedStock": "Reservado",
+      "availableStock": "Disponível",
+      "reservationsHint": "Unidades reservadas estão comprometidas e ninguém mais pode vendê-las, movê-las ou baixá-las.",
+      "viewReservations": "Ver reservas",
       "currentStock": "Estoque Atual",
       "minStock": "Estoque Mínimo",
       "maxStock": "Estoque Máximo",
@@ -469,7 +475,10 @@
         "updateQuantityFailed": "Falha ao atualizar a quantidade",
         "confirmRemove": "Remover este componente da lista de materiais?",
         "removeFailed": "Falha ao remover o componente"
-      }
+      },
+      "prepareTransfer": "Preparar estoque",
+      "shipTransfer": "Enviar transferência",
+      "receiveTransfer": "Receber transferência"
     },
     "quickAddCategory": {
       "title": "Adição Rápida de Categoria",
@@ -1409,7 +1418,8 @@
         "processing": "Processando",
         "completed": "Concluída",
         "failed": "Falhou",
-        "expired": "Expirada"
+        "expired": "Expirada",
+        "prepared": "Preparado"
       }
     }
   },
@@ -2543,6 +2553,8 @@
       "sku": "SKU",
       "price": "Preço",
       "stock": "Estoque",
+      "reserved": "Reservado",
+      "available": "Disponível",
       "noVariants": "Nenhuma variante encontrada",
       "totalVariants": "Total de Variantes",
       "totalStock": "Estoque Total"
@@ -3736,6 +3748,42 @@
     "licensedUnder": "Licenciado sob a {license}",
     "sourceCode": "Código-fonte"
   },
+  "reservations": {
+    "title": "Reservas de estoque",
+    "subtitle": "Unidades em estoque comprometidas com um pedido, um plugin ou uma reserva, portanto indisponíveis para venda ou movimentação.",
+    "searchPlaceholder": "Buscar por referência",
+    "owner": "Proprietário",
+    "allOwners": "Todos os proprietários",
+    "filter": "Filtrar",
+    "product": "Produto",
+    "quantity": "Reservado",
+    "heldIn": "Reservado em",
+    "productTotal": "Total do produto",
+    "serial": "Série {number}",
+    "batch": "Lote {number}",
+    "reference": "Referência",
+    "expires": "Expira",
+    "noExpiry": "Sem expiração",
+    "release": "Liberar",
+    "confirmRelease": "Liberar a reserva {reference} de {owner}? As unidades voltam a ficar disponíveis.",
+    "empty": "Nenhuma reserva encontrada.",
+    "forProduct": "Reservas de {product}",
+    "allProducts": "Todos os produtos",
+    "showing": "Mostrando {from} a {to} de {total}",
+    "statuses": {
+      "active": "Ativa",
+      "expired": "Expirada",
+      "consumed": "Consumida",
+      "released": "Liberada",
+      "all": "Todas"
+    },
+    "reasons": {
+      "released": "Liberada pelo proprietário",
+      "admin": "Liberada por um administrador",
+      "expired": "Expirada",
+      "uninstalled": "Plugin desinstalado"
+    }
+  },
   "stockTransfers": {
     "title": "Transferências de Estoque",
     "subtitle": "Transfira estoque entre localizações.",
@@ -3795,5 +3843,9 @@
     "amount": "Valor do imposto",
     "rate": "Alíquota",
     "rateHint": "Opcional: informe uma alíquota para calcular o valor a partir do subtotal após os descontos. Somente o valor é salvo."
+  },
+  "warehouseStock": {
+    "title": "Estoque por depósito",
+    "includeZero": "Incluir saldos zerados"
   }
 }

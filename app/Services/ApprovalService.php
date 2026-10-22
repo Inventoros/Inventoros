@@ -245,6 +245,18 @@ final class ApprovalService
             throw new InsufficientStockException('Cannot remove '.abs($quantity)." units; only {$onHand} on hand.");
         }
 
+        // Units promised by stock reservations cannot be removed either,
+        // except by a physical correction (see StockAdjustment::adjust()).
+        $reservations = app(StockReservationService::class);
+        if ($quantity < 0 && ! $reservations->isPhysicalCorrection($type)) {
+            $reserved = $reservations->reservedTotal((int) $product->id, $variant?->id);
+            if ($reserved > 0 && $onHand + $quantity < $reserved) {
+                throw new InsufficientStockException(
+                    'Cannot remove '.abs($quantity).' units; only '.max(0, $onHand - $reserved)." available ({$onHand} on hand, {$reserved} reserved)."
+                );
+            }
+        }
+
         $request = DB::transaction(function () use ($user, $product, $variant, $quantity, $type, $reason, $notes, $locationId) {
             $request = StockAdjustmentRequest::create([
                 'organization_id' => $product->organization_id,

@@ -610,7 +610,7 @@ final class ProductService
             return [];
         }
 
-        $referenced = collect(['order_items', 'purchase_order_items', 'return_order_items', 'stock_adjustment_requests', 'stock_audit_items'])
+        $referenced = collect(['order_items', 'purchase_order_items', 'return_order_items', 'stock_adjustment_requests', 'stock_transfer_items', 'stock_audit_items'])
             ->flatMap(fn (string $table) => DB::table($table)->whereIn('product_variant_id', $variantIds)->distinct()->pluck('product_variant_id'))
             ->map(fn ($id) => (int) $id)
             ->all();

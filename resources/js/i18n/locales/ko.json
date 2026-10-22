@@ -131,6 +131,7 @@
     }
   },
   "common": {
+    "pagination": "페이지 탐색",
     "save": "저장",
     "saveChanges": "변경사항 저장",
     "saving": "저장 중...",
@@ -237,6 +238,7 @@
     "webhooks": "Webhooks",
     "warehouses": "창고",
     "workOrders": "작업 지시",
+    "reservations": "예약",
     "account": "계정",
     "profile": "프로필",
     "logOut": "로그아웃",
@@ -435,6 +437,10 @@
       "variantCount": "{count}개 옵션",
       "variantStockTracked": "재고가 옵션별로 추적됩니다. 총 옵션 재고",
       "stockInfo": "재고 정보",
+      "reservedStock": "예약됨",
+      "availableStock": "가용",
+      "reservationsHint": "예약된 수량은 약속된 재고이므로 다른 사람이 판매, 이동 또는 폐기할 수 없습니다.",
+      "viewReservations": "예약 보기",
       "currentStock": "현재 재고",
       "minStock": "최소 재고",
       "maxStock": "최대 재고",
@@ -469,7 +475,10 @@
         "updateQuantityFailed": "수량 업데이트에 실패했습니다",
         "confirmRemove": "자재 명세서에서 이 구성품을 제거하시겠습니까?",
         "removeFailed": "구성품 제거에 실패했습니다"
-      }
+      },
+      "prepareTransfer": "재고 준비",
+      "shipTransfer": "이동 출고",
+      "receiveTransfer": "이동 입고"
     },
     "quickAddCategory": {
       "title": "빠른 카테고리 추가",
@@ -1409,7 +1418,8 @@
         "processing": "처리 중",
         "completed": "완료됨",
         "failed": "실패",
-        "expired": "만료됨"
+        "expired": "만료됨",
+        "prepared": "준비됨"
       }
     }
   },
@@ -2543,6 +2553,8 @@
       "sku": "SKU",
       "price": "가격",
       "stock": "재고",
+      "reserved": "예약됨",
+      "available": "가용",
       "noVariants": "옵션을 찾을 수 없습니다",
       "totalVariants": "전체 옵션",
       "totalStock": "총 재고"
@@ -3736,6 +3748,42 @@
     "licensedUnder": "{license}에 따라 라이선스 부여",
     "sourceCode": "소스 코드"
   },
+  "reservations": {
+    "title": "재고 예약",
+    "subtitle": "주문, 플러그인 또는 예약에 약속된 보유 재고로, 판매하거나 이동할 수 없습니다.",
+    "searchPlaceholder": "참조로 검색",
+    "owner": "소유자",
+    "allOwners": "모든 소유자",
+    "filter": "필터",
+    "product": "제품",
+    "quantity": "예약 수량",
+    "heldIn": "예약 위치",
+    "productTotal": "제품 전체",
+    "serial": "시리얼 {number}",
+    "batch": "배치 {number}",
+    "reference": "참조",
+    "expires": "만료",
+    "noExpiry": "만료 없음",
+    "release": "해제",
+    "confirmRelease": "{owner}의 예약 {reference}을(를) 해제할까요? 수량이 다시 가용 상태가 됩니다.",
+    "empty": "일치하는 예약이 없습니다.",
+    "forProduct": "{product}의 예약",
+    "allProducts": "모든 제품",
+    "showing": "{total}개 중 {from}-{to}",
+    "statuses": {
+      "active": "활성",
+      "expired": "만료됨",
+      "consumed": "소진됨",
+      "released": "해제됨",
+      "all": "전체"
+    },
+    "reasons": {
+      "released": "소유자가 해제",
+      "admin": "관리자가 해제",
+      "expired": "만료됨",
+      "uninstalled": "플러그인 제거됨"
+    }
+  },
   "stockTransfers": {
     "title": "재고 이동",
     "subtitle": "위치 간 재고를 이동합니다.",
@@ -3795,5 +3843,9 @@
     "amount": "세액",
     "rate": "세율",
     "rateHint": "선택 사항: 세율을 입력하면 할인 후 소계에서 세액을 계산합니다. 세액만 저장됩니다."
+  },
+  "warehouseStock": {
+    "title": "창고별 재고",
+    "includeZero": "재고 0 포함"
   }
 }

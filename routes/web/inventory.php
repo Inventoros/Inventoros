@@ -17,6 +17,7 @@ use App\Http\Controllers\Inventory\QrCodeController;
 use App\Http\Controllers\Inventory\SKUController;
 use App\Http\Controllers\Inventory\StockAdjustmentController;
 use App\Http\Controllers\Inventory\StockAuditController;
+use App\Http\Controllers\Inventory\StockReservationController;
 use App\Http\Controllers\Inventory\StockTransferController;
 use App\Http\Controllers\Inventory\WorkOrderController;
 use App\Http\Controllers\WarehouseController;
@@ -26,6 +27,9 @@ use Illuminate\Support\Facades\Route;
  * Inventory web routes. Loaded inside the `auth` group in routes/web.php, so
  * every route here is already authenticated.
  */
+
+Route::get('/stock', [\App\Http\Controllers\Inventory\StockBalanceController::class, 'index'])->name('stock.index')->middleware('permission:view_products');
+Route::get('/stock/export', [\App\Http\Controllers\Inventory\StockBalanceController::class, 'export'])->name('stock.export')->middleware(['permission:view_products', 'permission:export_data']);
 
 // Inventory Management - Permission based
 Route::get('/products', [ProductController::class, 'index'])->name('products.index')->middleware('permission:view_products');
@@ -141,6 +145,8 @@ Route::get('/stock-transfers/create', [StockTransferController::class, 'create']
 Route::post('/stock-transfers', [StockTransferController::class, 'store'])->name('stock-transfers.store')->middleware('permission:transfer_stock');
 Route::get('/stock-transfers/{stockTransfer}', [StockTransferController::class, 'show'])->name('stock-transfers.show')->middleware('permission:transfer_stock');
 Route::put('/stock-transfers/{stockTransfer}', [StockTransferController::class, 'update'])->name('stock-transfers.update')->middleware('permission:transfer_stock');
+Route::post('/stock-transfers/{stockTransfer}/prepare', [StockTransferController::class, 'prepare'])->name('stock-transfers.prepare')->middleware('permission:transfer_stock');
+Route::post('/stock-transfers/{stockTransfer}/ship', [StockTransferController::class, 'ship'])->name('stock-transfers.ship')->middleware('permission:transfer_stock');
 Route::post('/stock-transfers/{stockTransfer}/complete', [StockTransferController::class, 'complete'])->name('stock-transfers.complete')->middleware('permission:transfer_stock');
 Route::post('/stock-transfers/{stockTransfer}/cancel', [StockTransferController::class, 'cancel'])->name('stock-transfers.cancel')->middleware('permission:transfer_stock');
 
@@ -155,6 +161,11 @@ Route::delete('/stock-audits/{stockAudit}', [StockAuditController::class, 'destr
 Route::post('/stock-audits/{stockAudit}/start', [StockAuditController::class, 'start'])->name('stock-audits.start')->middleware('permission:manage_stock_audits');
 Route::post('/stock-audits/{stockAudit}/complete', [StockAuditController::class, 'complete'])->name('stock-audits.complete')->middleware('permission:manage_stock_audits');
 Route::post('/stock-audits/{stockAudit}/items/{item}/count', [StockAuditController::class, 'updateCount'])->name('stock-audits.items.count')->middleware('permission:manage_stock_audits');
+
+// Stock reservations (holds): anyone who can see products sees what is
+// promised; releasing a hold is a stock change.
+Route::get('/reservations', [StockReservationController::class, 'index'])->name('reservations.index')->middleware('permission:view_products');
+Route::post('/reservations/{reservation}/release', [StockReservationController::class, 'release'])->name('reservations.release')->middleware('permission:manage_stock');
 
 // Stock Adjustments - Permission based
 Route::get('/stock-adjustments', [StockAdjustmentController::class, 'index'])->name('stock-adjustments.index')->middleware('permission:manage_stock');

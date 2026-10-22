@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Mcp\Tools;
 
+use App\Exceptions\BusinessRuleException;
 use App\Mcp\Concerns\AuthenticatesMcpRequest;
 use App\Services\OrderService;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
@@ -72,14 +73,17 @@ class CreateOrderTool extends Tool
 
         // OrderService owns the create invariant (lock → validate → ledger +
         // decrement, wrapped in SequenceNumberRetry) shared with the
-        // web/REST/GraphQL surfaces. It throws InsufficientStockException
-        // (a RuntimeException) which the MCP framework surfaces as a tool
-        // error — same as the previous inline RuntimeException.
-        $order = app(OrderService::class)->create(
-            $validated,
-            $this->user(),
-            $validated['source'] ?? 'mcp'
-        );
+        // web/REST/GraphQL surfaces. A business-rule refusal (stock short of
+        // what is available, an invalid line) is reported as a tool error.
+        try {
+            $order = app(OrderService::class)->create(
+                $validated,
+                $this->user(),
+                $validated['source'] ?? 'mcp'
+            );
+        } catch (BusinessRuleException $e) {
+            return Response::error($e->getMessage());
+        }
 
         $result = $order->fresh('items');
 

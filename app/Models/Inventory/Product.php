@@ -12,6 +12,7 @@ use App\Models\Inventory\Concerns\ActsAsAssembly;
 use App\Models\Inventory\Concerns\CalculatesProductProfit;
 use App\Models\Inventory\Concerns\HasPluginDisplayValues;
 use App\Models\Inventory\Concerns\HasProductVariants;
+use App\Models\Inventory\Concerns\HasStockReservations;
 use App\Models\Inventory\Concerns\TracksStockLevels;
 use App\Traits\LogsActivity;
 use Database\Factories\ProductFactory;
@@ -75,7 +76,7 @@ use Illuminate\Support\Carbon;
  */
 class Product extends Model
 {
-    use ActsAsAssembly, BelongsToOrganization, CalculatesProductProfit, HasFactory, HasPluginDisplayValues, HasProductVariants, LogsActivity, SoftDeletes, TracksStockLevels;
+    use ActsAsAssembly, BelongsToOrganization, CalculatesProductProfit, HasFactory, HasPluginDisplayValues, HasProductVariants, HasStockReservations, LogsActivity, SoftDeletes, TracksStockLevels;
 
     protected static function newFactory(): ProductFactory
     {

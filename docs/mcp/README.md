@@ -110,7 +110,7 @@ Call `who_am_i` first to confirm the token works.
 
 ## Tool catalog
 
-30 tools across 9 groups. Tools marked **destructive** change data; clients should confirm before calling them.
+32 tools across 9 groups. Tools marked **destructive** change data; clients should confirm before calling them.
 
 ### Identity
 
@@ -129,6 +129,7 @@ Call `who_am_i` first to confirm the token works.
 | `list_categories` | `manage_categories` or `view_products` | Category list. |
 | `list_locations` | `manage_locations` or `view_products` | Storage locations, optionally filtered by warehouse. |
 | `list_warehouses` | `view_warehouses` or `view_products` | Warehouse list. |
+| `list_stock_balances` | `view_products` | Stock by SKU, variant, warehouse and location, with holds, availability, incoming quantities, sorting and pagination. |
 
 ### Stock
 
@@ -179,6 +180,7 @@ Call `who_am_i` first to confirm the token works.
 |---|---|---|
 | `list_work_orders` | `manage_stock` | Paginated work orders with status filter. |
 | `start_work_order` | `manage_stock` | Validate component stock (and available serials or batch quantity for tracked components) and transition to in_progress, through the same service as the web and REST API. **Destructive**. |
+| `transition_stock_transfer` | `transfer_stock` | Prepare, ship, receive or cancel an unshipped warehouse transfer. **Destructive**. |
 | `delete_work_order` | `manage_stock` | Delete a draft or cancelled work order. **Destructive**. |
 
 ### Catalog (write)

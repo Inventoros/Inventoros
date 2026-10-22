@@ -82,6 +82,25 @@ final class CorePhpApiContractTest extends TestCase
         'App\Services\ProductLocationStockService::receive' => ['returns' => 'void', 'params' => ['App\Models\Inventory\Product|App\Models\Inventory\ProductVariant $product', 'int $quantity', '?int $locationId = NULL']],
         'App\Services\ProductLocationStockService::applyDelta' => ['returns' => 'int', 'params' => ['App\Models\Inventory\Product|App\Models\Inventory\ProductVariant $product', 'int $locationId', 'int $delta', 'bool $allowNegativeBin = false']],
 
+        'App\Services\StockReservationService::reserve' => ['returns' => 'App\Models\Inventory\StockReservation', 'params' => [
+            'App\Models\Inventory\Product $product', '?App\Models\Inventory\ProductVariant $variant', 'int $quantity', 'string $owner', 'string $reference',
+            '?int $locationId = NULL', '?Carbon\CarbonInterface $expiresAt = NULL', '?App\Models\Inventory\ProductSerial $serial = NULL',
+            '?App\Models\Inventory\ProductBatch $batch = NULL',
+        ]],
+        'App\Services\StockReservationService::release' => ['returns' => 'int', 'params' => ['string $owner', 'string $reference', '?int $organizationId = NULL']],
+        'App\Services\StockReservationService::consume' => ['returns' => 'int', 'params' => [
+            'string $owner', 'string $reference', '?Illuminate\Database\Eloquent\Model $by = NULL', '?int $organizationId = NULL',
+        ]],
+        'App\Services\StockReservationService::available' => ['returns' => 'int', 'params' => [
+            'App\Models\Inventory\Product $product', '?App\Models\Inventory\ProductVariant $variant = NULL', '?int $locationId = NULL',
+        ]],
+        'App\Services\StockReservationService::reserved' => ['returns' => 'int', 'params' => [
+            'App\Models\Inventory\Product $product', '?App\Models\Inventory\ProductVariant $variant = NULL', '?int $locationId = NULL',
+        ]],
+        'App\Services\StockReservationService::holds' => ['returns' => 'Illuminate\Database\Eloquent\Collection', 'params' => [
+            'string $owner', 'string $reference', '?int $organizationId = NULL',
+        ]],
+
         'App\Services\TrackedStockAllocationService::allocateForOrderItem' => ['returns' => 'int', 'params' => ['App\Models\Inventory\Product $product', 'int $quantity', 'App\Models\Order\OrderItem $orderItem']],
         'App\Services\TrackedStockAllocationService::releaseForOrderItem' => ['returns' => 'int', 'params' => ['App\Models\Order\OrderItem $orderItem', '?int $limit = NULL']],
 

@@ -33,6 +33,8 @@ class StockTransferResource extends JsonResource
             'is_inter_warehouse' => $this->is_inter_warehouse,
             'shipping_method' => $this->shipping_method,
             'tracking_number' => $this->tracking_number,
+            'prepared_at' => $this->prepared_at?->toIso8601String(),
+            'stock_dispatched_at' => $this->stock_dispatched_at?->toIso8601String(),
             'shipped_at' => $this->shipped_at?->toIso8601String(),
             'estimated_arrival' => $this->estimated_arrival?->toIso8601String(),
             'completed_at' => $this->completed_at?->toIso8601String(),

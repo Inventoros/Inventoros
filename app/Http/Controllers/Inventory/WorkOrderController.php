@@ -188,8 +188,9 @@ class WorkOrderController extends Controller
             $tracking = $item->variant === null && $item->product ? $this->trackingValue($item->product) : TrackingType::NONE->value;
 
             $item->setAttribute('tracking_type', $tracking);
-            $item->setAttribute('available_stock', (int) ($target->stock ?? 0));
-            $item->setAttribute('is_sufficient', ($target->stock ?? 0) >= ((float) $item->quantity_required - (float) $item->quantity_consumed));
+            $available = $item->product ? app(\App\Services\StockReservationService::class)->available($item->product, $item->variant) : 0;
+            $item->setAttribute('available_stock', $available);
+            $item->setAttribute('is_sufficient', $available >= ((float) $item->quantity_required - (float) $item->quantity_consumed));
             $item->setAttribute('available_serials', $picking && $tracking === TrackingType::SERIAL->value ? $this->availableSerials($item->product) : []);
             $item->setAttribute('available_batches', $picking && $tracking === TrackingType::BATCH->value ? $this->availableBatches($item->product) : []);
 

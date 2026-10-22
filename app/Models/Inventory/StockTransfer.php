@@ -50,6 +50,8 @@ class StockTransfer extends Model
         'shipping_method',
         'tracking_number',
         'shipped_at',
+        'prepared_at',
+        'stock_dispatched_at',
         'estimated_arrival',
         'notes',
         'completed_at',
@@ -75,6 +77,8 @@ class StockTransfer extends Model
     {
         return [
             'is_inter_warehouse' => 'boolean',
+            'prepared_at' => 'datetime',
+            'stock_dispatched_at' => 'datetime',
             'shipped_at' => 'datetime',
             'estimated_arrival' => 'datetime',
             'completed_at' => 'datetime',

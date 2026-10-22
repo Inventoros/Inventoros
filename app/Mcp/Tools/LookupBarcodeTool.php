@@ -51,6 +51,7 @@ class LookupBarcodeTool extends Tool
                 'sku' => $variant->sku,
                 'barcode' => $variant->barcode,
                 'stock' => $variant->stock,
+                'available_stock' => $variant->available_stock,
                 'price' => $variant->price,
                 'product' => $match['product']->only(['id', 'name']),
             ]);
@@ -66,6 +67,7 @@ class LookupBarcodeTool extends Tool
                 'name' => $product->name,
                 'barcode' => $product->barcode,
                 'stock' => $product->stock,
+                'available_stock' => $product->available_stock,
                 'price' => $product->price,
                 'selling_price' => $product->selling_price,
             ]);

@@ -131,6 +131,7 @@
     }
   },
   "common": {
+    "pagination": "ページ送り",
     "save": "保存",
     "saveChanges": "変更を保存",
     "saving": "保存中...",
@@ -237,6 +238,7 @@
     "webhooks": "Webhook",
     "warehouses": "倉庫",
     "workOrders": "作業指示",
+    "reservations": "引当",
     "account": "アカウント",
     "profile": "プロフィール",
     "logOut": "ログアウト",
@@ -435,6 +437,10 @@
       "variantCount": "{count}件のバリエーション",
       "variantStockTracked": "在庫はバリエーションごとに管理されています。バリエーション在庫合計",
       "stockInfo": "在庫情報",
+      "reservedStock": "引当済み",
+      "availableStock": "引当可能",
+      "reservationsHint": "引当済みの数量は約束済みのため、他の誰も販売、移動、廃棄できません。",
+      "viewReservations": "引当を表示",
       "currentStock": "現在の在庫",
       "minStock": "最小在庫",
       "maxStock": "最大在庫",
@@ -469,7 +475,10 @@
         "updateQuantityFailed": "数量の更新に失敗しました",
         "confirmRemove": "この構成部品を部品表から削除しますか？",
         "removeFailed": "構成部品の削除に失敗しました"
-      }
+      },
+      "prepareTransfer": "在庫を準備",
+      "shipTransfer": "移動を出荷",
+      "receiveTransfer": "移動を入荷"
     },
     "quickAddCategory": {
       "title": "カテゴリをクイック追加",
@@ -1409,7 +1418,8 @@
         "processing": "処理中",
         "completed": "完了",
         "failed": "失敗",
-        "expired": "期限切れ"
+        "expired": "期限切れ",
+        "prepared": "準備済み"
       }
     }
   },
@@ -2543,6 +2553,8 @@
       "sku": "SKU",
       "price": "価格",
       "stock": "在庫",
+      "reserved": "引当済み",
+      "available": "引当可能",
       "noVariants": "バリエーションが見つかりません",
       "totalVariants": "バリエーション合計",
       "totalStock": "在庫合計"
@@ -3736,6 +3748,42 @@
     "licensedUnder": "{license}のもとでライセンスされています",
     "sourceCode": "ソースコード"
   },
+  "reservations": {
+    "title": "在庫引当",
+    "subtitle": "注文、プラグイン、予約のために確保された手持ち在庫です。販売や移動には使えません。",
+    "searchPlaceholder": "参照で検索",
+    "owner": "所有者",
+    "allOwners": "すべての所有者",
+    "filter": "絞り込み",
+    "product": "商品",
+    "quantity": "引当数",
+    "heldIn": "引当場所",
+    "productTotal": "商品全体",
+    "serial": "シリアル {number}",
+    "batch": "ロット {number}",
+    "reference": "参照",
+    "expires": "有効期限",
+    "noExpiry": "期限なし",
+    "release": "解除",
+    "confirmRelease": "{owner} の引当 {reference} を解除しますか？数量は再び引当可能になります。",
+    "empty": "該当する引当はありません。",
+    "forProduct": "{product} の引当",
+    "allProducts": "すべての商品",
+    "showing": "{total} 件中 {from} から {to} を表示",
+    "statuses": {
+      "active": "有効",
+      "expired": "期限切れ",
+      "consumed": "消化済み",
+      "released": "解除済み",
+      "all": "すべて"
+    },
+    "reasons": {
+      "released": "所有者が解除",
+      "admin": "管理者が解除",
+      "expired": "期限切れ",
+      "uninstalled": "プラグインをアンインストール"
+    }
+  },
   "stockTransfers": {
     "title": "在庫移動",
     "subtitle": "ロケーション間で在庫を移動します。",
@@ -3795,5 +3843,9 @@
     "amount": "税額",
     "rate": "税率",
     "rateHint": "任意: 税率を入力すると、割引後の小計から税額を計算します。保存されるのは税額のみです。"
+  },
+  "warehouseStock": {
+    "title": "倉庫別在庫",
+    "includeZero": "在庫ゼロを含める"
   }
 }

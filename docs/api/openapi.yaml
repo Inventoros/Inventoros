@@ -1636,6 +1636,25 @@ paths:
         '404': { $ref: '#/components/responses/NotFound' }
         '422': { description: "Not pending (`invalid_status`)" }
 
+  /stock-balances:
+    get:
+      tags: [Products]
+      summary: Stock by warehouse, location and SKU
+      description: "Requires view_products. Product and variant bins are separate; warehouse assignments restrict results. Available is capped by the SKU's total availability, so it must not be summed across bins with unlocated holds."
+      parameters:
+        - { name: search, in: query, schema: { type: string } }
+        - { name: warehouse_id, in: query, schema: { type: integer } }
+        - { name: location_id, in: query, schema: { type: integer } }
+        - { name: out_of_stock, in: query, schema: { type: boolean } }
+        - { name: include_zero, in: query, schema: { type: boolean } }
+        - { name: sort_by, in: query, schema: { type: string, enum: [sku, product_name, variant_title, warehouse_name, location_name, on_hand, reserved, available, in_transit] } }
+        - { name: sort_dir, in: query, schema: { type: string, enum: [asc, desc] } }
+        - $ref: '#/components/parameters/PerPage'
+        - $ref: '#/components/parameters/Page'
+      responses:
+        '200': { description: "Paginated SKU/location balances: data includes product_id, product_variant_id, sku, product_name, variant_title, warehouse_id/name, location_id/name, on_hand, reserved, available, in_transit and min_stock; current_page, per_page, total and links provide pagination." }
+        '403': { description: Warehouse access or permission denied }
+
   /stock-transfers:
     get:
       tags: [Stock Transfers]
@@ -1667,6 +1686,17 @@ paths:
       responses:
         '200': { description: Transfer, content: { application/json: { schema: { type: object, properties: { data: { $ref: '#/components/schemas/StockTransfer' } } } } } }
         '404': { $ref: '#/components/responses/NotFound' }
+
+  /stock-transfers/{stockTransfer}/prepare:
+    parameters:
+      - { name: stockTransfer, in: path, required: true, schema: { type: integer } }
+    post:
+      tags: [Stock Transfers]
+      summary: Reserve source-bin stock for a transfer
+      description: "Requires transfer_stock and source warehouse access. Pending or prepared transfers only; approval must be granted first. Does not change on-hand totals."
+      responses:
+        '200': { description: Transfer prepared }
+        '422': { description: Invalid state or insufficient available stock }
 
   /stock-transfers/{stockTransfer}/ship:
     parameters:
@@ -2659,12 +2689,14 @@ components:
       properties:
         id: { type: integer }
         transfer_number: { type: string }
-        status: { type: string, enum: [pending, in_transit, completed, cancelled] }
+        status: { type: string, enum: [pending, prepared, in_transit, completed, cancelled] }
         from_location_id: { type: integer }
         to_location_id: { type: integer }
         is_inter_warehouse: { type: boolean }
         shipping_method: { type: string, nullable: true }
         tracking_number: { type: string, nullable: true }
+        prepared_at: { type: string, format: date-time, nullable: true }
+        stock_dispatched_at: { type: string, format: date-time, nullable: true }
         shipped_at: { type: string, format: date-time, nullable: true }
         completed_at: { type: string, format: date-time, nullable: true }
         items:
@@ -2674,6 +2706,7 @@ components:
             properties:
               id: { type: integer }
               product_id: { type: integer }
+              product_variant_id: { type: integer, nullable: true, description: "Required for products sold by variant" }
               quantity: { type: integer }
 
     StockTransferInput:
@@ -2694,6 +2727,7 @@ components:
             required: [product_id, quantity]
             properties:
               product_id: { type: integer }
+              product_variant_id: { type: integer, nullable: true, description: "Required for products sold by variant" }
               quantity: { type: integer, minimum: 1 }
               notes: { type: string, maxLength: 500 }
 
