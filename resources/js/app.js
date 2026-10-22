@@ -10,7 +10,7 @@ import { applyRegionalProp } from './lib/formatSettings';
 import { applyActiveOrganization, withOrganizationHeader } from './lib/activeOrganization';
 import { installPluginRuntime, loadPluginAssets, resolveRuntimePage } from './plugins/runtime';
 
-const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
+const appName = document.querySelector('meta[name="application-name"]')?.content || 'Inventoros';
 
 // window.Inventoros: Vue plus the plugin SDK, for pre-built plugin bundles
 // that are imported at runtime (see ./plugins/runtime.js).
@@ -21,7 +21,7 @@ const pages = import.meta.glob('./Pages/**/*.vue');
 const pluginPages = import.meta.glob('../../plugins/*/resources/js/Pages/**/*.vue');
 
 createInertiaApp({
-    title: (title) => `${title} - ${appName}`,
+    title: (title) => title ? `${title} - ${appName}` : appName,
     resolve: async (name, page) => {
         // Check if this is a plugin page (format: Plugin::PluginName/PagePath)
         if (name.startsWith('Plugin::')) {
