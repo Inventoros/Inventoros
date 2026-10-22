@@ -1,4 +1,16 @@
 {
+  "orderPlanning": {
+    "title": "Plan realizacji",
+    "hint": "Plan używa dostępnych magazynów i nie rezerwuje zapasów.",
+    "check": "Porównaj magazyny",
+    "failed": "Nie udało się wczytać planu. Spróbuj ponownie.",
+    "empty": "Brak dostępnych aktywnych magazynów.",
+    "ready": "Wszystkie pozycje dostępne",
+    "shortfall": "Brakuje {count} sztuk",
+    "use": "Użyj magazynu",
+    "line": "Dostępne {available} z {requested}; w drodze {incoming}",
+    "transfer": "Przenieś {count} × {sku} z {warehouse}"
+  },
   "auditLabels": {
     "notCounted": "Nie policzono",
     "never": "Nigdy"

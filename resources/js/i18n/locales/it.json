@@ -1,4 +1,16 @@
 {
+  "orderPlanning": {
+    "title": "Piano di evasione",
+    "hint": "Il piano usa i magazzini accessibili e non riserva scorte.",
+    "check": "Confronta magazzini",
+    "failed": "Impossibile caricare il piano. Riprova.",
+    "empty": "Nessun magazzino attivo accessibile.",
+    "ready": "Tutti gli articoli disponibili",
+    "shortfall": "Mancano {count} unità",
+    "use": "Usa magazzino",
+    "line": "{available} di {requested} disponibili; {incoming} in arrivo",
+    "transfer": "Trasferisci {count} × {sku} da {warehouse}"
+  },
   "auditLabels": {
     "notCounted": "Non contato",
     "never": "Mai"

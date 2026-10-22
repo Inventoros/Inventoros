@@ -9,13 +9,12 @@ use App\Mcp\Resources\LowStockResource;
 use App\Mcp\Resources\RecentOrdersResource;
 use App\Mcp\Tools\AdjustStockTool;
 use App\Mcp\Tools\CreateOrderTool;
-use App\Mcp\Tools\RecordPaymentTool;
 use App\Mcp\Tools\CreateProductTool;
 use App\Mcp\Tools\CreatePurchaseOrderTool;
+use App\Mcp\Tools\CreateShipmentTool;
 use App\Mcp\Tools\DecideApprovalTool;
 use App\Mcp\Tools\DeleteWorkOrderTool;
 use App\Mcp\Tools\EmailOrderInvoiceTool;
-use App\Mcp\Tools\CreateShipmentTool;
 use App\Mcp\Tools\GetOrderTool;
 use App\Mcp\Tools\GetProductTool;
 use App\Mcp\Tools\GetPurchaseOrderTool;
@@ -27,15 +26,19 @@ use App\Mcp\Tools\ListPendingApprovalsTool;
 use App\Mcp\Tools\ListProductsTool;
 use App\Mcp\Tools\ListPurchaseOrdersTool;
 use App\Mcp\Tools\ListShipmentsTool;
+use App\Mcp\Tools\ListStockBalancesTool;
 use App\Mcp\Tools\ListSuppliersTool;
 use App\Mcp\Tools\ListWarehousesTool;
 use App\Mcp\Tools\ListWorkOrdersTool;
 use App\Mcp\Tools\LookupBarcodeTool;
+use App\Mcp\Tools\PlanOrderFulfilmentTool;
 use App\Mcp\Tools\ReceivePurchaseOrderTool;
+use App\Mcp\Tools\RecordPaymentTool;
 use App\Mcp\Tools\SearchProductsTool;
 use App\Mcp\Tools\SendPurchaseOrderTool;
 use App\Mcp\Tools\StartWorkOrderTool;
 use App\Mcp\Tools\SubmitPurchaseOrderForApprovalTool;
+use App\Mcp\Tools\TransitionStockTransferTool;
 use App\Mcp\Tools\WhoAmITool;
 use App\Services\Plugins\PluginMcpToolRegistry;
 use Laravel\Mcp\Server;
@@ -89,11 +92,12 @@ class InventorosServer extends Server
 
         // Stock
         ListLowStockTool::class,
-        \App\Mcp\Tools\ListStockBalancesTool::class,
+        ListStockBalancesTool::class,
         AdjustStockTool::class,
-        \App\Mcp\Tools\TransitionStockTransferTool::class,
+        TransitionStockTransferTool::class,
 
         // Sales
+        PlanOrderFulfilmentTool::class,
         ListOrdersTool::class,
         GetOrderTool::class,
         CreateOrderTool::class,

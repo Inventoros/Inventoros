@@ -1,4 +1,16 @@
 {
+  "orderPlanning": {
+    "title": "Fulfilment plan",
+    "hint": "Plans use accessible warehouses and do not reserve stock.",
+    "check": "Compare warehouses",
+    "failed": "The plan could not be loaded. Try again.",
+    "empty": "No accessible active warehouses.",
+    "ready": "All items available",
+    "shortfall": "Short by {count} units",
+    "use": "Use warehouse",
+    "line": "{available} of {requested} available; {incoming} incoming",
+    "transfer": "Transfer {count} × {sku} from {warehouse}"
+  },
   "auditLabels": {
     "notCounted": "Not counted",
     "never": "Never"

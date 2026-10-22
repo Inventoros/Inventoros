@@ -1,4 +1,16 @@
 {
+  "orderPlanning": {
+    "title": "Plan de préparation",
+    "hint": "Le plan utilise les entrepôts accessibles sans réserver de stock.",
+    "check": "Comparer les entrepôts",
+    "failed": "Impossible de charger le plan. Réessayez.",
+    "empty": "Aucun entrepôt actif accessible.",
+    "ready": "Tous les articles sont disponibles",
+    "shortfall": "Il manque {count} unités",
+    "use": "Utiliser cet entrepôt",
+    "line": "{available} sur {requested} disponibles ; {incoming} en transit",
+    "transfer": "Transférer {count} × {sku} depuis {warehouse}"
+  },
   "auditLabels": {
     "notCounted": "Non compté",
     "never": "Jamais"

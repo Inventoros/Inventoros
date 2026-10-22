@@ -1,4 +1,16 @@
 {
+  "orderPlanning": {
+    "title": "履约计划",
+    "hint": "比较可访问的仓库，不预留库存。",
+    "check": "比较仓库",
+    "failed": "无法加载计划，请重试。",
+    "empty": "没有可访问的启用仓库。",
+    "ready": "所有商品库存充足",
+    "shortfall": "缺少 {count} 件",
+    "use": "使用此仓库",
+    "line": "需要 {requested} 件，可用 {available} 件，在途 {incoming} 件",
+    "transfer": "从 {warehouse} 调拨 {count} 件 {sku}"
+  },
   "auditLabels": {
     "notCounted": "未盘点",
     "never": "从未"

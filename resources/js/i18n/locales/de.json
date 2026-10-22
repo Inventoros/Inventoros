@@ -1,4 +1,16 @@
 {
+  "orderPlanning": {
+    "title": "Versandplanung",
+    "hint": "Die Planung nutzt zugängliche Lager und reserviert keinen Bestand.",
+    "check": "Lager vergleichen",
+    "failed": "Plan konnte nicht geladen werden. Erneut versuchen.",
+    "empty": "Keine zugänglichen aktiven Lager.",
+    "ready": "Alle Artikel verfügbar",
+    "shortfall": "Es fehlen {count} Einheiten",
+    "use": "Lager verwenden",
+    "line": "{available} von {requested} verfügbar; {incoming} unterwegs",
+    "transfer": "{count} × {sku} aus {warehouse} umlagern"
+  },
   "auditLabels": {
     "notCounted": "Nicht gezählt",
     "never": "Nie"

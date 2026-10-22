@@ -1,4 +1,16 @@
 {
+  "orderPlanning": {
+    "title": "出荷計画",
+    "hint": "アクセス可能な倉庫を比較します。在庫は予約されません。",
+    "check": "倉庫を比較",
+    "failed": "計画を読み込めませんでした。再試行してください。",
+    "empty": "アクセス可能な有効な倉庫がありません。",
+    "ready": "すべての商品に在庫あり",
+    "shortfall": "{count} 個不足",
+    "use": "この倉庫を使用",
+    "line": "{requested} 個中 {available} 個あり、入荷予定 {incoming} 個",
+    "transfer": "{warehouse} から {sku} を {count} 個移動"
+  },
   "auditLabels": {
     "notCounted": "未カウント",
     "never": "なし"

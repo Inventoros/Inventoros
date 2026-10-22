@@ -1,4 +1,16 @@
 {
+  "orderPlanning": {
+    "title": "Plan de preparación",
+    "hint": "El plan usa almacenes accesibles y no reserva existencias.",
+    "check": "Comparar almacenes",
+    "failed": "No se pudo cargar el plan. Inténtalo de nuevo.",
+    "empty": "No hay almacenes activos accesibles.",
+    "ready": "Todos los artículos disponibles",
+    "shortfall": "Faltan {count} unidades",
+    "use": "Usar almacén",
+    "line": "{available} de {requested} disponibles; {incoming} en tránsito",
+    "transfer": "Transferir {count} × {sku} desde {warehouse}"
+  },
   "auditLabels": {
     "notCounted": "Sin contar",
     "never": "Nunca"

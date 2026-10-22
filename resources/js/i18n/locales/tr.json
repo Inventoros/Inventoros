@@ -1,4 +1,16 @@
 {
+  "orderPlanning": {
+    "title": "Sipariş hazırlama planı",
+    "hint": "Plan erişilebilir depoları kullanır ve stok ayırmaz.",
+    "check": "Depoları karşılaştır",
+    "failed": "Plan yüklenemedi. Tekrar deneyin.",
+    "empty": "Erişilebilir etkin depo yok.",
+    "ready": "Tüm ürünler mevcut",
+    "shortfall": "{count} birim eksik",
+    "use": "Depoyu kullan",
+    "line": "{requested} birimin {available} birimi mevcut; {incoming} birim yolda",
+    "transfer": "{warehouse} deposundan {count} × {sku} aktar"
+  },
   "auditLabels": {
     "notCounted": "Sayılmadı",
     "never": "Hiç"

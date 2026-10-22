@@ -1,4 +1,16 @@
 {
+  "orderPlanning": {
+    "title": "Plano de atendimento",
+    "hint": "O plano usa depósitos acessíveis e não reserva estoque.",
+    "check": "Comparar depósitos",
+    "failed": "Não foi possível carregar o plano. Tente novamente.",
+    "empty": "Nenhum depósito ativo acessível.",
+    "ready": "Todos os itens disponíveis",
+    "shortfall": "Faltam {count} unidades",
+    "use": "Usar depósito",
+    "line": "{available} de {requested} disponíveis; {incoming} em trânsito",
+    "transfer": "Transferir {count} × {sku} de {warehouse}"
+  },
   "auditLabels": {
     "notCounted": "Não contado",
     "never": "Nunca"

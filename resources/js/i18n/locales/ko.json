@@ -1,4 +1,16 @@
 {
+  "orderPlanning": {
+    "title": "출고 계획",
+    "hint": "접근 가능한 창고를 비교하며 재고를 예약하지 않습니다.",
+    "check": "창고 비교",
+    "failed": "계획을 불러올 수 없습니다. 다시 시도하세요.",
+    "empty": "접근 가능한 활성 창고가 없습니다.",
+    "ready": "모든 품목 재고 있음",
+    "shortfall": "{count}개 부족",
+    "use": "창고 사용",
+    "line": "{requested}개 중 {available}개 있음, {incoming}개 입고 예정",
+    "transfer": "{warehouse}에서 {sku} {count}개 이동"
+  },
   "auditLabels": {
     "notCounted": "미집계",
     "never": "없음"

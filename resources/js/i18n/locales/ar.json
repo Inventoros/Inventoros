@@ -1,4 +1,16 @@
 {
+  "orderPlanning": {
+    "title": "خطة تجهيز الطلب",
+    "hint": "تستخدم الخطة المستودعات المتاحة ولا تحجز المخزون.",
+    "check": "مقارنة المستودعات",
+    "failed": "تعذر تحميل الخطة. حاول مجدداً.",
+    "empty": "لا توجد مستودعات نشطة متاحة.",
+    "ready": "جميع الأصناف متوفرة",
+    "shortfall": "ينقص {count} وحدة",
+    "use": "استخدام المستودع",
+    "line": "متاح {available} من {requested}؛ قادم {incoming}",
+    "transfer": "نقل {count} × {sku} من {warehouse}"
+  },
   "auditLabels": {
     "notCounted": "لم يُعدّ",
     "never": "أبدًا"

@@ -4,6 +4,7 @@ import PageHeader from '@/Components/ui/PageHeader.vue';
 import Card from '@/Components/ui/Card.vue';
 import Button from '@/Components/ui/Button.vue';
 import TaxInput from '@/Components/TaxInput.vue';
+import OrderConsolidationPlanner from '@/Components/OrderConsolidationPlanner.vue';
 import CustomerPicker from '@/Components/CustomerPicker.vue';
 import DiscountInput from '@/Components/DiscountInput.vue';
 import { useOrderTotals, lineNetCents } from '@/composables/useOrderTotals';
@@ -25,12 +26,15 @@ const props = defineProps({
     // and cannot start out shipped or delivered.
     ordersNeedApproval: { type: Boolean, default: false },
     products: Array,
+    warehouses: { type: Array, default: () => [] },
+    defaultWarehouseId: { type: Number, default: null },
     // The organization's currency, and the currencies an order can be in.
     defaultCurrency: { type: String, default: 'USD' },
     currencies: { type: Array, default: () => [] },
 });
 
 const form = useForm({
+    warehouse_id: props.defaultWarehouseId ?? '',
     customer_id: null,
     customer_name: '',
     customer_email: '',
@@ -381,8 +385,8 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                         <p v-if="form.errors[`items.${index}.unit_price`]" :class="fieldError">{{ form.errors[`items.${index}.unit_price`] }}</p>
                                     </div>
                                     <div class="w-20">
-                                        <label class="mb-1 block text-[11px] text-text-tertiary">{{ t('orders.edit.qty') }}</label>
-                                        <input :value="item.quantity" @input="updateItemQuantity(index, parseInt($event.target.value))" type="number" min="1" :class="fieldInput" />
+                                        <label :for="`item_${index}_quantity`" class="mb-1 block text-[11px] text-text-tertiary">{{ t('orders.edit.qty') }}</label>
+                                        <input :id="`item_${index}_quantity`" :value="item.quantity" @input="updateItemQuantity(index, parseInt($event.target.value))" type="number" min="1" :class="fieldInput" />
                                     </div>
                                     <div class="w-28">
                                         <label class="mb-1 block text-[11px] text-text-tertiary">{{ t('orders.show.unitPrice') }}</label>
@@ -446,12 +450,22 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                 <p v-if="form.errors.status" :class="fieldError">{{ form.errors.status }}</p>
                             </div>
                             <div>
+                                <label for="order_warehouse" :class="fieldLabel">{{ t('locations.warehouse') }}</label>
+                                <select id="order_warehouse" v-model="form.warehouse_id" :class="fieldInput">
+                                    <option value="">{{ t('common.optional') }}</option>
+                                    <option v-for="warehouse in warehouses" :key="warehouse.id" :value="warehouse.id">{{ warehouse.name }}</option>
+                                </select>
+                                <p v-if="form.errors.warehouse_id" :class="fieldError">{{ form.errors.warehouse_id }}</p>
+                            </div>
+                            <div>
                                 <label for="notes" :class="fieldLabel">{{ t('common.notes') }}</label>
                                 <textarea id="notes" v-model="form.notes" rows="3" :class="fieldArea" :placeholder="t('orders.create.notesPlaceholder')"></textarea>
                                 <p v-if="form.errors.notes" :class="fieldError">{{ form.errors.notes }}</p>
                             </div>
                         </div>
                     </Card>
+
+                    <OrderConsolidationPlanner v-if="form.items.length" :items="form.items" v-model="form.warehouse_id" />
 
                     <Card :padded="false">
                         <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">{{ t('orders.create.orderSummary') }}</h3></div>

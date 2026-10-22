@@ -3,18 +3,20 @@
 use App\Http\Controllers\Api\ApprovalController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\BarcodeLookupController;
-use App\Http\Controllers\Api\OrderPaymentController;
 use App\Http\Controllers\Api\BatchTrackingController;
 use App\Http\Controllers\Api\CustomerController;
 use App\Http\Controllers\Api\OrderController;
+use App\Http\Controllers\Api\OrderPaymentController;
 use App\Http\Controllers\Api\PermissionSetController;
 use App\Http\Controllers\Api\ProductCategoryController;
+use App\Http\Controllers\Api\ProductComponentController;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\ProductLocationController;
 use App\Http\Controllers\Api\ProductOptionController;
 use App\Http\Controllers\Api\ProductVariantController;
 use App\Http\Controllers\Api\PurchaseOrderController;
 use App\Http\Controllers\Api\ReturnOrderController;
+use App\Http\Controllers\Api\SavedReportController;
 use App\Http\Controllers\Api\SerialTrackingController;
 use App\Http\Controllers\Api\ShipmentController;
 use App\Http\Controllers\Api\StockAdjustmentController;
@@ -22,7 +24,12 @@ use App\Http\Controllers\Api\StockAuditController as ApiStockAuditController;
 use App\Http\Controllers\Api\StockTransferController;
 use App\Http\Controllers\Api\SupplierController;
 use App\Http\Controllers\Api\UserController;
+use App\Http\Controllers\Api\WarehouseController;
 use App\Http\Controllers\Api\WebhookController;
+use App\Http\Controllers\Api\WorkOrderController;
+use App\Http\Controllers\Inventory\StockBalanceController;
+use App\Http\Controllers\Order\OrderFulfilmentPlanController;
+use App\Services\ApprovalService;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -142,6 +149,7 @@ Route::prefix('v1')->as('api.')->middleware('throttle:api')->group(function () {
             ->middleware('api.permission:manage_locations');
 
         // Orders
+        Route::post('orders/fulfilment-plan', OrderFulfilmentPlanController::class)->middleware('api.permission:view_products|create_orders');
         Route::apiResource('orders', OrderController::class)->only(['index', 'show'])
             ->middleware('api.permission:view_orders');
         Route::apiResource('orders', OrderController::class)->only(['store'])
@@ -179,7 +187,7 @@ Route::prefix('v1')->as('api.')->middleware('throttle:api')->group(function () {
         Route::post('shipments/{shipment}/void-label', [ShipmentController::class, 'voidLabel'])
             ->middleware('api.permission:create_shipments');
 
-        Route::get('stock-balances', [\App\Http\Controllers\Inventory\StockBalanceController::class, 'api'])->middleware('api.permission:view_products');
+        Route::get('stock-balances', [StockBalanceController::class, 'api'])->middleware('api.permission:view_products');
 
         // Stock Audits
         Route::apiResource('stock-audits', ApiStockAuditController::class)
@@ -229,10 +237,10 @@ Route::prefix('v1')->as('api.')->middleware('throttle:api')->group(function () {
         Route::get('approvals', [ApprovalController::class, 'index']);
         Route::get('approvals/mine', [ApprovalController::class, 'mine']);
         Route::post('approvals/{type}/{id}/approve', [ApprovalController::class, 'approve'])
-            ->whereIn('type', \App\Services\ApprovalService::TYPES)->whereNumber('id')
+            ->whereIn('type', ApprovalService::TYPES)->whereNumber('id')
             ->middleware('api.permission:approve_purchase_orders|approve_stock_adjustments|approve_stock_transfers|approve_orders');
         Route::post('approvals/{type}/{id}/reject', [ApprovalController::class, 'reject'])
-            ->whereIn('type', \App\Services\ApprovalService::TYPES)->whereNumber('id')
+            ->whereIn('type', ApprovalService::TYPES)->whereNumber('id')
             ->middleware('api.permission:approve_purchase_orders|approve_stock_adjustments|approve_stock_transfers|approve_orders');
 
         // Barcode Lookup
@@ -252,35 +260,35 @@ Route::prefix('v1')->as('api.')->middleware('throttle:api')->group(function () {
             ->middleware('api.permission:delete_roles');
 
         // Warehouses
-        Route::apiResource('warehouses', \App\Http\Controllers\Api\WarehouseController::class)->only(['index', 'show'])
+        Route::apiResource('warehouses', WarehouseController::class)->only(['index', 'show'])
             ->middleware('api.permission:view_warehouses');
-        Route::apiResource('warehouses', \App\Http\Controllers\Api\WarehouseController::class)->only(['store'])
+        Route::apiResource('warehouses', WarehouseController::class)->only(['store'])
             ->middleware('api.permission:create_warehouses');
-        Route::apiResource('warehouses', \App\Http\Controllers\Api\WarehouseController::class)->only(['update'])
+        Route::apiResource('warehouses', WarehouseController::class)->only(['update'])
             ->middleware('api.permission:edit_warehouses');
-        Route::apiResource('warehouses', \App\Http\Controllers\Api\WarehouseController::class)->only(['destroy'])
+        Route::apiResource('warehouses', WarehouseController::class)->only(['destroy'])
             ->middleware('api.permission:delete_warehouses');
 
         // Work Orders
-        Route::apiResource('work-orders', \App\Http\Controllers\Api\WorkOrderController::class)
+        Route::apiResource('work-orders', WorkOrderController::class)
             ->only(['index', 'store', 'show', 'destroy'])
             ->middleware('api.permission:manage_stock');
-        Route::post('work-orders/{workOrder}/start', [\App\Http\Controllers\Api\WorkOrderController::class, 'start'])
+        Route::post('work-orders/{workOrder}/start', [WorkOrderController::class, 'start'])
             ->middleware('api.permission:manage_stock');
-        Route::post('work-orders/{workOrder}/complete', [\App\Http\Controllers\Api\WorkOrderController::class, 'complete'])
+        Route::post('work-orders/{workOrder}/complete', [WorkOrderController::class, 'complete'])
             ->middleware('api.permission:manage_stock');
-        Route::post('work-orders/{workOrder}/cancel', [\App\Http\Controllers\Api\WorkOrderController::class, 'cancel'])
+        Route::post('work-orders/{workOrder}/cancel', [WorkOrderController::class, 'cancel'])
             ->middleware('api.permission:manage_stock');
 
         // Product Components (nested under products)
         Route::prefix('products/{product}')->group(function () {
-            Route::get('components', [\App\Http\Controllers\Api\ProductComponentController::class, 'index'])
+            Route::get('components', [ProductComponentController::class, 'index'])
                 ->middleware('api.permission:view_products');
-            Route::post('components', [\App\Http\Controllers\Api\ProductComponentController::class, 'store'])
+            Route::post('components', [ProductComponentController::class, 'store'])
                 ->middleware('api.permission:edit_products');
-            Route::put('components/{component}', [\App\Http\Controllers\Api\ProductComponentController::class, 'update'])
+            Route::put('components/{component}', [ProductComponentController::class, 'update'])
                 ->middleware('api.permission:edit_products');
-            Route::delete('components/{component}', [\App\Http\Controllers\Api\ProductComponentController::class, 'destroy'])
+            Route::delete('components/{component}', [ProductComponentController::class, 'destroy'])
                 ->middleware('api.permission:edit_products');
         });
 
@@ -356,9 +364,9 @@ Route::prefix('v1')->as('api.')->middleware('throttle:api')->group(function () {
         });
 
         // Saved Reports
-        Route::apiResource('reports', \App\Http\Controllers\Api\SavedReportController::class)
+        Route::apiResource('reports', SavedReportController::class)
             ->middleware('api.permission:view_reports');
-        Route::get('reports/{report}/export', [\App\Http\Controllers\Api\SavedReportController::class, 'export'])
+        Route::get('reports/{report}/export', [SavedReportController::class, 'export'])
             ->middleware('api.permission:view_reports');
     });
 });

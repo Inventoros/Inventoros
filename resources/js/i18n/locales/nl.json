@@ -1,4 +1,16 @@
 {
+  "orderPlanning": {
+    "title": "Leveringsplan",
+    "hint": "Het plan gebruikt toegankelijke magazijnen en reserveert geen voorraad.",
+    "check": "Magazijnen vergelijken",
+    "failed": "Het plan kon niet worden geladen. Probeer opnieuw.",
+    "empty": "Geen toegankelijke actieve magazijnen.",
+    "ready": "Alle artikelen beschikbaar",
+    "shortfall": "Er ontbreken {count} eenheden",
+    "use": "Magazijn gebruiken",
+    "line": "{available} van {requested} beschikbaar; {incoming} onderweg",
+    "transfer": "{count} × {sku} overboeken vanuit {warehouse}"
+  },
   "auditLabels": {
     "notCounted": "Niet geteld",
     "never": "Nooit"

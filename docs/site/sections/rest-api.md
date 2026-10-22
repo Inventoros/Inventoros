@@ -312,3 +312,7 @@ curl -X POST "${APP_URL}/graphql" \
 ## Versioning
 
 The current API is `v1`, served at `/api/v1`. Future incompatible changes will land at `/api/v2`; `v1` will continue to receive non-breaking additions.
+
+## Draft order fulfilment planning
+
+`POST /api/v1/orders/fulfilment-plan` accepts `items` (1 to 100 lines containing `product_id`, optional `product_variant_id`, and positive integer `quantity`). It requires `view_products` or `create_orders` and returns up to 10 accessible active warehouses ranked by stock coverage and priority. Each candidate includes available units, incoming transfers, shortages and suggested location transfers. Incoming stock is not counted as available. Duplicate SKU lines are combined; global and bin reservations constrain the result. This is a read-only snapshot and does not reserve stock. The order creation screen can select a ready warehouse or open a prefilled transfer in a new tab.

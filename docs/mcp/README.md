@@ -110,7 +110,7 @@ Call `who_am_i` first to confirm the token works.
 
 ## Tool catalog
 
-32 tools across 9 groups. Tools marked **destructive** change data; clients should confirm before calling them.
+33 tools across 9 groups. Tools marked **destructive** change data; clients should confirm before calling them.
 
 ### Identity
 
@@ -129,6 +129,7 @@ Call `who_am_i` first to confirm the token works.
 | `list_categories` | `manage_categories` or `view_products` | Category list. |
 | `list_locations` | `manage_locations` or `view_products` | Storage locations, optionally filtered by warehouse. |
 | `list_warehouses` | `view_warehouses` or `view_products` | Warehouse list. |
+| `plan_order_fulfilment` | `view_products` or `create_orders` | Compare accessible warehouses for a draft order and suggest transfers without changing stock. |
 | `list_stock_balances` | `view_products` | Stock by SKU, variant, warehouse and location, with holds, availability, incoming quantities, sorting and pagination. |
 
 ### Stock

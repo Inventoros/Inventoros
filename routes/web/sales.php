@@ -7,6 +7,7 @@ use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\Inventory\SupplierController;
 use App\Http\Controllers\Order\InvoiceController;
 use App\Http\Controllers\Order\OrderController;
+use App\Http\Controllers\Order\OrderFulfilmentPlanController;
 use App\Http\Controllers\Order\OrderPaymentController;
 use App\Http\Controllers\Order\ReturnOrderController;
 use App\Http\Controllers\Order\ShipmentController;
@@ -64,6 +65,8 @@ Route::post('/purchase-orders/{purchaseOrder}/cancel', [PurchaseOrderController:
 // Purchase Order Invoice PDF
 Route::get('/purchase-orders/{purchaseOrder}/invoice/download', [PurchaseOrderInvoiceController::class, 'download'])->name('purchase-orders.invoice.download')->middleware('permission:view_purchase_orders');
 Route::get('/purchase-orders/{purchaseOrder}/invoice/preview', [PurchaseOrderInvoiceController::class, 'preview'])->name('purchase-orders.invoice.preview')->middleware('permission:view_purchase_orders');
+
+Route::post('/orders/fulfilment-plan', OrderFulfilmentPlanController::class)->name('orders.fulfilment-plan')->middleware('permission:create_orders');
 
 // Order Management - Permission based
 Route::get('/orders', [OrderController::class, 'index'])->name('orders.index')->middleware('permission:view_orders');
