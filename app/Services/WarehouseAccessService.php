@@ -6,6 +6,7 @@ namespace App\Services;
 
 use App\Enums\Permission;
 use App\Models\Inventory\ProductLocation;
+use App\Models\Inventory\StockAudit;
 use App\Models\Purchasing\PurchaseOrder;
 use App\Models\Purchasing\PurchaseOrderItem;
 use App\Models\Setting;
@@ -309,5 +310,23 @@ final class WarehouseAccessService
             Warehouse::query()->where('warehouses.organization_id', $user->organization_id),
             $user,
         );
+    }
+
+    public function authorizeStockAudit(User $user, StockAudit $audit): void
+    {
+        if ($audit->warehouse_id !== null) {
+            $this->authorizeWarehouse($user, (int) $audit->warehouse_id);
+        } else {
+            $this->authorizeLocation($user, $audit->warehouse_location_id);
+        }
+    }
+
+    public function scopeStockAudits($query, User $user): void
+    {
+        $ids = $this->accessibleWarehouseIds($user);
+        if ($ids !== null) {
+            $query->where(fn ($q) => $q->whereIn('warehouse_id', $ids)
+                ->orWhereHas('warehouseLocation', fn ($locations) => $locations->whereIn('warehouse_id', $ids)));
+        }
     }
 }

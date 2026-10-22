@@ -910,7 +910,7 @@ paths:
     post:
       tags: [Stock Audits]
       summary: Create a draft stock audit
-      description: "Requires `create_stock_audits`. Items are seeded from product_ids, else the products at warehouse_location_id, else every active product."
+      description: "Requires `create_stock_audits`. Items count individual variant SKUs when present. product_ids limits products; warehouse_id counts each bin in that warehouse; warehouse_location_id limits to one location; otherwise quantities are organization-wide."
       requestBody:
         required: true
         content: { application/json: { schema: { $ref: '#/components/schemas/StockAuditInput' } } }
@@ -2738,7 +2738,8 @@ components:
         name: { type: string, maxLength: 255 }
         description: { type: string, maxLength: 1000 }
         audit_type: { type: string, enum: [full, cycle, spot] }
-        warehouse_location_id: { type: integer, description: "Audit the products at this location" }
+        warehouse_id: { type: integer, description: "Count each location bin in this warehouse; warehouse access is required" }
+        warehouse_location_id: { type: integer, description: "Limit the audit to this location, within warehouse_id when provided" }
         notes: { type: string, maxLength: 2000 }
         product_ids:
           type: array
