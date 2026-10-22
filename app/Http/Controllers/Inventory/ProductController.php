@@ -17,6 +17,7 @@ use App\Models\Inventory\SupplierPriceHistory;
 use App\Services\ProductLocationStockService;
 use App\Services\ProductService;
 use App\Services\StockReservationService;
+use App\Services\WarehouseStockLevelService;
 use App\Support\PluginQueryGuard;
 use App\Support\ProductSearch;
 use Illuminate\Http\RedirectResponse;
