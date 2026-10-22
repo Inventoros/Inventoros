@@ -274,7 +274,15 @@ class WarehouseController extends Controller
 
         $this->warehouseAccess->authorizeWarehouse($request->user(), $warehouse->id);
 
-        app(WarehouseDeletionService::class)->delete($warehouse, $request->user());
+        try {
+            app(WarehouseDeletionService::class)->delete($warehouse, $request->user());
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return redirect()->back()->withErrors($e->errors())->with('error', $e->errors()['warehouse'][0]);
+        }
+
+        if ((int) $request->session()->get('active_warehouse_id') === (int) $warehouse->id) {
+            $request->session()->forget('active_warehouse_id');
+        }
 
         return redirect()->route('warehouses.index')
             ->with('success', 'Warehouse deleted successfully.');
