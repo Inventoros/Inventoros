@@ -6,6 +6,7 @@ namespace App\Models\Inventory;
 
 use App\Models\Auth\Organization;
 use App\Models\User;
+use App\Models\Warehouse;
 use App\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -22,6 +23,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property string|null $description
  * @property string $status
  * @property string $audit_type
+ * @property int|null $warehouse_id
  * @property int|null $warehouse_location_id
  * @property \Illuminate\Support\Carbon|null $started_at
  * @property \Illuminate\Support\Carbon|null $completed_at
@@ -37,7 +39,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  */
 class StockAudit extends Model
 {
-    use SoftDeletes, LogsActivity;
+    use LogsActivity, SoftDeletes;
 
     protected $fillable = [
         'organization_id',
@@ -47,6 +49,7 @@ class StockAudit extends Model
         'status',
         'audit_type',
         'cycle_count_schedule_id',
+        'warehouse_id',
         'warehouse_location_id',
         'started_at',
         'completed_at',
@@ -58,6 +61,8 @@ class StockAudit extends Model
     protected function casts(): array
     {
         return [
+            'warehouse_id' => 'integer',
+            'warehouse_location_id' => 'integer',
             'started_at' => 'datetime',
             'completed_at' => 'datetime',
         ];
@@ -66,17 +71,22 @@ class StockAudit extends Model
     /**
      * Get the organization that owns this audit.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\Auth\Organization, $this>
+     * @return BelongsTo<Organization, $this>
      */
     public function organization(): BelongsTo
     {
         return $this->belongsTo(Organization::class);
     }
 
+    public function warehouse(): BelongsTo
+    {
+        return $this->belongsTo(Warehouse::class);
+    }
+
     /**
      * Get the warehouse location for this audit.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\Inventory\ProductLocation, $this>
+     * @return BelongsTo<ProductLocation, $this>
      */
     public function warehouseLocation(): BelongsTo
     {
@@ -86,7 +96,7 @@ class StockAudit extends Model
     /**
      * Get the user who created this audit.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\User, $this>
+     * @return BelongsTo<User, $this>
      */
     public function creator(): BelongsTo
     {
@@ -116,7 +126,7 @@ class StockAudit extends Model
     /**
      * Get the audit items.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\Inventory\StockAuditItem, $this>
+     * @return HasMany<StockAuditItem, $this>
      */
     public function items(): HasMany
     {
@@ -126,9 +136,9 @@ class StockAudit extends Model
     /**
      * Scope to filter by organization.
      *
-     * @param \Illuminate\Database\Eloquent\Builder<static> $query
-     * @param int $organizationId
-     * @return \Illuminate\Database\Eloquent\Builder<static>
+     * @param  Builder<static>  $query
+     * @param  int  $organizationId
+     * @return Builder<static>
      */
     public function scopeForOrganization($query, $organizationId)
     {
@@ -138,9 +148,9 @@ class StockAudit extends Model
     /**
      * Scope to filter by status.
      *
-     * @param \Illuminate\Database\Eloquent\Builder<static> $query
-     * @param string $status
-     * @return \Illuminate\Database\Eloquent\Builder<static>
+     * @param  Builder<static>  $query
+     * @param  string  $status
+     * @return Builder<static>
      */
     public function scopeByStatus($query, $status)
     {
@@ -150,9 +160,9 @@ class StockAudit extends Model
     /**
      * Scope to filter by audit type.
      *
-     * @param \Illuminate\Database\Eloquent\Builder<static> $query
-     * @param string $type
-     * @return \Illuminate\Database\Eloquent\Builder<static>
+     * @param  Builder<static>  $query
+     * @param  string  $type
+     * @return Builder<static>
      */
     public function scopeByType($query, $type)
     {
@@ -161,9 +171,6 @@ class StockAudit extends Model
 
     /**
      * Generate a unique audit number scoped by organization.
-     *
-     * @param int $organizationId
-     * @return string
      */
     public static function generateAuditNumber(int $organizationId): string
     {
@@ -180,6 +187,6 @@ class StockAudit extends Model
             $newNumber = '0001';
         }
 
-        return $prefix . $newNumber;
+        return $prefix.$newNumber;
     }
 }

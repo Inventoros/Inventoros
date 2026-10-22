@@ -87,6 +87,8 @@ final class StockAuditSnapshotTest extends TestCase
             'option_values' => ['Size' => 'S'],
             'stock' => 9,
         ]);
+        $variant = $products['with variants']->variants()->firstOrFail();
+        DB::transaction(fn () => app(ProductLocationStockService::class)->move($variant, $this->back->id, $this->front->id, 2));
 
         return $products;
     }
@@ -118,10 +120,11 @@ final class StockAuditSnapshotTest extends TestCase
     private function expected(Product $product, ?ProductLocation $location): int
     {
         $product = $product->fresh();
+        $target = $product->has_variants ? $product->variants()->first() : $product;
 
         return $location
-            ? app(ProductLocationStockService::class)->onHandAt($product, $location->id)
-            : (int) $product->stock;
+            ? app(ProductLocationStockService::class)->onHandAt($target, $location->id)
+            : (int) $target->stock;
     }
 
     public function test_a_location_scoped_audit_snapshots_the_audited_bin(): void
@@ -144,7 +147,7 @@ final class StockAuditSnapshotTest extends TestCase
             $line = $lines[$product->id];
             $this->assertSame($this->expected($product, $this->front), $line->system_quantity, $label);
             $this->assertSame($this->front->id, $line->location_id, $label);
-            $this->assertNull($line->product_variant_id, $label);
+            $this->assertSame($product->has_variants ? $product->variants()->first()->id : null, $line->product_variant_id, $label);
             $this->assertSame('pending', $line->status, $label);
             $this->assertNull($line->counted_quantity, $label);
             $this->assertSame(0, $line->discrepancy, $label);
@@ -173,7 +176,7 @@ final class StockAuditSnapshotTest extends TestCase
         $this->assertArrayNotHasKey($other->id, $lines);
 
         foreach ($products as $label => $product) {
-            $this->assertSame((int) $product->stock, $lines[$product->id]->system_quantity, $label);
+            $this->assertSame($this->expected($product, null), $lines[$product->id]->system_quantity, $label);
             $this->assertSame($product->location_id, $lines[$product->id]->location_id, $label);
         }
     }
