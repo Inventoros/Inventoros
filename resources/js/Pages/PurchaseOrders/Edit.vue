@@ -1,4 +1,7 @@
 <script setup>
+import CurrencySelect from '@/Components/CurrencySelect.vue';
+import { useCurrency } from '@/composables/useCurrency';
+
 import AppLayout from '@/Layouts/AppLayout.vue';
 import PageHeader from '@/Components/ui/PageHeader.vue';
 import Card from '@/Components/ui/Card.vue';
@@ -13,6 +16,7 @@ import { toIsoDate } from '@/lib/dates';
 import { formatMoney } from '@/lib/money';
 import { ArrowLeft, Plus, Trash2 } from 'lucide-vue-next';
 
+const { organizationCurrency } = useCurrency();
 const { t } = useI18n();
 
 const props = defineProps({
@@ -26,7 +30,7 @@ const form = useForm({
     supplier_id: props.purchaseOrder.supplier_id,
     order_date: toIsoDate(props.purchaseOrder.order_date),
     expected_date: toIsoDate(props.purchaseOrder.expected_date),
-    currency: props.purchaseOrder.currency || 'USD',
+    currency: props.purchaseOrder.currency || organizationCurrency.value,
     shipping: props.purchaseOrder.shipping || 0,
     tax: props.purchaseOrder.tax || 0,
     notes: props.purchaseOrder.notes || '',
@@ -220,13 +224,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
 
                         <div>
                             <label for="currency" :class="fieldLabel">{{ t('common.currency') }}</label>
-                            <select id="currency" v-model="form.currency" :class="fieldInput">
-                                <option value="USD">{{ t('purchaseOrders.currencies.usd') }}</option>
-                                <option value="EUR">{{ t('purchaseOrders.currencies.eur') }}</option>
-                                <option value="GBP">{{ t('purchaseOrders.currencies.gbp') }}</option>
-                                <option value="CAD">{{ t('purchaseOrders.currencies.cad') }}</option>
-                                <option value="AUD">{{ t('purchaseOrders.currencies.aud') }}</option>
-                            </select>
+                            <CurrencySelect id="currency" v-model="form.currency" :class="fieldInput" />
                             <p v-if="form.errors.currency" :class="fieldError">{{ form.errors.currency }}</p>
                         </div>
 

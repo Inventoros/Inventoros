@@ -1542,6 +1542,9 @@
   "settings": {
     "title": "الإعدادات",
     "organization": {
+      "logoTitle": "شعار الشركة",
+      "logoHint": "PNG أو JPEG أو WebP. بحد أقصى 2 ميغابايت و2048 × 2048 بكسل.",
+      "logoRemove": "إزالة الشعار",
       "title": "إعدادات المؤسسة",
       "generalInfo": "المعلومات العامة",
       "regionalSettings": "الإعدادات الإقليمية",
@@ -1784,6 +1787,10 @@
         "customRolesSelected": "الأدوار المخصصة المحددة: {count} | الأدوار المخصصة المحددة: {count}"
       },
       "show": {
+        "effectivePermissions": "الصلاحيات الفعلية",
+        "effectivePermissionsHint": "صلاحيات الأدوار في هذه المؤسسة. تظل قيود الوصول إلى المستودعات والسجلات سارية.",
+        "allowed": "ممنوحة",
+        "notGranted": "غير ممنوحة",
         "title": "تفاصيل المستخدم",
         "editUser": "تعديل المستخدم",
         "backToUsers": "العودة إلى المستخدمين",

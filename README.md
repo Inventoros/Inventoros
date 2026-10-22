@@ -280,6 +280,7 @@ The **GraphQL API** is available at `/graphql` with Sanctum bearer token authent
 
 - [Upgrade Guide](UPGRADE.md) -- Upgrading from v1.0.x to v2.0.0
 - [Changelog](CHANGELOG.md) -- What changed in each release
+- [Workspace Settings](docs/features/workspace-settings.md) -- Sign out, inspect permissions, set currency defaults and upload a company logo
 - [cPanel Deployment](CPANEL.md) -- Deploy on shared hosting
 - [Plugin Development](docs/PLUGIN_DEVELOPMENT.md) -- Creating plugins with hooks and filters
 - [Email Notifications](docs/features/email-notifications.md) -- Configuration and usage

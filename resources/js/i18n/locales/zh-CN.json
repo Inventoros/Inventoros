@@ -1542,6 +1542,9 @@
   "settings": {
     "title": "设置",
     "organization": {
+      "logoTitle": "公司标志",
+      "logoHint": "PNG、JPEG 或 WebP。最大 2 MB，2048 × 2048 像素。",
+      "logoRemove": "删除标志",
       "title": "组织设置",
       "generalInfo": "基本信息",
       "regionalSettings": "区域设置",
@@ -1784,6 +1787,10 @@
         "customRolesSelected": "已选择 {count} 个自定义角色 | 已选择 {count} 个自定义角色"
       },
       "show": {
+        "effectivePermissions": "有效权限",
+        "effectivePermissionsHint": "此组织中的角色权限。仓库访问和记录限制仍然适用。",
+        "allowed": "已授予",
+        "notGranted": "未授予",
         "title": "用户详情",
         "editUser": "编辑用户",
         "backToUsers": "返回用户",

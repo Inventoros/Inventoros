@@ -1443,6 +1443,9 @@
   "settings": {
     "title": "Settings",
     "organization": {
+      "logoTitle": "Company logo",
+      "logoHint": "PNG, JPEG or WebP. Maximum 2 MB and 2048 × 2048 pixels.",
+      "logoRemove": "Remove logo",
       "title": "Organization Settings",
       "generalInfo": "General Information",
       "regionalSettings": "Regional Settings",
@@ -1685,6 +1688,10 @@
         "customRolesSelected": "{count} custom role selected | {count} custom roles selected"
       },
       "show": {
+        "effectivePermissions": "Effective permissions",
+        "effectivePermissionsHint": "Role permissions in this organization. Warehouse access and record restrictions still apply.",
+        "allowed": "Granted",
+        "notGranted": "Not granted",
         "title": "User Details",
         "editUser": "Edit User",
         "backToUsers": "Back to Users",
