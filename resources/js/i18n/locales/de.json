@@ -1,4 +1,18 @@
 {
+  "stockReset": {
+    "title": "Bestand auf null setzen",
+    "hint": "Setzt den Bestand der gesamten Organisation zurück, einschließlich inaktiver und gelöschter Produkte. Produkte, Aufträge und Historie bleiben erhalten. Verfügbare Seriennummern werden ausgebucht und Chargenbestände auf null gesetzt.",
+    "products": "Produkte mit Bestand",
+    "variants": "Varianten mit Bestand",
+    "locations": "Lagerplatzbestände",
+    "serials": "Verfügbare Seriennummern",
+    "batches": "Chargenbestände",
+    "blocked": "Vor dem Zurücksetzen Umlagerungen, Inventuren und Produktion abschließen oder abbrechen und Reservierungen freigeben.",
+    "reason": "Grund",
+    "password": "Aktuelles Passwort",
+    "confirm": "Zur Bestätigung {phrase} eingeben",
+    "writtenOff": "Ausgebucht"
+  },
   "inventoryCleanup": {
     "perPage": "Produkte pro Seite",
     "selectionHint": "Die Auswahl bleibt beim Seitenwechsel erhalten."

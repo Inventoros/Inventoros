@@ -1,4 +1,18 @@
 {
+  "stockReset": {
+    "title": "将库存重置为零",
+    "hint": "重置整个组织的库存，包括停用和已删除的商品。保留商品、订单及历史记录。可用序列号将核销，批次余额将归零。",
+    "products": "有库存的商品",
+    "variants": "有库存的变体",
+    "locations": "库位余额",
+    "serials": "可用序列号",
+    "batches": "批次余额",
+    "blocked": "重置前请完成或取消调拨、盘点和生产，并释放预留库存。",
+    "reason": "原因",
+    "password": "当前密码",
+    "confirm": "输入 {phrase} 以确认",
+    "writtenOff": "已核销"
+  },
   "inventoryCleanup": {
     "perPage": "每页商品数",
     "selectionHint": "切换页面时保留所选商品。"

@@ -25,6 +25,7 @@ const { t } = useI18n();
 
 const props = defineProps({
     products: Object,
+    canResetStock: { type: Boolean, default: false },
     filters: Object,
     categories: Array,
     locations: Array,
@@ -229,6 +230,7 @@ const thClass =
 
         <PageHeader :title="t('products.title')" :description="t('products.subtitle')">
             <template #actions>
+                <Button v-if="canResetStock" variant="secondary" size="sm" as="Link" :href="route('products.stock-reset.preview')">{{ t('stockReset.title') }}</Button>
                 <Button v-if="canVisit('products.create')" variant="default" size="sm" as="Link" :href="route('products.create')">
                     <Plus :size="14" />
                     {{ t('products.addProduct') }}

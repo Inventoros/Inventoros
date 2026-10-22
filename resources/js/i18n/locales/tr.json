@@ -1,4 +1,18 @@
 {
+  "stockReset": {
+    "title": "Stokları sıfırla",
+    "hint": "Etkin olmayan ve silinen ürünler dahil tüm kuruluşun stoklarını sıfırlar. Ürünler, siparişler ve geçmiş korunur. Kullanılabilir seri numaraları kayıttan düşülür ve parti bakiyeleri sıfırlanır.",
+    "products": "Stoklu ürünler",
+    "variants": "Stoklu varyantlar",
+    "locations": "Konum bakiyeleri",
+    "serials": "Kullanılabilir seri numaraları",
+    "batches": "Parti bakiyeleri",
+    "blocked": "Stokları sıfırlamadan önce aktarımları, sayımları ve üretimi tamamlayın veya iptal edin ve ayırmaları kaldırın.",
+    "reason": "Neden",
+    "password": "Mevcut parola",
+    "confirm": "Onaylamak için {phrase} yazın",
+    "writtenOff": "Kayıttan düşüldü"
+  },
   "inventoryCleanup": {
     "perPage": "Sayfa başına ürün",
     "selectionHint": "Sayfalar arasında geçiş yaparken seçimler korunur."

@@ -1,4 +1,18 @@
 {
+  "stockReset": {
+    "title": "Zerar estoque",
+    "hint": "Zera o estoque de toda a organização, incluindo produtos inativos e excluídos. Produtos, pedidos e histórico são mantidos. Seriais disponíveis recebem baixa e os saldos dos lotes ficam em zero.",
+    "products": "Produtos com estoque",
+    "variants": "Variantes com estoque",
+    "locations": "Saldos por localização",
+    "serials": "Seriais disponíveis",
+    "batches": "Saldos dos lotes",
+    "blocked": "Conclua ou cancele transferências, contagens e produção e libere as reservas antes de zerar o estoque.",
+    "reason": "Motivo",
+    "password": "Senha atual",
+    "confirm": "Digite {phrase} para confirmar",
+    "writtenOff": "Baixado"
+  },
   "inventoryCleanup": {
     "perPage": "Produtos por página",
     "selectionHint": "A seleção é mantida ao mudar de página."

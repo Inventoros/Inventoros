@@ -1,4 +1,18 @@
 {
+  "stockReset": {
+    "title": "Azzera scorte",
+    "hint": "Azzera le scorte dell’intera organizzazione, inclusi i prodotti inattivi ed eliminati. Prodotti, ordini e cronologia vengono conservati. I seriali disponibili vengono scaricati e i lotti azzerati.",
+    "products": "Prodotti con scorte",
+    "variants": "Varianti con scorte",
+    "locations": "Saldi per ubicazione",
+    "serials": "Seriali disponibili",
+    "batches": "Saldi dei lotti",
+    "blocked": "Completa o annulla trasferimenti, inventari e produzione e rilascia le prenotazioni prima di azzerare le scorte.",
+    "reason": "Motivo",
+    "password": "Password attuale",
+    "confirm": "Digita {phrase} per confermare",
+    "writtenOff": "Scaricato"
+  },
   "inventoryCleanup": {
     "perPage": "Prodotti per pagina",
     "selectionHint": "La selezione viene mantenuta quando cambi pagina."
