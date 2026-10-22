@@ -19,6 +19,7 @@ use App\Services\ProductLocationStockService;
 use App\Services\ProductService;
 use App\Services\StockReservationService;
 use App\Services\WarehouseAccessService;
+use App\Services\WarehouseStockLevelService;
 use App\Support\PluginQueryGuard;
 use App\Support\ProductSearch;
 use Illuminate\Http\RedirectResponse;
