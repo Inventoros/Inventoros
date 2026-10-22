@@ -482,7 +482,8 @@ class PurchaseOrderEmailTest extends TestCase
     public function test_a_resend_waiting_in_the_queue_reads_as_queued(): void
     {
         $po = $this->draftPo(['status' => PurchaseOrder::STATUS_SENT]);
-        $po->forceFill(['sent_at' => now()->subDay(), 'queued_at' => now()->subDay()])->save();
+        $deliveredAt = now()->subDay();
+        $po->forceFill(['sent_at' => $deliveredAt, 'queued_at' => $deliveredAt])->save();
         $this->assertFalse($po->fresh()->emailIsQueued());
 
         $po->forceFill(['queued_at' => now()])->save();

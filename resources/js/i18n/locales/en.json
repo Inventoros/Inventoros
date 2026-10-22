@@ -1,4 +1,18 @@
 {
+  "stockReset": {
+    "title": "Reset stock to zero",
+    "hint": "This resets stock across the entire organization, including inactive and deleted products. Products, orders and history are kept. Available serials are written off and batch balances become zero.",
+    "products": "Products with stock",
+    "variants": "Variants with stock",
+    "locations": "Location balances",
+    "serials": "Available serials",
+    "batches": "Batch balances",
+    "blocked": "Finish or cancel transfers, stock counts and production, and release reservations before resetting stock.",
+    "reason": "Reason",
+    "password": "Current password",
+    "confirm": "Type {phrase} to confirm",
+    "writtenOff": "Written off"
+  },
   "orderPlanning": {
     "title": "Fulfilment plan",
     "hint": "Plans use accessible warehouses and do not reserve stock.",

@@ -14,9 +14,11 @@ use App\Models\Inventory\ProductCategory;
 use App\Models\Inventory\ProductLocation;
 use App\Models\Inventory\Supplier;
 use App\Models\Inventory\SupplierPriceHistory;
+use App\Models\Inventory\VariantLocationStock;
 use App\Services\ProductLocationStockService;
 use App\Services\ProductService;
 use App\Services\StockReservationService;
+use App\Services\WarehouseAccessService;
 use App\Services\WarehouseStockLevelService;
 use App\Support\PluginQueryGuard;
 use App\Support\ProductSearch;
@@ -112,6 +114,7 @@ class ProductController extends Controller
             ->get(['id', 'name']);
 
         $data = [
+            'canResetStock' => $request->user()->isAdmin() && $request->user()->hasPermission('manage_stock'),
             'products' => $products,
             'filters' => $request->only(['search', 'category', 'location', 'low_stock', 'per_page']),
             'categories' => $categories,
@@ -275,10 +278,10 @@ class ProductController extends Controller
             // Per-location on-hand breakdown (location name + quantity), richest
             // bin first. Empty for products that hold no binned stock.
             // Restricted to the bins in warehouses the viewer can access.
-            'variantLocationBreakdown' => \App\Models\Inventory\VariantLocationStock::query()
+            'variantLocationBreakdown' => VariantLocationStock::query()
                 ->where('organization_id', $product->organization_id)
                 ->whereHas('variant', fn ($q) => $q->where('product_id', $product->id)->whereNull('deleted_at'))
-                ->tap(fn ($q) => app(\App\Services\WarehouseAccessService::class)->scopeByLocation($q, auth()->user(), 'location_id'))
+                ->tap(fn ($q) => app(WarehouseAccessService::class)->scopeByLocation($q, auth()->user(), 'location_id'))
                 ->with(['variant:id,sku,title', 'location.warehouse:id,name'])->orderBy('product_variant_id')->get(),
             'locationBreakdown' => app(ProductLocationStockService::class)->breakdown($product, auth()->user()),
             // On-hand and thresholds per warehouse the viewer can access.

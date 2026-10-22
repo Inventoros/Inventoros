@@ -32,6 +32,9 @@ class ProductSerial extends Model
 
     public const STATUS_AVAILABLE = 'available';
 
+    /** Removed by an audited administrator stock reset; retained for history. */
+    public const STATUS_WRITTEN_OFF = 'written_off';
+
     public const STATUS_SOLD = 'sold';
 
     public const STATUS_RESERVED = 'reserved';
