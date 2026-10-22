@@ -1,4 +1,6 @@
 <script setup>
+import { useCurrency } from '@/composables/useCurrency';
+
 import AppLayout from '@/Layouts/AppLayout.vue';
 import PluginSlot from '@/Components/PluginSlot.vue';
 import PageHeader from '@/Components/ui/PageHeader.vue';
@@ -14,6 +16,7 @@ import { usePermissions } from '@/composables/usePermissions';
 
 const { canVisit } = usePermissions();
 
+const { organizationCurrency } = useCurrency();
 const { t } = useI18n();
 
 const props = defineProps({
@@ -188,7 +191,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium text-text-secondary';
                             </div>
                             <div>
                                 <dt class="text-xs text-text-tertiary">{{ t('common.currency') }}</dt>
-                                <dd class="mt-1 text-sm text-text-primary">{{ supplier.currency || 'USD' }}</dd>
+                                <dd class="mt-1 text-sm text-text-primary">{{ supplier.currency || organizationCurrency }}</dd>
                             </div>
                         </dl>
                     </div>

@@ -1,4 +1,7 @@
 <script setup>
+import CurrencySelect from '@/Components/CurrencySelect.vue';
+import { useCurrency } from '@/composables/useCurrency';
+
 import AppLayout from '@/Layouts/AppLayout.vue';
 import PageHeader from '@/Components/ui/PageHeader.vue';
 import Card from '@/Components/ui/Card.vue';
@@ -8,6 +11,7 @@ import { ref, watch, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { ArrowLeft, Eye } from 'lucide-vue-next';
 
+const { organizationCurrency } = useCurrency();
 const { t } = useI18n();
 
 const props = defineProps({
@@ -34,7 +38,7 @@ const form = useForm({
     tax_id: props.customer.tax_id || '',
     payment_terms: props.customer.payment_terms || '',
     credit_limit: props.customer.credit_limit || '',
-    currency: props.customer.currency || 'USD',
+    currency: props.customer.currency || organizationCurrency.value,
     notes: props.customer.notes || '',
     is_active: props.customer.is_active,
 });
@@ -220,13 +224,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                         </div>
                         <div>
                             <label for="currency" :class="fieldLabel">{{ t('common.currency') }}</label>
-                            <select id="currency" v-model="form.currency" :class="fieldInput">
-                                <option value="USD">{{ t('purchaseOrders.currencies.usd') }}</option>
-                                <option value="EUR">{{ t('purchaseOrders.currencies.eur') }}</option>
-                                <option value="GBP">{{ t('purchaseOrders.currencies.gbp') }}</option>
-                                <option value="CAD">{{ t('purchaseOrders.currencies.cad') }}</option>
-                                <option value="AUD">{{ t('purchaseOrders.currencies.aud') }}</option>
-                            </select>
+                            <CurrencySelect id="currency" v-model="form.currency" :class="fieldInput" />
                         </div>
                         <div class="md:col-span-2">
                             <label for="notes" :class="fieldLabel">{{ t('common.notes') }}</label>
