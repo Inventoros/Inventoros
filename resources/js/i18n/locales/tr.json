@@ -1,4 +1,8 @@
 {
+  "inventoryCleanup": {
+    "perPage": "Sayfa başına ürün",
+    "selectionHint": "Sayfalar arasında geçiş yaparken seçimler korunur."
+  },
   "auditLabels": {
     "notCounted": "Sayılmadı",
     "never": "Hiç"

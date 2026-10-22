@@ -4,15 +4,16 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Enums\Permission;
 use App\Http\Requests\Warehouse\StoreWarehouseRequest;
 use App\Http\Requests\Warehouse\UpdateWarehouseRequest;
-use App\Enums\Permission;
 use App\Models\Inventory\ProductLocationStock;
 use App\Models\User;
 use App\Models\Warehouse;
 use App\Rules\OrganizationMember;
 use App\Services\Organizations\ActiveOrganization;
 use App\Services\WarehouseAccessService;
+use App\Services\WarehouseDeletionService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -273,18 +274,7 @@ class WarehouseController extends Controller
 
         $this->warehouseAccess->authorizeWarehouse($request->user(), $warehouse->id);
 
-        if ($warehouse->is_default) {
-            return redirect()->back()
-                ->withErrors(['warehouse' => 'Cannot delete the default warehouse. Set another warehouse as default first.']);
-        }
-
-        // Check if warehouse has locations with products
-        if ($warehouse->locations()->whereHas('products')->exists()) {
-            return redirect()->back()
-                ->withErrors(['warehouse' => 'Cannot delete warehouse with locations that have associated products.']);
-        }
-
-        $warehouse->delete();
+        app(WarehouseDeletionService::class)->delete($warehouse, $request->user());
 
         return redirect()->route('warehouses.index')
             ->with('success', 'Warehouse deleted successfully.');
