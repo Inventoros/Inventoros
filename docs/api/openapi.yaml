@@ -768,6 +768,46 @@ paths:
         '200': { description: Deleted }
         '422': { description: Cannot delete (default or has products) }
 
+  /orders/fulfilment-plan:
+    post:
+      tags: [Orders]
+      summary: Compare accessible warehouses for a draft order
+      description: Read-only. Requires view_products or create_orders. Returns up to ten candidates; incoming stock is not currently available and no units are reserved.
+      operationId: planOrderFulfilment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [items]
+              properties:
+                items:
+                  type: array
+                  minItems: 1
+                  maxItems: 100
+                  items:
+                    type: object
+                    required: [product_id, quantity]
+                    properties:
+                      product_id: {type: integer, minimum: 1}
+                      product_variant_id: {type: integer, nullable: true, minimum: 1}
+                      quantity: {type: integer, minimum: 1, maximum: 2147483647}
+      responses:
+        '200':
+          description: Ranked warehouse candidates with line availability, shortages, incoming stock and suggested bin transfers
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  as_of: {type: string, format: date-time}
+                  recommended_warehouse_id: {type: integer, nullable: true}
+                  total_candidates: {type: integer}
+                  candidates: {type: array, items: {type: object}}
+        '403': {description: Permission denied}
+        '422': {description: Invalid or foreign product/variant selection}
+
   /orders:
     get:
       tags: [Orders]
