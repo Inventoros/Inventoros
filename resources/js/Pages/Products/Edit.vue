@@ -9,7 +9,7 @@ import ProductVariantManager from '@/Components/ProductVariantManager.vue';
 import ProductSupplierManager from '@/Components/ProductSupplierManager.vue';
 import QuickAddModal from '@/Components/QuickAddModal.vue';
 import SKUGeneratorModal from '@/Components/SKUGeneratorModal.vue';
-import { Head, Link, useForm, router } from '@inertiajs/vue3';
+import { Head, Link, useForm, router, usePage } from '@inertiajs/vue3';
 import { ref, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { formatPercent } from '@/lib/reportFormat';
@@ -145,7 +145,15 @@ const getCurrencySymbol = (code) => {
 const showCategoryModal = ref(false);
 const showLocationModal = ref(false);
 const categoryForm = ref({ name: '', description: '' });
-const locationForm = ref({ name: '', code: '', description: '' });
+const page = usePage();
+const locationWarehouses = computed(() => page.props.warehouses || []);
+const newLocationForm = () => ({
+    name: '', code: '', description: '',
+    warehouse_id: page.props.activeWarehouseId
+        || locationWarehouses.value.find(warehouse => warehouse.is_default)?.id || '',
+});
+const locationForm = ref(newLocationForm());
+const locationErrors = ref({});
 const categoryLoading = ref(false);
 const locationLoading = ref(false);
 
@@ -178,6 +186,7 @@ const createCategory = async () => {
 };
 
 const createLocation = async () => {
+    locationErrors.value = {};
     locationLoading.value = true;
     try {
         const response = await axios.post(route('locations.store'), locationForm.value, {
@@ -188,11 +197,14 @@ const createLocation = async () => {
             router.reload({ only: ['locations'] });
             form.location_id = response.data.location.id;
             showLocationModal.value = false;
-            locationForm.value = { name: '', code: '', description: '' };
+            locationForm.value = newLocationForm();
         }
     } catch (error) {
-        console.error('Error creating location:', error);
-        alert(t('products.form.createLocationFailed'));
+        if (error.response?.status === 422) {
+            locationErrors.value = error.response.data.errors || {};
+        } else {
+            alert(t('products.form.createLocationFailed'));
+        }
     } finally {
         locationLoading.value = false;
     }
@@ -411,7 +423,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                         <div>
                             <div class="flex items-center justify-between">
                                 <label for="category" :class="fieldLabel">
-                                    {{ t('products.category') }} <span class="text-status-danger">*</span>
+                                    {{ t('products.category') }}
                                 </label>
                                 <button
                                     type="button"
@@ -421,7 +433,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                     {{ t('products.create.quickAdd') }}
                                 </button>
                             </div>
-                            <select id="category" v-model="form.category_id" :class="fieldInput" required>
+                            <select id="category" v-model="form.category_id" :class="fieldInput">
                                 <option value="">{{ t('products.create.selectCategory') }}</option>
                                 <option v-for="category in categories" :key="category.id" :value="category.id">
                                     {{ category.name }}
@@ -434,7 +446,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                         <div>
                             <div class="flex items-center justify-between">
                                 <label for="location" :class="fieldLabel">
-                                    {{ t('products.location') }} <span class="text-status-danger">*</span>
+                                    {{ t('products.location') }}
                                 </label>
                                 <button
                                     type="button"
@@ -444,7 +456,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                     {{ t('products.create.quickAdd') }}
                                 </button>
                             </div>
-                            <select id="location" v-model="form.location_id" :class="fieldInput" required>
+                            <select id="location" v-model="form.location_id" :class="fieldInput">
                                 <option value="">{{ t('products.create.selectLocation') }}</option>
                                 <option v-for="location in locations" :key="location.id" :value="location.id">
                                     {{ location.name }}
@@ -650,6 +662,14 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                     </div>
 
                     <div class="space-y-4">
+                        <div>
+                            <label for="quick-location-warehouse" :class="fieldLabel">{{ t('locations.warehouse') }}</label>
+                            <select id="quick-location-warehouse" v-model="locationForm.warehouse_id" :class="fieldInput">
+                                <option value="">{{ t('locations.noWarehouse') }}</option>
+                                <option v-for="warehouse in locationWarehouses" :key="warehouse.id" :value="warehouse.id">{{ warehouse.name }}</option>
+                            </select>
+                        </div>
+                        <p v-for="(errors, field) in locationErrors" :key="field" :class="fieldError" role="alert">{{ errors[0] }}</p>
                         <div>
                             <label :class="fieldLabel">
                                 {{ t('products.quickAddLocation.locationName') }} <span class="text-status-danger">*</span>
