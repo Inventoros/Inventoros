@@ -111,6 +111,18 @@ final class InventoryResetTest extends TestCase
         $this->assertSame(0, $this->productA->fresh()->stock);
     }
 
+    public function test_legacy_stock_in_a_deleted_location_is_written_off_without_restoring_the_location(): void
+    {
+        DB::table('product_locations')->where('id', $this->locationA->id)->update(['deleted_at' => now()]);
+        $service = app(InventoryResetService::class);
+        $preview = $service->preview($this->admin);
+        $service->reset($this->admin, $preview['signature'], 'Clear legacy stock');
+        $this->assertSame(0, $this->productA->fresh()->stock);
+        $this->assertSame(0, (int) DB::table('product_location_stocks')->sum('quantity'));
+        $this->assertSoftDeleted($this->locationA);
+        $this->assertDatabaseHas('stock_adjustments', ['location_id' => $this->locationA->id, 'reason' => 'Administrator stock reset']);
+    }
+
     public function test_a_failed_adjustment_rolls_back_every_stock_change(): void
     {
         $service = app(InventoryResetService::class);
