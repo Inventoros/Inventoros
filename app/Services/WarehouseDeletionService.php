@@ -48,8 +48,15 @@ final class WarehouseDeletionService
                 ->where(fn ($q) => $q->whereIn('from_location_id', $ids)->orWhereIn('to_location_id', $ids))->exists();
             $holds = Schema::hasTable('stock_reservations') && DB::table('stock_reservations')->whereIn('location_id', $ids)
                 ->whereNull('released_at')->whereNull('consumed_at')->where(fn ($q) => $q->whereNull('expires_at')->orWhere('expires_at', '>', now()))->exists();
-            if ($transfers || $holds) {
-                throw ValidationException::withMessages(['warehouse' => 'Finish or cancel active transfers and release stock reservations before deleting this warehouse.']);
+            $counts = DB::table('stock_audits')->where('organization_id', $locked->organization_id)->whereIn('status', ['draft', 'in_progress'])
+                ->where(function ($query) use ($ids, $locked): void {
+                    $query->whereIn('warehouse_location_id', $ids);
+                    if (Schema::hasColumn('stock_audits', 'warehouse_id')) {
+                        $query->orWhere('warehouse_id', $locked->id);
+                    }
+                })->exists();
+            if ($transfers || $holds || $counts) {
+                throw ValidationException::withMessages(['warehouse' => 'Finish or cancel active transfers and stock counts, and release stock reservations before deleting this warehouse.']);
             }
             // Keep locations and their history usable; deleting an empty warehouse
             // must not require deleting zero-stock products or historical bin rows.
