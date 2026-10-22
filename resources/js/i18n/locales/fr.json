@@ -1,4 +1,18 @@
 {
+  "stockReset": {
+    "title": "Remettre le stock à zéro",
+    "hint": "Réinitialise le stock de toute l’organisation, y compris les produits inactifs et supprimés. Produits, commandes et historique sont conservés. Les numéros de série disponibles sont sortis du stock et les lots passent à zéro.",
+    "products": "Produits en stock",
+    "variants": "Variantes en stock",
+    "locations": "Soldes par emplacement",
+    "serials": "Numéros de série disponibles",
+    "batches": "Soldes des lots",
+    "blocked": "Terminez ou annulez les transferts, inventaires et fabrications, puis libérez les réservations avant la remise à zéro.",
+    "reason": "Motif",
+    "password": "Mot de passe actuel",
+    "confirm": "Saisissez {phrase} pour confirmer",
+    "writtenOff": "Sorti du stock"
+  },
   "orderPlanning": {
     "title": "Plan de préparation",
     "hint": "Le plan utilise les entrepôts accessibles sans réserver de stock.",

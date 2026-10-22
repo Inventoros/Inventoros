@@ -33,11 +33,12 @@ const filteredSerials = computed(() => {
 });
 
 const statusCounts = computed(() => {
-    const counts = { available: 0, sold: 0, reserved: 0, damaged: 0, transferred: 0, consumed: 0 };
+    const counts = { available: 0, sold: 0, reserved: 0, damaged: 0, transferred: 0, consumed: 0, written_off: 0 };
     localSerials.value.forEach(s => {
         if (counts[s.status] !== undefined) counts[s.status]++;
     });
     // Only organizations that moved serials to another one see this filter.
+    if (counts.written_off === 0) delete counts.written_off;
     if (counts.transferred === 0) delete counts.transferred;
     return counts;
 });
@@ -143,7 +144,7 @@ const statusBadgeClass = (status) => {
                         : 'border-gray-200 dark:border-border-subtle text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-surface-canvas/50'
                 ]"
             >
-                {{ t(`components.serialList.statuses.${status}`) }} ({{ count }})
+                {{ status === 'written_off' ? t('stockReset.writtenOff') : t(`components.serialList.statuses.${status}`) }} ({{ count }})
             </button>
         </div>
 
@@ -213,12 +214,12 @@ const statusBadgeClass = (status) => {
                         <td class="py-2 px-3 font-mono text-gray-900 dark:text-gray-100">{{ serial.serial_number }}</td>
                         <td class="py-2 px-3">
                             <span :class="['px-2 py-0.5 text-xs font-medium rounded-full capitalize', statusBadgeClass(serial.status)]">
-                                {{ t(`components.serialList.statuses.${serial.status}`) }}
+                                {{ serial.status === 'written_off' ? t('stockReset.writtenOff') : t(`components.serialList.statuses.${serial.status}`) }}
                             </span>
                         </td>
                         <td class="py-2 px-3 text-gray-600 dark:text-gray-400 max-w-[200px] truncate">{{ serial.notes || '-' }}</td>
                         <td class="py-2 px-3">
-                            <span v-if="serial.status === 'transferred' || serial.status === 'consumed'" class="text-xs text-gray-400 dark:text-gray-500">-</span>
+                            <span v-if="serial.status === 'transferred' || serial.status === 'consumed' || serial.status === 'written_off'" class="text-xs text-gray-400 dark:text-gray-500">-</span>
                             <div v-else class="flex gap-1">
                                 <button
                                     v-if="serial.status === 'available'"

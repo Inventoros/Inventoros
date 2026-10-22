@@ -143,3 +143,15 @@ test('bulk selection spans pages and page size can exceed fifteen', async ({ pag
     expect(await page.locator('tbody tr').count()).toBeGreaterThan(15);
     await expect(page.getByText('16 selected', { exact: true })).toHaveCount(0);
 });
+
+
+test('admin stock reset requires an explicit typed confirmation', async ({ page }) => {
+    await page.goto('/products/stock-reset');
+    await expect(page.getByRole('heading', { name: 'Reset stock to zero', exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Reset stock to zero', exact: true })).toBeDisabled();
+    await page.getByLabel('Type ZERO STOCK to confirm').fill('ZERO STOCK');
+    await expect(page.getByLabel('Current password')).toHaveAttribute('required', '');
+    await expect(page.getByLabel('Reason')).toHaveAttribute('required', '');
+    await page.getByRole('link', { name: 'Cancel', exact: true }).click();
+    await expect(page).toHaveURL(/products$/);
+});

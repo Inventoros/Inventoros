@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\ProductVariantController as ApiProductVariantContro
 use App\Http\Controllers\Api\SerialTrackingController as ApiSerialTrackingController;
 use App\Http\Controllers\Inventory\BarcodeController;
 use App\Http\Controllers\Inventory\BulkProductController;
+use App\Http\Controllers\Inventory\InventoryResetController;
 use App\Http\Controllers\Inventory\ProductCategoryController;
 use App\Http\Controllers\Inventory\ProductComponentController;
 use App\Http\Controllers\Inventory\ProductController;
@@ -17,6 +18,7 @@ use App\Http\Controllers\Inventory\QrCodeController;
 use App\Http\Controllers\Inventory\SKUController;
 use App\Http\Controllers\Inventory\StockAdjustmentController;
 use App\Http\Controllers\Inventory\StockAuditController;
+use App\Http\Controllers\Inventory\StockBalanceController;
 use App\Http\Controllers\Inventory\StockReservationController;
 use App\Http\Controllers\Inventory\StockTransferController;
 use App\Http\Controllers\Inventory\WorkOrderController;
@@ -28,8 +30,11 @@ use Illuminate\Support\Facades\Route;
  * every route here is already authenticated.
  */
 
-Route::get('/stock', [\App\Http\Controllers\Inventory\StockBalanceController::class, 'index'])->name('stock.index')->middleware('permission:view_products');
-Route::get('/stock/export', [\App\Http\Controllers\Inventory\StockBalanceController::class, 'export'])->name('stock.export')->middleware(['permission:view_products', 'permission:export_data']);
+Route::get('/stock', [StockBalanceController::class, 'index'])->name('stock.index')->middleware('permission:view_products');
+Route::get('/stock/export', [StockBalanceController::class, 'export'])->name('stock.export')->middleware(['permission:view_products', 'permission:export_data']);
+
+Route::get('/products/stock-reset', [InventoryResetController::class, 'preview'])->name('products.stock-reset.preview')->middleware(['admin', 'permission:manage_stock']);
+Route::post('/products/stock-reset', [InventoryResetController::class, 'store'])->name('products.stock-reset.store')->middleware(['admin', 'permission:manage_stock']);
 
 // Inventory Management - Permission based
 Route::get('/products', [ProductController::class, 'index'])->name('products.index')->middleware('permission:view_products');
