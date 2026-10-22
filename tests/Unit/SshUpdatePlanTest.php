@@ -27,6 +27,20 @@ final class SshUpdatePlanTest extends TestCase
         $this->assertContains('-t', (new SshUpdatePlan($this->settings()))->command('apply'));
     }
 
+    public function test_apply_refuses_noninteractive_execution_before_any_server_connection(): void
+    {
+        $root = dirname(__DIR__, 2);
+        $process = proc_open([PHP_BINARY, $root.'/deploy/cpanel/ssh-update.php', '--apply', '--settings='.$root.'/deploy/cpanel/ssh-settings.example.json'], [0 => ['pipe', 'r'], 1 => ['pipe', 'w'], 2 => ['pipe', 'w']], $pipes, $root);
+        $this->assertIsResource($process);
+        fclose($pipes[0]);
+        stream_get_contents($pipes[1]);
+        fclose($pipes[1]);
+        $error = stream_get_contents($pipes[2]);
+        fclose($pipes[2]);
+        $this->assertSame(1, proc_close($process));
+        $this->assertStringContainsString('requires an interactive terminal', $error);
+    }
+
     public function test_an_ssh_option_cannot_be_supplied_as_the_host(): void
     {
         $this->expectException(\InvalidArgumentException::class);

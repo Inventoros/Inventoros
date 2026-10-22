@@ -38,6 +38,9 @@ try {
     }
     $root = dirname(__DIR__, 2);
     if ($mode === 'apply') {
+        if (! function_exists('stream_isatty') || ! stream_isatty(STDIN)) {
+            throw new RuntimeException('Apply requires an interactive terminal so the server update can be reviewed and confirmed.');
+        }
         SshUpdatePlan::assertMain(static function (array $command) use ($root): string {
             $process = proc_open($command, [0 => ['pipe', 'r'], 1 => ['pipe', 'w'], 2 => STDERR], $pipes, $root);
             if (! is_resource($process)) throw new RuntimeException('Could not start Git.');
