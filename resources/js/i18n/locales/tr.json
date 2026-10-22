@@ -1507,6 +1507,9 @@
   "settings": {
     "title": "Ayarlar",
     "organization": {
+      "logoTitle": "Şirket logosu",
+      "logoHint": "PNG, JPEG veya WebP. En fazla 2 MB ve 2048 × 2048 piksel.",
+      "logoRemove": "Logoyu kaldır",
       "title": "Organizasyon Ayarları",
       "generalInfo": "Genel Bilgiler",
       "regionalSettings": "Bölgesel Ayarlar",
@@ -1749,6 +1752,10 @@
         "customRolesSelected": "{count} özel rol seçildi | {count} özel rol seçildi"
       },
       "show": {
+        "effectivePermissions": "Etkin izinler",
+        "effectivePermissionsHint": "Bu kuruluştaki rol izinleri. Depo erişimi ve kayıt kısıtlamaları geçerliliğini korur.",
+        "allowed": "Verildi",
+        "notGranted": "Verilmedi",
         "title": "Kullanıcı Detayları",
         "editUser": "Kullanıcıyı Düzenle",
         "backToUsers": "Kullanıcılara Dön",

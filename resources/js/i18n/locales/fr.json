@@ -1507,6 +1507,9 @@
   "settings": {
     "title": "Paramètres",
     "organization": {
+      "logoTitle": "Logo de l’entreprise",
+      "logoHint": "PNG, JPEG ou WebP. Maximum 2 Mo et 2048 × 2048 pixels.",
+      "logoRemove": "Supprimer le logo",
       "title": "Paramètres de l'organisation",
       "generalInfo": "Informations générales",
       "regionalSettings": "Paramètres régionaux",
@@ -1749,6 +1752,10 @@
         "customRolesSelected": "{count} rôle personnalisé sélectionné | {count} rôles personnalisés sélectionnés"
       },
       "show": {
+        "effectivePermissions": "Autorisations effectives",
+        "effectivePermissionsHint": "Autorisations des rôles dans cette organisation. Les restrictions sur les entrepôts et les enregistrements restent applicables.",
+        "allowed": "Accordée",
+        "notGranted": "Non accordée",
         "title": "Détails de l'utilisateur",
         "editUser": "Modifier l'utilisateur",
         "backToUsers": "Retour aux utilisateurs",

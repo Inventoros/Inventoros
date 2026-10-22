@@ -104,6 +104,17 @@ class Customer extends Model
         ];
     }
 
+    protected static function booted(): void
+    {
+        // Match the organization default on every creation surface (web, API,
+        // and imports), while preserving an explicitly selected currency.
+        static::creating(function (Customer $record): void {
+            $record->currency = filled($record->currency)
+                ? strtoupper(trim((string) $record->currency))
+                : Organization::currencyFor($record->organization_id === null ? null : (int) $record->organization_id);
+        });
+    }
+
     /**
      * Get the organization that owns the customer.
      *

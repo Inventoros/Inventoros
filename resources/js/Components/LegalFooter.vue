@@ -5,6 +5,7 @@ const year = new Date().getFullYear();
 <template>
     <footer class="text-xs text-text-tertiary">
         <p class="flex flex-wrap items-center gap-x-2 gap-y-1">
+            <img src="/images/brand/inventoros_icon_transparent_512.png" alt="" class="h-5 w-5" />
             <span>&copy; {{ year }} Inventoros</span>
             <span aria-hidden="true">&middot;</span>
             <a href="https://inventoros.com" target="_blank" rel="noopener noreferrer" class="hover:text-text-secondary">inventoros.com</a>

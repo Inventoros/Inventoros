@@ -45,6 +45,7 @@ import {
     Bell,
     Search,
     Menu,
+    LogOut,
     X,
 } from 'lucide-vue-next';
 
@@ -103,6 +104,7 @@ const user = computed(() => page.props.auth?.user);
 // Requests waiting for this user's decision, shown on the Approvals item.
 const pendingApprovalsCount = computed(() => Number(page.props.pendingApprovalsCount || 0));
 const workspaceName = computed(() => page.props.auth?.organization?.name || 'Inventoros');
+const workspaceLogo = computed(() => page.props.auth?.organization?.logo_url);
 
 /**
  * Nav schema. Each section is { id, label, items: [{ icon, name, href, active, perm? }] }.
@@ -222,7 +224,8 @@ const isActive = (item) => item.active.some((pattern) => route().current(pattern
         <!-- Mobile top bar -->
         <div class="md:hidden fixed top-0 inset-x-0 z-40 h-12 flex items-center justify-between px-4 bg-surface-base border-b border-border-subtle">
             <Link :href="route('dashboard')" class="flex items-center gap-2">
-                <img src="/images/brand/inventoros_icon_transparent_512.png" alt="Inventoros" class="h-7 w-7 shrink-0" />
+                <img v-if="workspaceLogo" :src="workspaceLogo" :alt="workspaceName" class="h-7 w-7 shrink-0 object-contain" />
+                <span v-else class="h-7 w-7 shrink-0 rounded-md bg-surface-overlay grid place-items-center text-sm font-semibold">{{ workspaceName.charAt(0).toUpperCase() }}</span>
                 <span class="text-sm font-semibold tracking-tight">{{ workspaceName }}</span>
             </Link>
             <button
@@ -259,7 +262,8 @@ const isActive = (item) => item.active.some((pattern) => route().current(pattern
                     :href="route('dashboard')"
                     class="flex items-center gap-2.5 w-full px-2 py-1.5 rounded-md hover:bg-surface-overlay transition-colors ds-focus-ring"
                 >
-                    <img src="/images/brand/inventoros_icon_transparent_512.png" alt="Inventoros" class="h-7 w-7 shrink-0" />
+                    <img v-if="workspaceLogo" :src="workspaceLogo" :alt="workspaceName" class="h-7 w-7 shrink-0 object-contain" />
+                    <span v-else class="h-7 w-7 shrink-0 rounded-md bg-surface-overlay grid place-items-center text-sm font-semibold">{{ workspaceName.charAt(0).toUpperCase() }}</span>
                     <span class="text-sm font-semibold tracking-tight truncate flex-1 text-left">
                         {{ workspaceName }}
                     </span>
@@ -335,6 +339,16 @@ const isActive = (item) => item.active.some((pattern) => route().current(pattern
                         <p class="text-[13px] font-medium text-text-primary truncate">{{ user?.name }}</p>
                         <p class="text-[11px] text-text-tertiary truncate">{{ user?.email }}</p>
                     </div>
+                </Link>
+                <Link
+                    :href="route('logout')"
+                    method="post"
+                    as="button"
+                    data-testid="logout"
+                    class="flex items-center gap-2.5 w-full px-2 py-2 rounded-md text-sm text-text-secondary hover:bg-surface-overlay ds-focus-ring"
+                >
+                    <LogOut :size="16" />
+                    {{ t('nav.logOut') }}
                 </Link>
             </div>
         </aside>
