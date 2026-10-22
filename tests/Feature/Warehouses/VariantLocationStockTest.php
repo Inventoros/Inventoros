@@ -53,6 +53,15 @@ final class VariantLocationStockTest extends TestCase
         $this->assertSame(1, VariantLocationStock::where('product_variant_id', $this->variant->id)->count());
     }
 
+    public function test_upgrade_backfills_existing_variant_stock_at_its_primary_location(): void
+    {
+        $migration = require database_path('migrations/2026_10_21_000001_create_variant_location_stocks.php');
+        $migration->down();
+        $migration->up();
+        $this->assertSame(20, $this->bins()->onHandAt($this->variant, $this->locationA->id));
+        $this->assertSame(20, $this->bins()->totalAssigned($this->variant));
+    }
+
     public function test_move_changes_only_location_balances_and_preserves_variant_total(): void
     {
         $this->move(7);
