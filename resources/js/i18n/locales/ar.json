@@ -1,4 +1,8 @@
 {
+  "inventoryCleanup": {
+    "perPage": "المنتجات في الصفحة",
+    "selectionHint": "تبقى العناصر محددة عند التنقل بين الصفحات."
+  },
   "auditLabels": {
     "notCounted": "لم يُعدّ",
     "never": "أبدًا"

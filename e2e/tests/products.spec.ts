@@ -117,3 +117,29 @@ test.describe('Products', () => {
         }
     });
 });
+
+
+test('bulk selection spans pages and page size can exceed fifteen', async ({ page }) => {
+    await page.goto('/products/create');
+    await page.locator('#name').fill('Bulk selection fixture');
+    await page.locator('#sku').fill(`BULK-${Date.now()}`);
+    await page.locator('#price').fill('1');
+    await page.locator('#stock').fill('0');
+    await page.locator('#min_stock').fill('0');
+    await page.locator('#category').selectOption({ index: 1 });
+    await page.locator('#location').selectOption({ index: 1 });
+    await page.locator('button[type="submit"]').click();
+    await expect(page).not.toHaveURL(/products\/create/);
+    await page.goto('/products?per_page=15');
+    await page.locator('thead input[type="checkbox"]').check();
+    await expect(page.getByText('15 products selected', { exact: true })).toBeVisible();
+    await page.locator('nav').getByRole('link', { name: '2', exact: true }).click();
+    await expect(page).toHaveURL(/page=2/);
+    await expect(page.getByText('15 products selected', { exact: true })).toBeVisible();
+    await page.locator('tbody input[type="checkbox"]').first().check();
+    await expect(page.getByText('16 products selected', { exact: true })).toBeVisible();
+    await page.locator('#products_per_page').selectOption('100');
+    await expect(page).toHaveURL(/per_page=100/);
+    expect(await page.locator('tbody tr').count()).toBeGreaterThan(15);
+    await expect(page.getByText('16 products selected', { exact: true })).toHaveCount(0);
+});
