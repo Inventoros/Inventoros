@@ -474,7 +474,10 @@
         "updateQuantityFailed": "Échec de la mise à jour de la quantité",
         "confirmRemove": "Retirer ce composant de la nomenclature ?",
         "removeFailed": "Échec du retrait du composant"
-      }
+      },
+      "prepareTransfer": "Préparer le stock",
+      "shipTransfer": "Expédier le transfert",
+      "receiveTransfer": "Réceptionner le transfert"
     },
     "quickAddCategory": {
       "title": "Ajout rapide de catégorie",
@@ -1414,7 +1417,8 @@
         "processing": "En cours",
         "completed": "Terminé",
         "failed": "Échec",
-        "expired": "Expiré"
+        "expired": "Expiré",
+        "prepared": "Préparé"
       }
     }
   },

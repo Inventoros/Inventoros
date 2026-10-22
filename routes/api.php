@@ -321,6 +321,7 @@ Route::prefix('v1')->as('api.')->middleware('throttle:api')->group(function () {
             Route::middleware('api.permission:transfer_stock')->group(function () {
                 Route::apiResource('stock-transfers', StockTransferController::class)
                     ->only(['index', 'show', 'store']);
+                Route::post('stock-transfers/{stockTransfer}/prepare', [StockTransferController::class, 'prepare']);
                 Route::post('stock-transfers/{stockTransfer}/ship', [StockTransferController::class, 'ship']);
                 Route::post('stock-transfers/{stockTransfer}/complete', [StockTransferController::class, 'complete']);
                 Route::post('stock-transfers/{stockTransfer}/cancel', [StockTransferController::class, 'cancel']);

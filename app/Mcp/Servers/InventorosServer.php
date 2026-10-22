@@ -90,6 +90,7 @@ class InventorosServer extends Server
         // Stock
         ListLowStockTool::class,
         AdjustStockTool::class,
+        \App\Mcp\Tools\TransitionStockTransferTool::class,
 
         // Sales
         ListOrdersTool::class,

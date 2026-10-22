@@ -474,7 +474,10 @@
         "updateQuantityFailed": "数量の更新に失敗しました",
         "confirmRemove": "この構成部品を部品表から削除しますか？",
         "removeFailed": "構成部品の削除に失敗しました"
-      }
+      },
+      "prepareTransfer": "在庫を準備",
+      "shipTransfer": "移動を出荷",
+      "receiveTransfer": "移動を入荷"
     },
     "quickAddCategory": {
       "title": "カテゴリをクイック追加",
@@ -1414,7 +1417,8 @@
         "processing": "処理中",
         "completed": "完了",
         "failed": "失敗",
-        "expired": "期限切れ"
+        "expired": "期限切れ",
+        "prepared": "準備済み"
       }
     }
   },

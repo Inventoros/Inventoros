@@ -101,7 +101,7 @@ Add an entry to `~/.cursor/mcp.json` (or the workspace-level `.cursor/mcp.json`)
 
 ### Tool catalog
 
-30 tools across 8 surfaces. Tools marked destructive mutate state and should be confirmed before invocation.
+31 tools across 8 surfaces. Tools marked destructive mutate state and should be confirmed before invocation.
 
 Identity:
 
@@ -151,6 +151,7 @@ Manufacturing:
 
 - `list_work_orders` (`manage_stock`). Paginated work orders with a status filter.
 - `start_work_order` (`manage_stock`). Move a draft or pending work order to in_progress after checking component stock, including available serials or batch quantity for tracked components. Destructive.
+- `transition_stock_transfer` (`transfer_stock`). Prepare, ship, receive or cancel an unshipped warehouse transfer. Destructive.
 - `delete_work_order` (`manage_stock`). Delete a draft or cancelled work order. Destructive.
 
 Catalog (write):

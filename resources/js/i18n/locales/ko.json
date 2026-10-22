@@ -474,7 +474,10 @@
         "updateQuantityFailed": "수량 업데이트에 실패했습니다",
         "confirmRemove": "자재 명세서에서 이 구성품을 제거하시겠습니까?",
         "removeFailed": "구성품 제거에 실패했습니다"
-      }
+      },
+      "prepareTransfer": "재고 준비",
+      "shipTransfer": "이동 출고",
+      "receiveTransfer": "이동 입고"
     },
     "quickAddCategory": {
       "title": "빠른 카테고리 추가",
@@ -1414,7 +1417,8 @@
         "processing": "처리 중",
         "completed": "완료됨",
         "failed": "실패",
-        "expired": "만료됨"
+        "expired": "만료됨",
+        "prepared": "준비됨"
       }
     }
   },

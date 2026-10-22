@@ -474,7 +474,10 @@
         "updateQuantityFailed": "Aantal bijwerken mislukt",
         "confirmRemove": "Dit component uit de stuklijst verwijderen?",
         "removeFailed": "Component verwijderen mislukt"
-      }
+      },
+      "prepareTransfer": "Voorraad voorbereiden",
+      "shipTransfer": "Transfer verzenden",
+      "receiveTransfer": "Transfer ontvangen"
     },
     "quickAddCategory": {
       "title": "Snel categorie toevoegen",
@@ -1414,7 +1417,8 @@
         "processing": "In verwerking",
         "completed": "Voltooid",
         "failed": "Mislukt",
-        "expired": "Verlopen"
+        "expired": "Verlopen",
+        "prepared": "Voorbereid"
       }
     }
   },

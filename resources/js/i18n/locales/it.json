@@ -474,7 +474,10 @@
         "updateQuantityFailed": "Impossibile aggiornare la quantità",
         "confirmRemove": "Rimuovere questo componente dalla distinta base?",
         "removeFailed": "Impossibile rimuovere il componente"
-      }
+      },
+      "prepareTransfer": "Prepara scorte",
+      "shipTransfer": "Spedisci trasferimento",
+      "receiveTransfer": "Ricevi trasferimento"
     },
     "quickAddCategory": {
       "title": "Aggiunta rapida categoria",
@@ -1414,7 +1417,8 @@
         "processing": "In elaborazione",
         "completed": "Completata",
         "failed": "Non riuscita",
-        "expired": "Scaduta"
+        "expired": "Scaduta",
+        "prepared": "Preparato"
       }
     }
   },

@@ -22,6 +22,7 @@ class StockTransferItemType extends GraphQLType
         return [
             'id' => ['type' => Type::nonNull(Type::int()), 'description' => 'The ID of the transfer line'],
             'product_id' => ['type' => Type::nonNull(Type::int()), 'description' => 'The product moved'],
+            'product_variant_id' => ['type' => Type::int(), 'description' => 'Variant SKU moved'],
             'quantity' => ['type' => Type::nonNull(Type::int()), 'description' => 'Quantity moved'],
             'notes' => ['type' => Type::string(), 'description' => 'Line notes'],
             'product' => [

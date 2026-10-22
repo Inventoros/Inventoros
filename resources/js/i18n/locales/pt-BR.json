@@ -474,7 +474,10 @@
         "updateQuantityFailed": "Falha ao atualizar a quantidade",
         "confirmRemove": "Remover este componente da lista de materiais?",
         "removeFailed": "Falha ao remover o componente"
-      }
+      },
+      "prepareTransfer": "Preparar estoque",
+      "shipTransfer": "Enviar transferência",
+      "receiveTransfer": "Receber transferência"
     },
     "quickAddCategory": {
       "title": "Adição Rápida de Categoria",
@@ -1414,7 +1417,8 @@
         "processing": "Processando",
         "completed": "Concluída",
         "failed": "Falhou",
-        "expired": "Expirada"
+        "expired": "Expirada",
+        "prepared": "Preparado"
       }
     }
   },

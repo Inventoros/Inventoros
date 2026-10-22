@@ -474,7 +474,10 @@
         "updateQuantityFailed": "Не удалось обновить количество",
         "confirmRemove": "Удалить этот компонент из спецификации?",
         "removeFailed": "Не удалось удалить компонент"
-      }
+      },
+      "prepareTransfer": "Подготовить запас",
+      "shipTransfer": "Отправить перемещение",
+      "receiveTransfer": "Принять перемещение"
     },
     "quickAddCategory": {
       "title": "Быстрое добавление категории",
@@ -1414,7 +1417,8 @@
         "processing": "Обработка",
         "completed": "Готово",
         "failed": "Ошибка",
-        "expired": "Истёк"
+        "expired": "Истёк",
+        "prepared": "Подготовлен"
       }
     }
   },

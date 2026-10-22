@@ -31,12 +31,12 @@ const form = useForm({
     to_location_id: '',
     notes: '',
     items: [
-        { product_id: '', quantity: 1, notes: '' },
+        { product_id: '', product_variant_id: '', quantity: 1, notes: '' },
     ],
 });
 
 const addItem = () => {
-    form.items.push({ product_id: '', quantity: 1, notes: '' });
+    form.items.push({ product_id: '', product_variant_id: '', quantity: 1, notes: '' });
 };
 
 const removeItem = (index) => {
@@ -64,13 +64,13 @@ const hasValidItems = computed(() => {
 // --- Scanning ---------------------------------------------------------
 // Scan (camera modal or keyboard-wedge scanner) to add a product line, or
 // bump the quantity when the product is already on the transfer. Transfers
-// move whole products, so a variant barcode resolves to its product.
+// retain the scanned variant SKU on its own line.
 const showScanner = ref(false);
 const scanMessage = ref('');
 const scanMessageTone = ref('info');
 const { lookup } = useBarcodeLookup();
 
-const addScannedProduct = (product) => {
+const addScannedProduct = (product, variant = null) => {
     showScanner.value = false;
     const known = props.products.find(p => p.id === product.id);
     if (!known) {
@@ -78,19 +78,26 @@ const addScannedProduct = (product) => {
         scanMessageTone.value = 'warning';
         return;
     }
-    const existing = form.items.find(item => parseInt(item.product_id) === known.id);
+    if (known.has_variants && !variant) {
+        scanMessage.value = t('orders.create.chooseVariant');
+        scanMessageTone.value = 'warning';
+        return;
+    }
+    const matches = item => parseInt(item.product_id) === known.id && (Number(item.product_variant_id) || null) === (variant?.id || null);
+    const existing = form.items.find(matches);
     if (existing) {
         existing.quantity = (parseInt(existing.quantity) || 0) + 1;
     } else {
         const blank = form.items.find(item => !item.product_id);
         if (blank) {
             blank.product_id = known.id;
+            blank.product_variant_id = variant?.id || '';
             blank.quantity = 1;
         } else {
-            form.items.push({ product_id: known.id, quantity: 1, notes: '' });
+            form.items.push({ product_id: known.id, product_variant_id: variant?.id || '', quantity: 1, notes: '' });
         }
     }
-    const line = form.items.find(item => parseInt(item.product_id) === known.id);
+    const line = form.items.find(matches);
     scanMessage.value = t('scanning.addedToLine', { name: known.name, quantity: line.quantity });
     scanMessageTone.value = 'success';
 };
@@ -103,7 +110,7 @@ const onScannedCode = async (code) => {
             scanMessageTone.value = 'danger';
             return;
         }
-        addScannedProduct(found.product);
+        addScannedProduct(found.product, found.variant);
     } catch (error) {
         scanMessage.value = t('scanning.lookupFailed');
         scanMessageTone.value = 'danger';
@@ -262,6 +269,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                 <label :class="fieldLabel">{{ t('common.product') }} <span class="text-status-danger">*</span></label>
                                 <select
                                     v-model="item.product_id"
+                                    @change="item.product_variant_id = ''"
                                     required
                                     :class="fieldInput"
                                 >
@@ -275,6 +283,14 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                 </p>
                             </div>
 
+                            <div v-if="getProduct(item.product_id)?.active_variants?.length" class="min-w-48 flex-1">
+                                <label :class="fieldLabel">{{ t('orders.create.variant') }}</label>
+                                <select v-model="item.product_variant_id" required :class="fieldInput">
+                                    <option value="">{{ t('orders.create.chooseVariant') }}</option>
+                                    <option v-for="variant in getProduct(item.product_id).active_variants" :key="variant.id" :value="variant.id">{{ variant.sku || variant.title }} ({{ variant.stock }})</option>
+                                </select>
+                                <p v-if="form.errors[`items.${index}.product_variant_id`]" :class="fieldError">{{ form.errors[`items.${index}.product_variant_id`] }}</p>
+                            </div>
                             <!-- Quantity -->
                             <div class="w-32">
                                 <label :class="fieldLabel">{{ t('stockTransfers.create.qty') }} <span class="text-status-danger">*</span></label>

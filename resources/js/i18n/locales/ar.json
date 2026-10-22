@@ -474,7 +474,10 @@
         "updateQuantityFailed": "تعذّر تحديث الكمية",
         "confirmRemove": "هل تريد إزالة هذا المكوّن من قائمة المواد؟",
         "removeFailed": "تعذّرت إزالة المكوّن"
-      }
+      },
+      "prepareTransfer": "تجهيز المخزون",
+      "shipTransfer": "شحن التحويل",
+      "receiveTransfer": "استلام التحويل"
     },
     "quickAddCategory": {
       "title": "إضافة فئة سريعة",
@@ -1414,7 +1417,8 @@
         "processing": "قيد المعالجة",
         "completed": "مكتمل",
         "failed": "فشل",
-        "expired": "منتهي الصلاحية"
+        "expired": "منتهي الصلاحية",
+        "prepared": "تم التجهيز"
       }
     }
   },

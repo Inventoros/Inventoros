@@ -474,7 +474,10 @@
         "updateQuantityFailed": "Miktar güncellenemedi",
         "confirmRemove": "Bu bileşen ürün ağacından kaldırılsın mı?",
         "removeFailed": "Bileşen kaldırılamadı"
-      }
+      },
+      "prepareTransfer": "Stoku hazırla",
+      "shipTransfer": "Transferi gönder",
+      "receiveTransfer": "Transferi teslim al"
     },
     "quickAddCategory": {
       "title": "Hızlı Kategori Ekle",
@@ -1414,7 +1417,8 @@
         "processing": "İşleniyor",
         "completed": "Tamamlandı",
         "failed": "Başarısız",
-        "expired": "Süresi doldu"
+        "expired": "Süresi doldu",
+        "prepared": "Hazırlandı"
       }
     }
   },

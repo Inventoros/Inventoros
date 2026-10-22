@@ -1668,6 +1668,17 @@ paths:
         '200': { description: Transfer, content: { application/json: { schema: { type: object, properties: { data: { $ref: '#/components/schemas/StockTransfer' } } } } } }
         '404': { $ref: '#/components/responses/NotFound' }
 
+  /stock-transfers/{stockTransfer}/prepare:
+    parameters:
+      - { name: stockTransfer, in: path, required: true, schema: { type: integer } }
+    post:
+      tags: [Stock Transfers]
+      summary: Reserve source-bin stock for a transfer
+      description: "Requires transfer_stock and source warehouse access. Pending or prepared transfers only; approval must be granted first. Does not change on-hand totals."
+      responses:
+        '200': { description: Transfer prepared }
+        '422': { description: Invalid state or insufficient available stock }
+
   /stock-transfers/{stockTransfer}/ship:
     parameters:
       - { name: stockTransfer, in: path, required: true, schema: { type: integer } }
@@ -2659,12 +2670,14 @@ components:
       properties:
         id: { type: integer }
         transfer_number: { type: string }
-        status: { type: string, enum: [pending, in_transit, completed, cancelled] }
+        status: { type: string, enum: [pending, prepared, in_transit, completed, cancelled] }
         from_location_id: { type: integer }
         to_location_id: { type: integer }
         is_inter_warehouse: { type: boolean }
         shipping_method: { type: string, nullable: true }
         tracking_number: { type: string, nullable: true }
+        prepared_at: { type: string, format: date-time, nullable: true }
+        stock_dispatched_at: { type: string, format: date-time, nullable: true }
         shipped_at: { type: string, format: date-time, nullable: true }
         completed_at: { type: string, format: date-time, nullable: true }
         items:
@@ -2674,6 +2687,7 @@ components:
             properties:
               id: { type: integer }
               product_id: { type: integer }
+              product_variant_id: { type: integer, nullable: true, description: "Required for products sold by variant" }
               quantity: { type: integer }
 
     StockTransferInput:
@@ -2694,6 +2708,7 @@ components:
             required: [product_id, quantity]
             properties:
               product_id: { type: integer }
+              product_variant_id: { type: integer, nullable: true, description: "Required for products sold by variant" }
               quantity: { type: integer, minimum: 1 }
               notes: { type: string, maxLength: 500 }
 
