@@ -139,6 +139,7 @@ const sections = computed(() => [
         label: t('nav.sections.stock'),
         items: [
             { icon: SlidersHorizontal, name: t('nav.stockAdjustments'), href: route('stock-adjustments.index'), active: ['stock-adjustments.*'], perm: 'manage_stock' },
+            { icon: Boxes, name: t('warehouseStock.title'), href: route('stock.index'), active: ['stock.*'], perm: 'view_products' },
             { icon: ArrowLeftRight, name: t('nav.stockTransfers'), href: route('stock-transfers.index'), active: ['stock-transfers.*'], perm: 'transfer_stock' },
             { icon: ScanLine, name: t('nav.stockAudits'), href: route('stock-audits.index'), active: ['stock-audits.*'], perm: 'view_stock_audits' },
             { icon: Hammer, name: t('nav.workOrders'), href: route('work-orders.index'), active: ['work-orders.*'], perm: 'manage_stock' },

@@ -179,6 +179,8 @@ Route::prefix('v1')->as('api.')->middleware('throttle:api')->group(function () {
         Route::post('shipments/{shipment}/void-label', [ShipmentController::class, 'voidLabel'])
             ->middleware('api.permission:create_shipments');
 
+        Route::get('stock-balances', [\App\Http\Controllers\Inventory\StockBalanceController::class, 'api'])->middleware('api.permission:view_products');
+
         // Stock Audits
         Route::apiResource('stock-audits', ApiStockAuditController::class)
             ->only(['index', 'show'])
@@ -321,6 +323,7 @@ Route::prefix('v1')->as('api.')->middleware('throttle:api')->group(function () {
             Route::middleware('api.permission:transfer_stock')->group(function () {
                 Route::apiResource('stock-transfers', StockTransferController::class)
                     ->only(['index', 'show', 'store']);
+                Route::post('stock-transfers/{stockTransfer}/prepare', [StockTransferController::class, 'prepare']);
                 Route::post('stock-transfers/{stockTransfer}/ship', [StockTransferController::class, 'ship']);
                 Route::post('stock-transfers/{stockTransfer}/complete', [StockTransferController::class, 'complete']);
                 Route::post('stock-transfers/{stockTransfer}/cancel', [StockTransferController::class, 'cancel']);

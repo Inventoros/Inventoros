@@ -28,6 +28,9 @@ use Illuminate\Support\Facades\Route;
  * every route here is already authenticated.
  */
 
+Route::get('/stock', [\App\Http\Controllers\Inventory\StockBalanceController::class, 'index'])->name('stock.index')->middleware('permission:view_products');
+Route::get('/stock/export', [\App\Http\Controllers\Inventory\StockBalanceController::class, 'export'])->name('stock.export')->middleware(['permission:view_products', 'permission:export_data']);
+
 // Inventory Management - Permission based
 Route::get('/products', [ProductController::class, 'index'])->name('products.index')->middleware('permission:view_products');
 Route::get('/products/create', [ProductController::class, 'create'])->name('products.create')->middleware('permission:create_products');
@@ -142,6 +145,8 @@ Route::get('/stock-transfers/create', [StockTransferController::class, 'create']
 Route::post('/stock-transfers', [StockTransferController::class, 'store'])->name('stock-transfers.store')->middleware('permission:transfer_stock');
 Route::get('/stock-transfers/{stockTransfer}', [StockTransferController::class, 'show'])->name('stock-transfers.show')->middleware('permission:transfer_stock');
 Route::put('/stock-transfers/{stockTransfer}', [StockTransferController::class, 'update'])->name('stock-transfers.update')->middleware('permission:transfer_stock');
+Route::post('/stock-transfers/{stockTransfer}/prepare', [StockTransferController::class, 'prepare'])->name('stock-transfers.prepare')->middleware('permission:transfer_stock');
+Route::post('/stock-transfers/{stockTransfer}/ship', [StockTransferController::class, 'ship'])->name('stock-transfers.ship')->middleware('permission:transfer_stock');
 Route::post('/stock-transfers/{stockTransfer}/complete', [StockTransferController::class, 'complete'])->name('stock-transfers.complete')->middleware('permission:transfer_stock');
 Route::post('/stock-transfers/{stockTransfer}/cancel', [StockTransferController::class, 'cancel'])->name('stock-transfers.cancel')->middleware('permission:transfer_stock');
 

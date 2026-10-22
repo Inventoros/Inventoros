@@ -21,6 +21,7 @@ class StockTransferItemInputType extends InputType
                 'type' => Type::nonNull(Type::int()),
                 'description' => 'The product to move',
             ],
+            'product_variant_id' => ['type' => Type::int(), 'description' => 'Variant SKU to transfer'],
             'quantity' => [
                 'type' => Type::nonNull(Type::int()),
                 'description' => 'Quantity to move',

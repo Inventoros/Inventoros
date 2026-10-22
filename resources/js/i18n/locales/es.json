@@ -131,6 +131,7 @@
     }
   },
   "common": {
+    "pagination": "Paginación",
     "save": "Guardar",
     "saveChanges": "Guardar cambios",
     "saving": "Guardando...",
@@ -474,7 +475,10 @@
         "updateQuantityFailed": "No se pudo actualizar la cantidad",
         "confirmRemove": "¿Quitar este componente de la lista de materiales?",
         "removeFailed": "No se pudo quitar el componente"
-      }
+      },
+      "prepareTransfer": "Preparar existencias",
+      "shipTransfer": "Enviar transferencia",
+      "receiveTransfer": "Recibir transferencia"
     },
     "quickAddCategory": {
       "title": "Agregar categor\u00eda r\u00e1pida",
@@ -1414,7 +1418,8 @@
         "processing": "Procesando",
         "completed": "Completada",
         "failed": "Fallida",
-        "expired": "Caducada"
+        "expired": "Caducada",
+        "prepared": "Preparado"
       }
     }
   },
@@ -3838,5 +3843,9 @@
     "amount": "Importe del impuesto",
     "rate": "Tasa",
     "rateHint": "Opcional: introduzca un tipo impositivo para calcular el importe a partir del subtotal después de los descuentos. Solo se guarda el importe."
+  },
+  "warehouseStock": {
+    "title": "Existencias por almacén",
+    "includeZero": "Incluir saldos cero"
   }
 }

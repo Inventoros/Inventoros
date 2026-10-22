@@ -298,7 +298,7 @@ Queries: `products`, `product`, `orders`, `order`, `suppliers`, `supplier`, `pur
 
 Users are read-only over GraphQL. Orders carry their `shipments`, and their `payments`, `amount_paid`, `balance_due` and `payment_status` when the user and token hold `view_payments`.
 
-Mutations: `createProduct`, `updateProduct`, `deleteProduct`, `createOrder`, `updateOrder`, `createStockAdjustment`, `requestStockAdjustmentApproval`, `createSupplier`, `updateSupplier`, `createCustomer`, `updateCustomer`, `createReturnOrder`, `approveReturnOrder`, `receiveReturnOrder`, `createStockTransfer`, `completeStockTransfer`, `createPurchaseOrder`, `updatePurchaseOrder`, `receivePurchaseOrder` and `decideApproval`.
+Mutations: `createProduct`, `updateProduct`, `deleteProduct`, `createOrder`, `updateOrder`, `createStockAdjustment`, `requestStockAdjustmentApproval`, `createSupplier`, `updateSupplier`, `createCustomer`, `updateCustomer`, `createReturnOrder`, `approveReturnOrder`, `receiveReturnOrder`, `createStockTransfer`, `completeStockTransfer`, `transitionStockTransfer`, `createPurchaseOrder`, `updatePurchaseOrder`, `receivePurchaseOrder` and `decideApproval`.
 
 Every field is gated like the matching REST route: the user must hold the permission and the token must allow it, so a scoped token is enforced the same way over GraphQL. Mutations call the same services as the web app and REST API, so a return received or a transfer completed over GraphQL restocks and moves bins exactly as it would anywhere else. List queries accept `limit` (default 50, max 100), except `pendingApprovals`, which takes none. The endpoint shares the REST rate limit of 60 requests per minute.
 

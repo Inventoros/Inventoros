@@ -131,6 +131,7 @@
     }
   },
   "common": {
+    "pagination": "페이지 탐색",
     "save": "저장",
     "saveChanges": "변경사항 저장",
     "saving": "저장 중...",
@@ -474,7 +475,10 @@
         "updateQuantityFailed": "수량 업데이트에 실패했습니다",
         "confirmRemove": "자재 명세서에서 이 구성품을 제거하시겠습니까?",
         "removeFailed": "구성품 제거에 실패했습니다"
-      }
+      },
+      "prepareTransfer": "재고 준비",
+      "shipTransfer": "이동 출고",
+      "receiveTransfer": "이동 입고"
     },
     "quickAddCategory": {
       "title": "빠른 카테고리 추가",
@@ -1414,7 +1418,8 @@
         "processing": "처리 중",
         "completed": "완료됨",
         "failed": "실패",
-        "expired": "만료됨"
+        "expired": "만료됨",
+        "prepared": "준비됨"
       }
     }
   },
@@ -3838,5 +3843,9 @@
     "amount": "세액",
     "rate": "세율",
     "rateHint": "선택 사항: 세율을 입력하면 할인 후 소계에서 세액을 계산합니다. 세액만 저장됩니다."
+  },
+  "warehouseStock": {
+    "title": "창고별 재고",
+    "includeZero": "재고 0 포함"
   }
 }

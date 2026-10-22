@@ -131,6 +131,7 @@
     }
   },
   "common": {
+    "pagination": "Paginering",
     "save": "Opslaan",
     "saveChanges": "Wijzigingen opslaan",
     "saving": "Opslaan...",
@@ -474,7 +475,10 @@
         "updateQuantityFailed": "Aantal bijwerken mislukt",
         "confirmRemove": "Dit component uit de stuklijst verwijderen?",
         "removeFailed": "Component verwijderen mislukt"
-      }
+      },
+      "prepareTransfer": "Voorraad voorbereiden",
+      "shipTransfer": "Transfer verzenden",
+      "receiveTransfer": "Transfer ontvangen"
     },
     "quickAddCategory": {
       "title": "Snel categorie toevoegen",
@@ -1414,7 +1418,8 @@
         "processing": "In verwerking",
         "completed": "Voltooid",
         "failed": "Mislukt",
-        "expired": "Verlopen"
+        "expired": "Verlopen",
+        "prepared": "Voorbereid"
       }
     }
   },
@@ -3838,5 +3843,9 @@
     "amount": "Belastingbedrag",
     "rate": "Tarief",
     "rateHint": "Optioneel: voer een belastingtarief in om het bedrag te berekenen op basis van het subtotaal na kortingen. Alleen het bedrag wordt opgeslagen."
+  },
+  "warehouseStock": {
+    "title": "Voorraad per magazijn",
+    "includeZero": "Nulstanden tonen"
   }
 }

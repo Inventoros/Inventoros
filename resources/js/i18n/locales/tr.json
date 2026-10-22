@@ -131,6 +131,7 @@
     }
   },
   "common": {
+    "pagination": "Sayfalama",
     "save": "Kaydet",
     "saveChanges": "Değişiklikleri Kaydet",
     "saving": "Kaydediliyor...",
@@ -474,7 +475,10 @@
         "updateQuantityFailed": "Miktar güncellenemedi",
         "confirmRemove": "Bu bileşen ürün ağacından kaldırılsın mı?",
         "removeFailed": "Bileşen kaldırılamadı"
-      }
+      },
+      "prepareTransfer": "Stoku hazırla",
+      "shipTransfer": "Transferi gönder",
+      "receiveTransfer": "Transferi teslim al"
     },
     "quickAddCategory": {
       "title": "Hızlı Kategori Ekle",
@@ -1414,7 +1418,8 @@
         "processing": "İşleniyor",
         "completed": "Tamamlandı",
         "failed": "Başarısız",
-        "expired": "Süresi doldu"
+        "expired": "Süresi doldu",
+        "prepared": "Hazırlandı"
       }
     }
   },
@@ -3838,5 +3843,9 @@
     "amount": "Vergi tutarı",
     "rate": "Oran",
     "rateHint": "İsteğe bağlı: tutarı indirimlerden sonraki ara toplamdan hesaplamak için bir vergi oranı girin. Yalnızca tutar kaydedilir."
+  },
+  "warehouseStock": {
+    "title": "Depoya göre stok",
+    "includeZero": "Sıfır bakiyeleri dahil et"
   }
 }

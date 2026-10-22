@@ -131,6 +131,7 @@
     }
   },
   "common": {
+    "pagination": "Seitennavigation",
     "save": "Speichern",
     "saveChanges": "Änderungen speichern",
     "saving": "Wird gespeichert...",
@@ -474,7 +475,10 @@
         "updateQuantityFailed": "Menge konnte nicht aktualisiert werden",
         "confirmRemove": "Diese Komponente aus der Stückliste entfernen?",
         "removeFailed": "Komponente konnte nicht entfernt werden"
-      }
+      },
+      "prepareTransfer": "Bestand reservieren",
+      "shipTransfer": "Transfer versenden",
+      "receiveTransfer": "Transfer empfangen"
     },
     "quickAddCategory": {
       "title": "Kategorie schnell hinzufügen",
@@ -1414,7 +1418,8 @@
         "processing": "In Bearbeitung",
         "completed": "Abgeschlossen",
         "failed": "Fehlgeschlagen",
-        "expired": "Abgelaufen"
+        "expired": "Abgelaufen",
+        "prepared": "Vorbereitet"
       }
     }
   },
@@ -3838,5 +3843,9 @@
     "amount": "Steuerbetrag",
     "rate": "Satz",
     "rateHint": "Optional: Geben Sie einen Steuersatz ein, um den Betrag aus der Zwischensumme nach Rabatten zu berechnen. Gespeichert wird nur der Betrag."
+  },
+  "warehouseStock": {
+    "title": "Bestand nach Lager",
+    "includeZero": "Nullbestände anzeigen"
   }
 }

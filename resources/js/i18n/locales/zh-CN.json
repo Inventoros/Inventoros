@@ -131,6 +131,7 @@
     }
   },
   "common": {
+    "pagination": "分页",
     "save": "保存",
     "saveChanges": "保存更改",
     "saving": "保存中...",
@@ -474,7 +475,10 @@
         "updateQuantityFailed": "更新数量失败",
         "confirmRemove": "要从物料清单中移除此组件吗？",
         "removeFailed": "移除组件失败"
-      }
+      },
+      "prepareTransfer": "准备库存",
+      "shipTransfer": "发出调拨",
+      "receiveTransfer": "接收调拨"
     },
     "quickAddCategory": {
       "title": "快速添加分类",
@@ -1414,7 +1418,8 @@
         "processing": "处理中",
         "completed": "已完成",
         "failed": "失败",
-        "expired": "已过期"
+        "expired": "已过期",
+        "prepared": "已备货"
       }
     }
   },
@@ -3838,5 +3843,9 @@
     "amount": "税额",
     "rate": "税率",
     "rateHint": "可选：输入税率，即可根据折扣后的小计计算税额。仅保存税额。"
+  },
+  "warehouseStock": {
+    "title": "按仓库查看库存",
+    "includeZero": "包含零库存"
   }
 }

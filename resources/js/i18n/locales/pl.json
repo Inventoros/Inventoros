@@ -131,6 +131,7 @@
     }
   },
   "common": {
+    "pagination": "Stronicowanie",
     "save": "Zapisz",
     "saveChanges": "Zapisz zmiany",
     "saving": "Zapisywanie...",
@@ -474,7 +475,10 @@
         "updateQuantityFailed": "Nie udało się zaktualizować ilości",
         "confirmRemove": "Usunąć ten komponent z zestawienia materiałów?",
         "removeFailed": "Nie udało się usunąć komponentu"
-      }
+      },
+      "prepareTransfer": "Przygotuj zapas",
+      "shipTransfer": "Wyślij transfer",
+      "receiveTransfer": "Przyjmij transfer"
     },
     "quickAddCategory": {
       "title": "Szybkie dodawanie kategorii",
@@ -1414,7 +1418,8 @@
         "processing": "Przetwarzanie",
         "completed": "Zakończony",
         "failed": "Nieudany",
-        "expired": "Wygasły"
+        "expired": "Wygasły",
+        "prepared": "Przygotowany"
       }
     }
   },
@@ -3838,5 +3843,9 @@
     "amount": "Kwota podatku",
     "rate": "Stawka",
     "rateHint": "Opcjonalnie: wpisz stawkę podatku, aby obliczyć kwotę od sumy częściowej po rabatach. Zapisywana jest tylko kwota."
+  },
+  "warehouseStock": {
+    "title": "Stan według magazynu",
+    "includeZero": "Uwzględnij stany zerowe"
   }
 }

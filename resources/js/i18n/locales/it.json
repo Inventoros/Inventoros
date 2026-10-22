@@ -131,6 +131,7 @@
     }
   },
   "common": {
+    "pagination": "Paginazione",
     "save": "Salva",
     "saveChanges": "Salva modifiche",
     "saving": "Salvataggio...",
@@ -474,7 +475,10 @@
         "updateQuantityFailed": "Impossibile aggiornare la quantità",
         "confirmRemove": "Rimuovere questo componente dalla distinta base?",
         "removeFailed": "Impossibile rimuovere il componente"
-      }
+      },
+      "prepareTransfer": "Prepara scorte",
+      "shipTransfer": "Spedisci trasferimento",
+      "receiveTransfer": "Ricevi trasferimento"
     },
     "quickAddCategory": {
       "title": "Aggiunta rapida categoria",
@@ -1414,7 +1418,8 @@
         "processing": "In elaborazione",
         "completed": "Completata",
         "failed": "Non riuscita",
-        "expired": "Scaduta"
+        "expired": "Scaduta",
+        "prepared": "Preparato"
       }
     }
   },
@@ -3838,5 +3843,9 @@
     "amount": "Importo dell'imposta",
     "rate": "Aliquota",
     "rateHint": "Facoltativo: inserisci un'aliquota per calcolare l'importo dal subtotale dopo gli sconti. Viene salvato solo l'importo."
+  },
+  "warehouseStock": {
+    "title": "Scorte per magazzino",
+    "includeZero": "Includi saldi a zero"
   }
 }

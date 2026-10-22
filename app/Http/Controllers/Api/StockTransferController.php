@@ -84,6 +84,11 @@ class StockTransferController extends Controller
         return response()->json(['data' => new StockTransferResource($this->loaded($stockTransfer))]);
     }
 
+    public function prepare(Request $request, StockTransfer $stockTransfer): JsonResponse
+    {
+        return $this->transition($request, $stockTransfer, fn () => $this->transfers->prepare($stockTransfer, $request->user()), 'Stock reserved for transfer');
+    }
+
     /**
      * Mark a pending transfer as shipped (in transit).
      */
@@ -131,6 +136,6 @@ class StockTransferController extends Controller
 
     private function loaded(StockTransfer $transfer): StockTransfer
     {
-        return $transfer->load(['fromLocation', 'toLocation', 'transferredBy', 'completer', 'items.product']);
+        return $transfer->load(['fromLocation', 'toLocation', 'transferredBy', 'completer', 'items.product', 'items.variant']);
     }
 }
