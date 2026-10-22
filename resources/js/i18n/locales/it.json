@@ -11,6 +11,10 @@
     "line": "{available} di {requested} disponibili; {incoming} in arrivo",
     "transfer": "Trasferisci {count} × {sku} da {warehouse}"
   },
+  "inventoryCleanup": {
+    "perPage": "Prodotti per pagina",
+    "selectionHint": "La selezione viene mantenuta quando cambi pagina."
+  },
   "auditLabels": {
     "notCounted": "Non contato",
     "never": "Mai"

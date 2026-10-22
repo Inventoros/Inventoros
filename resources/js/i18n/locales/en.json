@@ -11,6 +11,10 @@
     "line": "{available} of {requested} available; {incoming} incoming",
     "transfer": "Transfer {count} × {sku} from {warehouse}"
   },
+  "inventoryCleanup": {
+    "perPage": "Products per page",
+    "selectionHint": "Selections stay selected when you move between pages."
+  },
   "auditLabels": {
     "notCounted": "Not counted",
     "never": "Never"

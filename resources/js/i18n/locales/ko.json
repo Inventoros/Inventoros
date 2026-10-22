@@ -11,6 +11,10 @@
     "line": "{requested}개 중 {available}개 있음, {incoming}개 입고 예정",
     "transfer": "{warehouse}에서 {sku} {count}개 이동"
   },
+  "inventoryCleanup": {
+    "perPage": "페이지당 제품 수",
+    "selectionHint": "페이지를 이동해도 선택이 유지됩니다."
+  },
   "auditLabels": {
     "notCounted": "미집계",
     "never": "없음"

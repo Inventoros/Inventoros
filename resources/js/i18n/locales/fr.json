@@ -11,6 +11,10 @@
     "line": "{available} sur {requested} disponibles ; {incoming} en transit",
     "transfer": "Transférer {count} × {sku} depuis {warehouse}"
   },
+  "inventoryCleanup": {
+    "perPage": "Produits par page",
+    "selectionHint": "La sélection est conservée lors du changement de page."
+  },
   "auditLabels": {
     "notCounted": "Non compté",
     "never": "Jamais"

@@ -11,6 +11,10 @@
     "line": "متاح {available} من {requested}؛ قادم {incoming}",
     "transfer": "نقل {count} × {sku} من {warehouse}"
   },
+  "inventoryCleanup": {
+    "perPage": "المنتجات في الصفحة",
+    "selectionHint": "تبقى العناصر محددة عند التنقل بين الصفحات."
+  },
   "auditLabels": {
     "notCounted": "لم يُعدّ",
     "never": "أبدًا"

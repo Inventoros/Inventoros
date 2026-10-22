@@ -11,6 +11,10 @@
     "line": "{available} van {requested} beschikbaar; {incoming} onderweg",
     "transfer": "{count} × {sku} overboeken vanuit {warehouse}"
   },
+  "inventoryCleanup": {
+    "perPage": "Producten per pagina",
+    "selectionHint": "Selecties blijven behouden wanneer u van pagina wisselt."
+  },
   "auditLabels": {
     "notCounted": "Niet geteld",
     "never": "Nooit"

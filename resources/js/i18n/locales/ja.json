@@ -11,6 +11,10 @@
     "line": "{requested} 個中 {available} 個あり、入荷予定 {incoming} 個",
     "transfer": "{warehouse} から {sku} を {count} 個移動"
   },
+  "inventoryCleanup": {
+    "perPage": "ページあたりの商品数",
+    "selectionHint": "ページを切り替えても選択は維持されます。"
+  },
   "auditLabels": {
     "notCounted": "未カウント",
     "never": "なし"

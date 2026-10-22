@@ -11,6 +11,10 @@
     "line": "{available} von {requested} verfügbar; {incoming} unterwegs",
     "transfer": "{count} × {sku} aus {warehouse} umlagern"
   },
+  "inventoryCleanup": {
+    "perPage": "Produkte pro Seite",
+    "selectionHint": "Die Auswahl bleibt beim Seitenwechsel erhalten."
+  },
   "auditLabels": {
     "notCounted": "Nicht gezählt",
     "never": "Nie"

@@ -9,9 +9,11 @@ use App\Http\Requests\Api\Warehouse\StoreWarehouseRequest;
 use App\Http\Requests\Api\Warehouse\UpdateWarehouseRequest;
 use App\Models\Warehouse;
 use App\Services\WarehouseAccessService;
+use App\Services\WarehouseDeletionService;
 use Dedoc\Scramble\Attributes\QueryParameter;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 
 /**
  * @tags Warehouses
@@ -155,21 +157,14 @@ class WarehouseController extends Controller
 
         app(WarehouseAccessService::class)->authorizeWarehouse($request->user(), $warehouse->id);
 
-        if ($warehouse->is_default) {
+        try {
+            app(WarehouseDeletionService::class)->delete($warehouse, $request->user());
+        } catch (ValidationException $e) {
             return response()->json([
-                'message' => 'Cannot delete the default warehouse. Set another warehouse as default first.',
-                'error' => 'cannot_delete_default',
+                'message' => $e->errors()['warehouse'][0],
+                'error' => $warehouse->is_default ? 'cannot_delete_default' : 'has_products',
             ], 422);
         }
-
-        if ($warehouse->locations()->whereHas('products')->exists()) {
-            return response()->json([
-                'message' => 'Cannot delete warehouse with locations that have associated products.',
-                'error' => 'has_products',
-            ], 422);
-        }
-
-        $warehouse->delete();
 
         return response()->json([
             'message' => 'Warehouse deleted successfully',

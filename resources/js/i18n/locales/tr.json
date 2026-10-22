@@ -11,6 +11,10 @@
     "line": "{requested} birimin {available} birimi mevcut; {incoming} birim yolda",
     "transfer": "{warehouse} deposundan {count} × {sku} aktar"
   },
+  "inventoryCleanup": {
+    "perPage": "Sayfa başına ürün",
+    "selectionHint": "Sayfalar arasında geçiş yaparken seçimler korunur."
+  },
   "auditLabels": {
     "notCounted": "Sayılmadı",
     "never": "Hiç"

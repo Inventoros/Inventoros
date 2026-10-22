@@ -11,6 +11,10 @@
     "line": "Dostępne {available} z {requested}; w drodze {incoming}",
     "transfer": "Przenieś {count} × {sku} z {warehouse}"
   },
+  "inventoryCleanup": {
+    "perPage": "Produkty na stronie",
+    "selectionHint": "Wybór zostaje zachowany przy zmianie strony."
+  },
   "auditLabels": {
     "notCounted": "Nie policzono",
     "never": "Nigdy"

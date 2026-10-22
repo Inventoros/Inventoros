@@ -11,6 +11,10 @@
     "line": "需要 {requested} 件，可用 {available} 件，在途 {incoming} 件",
     "transfer": "从 {warehouse} 调拨 {count} 件 {sku}"
   },
+  "inventoryCleanup": {
+    "perPage": "每页商品数",
+    "selectionHint": "切换页面时保留所选商品。"
+  },
   "auditLabels": {
     "notCounted": "未盘点",
     "never": "从未"

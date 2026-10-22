@@ -11,6 +11,10 @@
     "line": "Доступно {available} из {requested}; в пути {incoming}",
     "transfer": "Переместить {count} × {sku} со склада {warehouse}"
   },
+  "inventoryCleanup": {
+    "perPage": "Товаров на странице",
+    "selectionHint": "Выбор сохраняется при переходе между страницами."
+  },
   "auditLabels": {
     "notCounted": "Не подсчитано",
     "never": "Никогда"
