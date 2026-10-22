@@ -87,6 +87,19 @@ class ShipmentCustomerEmailTest extends TestCase
         Mail::assertNothingQueued();
     }
 
+    public function test_an_integration_can_own_one_shipments_notification_without_changing_the_customers_preference(): void
+    {
+        Mail::fake();
+        $owned = $this->shipment();
+        $normal = $this->shipment();
+        add_filter('shipment_should_notify_customer', fn ($send, Shipment $shipment) => $shipment->id === $owned->id ? false : $send);
+        app(ShipmentService::class)->markShipped($owned, $this->admin);
+        app(ShipmentService::class)->markShipped($normal, $this->admin);
+        Mail::assertQueued(ShipmentShippedEmail::class, 1);
+        $this->assertTrue($owned->fresh()->notify_customer);
+        $this->assertNull($owned->fresh()->customer_notification_queued_at);
+    }
+
     public function test_the_email_is_queued_and_carries_the_tracking_link_in_both_parts(): void
     {
         $shipment = $this->shipment();

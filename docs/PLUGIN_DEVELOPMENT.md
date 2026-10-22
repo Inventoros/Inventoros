@@ -1192,3 +1192,7 @@ A plugin runs PHP inside the application with full access to the database and fi
 - A plugin whose main file throws at boot is skipped for that request (and logged) rather than taking the application down.
 - A runtime bundle that fails to import is reported in the browser console as `[Inventoros] Plugin "{slug}" UI failed to load.`
 - Check `window.Inventoros` and the `pluginAssets` prop (Vue devtools, or `JSON.parse(document.querySelector('script[data-page]').textContent).props.pluginAssets`) to see which bundles the page is loading.
+
+### Shipment notification ownership
+
+A channel integration that sends the shipping email can return `false` from the `shipment_should_notify_customer` filter (`bool $send, Shipment $shipment`) for its own shipments. The core keeps the customer notification preference unchanged and does not claim or queue its email. Returning `true` cannot enable notifications on a shipment with `notify_customer=false`. Use `shipment_shipped` to queue channel work after commit.
