@@ -100,7 +100,12 @@ final class InventoryResetService
         $bins->ensureBinned($target);
         foreach ($bins->breakdown($target) as $bin) {
             if ((int) $bin->quantity !== 0) {
-                $this->adjust($target, -(int) $bin->quantity, $actor, $reason, (int) $bin->location_id);
+                // Retired locations can still have legacy balances. The reset
+                // owns bin syncing under the parent lock, so those can be
+                // written off without restoring a deleted location.
+                $adjustment = $this->adjust($target, -(int) $bin->quantity, $actor, $reason, null);
+                $bin->update(['quantity' => 0]);
+                $adjustment->update(['location_id' => $bin->location_id]);
             }
         }
         $remaining = (int) $target->fresh()->stock;
@@ -109,10 +114,10 @@ final class InventoryResetService
         }
     }
 
-    private function adjust(Product|ProductVariant $target, int $delta, User $actor, string $reason, ?int $locationId): void
+    private function adjust(Product|ProductVariant $target, int $delta, User $actor, string $reason, ?int $locationId): StockAdjustment
     {
         $method = $target instanceof ProductVariant ? 'adjustVariant' : 'adjust';
-        StockAdjustment::$method($target, $delta, 'correction', 'Administrator stock reset', $reason, actor: $actor, locationId: $locationId, syncBins: false);
+        return StockAdjustment::$method($target, $delta, 'correction', 'Administrator stock reset', $reason, actor: $actor, locationId: $locationId, syncBins: false);
     }
 
     private function log(User $actor, $subject, string $reason, array $properties): void
