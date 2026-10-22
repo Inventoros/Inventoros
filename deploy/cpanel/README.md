@@ -61,3 +61,17 @@ If you need to deploy manually without the GitHub release:
 - `.htaccess` - Apache rewrite rules for Laravel
 - `INSTALL.md` - The installation guide shipped in the package
 - `build-release.php` - Builds and verifies the package
+
+## SSH release updates
+
+For an installed cPanel site, copy `ssh-settings.example.json` to `ssh-settings.local.json` and set the SSH config alias, application directory and PHP binary. The local file is ignored by Git. Configure key authentication and verify the server host key in your SSH client first; the helper requires an existing trusted host key. Keep private keys in your SSH agent/configuration.
+
+```bash
+php deploy/cpanel/ssh-update.php          # print the plan; no connection
+php deploy/cpanel/ssh-update.php --check  # read the server update status
+php deploy/cpanel/ssh-update.php --apply  # run the interactive updater
+```
+
+`--apply` requires a clean local `main` matching the freshly fetched `origin/main`. It opens an SSH terminal and runs `php artisan app:update` in the configured application directory. Review the release and confirm in that terminal. The existing updater handles signed-package verification, backup, maintenance, migrations and rollback. Publish a release from main before updating the server; the helper installs published releases using the site's update configuration. A nonstandard local settings path can be supplied with `--settings=/path/to/settings.json`.
+
+The packaging workflow builds PR packages for review, and only signs and publishes releases whose commit is merged into main. Manual release tags point to the exact commit that was packaged.
