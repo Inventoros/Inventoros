@@ -28,7 +28,7 @@ final class InventoryCleanupTest extends TestCase
         $this->productA->update(['stock' => 0]);
         $this->productB->update(['stock' => 0]);
         ProductLocationStock::query()->update(['quantity' => 0]);
-        $this->actingAs($this->admin)->delete(route('warehouses.destroy', $this->warehouseB))->assertRedirect()->assertSessionHasNoErrors();
+        $this->actingAs($this->admin)->withSession(['active_warehouse_id' => $this->warehouseB->id])->delete(route('warehouses.destroy', $this->warehouseB))->assertRedirect()->assertSessionHasNoErrors()->assertSessionMissing('active_warehouse_id');
         $this->assertSoftDeleted($this->warehouseB);
         $this->assertNull($this->locationB->fresh()->warehouse_id);
         $this->assertNotNull($this->productB->fresh());
