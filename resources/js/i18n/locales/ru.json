@@ -213,7 +213,8 @@
     "add": "Добавить",
     "export": "Экспорт",
     "new": "Новый",
-    "editWithName": "Редактирование: {name}"
+    "editWithName": "Редактирование: {name}",
+    "pagination": "Пагинация"
   },
   "nav": {
     "dashboard": "Панель управления",

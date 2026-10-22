@@ -213,7 +213,8 @@
     "add": "Dodaj",
     "export": "Eksportuj",
     "new": "Nowy",
-    "editWithName": "Edycja: {name}"
+    "editWithName": "Edycja: {name}",
+    "pagination": "Stronicowanie"
   },
   "nav": {
     "dashboard": "Panel główny",

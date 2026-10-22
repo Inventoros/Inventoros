@@ -213,7 +213,8 @@
     "add": "إضافة",
     "export": "تصدير",
     "new": "جديد",
-    "editWithName": "تعديل: {name}"
+    "editWithName": "تعديل: {name}",
+    "pagination": "ترقيم الصفحات"
   },
   "nav": {
     "dashboard": "لوحة التحكم",

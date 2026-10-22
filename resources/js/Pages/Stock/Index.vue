@@ -57,7 +57,7 @@ const field = 'h-9 rounded-md border border-border-subtle bg-surface-canvas px-3
                     <tbody>
                         <tr v-for="row in balances.data" :key="`${row.product_id}:${row.product_variant_id}:${row.location_id}`" class="border-b border-border-subtle last:border-0">
                             <td class="whitespace-nowrap px-4 py-3 font-mono text-xs"><Link :href="route('products.show', row.product_id)" class="text-brand hover:underline">{{ row.sku }}</Link></td>
-                            <td class="px-4 py-3">{{ row.product_name }}</td><td class="px-4 py-3">{{ row.variant_title || '—' }}</td>
+                            <td class="px-4 py-3">{{ row.product_name }}</td><td class="px-4 py-3">{{ row.variant_title || t('common.na') }}</td>
                             <td class="px-4 py-3">{{ row.warehouse_name || t('locations.noWarehouse') }}</td><td class="px-4 py-3">{{ row.location_name || t('common.na') }}</td>
                             <td v-for="key in ['on_hand', 'reserved', 'available', 'in_transit']" :key="key" class="px-4 py-3 text-right tabular-nums" :class="key === 'available' && row.available === 0 ? 'font-semibold text-status-danger' : ''">{{ row[key] }}</td>
                         </tr>
@@ -66,7 +66,7 @@ const field = 'h-9 rounded-md border border-border-subtle bg-surface-canvas px-3
                 </table>
             </div>
         </Card>
-        <nav class="mt-4 flex flex-wrap gap-2" aria-label="Pagination">
+        <nav class="mt-4 flex flex-wrap gap-2" :aria-label="t('common.pagination')">
             <template v-for="link in balances.links" :key="link.label">
                 <Link v-if="link.url" :href="link.url" class="rounded-md border border-border-subtle px-3 py-2 text-sm ds-focus-ring" :class="link.active ? 'bg-brand text-brand-foreground' : 'bg-surface-canvas'" v-html="link.label" />
                 <span v-else class="rounded-md border border-border-subtle px-3 py-2 text-sm text-text-tertiary" v-html="link.label" />

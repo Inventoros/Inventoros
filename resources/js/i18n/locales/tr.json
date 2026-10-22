@@ -213,7 +213,8 @@
     "add": "Ekle",
     "export": "Dışa Aktar",
     "new": "Yeni",
-    "editWithName": "Düzenle: {name}"
+    "editWithName": "Düzenle: {name}",
+    "pagination": "Sayfalama"
   },
   "nav": {
     "dashboard": "Gösterge Paneli",

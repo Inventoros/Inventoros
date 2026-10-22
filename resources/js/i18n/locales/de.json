@@ -213,7 +213,8 @@
     "add": "Hinzufügen",
     "export": "Exportieren",
     "new": "Neu",
-    "editWithName": "Bearbeiten: {name}"
+    "editWithName": "Bearbeiten: {name}",
+    "pagination": "Seitennavigation"
   },
   "nav": {
     "dashboard": "Dashboard",
@@ -366,7 +367,7 @@
     "printBarcodes": "Barcodes drucken",
     "printQrLabels": "QR-Etiketten drucken",
     "scanBarcode": "Barcode scannen (Strg+B)",
-    "confirmDelete": "Sind Sie sicher, dass Sie \u201E{name}\u201C löschen möchten?",
+    "confirmDelete": "Sind Sie sicher, dass Sie „{name}“ löschen möchten?",
     "create": {
       "title": "Produkt erstellen",
       "basicInfo": "Grundinformationen",
@@ -1716,7 +1717,7 @@
       "addUser": "Benutzer hinzufügen",
       "description": "Verwalten Sie die Benutzer Ihrer Organisation. Sie können Benutzer hinzufügen, bearbeiten und entfernen sowie Rollen und Berechtigungen zuweisen.",
       "role": "Rolle",
-      "noUsersFound": "Keine Benutzer gefunden. Klicken Sie auf ‘Benutzer hinzuf\u00FCgen’, um Ihren ersten Benutzer zu erstellen.",
+      "noUsersFound": "Keine Benutzer gefunden. Klicken Sie auf ‘Benutzer hinzufügen’, um Ihren ersten Benutzer zu erstellen.",
       "create": {
         "title": "Benutzer erstellen",
         "backToUsers": "Zurück zu Benutzer",
@@ -1957,7 +1958,7 @@
       "filename": "Dateiname",
       "size": "Größe",
       "restore": "Wiederherstellen",
-      "noBackups": "Keine Sicherungen verf\u00FCgbar. Klicken Sie auf ‘Sicherung erstellen’, um Ihre erste Sicherung zu erstellen.",
+      "noBackups": "Keine Sicherungen verfügbar. Klicken Sie auf ‘Sicherung erstellen’, um Ihre erste Sicherung zu erstellen.",
       "updateInfo": "Aktualisierungsinformationen",
       "fetchedFrom": "Updates werden abgerufen von",
       "onGithub": "auf GitHub",

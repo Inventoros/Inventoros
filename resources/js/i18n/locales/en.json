@@ -114,7 +114,8 @@
     "add": "Add",
     "export": "Export",
     "new": "New",
-    "editWithName": "Edit: {name}"
+    "editWithName": "Edit: {name}",
+    "pagination": "Pagination"
   },
   "nav": {
     "dashboard": "Dashboard",

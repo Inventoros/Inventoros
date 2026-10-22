@@ -213,7 +213,8 @@
     "add": "Toevoegen",
     "export": "Exporteren",
     "new": "Nieuw",
-    "editWithName": "Bewerken: {name}"
+    "editWithName": "Bewerken: {name}",
+    "pagination": "Paginering"
   },
   "nav": {
     "dashboard": "Dashboard",

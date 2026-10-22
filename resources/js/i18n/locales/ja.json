@@ -213,7 +213,8 @@
     "add": "追加",
     "export": "エクスポート",
     "new": "新規",
-    "editWithName": "編集: {name}"
+    "editWithName": "編集: {name}",
+    "pagination": "ページ送り"
   },
   "nav": {
     "dashboard": "ダッシュボード",

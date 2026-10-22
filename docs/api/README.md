@@ -354,7 +354,7 @@ const api = (path, init = {}) =>
   });
 
 // List products
-const { data: products } = await api("/products?out_of_stock=1&per_page=25");
+const { data: products } = await api("/products?low_stock=1&per_page=25");
 
 // Create an order
 const { data: order } = await api("/orders", {
@@ -388,7 +388,7 @@ Events are fired by model observers after the database transaction commits, so t
 
 | Group | Events |
 | --- | --- |
-| Product | `product.created`, `product.updated`, `product.deleted`, `product.out_of_stock`, `product.out_of_stock` |
+| Product | `product.created`, `product.updated`, `product.deleted`, `product.low_stock`, `product.out_of_stock` |
 | Order | `order.created`, `order.updated`, `order.status_changed`, `order.approved`, `order.rejected` |
 | Payment | `payment.recorded`, `payment.voided` (a refund is a recorded payment of type `refund`) |
 | Shipment | `shipment.created`, `shipment.delivered` |

@@ -213,7 +213,8 @@
     "add": "추가",
     "export": "내보내기",
     "new": "새로 만들기",
-    "editWithName": "편집: {name}"
+    "editWithName": "편집: {name}",
+    "pagination": "페이지 탐색"
   },
   "nav": {
     "dashboard": "대시보드",
