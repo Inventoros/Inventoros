@@ -1,4 +1,6 @@
 <script setup>
+import { useCurrency } from '@/composables/useCurrency';
+
 import PluginSlot from '@/Components/PluginSlot.vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import PageHeader from '@/Components/ui/PageHeader.vue';
@@ -17,6 +19,7 @@ import { usePermissions } from '@/composables/usePermissions';
 
 const { canVisit } = usePermissions();
 
+const { organizationCurrency } = useCurrency();
 const { t } = useI18n();
 
 const props = defineProps({
@@ -147,7 +150,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
             <StatTile
                 :label="t('common.total')"
                 :value="formatCurrency(totalSpend)"
-                :hint="customer.currency || 'USD'"
+                :hint="customer.currency || organizationCurrency"
                 icon-tone="success"
             >
                 <template #icon><Wallet :size="18" /></template>
