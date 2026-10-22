@@ -352,10 +352,10 @@ final class StockTransferService
     {
         $transfer->load('items');
         $products = Product::query()->when($allowArchived, fn ($q) => $q->withTrashed())
-            ->where('organization_id', $transfer->organization_id)->whereIn('id', $transfer->items->pluck('product_id'))
+            ->where('organization_id', $transfer->organization_id)->whereIn('id', $transfer->items->pluck('product_id')->unique()->sort()->values()->all())
             ->orderBy('id')->lockForUpdate()->get()->keyBy('id');
         $variants = ProductVariant::query()->when($allowArchived, fn ($q) => $q->withTrashed())
-            ->where('organization_id', $transfer->organization_id)->whereIn('id', $transfer->items->pluck('product_variant_id')->filter())
+            ->where('organization_id', $transfer->organization_id)->whereIn('id', $transfer->items->pluck('product_variant_id')->filter()->unique()->sort()->values()->all())
             ->orderBy('id')->lockForUpdate()->get()->keyBy('id');
         $targets = [];
         foreach ($transfer->items as $item) {
