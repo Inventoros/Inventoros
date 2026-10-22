@@ -1,4 +1,6 @@
 <script setup>
+import { useCurrency } from '@/composables/useCurrency';
+
 import AppLayout from '@/Layouts/AppLayout.vue';
 import PageHeader from '@/Components/ui/PageHeader.vue';
 import Card from '@/Components/ui/Card.vue';
@@ -38,6 +40,7 @@ import {
     QrCode,
 } from 'lucide-vue-next';
 
+const { organizationCurrency } = useCurrency();
 const { t } = useI18n();
 const { hasPermission, canVisit } = usePermissions();
 
@@ -333,7 +336,7 @@ const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface
                 <StatTile
                     :label="t('products.show.sellingPrice')"
                     :value="formatCurrency(product.display_price ?? product.price)"
-                    :hint="product.currency || 'USD'"
+                    :hint="product.currency || organizationCurrency"
                     icon-tone="success"
                 >
                     <template #icon><DollarSign :size="18" /></template>

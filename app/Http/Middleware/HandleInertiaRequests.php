@@ -62,7 +62,7 @@ class HandleInertiaRequests extends Middleware
                 // writes, see EnsureActiveOrganizationMatches) and the ones the
                 // user can switch to; the switcher shows only with two or more.
                 'organization' => fn () => $user?->organization_id
-                    ? ['id' => (int) $user->organization_id, 'name' => $user->organization?->name]
+                    ? ['id' => (int) $user->organization_id, 'name' => $user->organization?->name, 'logo_url' => $user->organization?->logo_url]
                     : null,
                 'organizations' => fn () => $user
                     ? app(OrganizationMembershipService::class)->organizationsFor($user)
@@ -134,12 +134,13 @@ class HandleInertiaRequests extends Middleware
     /**
      * The regional settings the frontend formatters honour.
      *
-     * @return array{currency: string, date_format: string|null, time_format: string|null}
+     * @return array{currency: string, currencies: array<int, string>, date_format: string|null, time_format: string|null}
      */
     public static function regional(?Organization $organization): array
     {
         return [
-            'currency' => $organization?->currency ?: 'USD',
+            'currency' => $organization?->baseCurrency() ?? config('currencies.default', 'USD'),
+            'currencies' => array_keys((array) config('currencies.supported', [])),
             'date_format' => $organization?->date_format ?: null,
             'time_format' => $organization?->time_format ?: null,
         ];
