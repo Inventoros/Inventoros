@@ -237,6 +237,7 @@
     "webhooks": "Webhooks",
     "warehouses": "Склады",
     "workOrders": "Производственные заказы",
+    "reservations": "Резервы",
     "account": "Аккаунт",
     "profile": "Профиль",
     "logOut": "Выйти",
@@ -435,6 +436,10 @@
       "variantCount": "{count} вариантов",
       "variantStockTracked": "Остатки отслеживаются по вариантам. Общий остаток вариантов",
       "stockInfo": "Информация о запасах",
+      "reservedStock": "Зарезервировано",
+      "availableStock": "Доступно",
+      "reservationsHint": "Зарезервированные единицы обещаны, и никто другой не может их продать, переместить или списать.",
+      "viewReservations": "Показать резервы",
       "currentStock": "Текущий остаток",
       "minStock": "Мин. остаток",
       "maxStock": "Макс. остаток",
@@ -2536,6 +2541,8 @@
       "sku": "SKU",
       "price": "Цена",
       "stock": "Остаток",
+      "reserved": "Зарезервировано",
+      "available": "Доступно",
       "noVariants": "Варианты не найдены",
       "totalVariants": "Всего вариантов",
       "totalStock": "Общий остаток"
@@ -3728,6 +3735,42 @@
   "legal": {
     "licensedUnder": "Распространяется по лицензии {license}",
     "sourceCode": "Исходный код"
+  },
+  "reservations": {
+    "title": "Резервы запасов",
+    "subtitle": "Единицы в наличии, обещанные заказу, плагину или бронированию, поэтому их нельзя продать или переместить.",
+    "searchPlaceholder": "Поиск по ссылке",
+    "owner": "Владелец",
+    "allOwners": "Все владельцы",
+    "filter": "Фильтр",
+    "product": "Товар",
+    "quantity": "В резерве",
+    "heldIn": "Где зарезервировано",
+    "productTotal": "Весь товар",
+    "serial": "Серийный номер {number}",
+    "batch": "Партия {number}",
+    "reference": "Ссылка",
+    "expires": "Истекает",
+    "noExpiry": "Без срока",
+    "release": "Снять резерв",
+    "confirmRelease": "Снять резерв {reference} владельца {owner}? Единицы снова станут доступны.",
+    "empty": "Подходящих резервов нет.",
+    "forProduct": "Резервы для {product}",
+    "allProducts": "Все товары",
+    "showing": "С {from} по {to} из {total}",
+    "statuses": {
+      "active": "Активен",
+      "expired": "Истёк",
+      "consumed": "Использован",
+      "released": "Снят",
+      "all": "Все"
+    },
+    "reasons": {
+      "released": "Снят владельцем",
+      "admin": "Снят администратором",
+      "expired": "Истёк",
+      "uninstalled": "Плагин удалён"
+    }
   },
   "stockTransfers": {
     "title": "Перемещения запасов",

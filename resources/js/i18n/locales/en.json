@@ -138,6 +138,7 @@
     "webhooks": "Webhooks",
     "warehouses": "Warehouses",
     "workOrders": "Work Orders",
+    "reservations": "Reservations",
     "account": "Account",
     "profile": "Profile",
     "logOut": "Log Out",
@@ -336,6 +337,10 @@
       "variantCount": "{count} variants",
       "variantStockTracked": "Stock is tracked per variant. Total variant stock",
       "stockInfo": "Stock Information",
+      "reservedStock": "Reserved",
+      "availableStock": "Available",
+      "reservationsHint": "Reserved units are promised and cannot be sold, moved or written off by anyone else.",
+      "viewReservations": "View reservations",
       "currentStock": "Current Stock",
       "minStock": "Min Stock",
       "maxStock": "Max Stock",
@@ -2437,6 +2442,8 @@
       "sku": "SKU",
       "price": "Price",
       "stock": "Stock",
+      "reserved": "Reserved",
+      "available": "Available",
       "noVariants": "No variants found",
       "totalVariants": "Total Variants",
       "totalStock": "Total Stock"
@@ -3728,6 +3735,42 @@
   "legal": {
     "licensedUnder": "Licensed under the {license}",
     "sourceCode": "Source code"
+  },
+  "reservations": {
+    "title": "Stock reservations",
+    "subtitle": "Units on hand that are promised to an order, a plugin or a booking, so they are not available to sell or move.",
+    "searchPlaceholder": "Search by reference",
+    "owner": "Owner",
+    "allOwners": "All owners",
+    "filter": "Filter",
+    "product": "Product",
+    "quantity": "Held",
+    "heldIn": "Held in",
+    "productTotal": "Product total",
+    "serial": "Serial {number}",
+    "batch": "Batch {number}",
+    "reference": "Reference",
+    "expires": "Expires",
+    "noExpiry": "No expiry",
+    "release": "Release",
+    "confirmRelease": "Release reservation {reference} held by {owner}? The units become available again.",
+    "empty": "No reservations match.",
+    "forProduct": "Reservations for {product}",
+    "allProducts": "All products",
+    "showing": "Showing {from} to {to} of {total}",
+    "statuses": {
+      "active": "Active",
+      "expired": "Expired",
+      "consumed": "Consumed",
+      "released": "Released",
+      "all": "All"
+    },
+    "reasons": {
+      "released": "Released by owner",
+      "admin": "Released by an admin",
+      "expired": "Expired",
+      "uninstalled": "Plugin uninstalled"
+    }
   },
   "stockTransfers": {
     "title": "Stock Transfers",

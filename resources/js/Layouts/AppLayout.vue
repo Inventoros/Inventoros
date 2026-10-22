@@ -31,6 +31,7 @@ import {
     ArrowLeftRight,
     ScanLine,
     Hammer,
+    Lock,
     FileSpreadsheet,
     BarChart3,
     Users,
@@ -139,6 +140,7 @@ const sections = computed(() => [
             { icon: ArrowLeftRight, name: t('nav.stockTransfers'), href: route('stock-transfers.index'), active: ['stock-transfers.*'], perm: 'transfer_stock' },
             { icon: ScanLine, name: t('nav.stockAudits'), href: route('stock-audits.index'), active: ['stock-audits.*'], perm: 'view_stock_audits' },
             { icon: Hammer, name: t('nav.workOrders'), href: route('work-orders.index'), active: ['work-orders.*'], perm: 'manage_stock' },
+            { icon: Lock, name: t('nav.reservations'), href: route('reservations.index'), active: ['reservations.*'], perm: 'view_products' },
         ],
     },
     {

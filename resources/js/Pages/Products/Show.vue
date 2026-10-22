@@ -48,6 +48,8 @@ const props = defineProps({
     variantLocationBreakdown: { type: Array, default: () => [] },
     warehouseStockLevels: { type: Array, default: () => [] },
     priceHistory: { type: Array, default: () => [] },
+    // On hand / reserved / available (stock reservations), with a per-variant map.
+    stockAvailability: { type: Object, default: null },
     pluginComponents: Object,
 });
 
@@ -614,6 +616,7 @@ const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface
                                 :product-id="product.id"
                                 :currency-symbol="getCurrencySymbol()"
                                 :product-price="product.price"
+                                :availability="stockAvailability?.variants ?? null"
                                 :show-stock-adjust="true"
                                 @variant-updated="onVariantUpdated"
                             />
@@ -901,6 +904,31 @@ const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface
                                         :class="onHand <= product.min_stock ? 'text-status-danger' : 'text-brand'"
                                     >
                                         {{ onHand }}
+                                    </p>
+                                </div>
+                                <div v-if="stockAvailability" class="grid grid-cols-2 gap-3">
+                                    <div class="rounded-lg border border-border-subtle bg-surface-canvas p-3">
+                                        <p class="mb-1 text-xs text-text-tertiary">{{ t('products.show.reservedStock') }}</p>
+                                        <p class="text-lg font-semibold tabular-nums text-text-primary">
+                                            {{ stockAvailability.reserved }}
+                                        </p>
+                                    </div>
+                                    <div class="rounded-lg border border-border-subtle bg-surface-canvas p-3">
+                                        <p class="mb-1 text-xs text-text-tertiary">{{ t('products.show.availableStock') }}</p>
+                                        <p
+                                            class="text-lg font-semibold tabular-nums"
+                                            :class="stockAvailability.available <= 0 ? 'text-status-danger' : 'text-text-primary'"
+                                        >
+                                            {{ stockAvailability.available }}
+                                        </p>
+                                    </div>
+                                    <p v-if="stockAvailability.reserved > 0" class="col-span-2 text-xs text-text-tertiary">
+                                        {{ t('products.show.reservationsHint') }}
+                                        <Link
+                                            v-if="canVisit('reservations.index')"
+                                            :href="route('reservations.index', { product_id: product.id })"
+                                            class="text-brand hover:underline"
+                                        >{{ t('products.show.viewReservations') }}</Link>
                                     </p>
                                 </div>
                                 <div class="grid grid-cols-2 gap-3">

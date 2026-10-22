@@ -116,11 +116,18 @@ final class ProductLocationStockService
             ->where('location_id', $fromLocationId)
             ->first();
 
-        $available = (int) ($fromRow->quantity ?? 0);
+        // Units reserved in the source bin stay where they are. A hold on
+        // the product total does not pin units to any bin, so it does not
+        // limit a move.
+        $held = $this->reservations()->reservedAtLocation($this->productId($product), $fromLocationId, $this->variantId($product));
+        $onHand = (int) ($fromRow->quantity ?? 0);
+        $available = $onHand - $held;
 
         if ($available < $quantity) {
             throw new InsufficientStockException(
-                "Insufficient stock at the source location for item {$product->id}: have {$available}, transfer requires {$quantity}."
+                "Insufficient stock at the source location for item {$product->id}: have "
+                .($held > 0 ? max(0, $available)." available ({$onHand} on hand, {$held} reserved)" : (string) $onHand)
+                .", transfer requires {$quantity}."
             );
         }
 
@@ -152,11 +159,19 @@ final class ProductLocationStockService
      * from unassigned stock. Call BEFORE decrementing products.stock so the
      * lazy seed reads the pre-decrement total.
      *
+     * Units reserved in a bin (a bin hold, see StockReservationService) are
+     * left in it: they are drawn only when $respectHolds is false (a physical
+     * correction), and then only after every free unit, firing
+     * reservation_shortfall for each bin left short. With holds respected, a
+     * shortfall the free units cannot cover came from unassigned stock; the
+     * caller's check against available stock guarantees there is enough of
+     * it.
+     *
      * Must run inside the caller's product-locked transaction.
      *
      * @api
      */
-    public function consume(Product|ProductVariant $product, int $quantity, ?int $preferWarehouseId = null): void
+    public function consume(Product|ProductVariant $product, int $quantity, ?int $preferWarehouseId = null, bool $respectHolds = true): void
     {
         if ($quantity <= 0) {
             return;
@@ -188,17 +203,47 @@ final class ProductLocationStockService
             ->lockForUpdate()
             ->get();
 
+        $held = $this->reservations()->reservedByLocation($this->productId($product), $this->variantId($product));
         $remaining = $quantity;
 
+        // Free units first, in fulfilment order.
+        foreach ($bins as $bin) {
+            if ($remaining <= 0) {
+                break;
+            }
+
+            $free = (int) $bin->quantity - ($held[(int) $bin->location_id] ?? 0);
+            $take = min($remaining, max(0, $free));
+
+            if ($take > 0) {
+                $bin->decrement('quantity', $take);
+                $remaining -= $take;
+            }
+        }
+
+        if ($respectHolds || $remaining <= 0) {
+            return;
+        }
+
+        // A physical correction: what is gone is gone, held or not.
         foreach ($bins as $bin) {
             if ($remaining <= 0) {
                 break;
             }
 
             $take = min($remaining, (int) $bin->quantity);
-            $bin->decrement('quantity', $take);
-            $remaining -= $take;
+
+            if ($take > 0) {
+                $bin->decrement('quantity', $take);
+                $remaining -= $take;
+                $this->reservations()->reportShortfall($product instanceof ProductVariant ? $product->product : $product, $product instanceof ProductVariant ? $product : null, (int) $bin->location_id, (int) $bin->quantity);
+            }
         }
+    }
+
+    private function reservations(): StockReservationService
+    {
+        return app(StockReservationService::class);
     }
 
     /**
@@ -246,13 +291,16 @@ final class ProductLocationStockService
      *
      * Must run inside the adjustment's transaction (which holds the product
      * row lock). When $allowNegativeBin is false, refuses to drive the bin
-     * below zero.
+     * below zero. When $respectHolds is true, also refuses to take the bin
+     * below the units reserved in it; otherwise (a physical correction) a
+     * bin left with fewer units than are reserved there fires
+     * reservation_shortfall.
      *
-     * @throws InsufficientStockException when the bin would go negative
+     * @throws InsufficientStockException when the bin would go negative, or below its holds
      *
      * @api
      */
-    public function applyDelta(Product|ProductVariant $product, int $locationId, int $delta, bool $allowNegativeBin = false): int
+    public function applyDelta(Product|ProductVariant $product, int $locationId, int $delta, bool $allowNegativeBin = false, bool $respectHolds = true): int
     {
         $this->assertLocation($product, $locationId);
         $this->ensureBinned($product);
@@ -270,7 +318,22 @@ final class ProductLocationStockService
             );
         }
 
+        if ($delta < 0) {
+            $held = $this->reservations()->reservedAtLocation($this->productId($product), $locationId, $this->variantId($product));
+
+            if ($respectHolds && $held > 0 && $after < $held) {
+                throw new InsufficientStockException(
+                    'Cannot remove '.abs($delta)." units from that location for {$product->name}: only "
+                    .max(0, (int) $row->quantity - $held)." available there ({$row->quantity} on hand, {$held} reserved)."
+                );
+            }
+        }
+
         $row->update(['quantity' => $after]);
+
+        if ($delta < 0 && ! $respectHolds) {
+            $this->reservations()->reportShortfall($product instanceof ProductVariant ? $product->product : $product, $product instanceof ProductVariant ? $product : null, $locationId, $after);
+        }
 
         return $after;
     }
@@ -352,6 +415,16 @@ final class ProductLocationStockService
             });
 
         return $created;
+    }
+
+    private function productId(Product|ProductVariant $product): int
+    {
+        return (int) ($product instanceof ProductVariant ? $product->product_id : $product->id);
+    }
+
+    private function variantId(Product|ProductVariant $product): ?int
+    {
+        return $product instanceof ProductVariant ? (int) $product->id : null;
     }
 
     private function assertLocation(Product|ProductVariant $product, int $locationId): void

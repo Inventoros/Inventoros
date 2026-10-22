@@ -237,6 +237,7 @@
     "webhooks": "Webhooks",
     "warehouses": "Entrepôts",
     "workOrders": "Ordres de fabrication",
+    "reservations": "Réservations",
     "account": "Compte",
     "profile": "Profil",
     "logOut": "Déconnexion",
@@ -435,6 +436,10 @@
       "variantCount": "{count} variantes",
       "variantStockTracked": "Le stock est suivi par variante. Stock total des variantes",
       "stockInfo": "Informations sur le stock",
+      "reservedStock": "Réservé",
+      "availableStock": "Disponible",
+      "reservationsHint": "Les unités réservées sont promises et personne d'autre ne peut les vendre, les déplacer ou les sortir du stock.",
+      "viewReservations": "Voir les réservations",
       "currentStock": "Stock actuel",
       "minStock": "Stock minimum",
       "maxStock": "Stock maximum",
@@ -2536,6 +2541,8 @@
       "sku": "SKU",
       "price": "Prix",
       "stock": "Stock",
+      "reserved": "Réservé",
+      "available": "Disponible",
       "noVariants": "Aucune variante trouvée",
       "totalVariants": "Total des variantes",
       "totalStock": "Stock total"
@@ -3728,6 +3735,42 @@
   "legal": {
     "licensedUnder": "Sous licence {license}",
     "sourceCode": "Code source"
+  },
+  "reservations": {
+    "title": "Réservations de stock",
+    "subtitle": "Unités en stock promises à une commande, une extension ou une réservation, donc indisponibles à la vente ou au déplacement.",
+    "searchPlaceholder": "Rechercher par référence",
+    "owner": "Propriétaire",
+    "allOwners": "Tous les propriétaires",
+    "filter": "Filtrer",
+    "product": "Produit",
+    "quantity": "Réservé",
+    "heldIn": "Réservé dans",
+    "productTotal": "Total du produit",
+    "serial": "Numéro de série {number}",
+    "batch": "Lot {number}",
+    "reference": "Référence",
+    "expires": "Expire",
+    "noExpiry": "Sans expiration",
+    "release": "Libérer",
+    "confirmRelease": "Libérer la réservation {reference} de {owner} ? Les unités redeviennent disponibles.",
+    "empty": "Aucune réservation ne correspond.",
+    "forProduct": "Réservations pour {product}",
+    "allProducts": "Tous les produits",
+    "showing": "{from} à {to} sur {total}",
+    "statuses": {
+      "active": "Active",
+      "expired": "Expirée",
+      "consumed": "Consommée",
+      "released": "Libérée",
+      "all": "Toutes"
+    },
+    "reasons": {
+      "released": "Libérée par le propriétaire",
+      "admin": "Libérée par un administrateur",
+      "expired": "Expirée",
+      "uninstalled": "Extension désinstallée"
+    }
   },
   "stockTransfers": {
     "title": "Transferts de stock",

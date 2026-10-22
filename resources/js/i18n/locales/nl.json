@@ -237,6 +237,7 @@
     "webhooks": "Webhooks",
     "warehouses": "Magazijnen",
     "workOrders": "Werkorders",
+    "reservations": "Reserveringen",
     "account": "Account",
     "profile": "Profiel",
     "logOut": "Uitloggen",
@@ -435,6 +436,10 @@
       "variantCount": "{count} varianten",
       "variantStockTracked": "Voorraad wordt per variant bijgehouden. Totale variantvoorraad",
       "stockInfo": "Voorraadinformatie",
+      "reservedStock": "Gereserveerd",
+      "availableStock": "Beschikbaar",
+      "reservationsHint": "Gereserveerde eenheden zijn toegezegd en kunnen door niemand anders worden verkocht, verplaatst of afgeboekt.",
+      "viewReservations": "Reserveringen bekijken",
       "currentStock": "Huidige voorraad",
       "minStock": "Minimale voorraad",
       "maxStock": "Maximale voorraad",
@@ -2536,6 +2541,8 @@
       "sku": "SKU",
       "price": "Prijs",
       "stock": "Voorraad",
+      "reserved": "Gereserveerd",
+      "available": "Beschikbaar",
       "noVariants": "Geen varianten gevonden",
       "totalVariants": "Totaal varianten",
       "totalStock": "Totale voorraad"
@@ -3728,6 +3735,42 @@
   "legal": {
     "licensedUnder": "Gelicentieerd onder de {license}",
     "sourceCode": "Broncode"
+  },
+  "reservations": {
+    "title": "Voorraadreserveringen",
+    "subtitle": "Eenheden op voorraad die zijn toegezegd aan een order, een plug-in of een boeking, en dus niet beschikbaar zijn om te verkopen of te verplaatsen.",
+    "searchPlaceholder": "Zoeken op referentie",
+    "owner": "Eigenaar",
+    "allOwners": "Alle eigenaars",
+    "filter": "Filteren",
+    "product": "Product",
+    "quantity": "Gereserveerd",
+    "heldIn": "Gereserveerd in",
+    "productTotal": "Producttotaal",
+    "serial": "Serienummer {number}",
+    "batch": "Partij {number}",
+    "reference": "Referentie",
+    "expires": "Verloopt",
+    "noExpiry": "Verloopt niet",
+    "release": "Vrijgeven",
+    "confirmRelease": "Reservering {reference} van {owner} vrijgeven? De eenheden worden weer beschikbaar.",
+    "empty": "Geen overeenkomende reserveringen.",
+    "forProduct": "Reserveringen voor {product}",
+    "allProducts": "Alle producten",
+    "showing": "{from} tot {to} van {total}",
+    "statuses": {
+      "active": "Actief",
+      "expired": "Verlopen",
+      "consumed": "Verbruikt",
+      "released": "Vrijgegeven",
+      "all": "Alle"
+    },
+    "reasons": {
+      "released": "Vrijgegeven door eigenaar",
+      "admin": "Vrijgegeven door een beheerder",
+      "expired": "Verlopen",
+      "uninstalled": "Plug-in verwijderd"
+    }
   },
   "stockTransfers": {
     "title": "Voorraadoverboekingen",

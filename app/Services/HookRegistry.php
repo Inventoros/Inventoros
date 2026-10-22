@@ -144,7 +144,7 @@ final class HookRegistry
             // STOCK HOOKS
             // ========================================
             'stock_changed' => [
-                'description' => 'Fired once per product (or variant) per transaction after its on-hand stock or a location bin changed, on any surface (adjustments, orders, receipts, transfers, returns, audits, imports, commands). $change is [before, after, locations => [location_id => [before, after]]]',
+                'description' => 'Fired once per product (or variant) per transaction after its on-hand stock, a location bin or its reserved stock changed, on any surface (adjustments, orders, receipts, transfers, returns, audits, imports, commands, stock reservations). $change is [before, after, locations => [location_id => [before, after]]], plus reserved => [before, after] when stock reservations changed',
                 'parameters' => ['$product', '$variant', '$change'],
                 'example' => "add_action('stock_changed', function (\$product, \$variant, \$change) { /* ... */ });",
             ],
@@ -152,6 +152,26 @@ final class HookRegistry
                 'description' => 'Fired after a stock adjustment is committed ($product is null for a variant adjustment)',
                 'parameters' => ['$stock_adjustment', '$product'],
                 'example' => "add_action('stock_adjusted', function (\$stock_adjustment, \$product) { /* ... */ });",
+            ],
+            'stock_reserved' => [
+                'description' => 'Fired after a stock reservation (hold) is placed through StockReservationService::reserve() and committed. Not fired for an idempotent retry that returned the existing hold',
+                'parameters' => ['$reservation'],
+                'example' => "add_action('stock_reserved', function (\$reservation) { /* ... */ });",
+            ],
+            'stock_reservation_released' => [
+                'description' => 'Fired after a stock reservation is released and committed: by its owner, by an admin, on expiry (reservations:release-expired) or because its plugin was uninstalled. $reservation->release_reason says which (released, admin, expired, uninstalled)',
+                'parameters' => ['$reservation'],
+                'example' => "add_action('stock_reservation_released', function (\$reservation) { /* ... */ });",
+            ],
+            'stock_reservation_consumed' => [
+                'description' => 'Fired after a stock reservation is consumed and committed: an order carrying it was created, or its owner called StockReservationService::consume(). $by is what consumed it (the order), or null',
+                'parameters' => ['$reservation', '$by'],
+                'example' => "add_action('stock_reservation_consumed', function (\$reservation, \$by) { /* ... */ });",
+            ],
+            'reservation_shortfall' => [
+                'description' => 'Fired after commit when a physical correction (a recount, a damage or loss write-off) left fewer units on hand than active stock reservations hold, for the product total, a variant or one location bin. $shortfall is [location_id, on_hand, reserved, short, reservations]',
+                'parameters' => ['$product', '$variant', '$shortfall'],
+                'example' => "add_action('reservation_shortfall', function (\$product, \$variant, \$shortfall) { /* ... */ });",
             ],
             'low_stock_alert' => [
                 'description' => 'Fired when product stock drops to or below its minimum (for a product sold by variant, the sum of its active variants)',
@@ -522,6 +542,11 @@ final class HookRegistry
                 'description' => 'Modify the product name shown on the product list and detail pages, the REST product resource (display_name) and global search. The stored name is unchanged',
                 'parameters' => ['$name', '$product'],
                 'example' => "add_filter('product_display_name', function (\$name, \$product) { return \$name.' (sale)'; });",
+            ],
+            'product_available_quantity' => [
+                'description' => 'Modify the available-to-promise quantity shown for a product or variant (on hand less stock reservations) on the product page, the REST resource (available_stock), GraphQL and MCP. Display only: stock checks never read it. $variant is null for a product',
+                'parameters' => ['$available', '$product', '$variant'],
+                'example' => "add_filter('product_available_quantity', function (\$available, \$product, \$variant) { return max(0, \$available - 2); });",
             ],
             'product_price_display' => [
                 'description' => 'Modify the product price shown on the product list and detail pages and the REST product resource (display_price). The stored price is unchanged',

@@ -17,6 +17,7 @@ use App\Http\Controllers\Inventory\QrCodeController;
 use App\Http\Controllers\Inventory\SKUController;
 use App\Http\Controllers\Inventory\StockAdjustmentController;
 use App\Http\Controllers\Inventory\StockAuditController;
+use App\Http\Controllers\Inventory\StockReservationController;
 use App\Http\Controllers\Inventory\StockTransferController;
 use App\Http\Controllers\Inventory\WorkOrderController;
 use App\Http\Controllers\WarehouseController;
@@ -155,6 +156,11 @@ Route::delete('/stock-audits/{stockAudit}', [StockAuditController::class, 'destr
 Route::post('/stock-audits/{stockAudit}/start', [StockAuditController::class, 'start'])->name('stock-audits.start')->middleware('permission:manage_stock_audits');
 Route::post('/stock-audits/{stockAudit}/complete', [StockAuditController::class, 'complete'])->name('stock-audits.complete')->middleware('permission:manage_stock_audits');
 Route::post('/stock-audits/{stockAudit}/items/{item}/count', [StockAuditController::class, 'updateCount'])->name('stock-audits.items.count')->middleware('permission:manage_stock_audits');
+
+// Stock reservations (holds): anyone who can see products sees what is
+// promised; releasing a hold is a stock change.
+Route::get('/reservations', [StockReservationController::class, 'index'])->name('reservations.index')->middleware('permission:view_products');
+Route::post('/reservations/{reservation}/release', [StockReservationController::class, 'release'])->name('reservations.release')->middleware('permission:manage_stock');
 
 // Stock Adjustments - Permission based
 Route::get('/stock-adjustments', [StockAdjustmentController::class, 'index'])->name('stock-adjustments.index')->middleware('permission:manage_stock');

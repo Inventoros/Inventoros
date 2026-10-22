@@ -13,7 +13,9 @@ use App\Models\Inventory\ProductBatch;
 use App\Models\Inventory\ProductSerial;
 use App\Models\Inventory\WorkOrderAllocation;
 use App\Models\Inventory\WorkOrderItem;
+use App\Models\Inventory\StockReservation;
 use App\Models\Order\OrderItem;
+use Illuminate\Database\Eloquent\Collection;
 
 /**
  * Allocates and releases tracked units (serials) as orders are fulfilled and
@@ -38,19 +40,34 @@ final class TrackedStockAllocationService
      * Runs inside the order transaction, which already holds a row lock on the
      * product; the tracking records are additionally locked here.
      *
+     * Serials and batch units held by an active stock reservation are never
+     * allocated. $consumedHolds are the reservation holds the order is
+     * consuming (see OrderService::create()): their serials and batch units
+     * are allocated first, so the hold's consumer gets exactly what it held.
+     *
+     * @param  Collection<int, StockReservation>|null  $consumedHolds
      * @return int the number of units allocated (0 when skipped)
      *
      * @api
      */
-    public function allocateForOrderItem(Product $product, int $quantity, OrderItem $orderItem): int
+    public function allocateForOrderItem(Product $product, int $quantity, OrderItem $orderItem, ?Collection $consumedHolds = null): int
     {
         if ($quantity <= 0) {
             return 0;
         }
 
+        $mine = ($consumedHolds ?? new Collection)->where('product_id', $product->id);
+
         return match ($this->trackingType($product)) {
-            TrackingType::SERIAL => $this->allocateSerials($product, $quantity, $orderItem),
-            TrackingType::BATCH => $this->allocateBatches($product, $quantity, $orderItem),
+            TrackingType::SERIAL => $this->allocateSerials(
+                $product, $quantity, $orderItem,
+                $mine->pluck('product_serial_id')->filter()->map(fn ($id) => (int) $id)->values()->all(),
+            ),
+            TrackingType::BATCH => $this->allocateBatches(
+                $product, $quantity, $orderItem,
+                $mine->whereNotNull('product_batch_id')->groupBy('product_batch_id')
+                    ->map(fn ($holds) => (int) $holds->sum('quantity'))->all(),
+            ),
             default => 0,
         };
     }
@@ -75,14 +92,27 @@ final class TrackedStockAllocationService
     }
 
     /**
-     * Mark the oldest available serials sold and pin them to the order line.
-     * Skips unless at least $quantity serials are available.
+     * Mark the oldest available serials sold and pin them to the order line,
+     * the $preferred ones (a consumed reservation's) first. Serials held by
+     * an active reservation are skipped. Skips unless at least $quantity
+     * serials are available.
+     *
+     * @param  array<int, int>  $preferred
      */
-    private function allocateSerials(Product $product, int $quantity, OrderItem $orderItem): int
+    private function allocateSerials(Product $product, int $quantity, OrderItem $orderItem, array $preferred = []): int
     {
-        $available = ProductSerial::query()
+        $held = app(StockReservationService::class)->heldSerialIds((int) $product->id);
+
+        $query = ProductSerial::query()
             ->where('product_id', $product->id)
             ->where('status', ProductSerial::STATUS_AVAILABLE)
+            ->when($held !== [], fn ($q) => $q->whereNotIn('id', $held));
+
+        if ($preferred !== []) {
+            $query->orderByRaw('case when id in ('.implode(',', array_fill(0, count($preferred), '?')).') then 0 else 1 end', $preferred);
+        }
+
+        $available = $query
             ->orderBy('id')
             ->lockForUpdate()
             ->limit($quantity)
@@ -142,8 +172,13 @@ final class TrackedStockAllocationService
      * (earliest expiry first, undated batches last), recording how much came
      * from each batch. Skips unless the batches together hold at least
      * $quantity, so an under-tracked product is left untouched.
+     *
+     * Units held by an active reservation are not allocatable. $preferred
+     * (batch id => units of a consumed reservation) are drawn first.
+     *
+     * @param  array<int, int>  $preferred
      */
-    private function allocateBatches(Product $product, int $quantity, OrderItem $orderItem): int
+    private function allocateBatches(Product $product, int $quantity, OrderItem $orderItem, array $preferred = []): int
     {
         $batches = ProductBatch::query()
             ->where('product_id', $product->id)
@@ -156,12 +191,20 @@ final class TrackedStockAllocationService
             ->lockForUpdate()
             ->get();
 
+        $reserved = app(StockReservationService::class)->reservedByBatch((int) $product->id);
+
         // A plugin may hold units of a batch back from allocation (a
         // quarantined or recalled lot) through batch_allocatable_quantity;
-        // held units neither count toward coverage nor get consumed.
+        // held units neither count toward coverage nor get consumed. Units
+        // reserved for someone else are held back the same way.
         $allocatable = [];
         foreach ($batches as $batch) {
-            $allocatable[$batch->id] = $this->allocatableQuantity($batch, $product, $orderItem);
+            $allocatable[$batch->id] = max(0, $this->allocatableQuantity($batch, $product, $orderItem) - ($reserved[$batch->id] ?? 0));
+        }
+
+        // A consumed reservation's batches go first, then FEFO as usual.
+        if ($preferred !== []) {
+            $batches = $batches->sortBy(fn (ProductBatch $batch) => isset($preferred[$batch->id]) ? 0 : 1)->values();
         }
 
         $totalAvailable = array_sum($allocatable);

@@ -237,6 +237,7 @@
     "webhooks": "Webhooks",
     "warehouses": "Depolar",
     "workOrders": "İş Emirleri",
+    "reservations": "Rezervasyonlar",
     "account": "Hesap",
     "profile": "Profil",
     "logOut": "Çıkış Yap",
@@ -435,6 +436,10 @@
       "variantCount": "{count} varyant",
       "variantStockTracked": "Stok varyant bazında takip ediliyor. Toplam varyant stoku",
       "stockInfo": "Stok Bilgileri",
+      "reservedStock": "Rezerve",
+      "availableStock": "Kullanılabilir",
+      "reservationsHint": "Rezerve edilen birimler taahhüt edilmiştir ve başka kimse onları satamaz, taşıyamaz veya silemez.",
+      "viewReservations": "Rezervasyonları görüntüle",
       "currentStock": "Mevcut Stok",
       "minStock": "Min Stok",
       "maxStock": "Maks Stok",
@@ -2536,6 +2541,8 @@
       "sku": "SKU",
       "price": "Fiyat",
       "stock": "Stok",
+      "reserved": "Rezerve",
+      "available": "Kullanılabilir",
       "noVariants": "Varyant bulunamadı",
       "totalVariants": "Toplam Varyant",
       "totalStock": "Toplam Stok"
@@ -3728,6 +3735,42 @@
   "legal": {
     "licensedUnder": "{license} ile lisanslanmıştır",
     "sourceCode": "Kaynak kodu"
+  },
+  "reservations": {
+    "title": "Stok rezervasyonları",
+    "subtitle": "Bir siparişe, bir eklentiye veya bir rezervasyona ayrılmış eldeki birimler; satılamaz veya taşınamaz.",
+    "searchPlaceholder": "Referansa göre ara",
+    "owner": "Sahip",
+    "allOwners": "Tüm sahipler",
+    "filter": "Filtrele",
+    "product": "Ürün",
+    "quantity": "Rezerve",
+    "heldIn": "Rezerve yeri",
+    "productTotal": "Ürün toplamı",
+    "serial": "Seri {number}",
+    "batch": "Parti {number}",
+    "reference": "Referans",
+    "expires": "Sona erer",
+    "noExpiry": "Süresiz",
+    "release": "Serbest bırak",
+    "confirmRelease": "{owner} sahibinin {reference} rezervasyonu serbest bırakılsın mı? Birimler yeniden kullanılabilir olur.",
+    "empty": "Eşleşen rezervasyon yok.",
+    "forProduct": "{product} için rezervasyonlar",
+    "allProducts": "Tüm ürünler",
+    "showing": "{total} kayıttan {from}-{to}",
+    "statuses": {
+      "active": "Etkin",
+      "expired": "Süresi doldu",
+      "consumed": "Tüketildi",
+      "released": "Serbest bırakıldı",
+      "all": "Tümü"
+    },
+    "reasons": {
+      "released": "Sahibi serbest bıraktı",
+      "admin": "Bir yönetici serbest bıraktı",
+      "expired": "Süresi doldu",
+      "uninstalled": "Eklenti kaldırıldı"
+    }
   },
   "stockTransfers": {
     "title": "Stok Transferleri",

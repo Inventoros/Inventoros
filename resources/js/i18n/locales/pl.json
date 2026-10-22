@@ -237,6 +237,7 @@
     "webhooks": "Webhooks",
     "warehouses": "Magazyny",
     "workOrders": "Zlecenia produkcyjne",
+    "reservations": "Rezerwacje",
     "account": "Konto",
     "profile": "Profil",
     "logOut": "Wyloguj się",
@@ -435,6 +436,10 @@
       "variantCount": "{count} wariantów",
       "variantStockTracked": "Stan jest śledzony wg wariantów. Łączny stan wariantów",
       "stockInfo": "Informacje o stanie",
+      "reservedStock": "Zarezerwowane",
+      "availableStock": "Dostępne",
+      "reservationsHint": "Zarezerwowane jednostki są przyrzeczone i nikt inny nie może ich sprzedać, przenieść ani odpisać.",
+      "viewReservations": "Pokaż rezerwacje",
       "currentStock": "Aktualny stan",
       "minStock": "Min stan",
       "maxStock": "Maks stan",
@@ -2536,6 +2541,8 @@
       "sku": "SKU",
       "price": "Cena",
       "stock": "Stan",
+      "reserved": "Zarezerwowane",
+      "available": "Dostępne",
       "noVariants": "Nie znaleziono wariantów",
       "totalVariants": "Łącznie wariantów",
       "totalStock": "Łączny stan"
@@ -3728,6 +3735,42 @@
   "legal": {
     "licensedUnder": "Na licencji {license}",
     "sourceCode": "Kod źródłowy"
+  },
+  "reservations": {
+    "title": "Rezerwacje zapasów",
+    "subtitle": "Jednostki na stanie przyrzeczone zamówieniu, wtyczce lub rezerwacji, więc niedostępne do sprzedaży ani przeniesienia.",
+    "searchPlaceholder": "Szukaj po numerze referencyjnym",
+    "owner": "Właściciel",
+    "allOwners": "Wszyscy właściciele",
+    "filter": "Filtruj",
+    "product": "Produkt",
+    "quantity": "Zarezerwowano",
+    "heldIn": "Zarezerwowano w",
+    "productTotal": "Cały produkt",
+    "serial": "Numer seryjny {number}",
+    "batch": "Partia {number}",
+    "reference": "Numer referencyjny",
+    "expires": "Wygasa",
+    "noExpiry": "Bez terminu",
+    "release": "Zwolnij",
+    "confirmRelease": "Zwolnić rezerwację {reference} należącą do {owner}? Jednostki znów będą dostępne.",
+    "empty": "Brak pasujących rezerwacji.",
+    "forProduct": "Rezerwacje dla {product}",
+    "allProducts": "Wszystkie produkty",
+    "showing": "{from} do {to} z {total}",
+    "statuses": {
+      "active": "Aktywna",
+      "expired": "Wygasła",
+      "consumed": "Wykorzystana",
+      "released": "Zwolniona",
+      "all": "Wszystkie"
+    },
+    "reasons": {
+      "released": "Zwolniona przez właściciela",
+      "admin": "Zwolniona przez administratora",
+      "expired": "Wygasła",
+      "uninstalled": "Wtyczka odinstalowana"
+    }
   },
   "stockTransfers": {
     "title": "Przesunięcia magazynowe",
