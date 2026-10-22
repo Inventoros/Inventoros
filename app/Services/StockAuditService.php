@@ -12,7 +12,9 @@ use App\Models\Inventory\StockAdjustment;
 use App\Models\Inventory\StockAudit;
 use App\Models\Inventory\StockAuditItem;
 use App\Models\User;
+use App\Models\Warehouse;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 /**
  * The single implementation of the stock-audit (cycle count) write path:
@@ -50,9 +52,18 @@ final class StockAuditService
 
         // A restricted user audits their own warehouses only; an audit with no
         // location spans the whole organization.
-        $this->warehouseAccess->authorizeLocation($actor, $data['warehouse_location_id'] ?? null);
+        $warehouseId = ! empty($data['warehouse_id']) ? (int) $data['warehouse_id'] : null;
+        if ($warehouseId !== null) {
+            Warehouse::forOrganization($organizationId)->findOrFail($warehouseId);
+            $this->warehouseAccess->authorizeWarehouse($actor, $warehouseId);
+            if (! empty($data['warehouse_location_id']) && ! ProductLocation::whereKey($data['warehouse_location_id'])->where('warehouse_id', $warehouseId)->exists()) {
+                throw ValidationException::withMessages(['warehouse_location_id' => 'The location must be in the selected warehouse.']);
+            }
+        } else {
+            $this->warehouseAccess->authorizeLocation($actor, $data['warehouse_location_id'] ?? null);
+        }
 
-        return DB::transaction(function () use ($data, $organizationId, $actor) {
+        return DB::transaction(function () use ($data, $organizationId, $actor, $warehouseId) {
             $audit = StockAudit::create([
                 'organization_id' => $organizationId,
                 'audit_number' => StockAudit::generateAuditNumber($organizationId),
@@ -60,6 +71,7 @@ final class StockAuditService
                 'description' => $data['description'] ?? null,
                 'status' => 'draft',
                 'audit_type' => $data['audit_type'],
+                'warehouse_id' => $warehouseId,
                 'warehouse_location_id' => $data['warehouse_location_id'] ?? null,
                 'notes' => $data['notes'] ?? null,
                 'created_by' => $actor->id,
@@ -81,7 +93,8 @@ final class StockAuditService
                     ->orWhereIn('id', ProductLocationStock::query()
                         ->select('product_id')
                         ->where('location_id', $locationId)
-                        ->where('quantity', '>', 0)));
+                        ->where('quantity', '>', 0))
+                    ->orWhereHas('activeVariants.locationStocks', fn ($bins) => $bins->where('location_id', $locationId)->where('quantity', '>', 0)));
             }
 
             // A location-scoped audit counts that bin; otherwise the line
@@ -99,11 +112,12 @@ final class StockAuditService
      */
     public function start(StockAudit $stockAudit, User $actor): StockAudit
     {
-        $this->warehouseAccess->authorizeLocation($actor, $stockAudit->warehouse_location_id);
+        $this->warehouseAccess->authorizeStockAudit($actor, $stockAudit);
 
         return DB::transaction(function () use ($stockAudit, $actor) {
             $locked = StockAudit::whereKey($stockAudit->getKey())->lockForUpdate()->firstOrFail();
-            $this->warehouseAccess->authorizeLocation($actor, $locked->warehouse_location_id);
+            $this->warehouseAccess->authorizeStockAudit($actor, $locked);
+            $this->assertWarehouseScope($locked);
 
             if ($locked->status !== 'draft') {
                 throw new InvalidStateException('Only draft audits can be started.', 'invalid_status');
@@ -137,13 +151,14 @@ final class StockAuditService
      */
     public function recordCount(StockAudit $stockAudit, StockAuditItem $item, User $actor, int $countedQuantity, ?string $notes = null): StockAuditItem
     {
-        $this->warehouseAccess->authorizeLocation($actor, $stockAudit->warehouse_location_id);
+        $this->warehouseAccess->authorizeStockAudit($actor, $stockAudit);
 
         return DB::transaction(function () use ($stockAudit, $item, $actor, $countedQuantity, $notes) {
             // Parent before item: serialize counts with completion so no
             // count can overwrite the evidence after its stock was booked.
             $locked = StockAudit::whereKey($stockAudit->getKey())->lockForUpdate()->firstOrFail();
-            $this->warehouseAccess->authorizeLocation($actor, $locked->warehouse_location_id);
+            $this->warehouseAccess->authorizeStockAudit($actor, $locked);
+            $this->assertWarehouseScope($locked);
 
             if ($locked->status !== 'in_progress') {
                 throw new InvalidStateException('Audit is not in progress', 'invalid_status');
@@ -190,7 +205,7 @@ final class StockAuditService
      */
     public function complete(StockAudit $stockAudit, User $actor, bool $allowUncounted = false): int
     {
-        $this->warehouseAccess->authorizeLocation($actor, $stockAudit->warehouse_location_id);
+        $this->warehouseAccess->authorizeStockAudit($actor, $stockAudit);
 
         if ($stockAudit->status !== 'in_progress') {
             throw new InvalidStateException('Only in-progress audits can be completed.', 'invalid_status');
@@ -209,7 +224,9 @@ final class StockAuditService
                 throw new InvalidStateException('Only in-progress audits can be completed.', 'invalid_status');
             }
 
-            $locked->load('items.product');
+            $this->assertWarehouseScope($locked);
+            $locked->load(['items.product', 'items.variant']);
+            Product::where('organization_id', $locked->organization_id)->whereIn('id', $locked->items->pluck('product_id')->unique())->orderBy('id')->lockForUpdate()->get();
 
             $uncounted = $locked->items->whereNull('counted_quantity')->count();
             if ($uncounted > 0 && ! $allowUncounted) {
@@ -248,17 +265,27 @@ final class StockAuditService
 
                 // Create stock adjustment if there's a discrepancy
                 if ($discrepancy !== 0) {
-                    StockAdjustment::adjust(
-                        product: $item->product,
-                        quantity: $discrepancy,
-                        type: 'recount',
-                        reason: "Stock audit: {$locked->audit_number}",
-                        notes: "Audit '{$locked->name}' - System: {$item->system_quantity}, Counted: {$item->counted_quantity}",
-                        reference: $locked,
-                        actor: $actor,
-                        locationId: $locked->warehouse_location_id,
-                    );
-
+                    if ($item->product_variant_id !== null) {
+                        StockAdjustment::adjustVariant(
+                            variant: $item->variant,
+                            quantity: $discrepancy,
+                            type: 'recount',
+                            reason: "Stock audit: {$locked->audit_number}",
+                            notes: "Audit '{$locked->name}' - System: {$item->system_quantity}, Counted: {$item->counted_quantity}",
+                            reference: $locked, actor: $actor, locationId: $locked->warehouse_id !== null ? $item->location_id : $locked->warehouse_location_id,
+                        );
+                    } else {
+                        StockAdjustment::adjust(
+                            product: $item->product,
+                            quantity: $discrepancy,
+                            type: 'recount',
+                            reason: "Stock audit: {$locked->audit_number}",
+                            notes: "Audit '{$locked->name}' - System: {$item->system_quantity}, Counted: {$item->counted_quantity}",
+                            reference: $locked,
+                            actor: $actor,
+                            locationId: $locked->warehouse_id !== null ? $item->location_id : $locked->warehouse_location_id,
+                        );
+                    }
                     $adjustmentsCreated++;
                 }
             }
@@ -271,4 +298,11 @@ final class StockAuditService
 
         return $adjustmentsCreated;
     }
+    private function assertWarehouseScope(StockAudit $audit): void
+    {
+        if ($audit->warehouse_id !== null && $audit->items()->whereDoesntHave('location', fn ($q) => $q->where('warehouse_id', $audit->warehouse_id))->exists()) {
+            throw new InvalidStateException('An audited location has moved or been removed. Create a new audit for the current warehouse layout.', 'scope_changed');
+        }
+    }
+
 }

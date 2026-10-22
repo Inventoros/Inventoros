@@ -3,8 +3,8 @@ import AppLayout from '@/Layouts/AppLayout.vue';
 import PageHeader from '@/Components/ui/PageHeader.vue';
 import Card from '@/Components/ui/Card.vue';
 import Button from '@/Components/ui/Button.vue';
-import { Head, Link, useForm } from '@inertiajs/vue3';
-import { ref, computed } from 'vue';
+import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
+import { ref, computed, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { ArrowLeft, Info } from 'lucide-vue-next';
 
@@ -20,10 +20,15 @@ const form = useForm({
     name: '',
     description: '',
     audit_type: 'cycle',
+    warehouse_id: '',
     warehouse_location_id: '',
     notes: '',
     product_ids: [],
 });
+
+const page = usePage();
+const scopedLocations = computed(() => (props.locations || []).filter(location => !form.warehouse_id || location.warehouse_id === Number(form.warehouse_id)));
+watch(() => form.warehouse_id, () => { form.warehouse_location_id = ''; });
 
 const productSearch = ref('');
 const selectAllProducts = ref(false);
@@ -153,6 +158,14 @@ const fieldCheckbox = 'rounded border-border-subtle bg-surface-canvas text-brand
                             </p>
                         </div>
 
+                        <div>
+                            <label for="audit-warehouse" :class="fieldLabel">{{ t('locations.warehouse') }}</label>
+                            <select id="audit-warehouse" v-model="form.warehouse_id" :class="fieldInput">
+                                <option value="">{{ t('warehouses.allWarehouses') }}</option>
+                                <option v-for="warehouse in page.props.warehouses || []" :key="warehouse.id" :value="warehouse.id">{{ warehouse.name }}</option>
+                            </select>
+                            <p v-if="form.errors.warehouse_id" :class="fieldError">{{ form.errors.warehouse_id }}</p>
+                        </div>
                         <!-- Location -->
                         <div>
                             <label :class="fieldLabel">
@@ -163,7 +176,7 @@ const fieldCheckbox = 'rounded border-border-subtle bg-surface-canvas text-brand
                                 :class="fieldInput"
                             >
                                 <option value="">{{ t('products.allLocations') }}</option>
-                                <option v-for="location in locations" :key="location.id" :value="location.id">
+                                <option v-for="location in scopedLocations" :key="location.id" :value="location.id">
                                     {{ location.name }}
                                     <span v-if="location.code">({{ location.code }})</span>
                                 </option>
