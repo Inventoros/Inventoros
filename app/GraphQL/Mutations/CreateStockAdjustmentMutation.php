@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\GraphQL\Mutations;
 
+use App\Exceptions\InsufficientStockException;
 use App\GraphQL\Concerns\RequiresPermissions;
 use App\Models\Inventory\Product;
 use App\Models\Inventory\ProductLocation;
@@ -108,14 +109,22 @@ class CreateStockAdjustmentMutation extends Mutation
             throw new Error('This adjustment needs approval. Submit it with requestStockAdjustmentApproval.');
         }
 
-        $adjustment = StockAdjustment::adjust(
-            $product,
-            $args['quantity'],
-            $args['type'],
-            $args['reason'] ?? null,
-            $args['notes'] ?? null,
-            locationId: $locationId,
-        );
+        // Like the web, REST and MCP adjustments: never below zero, and never
+        // into units stock reservations promise unless the type records a
+        // physical correction (recount, damage, loss).
+        try {
+            $adjustment = StockAdjustment::adjust(
+                $product,
+                $args['quantity'],
+                $args['type'],
+                $args['reason'] ?? null,
+                $args['notes'] ?? null,
+                allowNegative: false,
+                locationId: $locationId,
+            );
+        } catch (InsufficientStockException $e) {
+            throw new Error($e->getMessage());
+        }
 
         $adjustment->load(['product', 'user']);
 

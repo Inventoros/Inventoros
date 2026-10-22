@@ -25,8 +25,16 @@ const props = defineProps({
     productPrice: {
         type: [Number, String],
         default: null
+    },
+    // Variant id => { on_hand, reserved, available } (stock reservations).
+    // Null hides the reserved and available columns.
+    availability: {
+        type: Object,
+        default: null
     }
 });
+
+const availabilityOf = (variant) => props.availability?.[variant.id] ?? null;
 
 
 const { t } = useI18n();
@@ -69,6 +77,12 @@ const onVariantUpdated = (updatedVariant) => {
                     <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                         {{ t('components.variantsTable.stock') }}
                     </th>
+                    <th v-if="availability" class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                        {{ t('components.variantsTable.reserved') }}
+                    </th>
+                    <th v-if="availability" class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                        {{ t('components.variantsTable.available') }}
+                    </th>
                     <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                         {{ t('common.status') }}
                     </th>
@@ -108,6 +122,12 @@ const onVariantUpdated = (updatedVariant) => {
                             {{ variant.stock }}
                         </span>
                     </td>
+                    <td v-if="availability" class="px-4 py-3 whitespace-nowrap text-sm tabular-nums text-gray-600 dark:text-gray-300">
+                        {{ availabilityOf(variant)?.reserved ?? 0 }}
+                    </td>
+                    <td v-if="availability" class="px-4 py-3 whitespace-nowrap text-sm font-medium tabular-nums text-gray-900 dark:text-gray-100">
+                        {{ availabilityOf(variant)?.available ?? variant.stock }}
+                    </td>
                     <td class="px-4 py-3 whitespace-nowrap">
                         <span :class="['px-2 py-1 text-xs font-medium rounded-full', getStatusBadge(variant).class]">
                             {{ getStatusBadge(variant).text }}
@@ -115,7 +135,7 @@ const onVariantUpdated = (updatedVariant) => {
                     </td>
                 </tr>
                 <tr v-if="variants.length === 0">
-                    <td colspan="5" class="px-4 py-8 text-center text-gray-500 dark:text-gray-400">
+                    <td :colspan="availability ? 7 : 5" class="px-4 py-8 text-center text-gray-500 dark:text-gray-400">
                         {{ t('components.variantsTable.noVariants') }}
                     </td>
                 </tr>

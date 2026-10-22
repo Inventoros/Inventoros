@@ -17,6 +17,7 @@ use App\Models\Inventory\SupplierPriceHistory;
 use App\Services\ProductLocationStockService;
 use App\Services\WarehouseStockLevelService;
 use App\Services\ProductService;
+use App\Services\StockReservationService;
 use App\Support\PluginQueryGuard;
 use App\Support\ProductSearch;
 use Illuminate\Http\RedirectResponse;
@@ -279,6 +280,8 @@ class ProductController extends Controller
             'locationBreakdown' => app(ProductLocationStockService::class)->breakdown($product, auth()->user()),
             // On-hand and thresholds per warehouse the viewer can access.
             'warehouseStockLevels' => app(WarehouseStockLevelService::class)->levelsForProduct($product, auth()->user()),
+            // On hand / reserved / available, for the product and each variant.
+            'stockAvailability' => $this->stockAvailability($product),
             'pluginComponents' => [
                 'header' => get_page_components('products.show', 'header'),
                 'actions' => get_page_components('products.show', 'actions'),
@@ -295,6 +298,23 @@ class ProductController extends Controller
         do_action('product_viewed', $product, auth()->user());
 
         return Inertia::render('Products/Show', $data);
+    }
+
+    /**
+     * On hand, reserved and available (on hand less stock reservations) for
+     * the product, and per variant for a product sold by variant.
+     *
+     * @return array{on_hand: int, reserved: int, available: int, variants: array<int, array{on_hand: int, reserved: int, available: int}>}
+     */
+    private function stockAvailability(Product $product): array
+    {
+        app(StockReservationService::class)->preloadReserved([$product]);
+
+        return $product->stockAvailability() + [
+            'variants' => $product->relationLoaded('variants')
+                ? $product->variants->mapWithKeys(fn ($variant) => [$variant->id => $variant->stockAvailability()])->all()
+                : [],
+        ];
     }
 
     /**

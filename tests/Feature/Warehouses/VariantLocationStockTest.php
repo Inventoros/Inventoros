@@ -131,4 +131,36 @@ final class VariantLocationStockTest extends TestCase
         ])->assertForbidden();
         $this->assertSame(17, $this->variant->fresh()->stock);
     }
+    public function test_variant_bin_holds_protect_units_from_moves_and_other_orders(): void
+    {
+        $holds = app(\App\Services\StockReservationService::class);
+        $holds->reserve($this->productA, $this->variant, 8, 'core', 'prepared-transfer', $this->locationA->id);
+        $this->assertSame(12, $holds->available($this->productA, $this->variant));
+        $this->assertSame(12, $holds->available($this->productA, $this->variant, $this->locationA->id));
+        try {
+            $this->move(13);
+            $this->fail('Reserved units must stay at their source');
+        } catch (InsufficientStockException) {
+            $this->assertSame(20, $this->bins()->onHandAt($this->variant, $this->locationA->id));
+        }
+        app(OrderService::class)->create([
+            'customer_name' => 'Buyer', 'status' => 'pending', 'order_date' => now()->toDateString(),
+            'items' => [['product_id' => $this->productA->id, 'product_variant_id' => $this->variant->id, 'quantity' => 10, 'unit_price' => 10]],
+        ], $this->admin);
+        $this->assertSame(10, $this->bins()->onHandAt($this->variant, $this->locationA->id));
+        $this->assertSame(2, $holds->available($this->productA, $this->variant));
+        $this->assertSame(8, $holds->release('core', 'prepared-transfer', $this->organization->id));
+        $this->assertSame(10, $holds->available($this->productA, $this->variant));
+    }
+
+    public function test_physical_variant_corrections_can_report_a_reservation_shortfall(): void
+    {
+        $holds = app(\App\Services\StockReservationService::class);
+        $holds->reserve($this->productA, $this->variant, 15, 'core', 'hold', $this->locationA->id);
+        StockAdjustment::adjustVariant($this->variant, -10, 'damage', allowNegative: false, actor: $this->admin, locationId: $this->locationA->id);
+        $this->assertSame(10, $this->variant->fresh()->stock);
+        $this->assertSame(10, $this->bins()->onHandAt($this->variant, $this->locationA->id));
+        $this->assertSame(-5, $holds->available($this->productA, $this->variant));
+    }
+
 }

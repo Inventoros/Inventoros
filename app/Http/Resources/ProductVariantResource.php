@@ -33,6 +33,8 @@ class ProductVariantResource extends JsonResource
             'effective_price' => $this->effective_price,
             'effective_purchase_price' => $this->effective_purchase_price,
             'stock' => $this->stock,
+            'reserved_stock' => $this->reserved_stock,
+            'available_stock' => $this->available_stock,
             'min_stock' => $this->min_stock,
             'image' => $this->image,
             'weight' => $this->weight,

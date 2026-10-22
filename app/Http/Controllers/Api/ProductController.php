@@ -10,6 +10,7 @@ use App\Http\Requests\Api\Product\UpdateProductRequest;
 use App\Http\Resources\ProductResource;
 use App\Models\Inventory\Product;
 use App\Services\ProductService;
+use App\Services\StockReservationService;
 use App\Support\ProductSearch;
 use Dedoc\Scramble\Attributes\QueryParameter;
 use Illuminate\Http\JsonResponse;
@@ -76,6 +77,9 @@ class ProductController extends Controller
 
         $perPage = min($request->input('per_page', 15), 100);
         $products = $query->paginate($perPage);
+
+        // reserved_stock / available_stock for the page in one query.
+        app(StockReservationService::class)->preloadReserved($products->getCollection());
 
         return ProductResource::collection($products);
     }
