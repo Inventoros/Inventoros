@@ -3851,5 +3851,38 @@
   "warehouseStock": {
     "title": "Stan według magazynu",
     "includeZero": "Uwzględnij stany zerowe"
-  }
+  },
+    "storage": {
+        "title": "Przechowywanie plików",
+        "description": "Lokalna i zewnętrzna pamięć dla przesłanych plików.",
+        "configure": "Ustaw INVENTOROS_UPLOADS_DISK i dane AWS w .env lub config/filesystems.php, odśwież pamięć konfiguracji i uruchom ponownie procesy kolejek.",
+        "existingFiles": "Istniejące pliki zachowują zapisany dysk. Przy zmianie pamięci zachowaj stare definicje dysków.",
+        "probe": "Test zapisuje, odczytuje i usuwa mały tymczasowy plik prywatny.",
+        "driver": "Sterownik",
+        "notConfigured": "Nie skonfigurowano",
+        "usedFor": "Zastosowanie",
+        "bucket": "Bucket",
+        "region": "Region",
+        "connected": "Połączenie potwierdzone: zapis, odczyt i usuwanie powiodły się.",
+        "failed": "Błąd połączenia podczas {step}. Sprawdź konfigurację serwera i uprawnienia.",
+        "unchecked": "Brak ostatniego testu połączenia.",
+        "checkedAt": "Sprawdzono: {time}",
+        "cleanupFailed": "Nie można usunąć pliku testowego. Po naprawie uprawnień sprawdź prefiks connection-checks.",
+        "requestFailed": "Nie można uruchomić testu. Spróbuj ponownie za chwilę.",
+        "checking": "Sprawdzanie…",
+        "check": "Sprawdź połączenie",
+        "purposes": {
+            "products": "Zdjęcia produktów",
+            "logos": "Logo organizacji",
+            "labels": "Etykiety wysyłkowe",
+            "imports": "Importy w kolejce",
+            "exports": "Wygenerowane eksporty"
+        },
+        "steps": {
+            "connect": "łączenia",
+            "write": "zapisywania",
+            "read": "odczytu",
+            "delete": "usuwania"
+        }
+    }
 }

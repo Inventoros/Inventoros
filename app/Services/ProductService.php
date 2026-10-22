@@ -14,7 +14,10 @@ use App\Models\User;
 use App\Observers\ProductObserver;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 use InvalidArgumentException;
 
 /**
@@ -55,31 +58,36 @@ final class ProductService
         $suppliers = $data['suppliers'] ?? [];
         unset($data['options'], $data['variants'], $data['suppliers']);
 
-        return DB::transaction(function () use ($data, $options, $variants, $syncSuppliers, $suppliers) {
-            $product = Product::create($data);
-            $this->recordOpeningStock($product);
+        try {
+            return DB::transaction(function () use ($data, $options, $variants, $syncSuppliers, $suppliers) {
+                $product = Product::create($data);
+                $this->recordOpeningStock($product);
 
-            if ($syncSuppliers) {
-                $this->syncSuppliers($product, $suppliers);
-            }
-
-            if ($product->has_variants && ! empty($options)) {
-                foreach ($options as $index => $optionData) {
-                    ProductOption::create([
-                        'product_id' => $product->id,
-                        'name' => $optionData['name'],
-                        'values' => $optionData['values'],
-                        'position' => $index,
-                    ]);
+                if ($syncSuppliers) {
+                    $this->syncSuppliers($product, $suppliers);
                 }
 
-                foreach ($variants as $index => $variantData) {
-                    $this->recordOpeningVariantStock(ProductVariant::create($this->variantPayload($product, $variantData, $index)));
-                }
-            }
+                if ($product->has_variants && ! empty($options)) {
+                    foreach ($options as $index => $optionData) {
+                        ProductOption::create([
+                            'product_id' => $product->id,
+                            'name' => $optionData['name'],
+                            'values' => $optionData['values'],
+                            'position' => $index,
+                        ]);
+                    }
 
-            return $product;
-        });
+                    foreach ($variants as $index => $variantData) {
+                        $this->recordOpeningVariantStock(ProductVariant::create($this->variantPayload($product, $variantData, $index)));
+                    }
+                }
+
+                return $product;
+            });
+        } catch (\Throwable $exception) {
+            $this->cleanupImages($data['image_disks'] ?? []);
+            throw $exception;
+        }
     }
 
     /**
@@ -89,6 +97,9 @@ final class ProductService
      */
     public function update(Product $product, array $data): Product
     {
+        $oldImages = $product->images ?? [];
+        $oldDisks = $product->image_disks ?? [];
+        unset($data['image_disks']);
         if (isset($data['images'])) {
             $data = $this->processUpdateImages($product, $data);
         }
@@ -115,37 +126,55 @@ final class ProductService
         // surface, including plugin filters that add it back.
         unset($data['options'], $data['variants'], $data['suppliers'], $data['stock']);
 
-        DB::transaction(function () use ($product, $data, $options, $variants, $syncOptions, $syncVariants, $disablingVariants, $syncSuppliers, $suppliers) {
-            $product->update($data);
+        try {
+            DB::transaction(function () use ($product, $data, $options, $variants, $syncOptions, $syncVariants, $disablingVariants, $syncSuppliers, $suppliers) {
+                $product->update($data);
 
-            // An edit that only touched options, variants or suppliers leaves
-            // the product row unchanged; it is still a product edit.
-            app(ProductObserver::class)->announceUpdate($product);
+                // An edit that only touched options, variants or suppliers leaves
+                // the product row unchanged; it is still a product edit.
+                app(ProductObserver::class)->announceUpdate($product);
 
-            if ($syncSuppliers) {
-                $this->syncSuppliers($product, $suppliers);
-            }
-
-            if ($disablingVariants) {
-                // Variants explicitly turned off: clear the options and retire
-                // the variants (a variant with stock or history is kept,
-                // deactivated, rather than deleted).
-                $product->options()->delete();
-                $this->retireVariants($product->variants()->pluck('id')->all());
-
-                return;
-            }
-
-            if ($product->has_variants) {
-                if ($syncOptions) {
-                    $this->syncOptions($product, $options);
+                if ($syncSuppliers) {
+                    $this->syncSuppliers($product, $suppliers);
                 }
 
-                if ($syncVariants) {
-                    $this->syncVariants($product, $variants);
+                if ($disablingVariants) {
+                    // Variants explicitly turned off: clear the options and retire
+                    // the variants (a variant with stock or history is kept,
+                    // deactivated, rather than deleted).
+                    $product->options()->delete();
+                    $this->retireVariants($product->variants()->pluck('id')->all());
+
+                    return;
+                }
+
+                if ($product->has_variants) {
+                    if ($syncOptions) {
+                        $this->syncOptions($product, $options);
+                    }
+
+                    if ($syncVariants) {
+                        $this->syncVariants($product, $variants);
+                    }
+                }
+            });
+        } catch (\Throwable $exception) {
+            $this->cleanupImages(array_diff_key($data['image_disks'] ?? [], array_flip($oldImages)));
+            throw $exception;
+        }
+
+        if (isset($data['images'])) {
+            $removed = [];
+            foreach (array_diff($oldImages, $data['images']) as $path) {
+                // Duplicated products share their existing files. Keep those
+                // files until no other product references them.
+                if (! Product::withoutGlobalScopes()->where('organization_id', $product->organization_id)
+                    ->where('id', '!=', $product->id)->whereJsonContains('images', $path)->exists()) {
+                    $removed[$path] = $oldDisks[$path] ?? 'public';
                 }
             }
-        });
+            $this->cleanupImages($removed);
+        }
 
         return $product;
     }
@@ -339,89 +368,88 @@ final class ProductService
         return $data;
     }
 
-    /**
-     * Validate + store base64 images on create, setting the thumbnail.
-     *
-     * @param  array<string, mixed>  $data
-     * @return array<string, mixed>
-     */
     private function processStoreImages(array $data): array
     {
         if (empty($data['images'])) {
+            unset($data['image_disks']);
+
             return $data;
         }
 
-        $imagePaths = [];
-        foreach ($data['images'] as $index => $imageData) {
-            if (isset($imageData['preview']) && str_starts_with($imageData['preview'], 'data:image/')) {
-                $this->validateBase64Image($imageData['preview']);
+        return $this->processImages($data);
+    }
 
-                $base64 = substr($imageData['preview'], strpos($imageData['preview'], ',') + 1);
-                $imageContent = base64_decode($base64);
+    private function processUpdateImages(Product $product, array $data): array
+    {
+        return $this->processImages($data, $product);
+    }
 
-                $extension = $this->getImageExtensionFromBase64($imageData['preview']);
-                $filename = 'products/'.uniqid().'_'.time().'.'.$extension;
+    /** Keep only this product's existing images; never trust a client disk/path. */
+    private function processImages(array $data, ?Product $product = null): array
+    {
+        $paths = [];
+        $disks = [];
+        $uploaded = [];
+        $oldImages = $product?->images ?? [];
+        $oldUrls = $product?->image_urls ?? [];
+        $disk = app(FileStorageService::class)->uploadsDisk('public');
 
-                Storage::disk('public')->put($filename, $imageContent);
-                $imagePaths[] = $filename;
-
-                if ($index === 0) {
-                    $data['thumbnail'] = $filename;
+        try {
+            foreach ($data['images'] as $image) {
+                $preview = $image['preview'] ?? '';
+                if (str_starts_with($preview, 'data:image/')) {
+                    $this->validateBase64Image($preview);
+                    $content = base64_decode(substr($preview, strpos($preview, ',') + 1));
+                    $path = 'products/'.Str::uuid().'.'.$this->getImageExtensionFromBase64($preview);
+                    // Track before writing: a timed-out upload may have reached S3.
+                    $uploaded[$path] = $disk;
+                    if (! Storage::disk($disk)->put($path, $content, ['visibility' => $disk === 'public' ? 'public' : 'private'])) {
+                        throw new \RuntimeException('The product image could not be stored.');
+                    }
+                    $paths[] = $path;
+                    $disks[$path] = $disk;
+                } elseif ($product !== null && isset($image['url'])) {
+                    $url = $image['url'];
+                    $index = array_search($url, $oldUrls, true);
+                    if ($index === false) {
+                        $index = array_search($url, $product->imageUrls(api: true), true);
+                    }
+                    // Accept the previous UI's local URLs during a rolling update.
+                    if ($index === false) {
+                        $index = array_search(str_starts_with($url, '/storage/') ? substr($url, 9) : $url, $oldImages, true);
+                    }
+                    if ($index === false) {
+                        throw ValidationException::withMessages(['images' => 'The selected image does not belong to this product.']);
+                    }
+                    $path = $oldImages[$index];
+                    $paths[] = $path;
+                    $disks[$path] = $product->image_disks[$path] ?? 'public';
                 }
             }
+        } catch (\Throwable $exception) {
+            $this->cleanupImages($uploaded);
+            throw $exception;
         }
-        $data['images'] = $imagePaths;
+
+        $data['images'] = $paths;
+        $data['image_disks'] = $disks;
+        $data['thumbnail'] = $paths[0] ?? null;
 
         return $data;
     }
 
-    /**
-     * Reconcile images on update: keep existing URLs, upload new base64,
-     * delete removed files, set the thumbnail.
-     *
-     * @param  array<string, mixed>  $data
-     * @return array<string, mixed>
-     */
-    private function processUpdateImages(Product $product, array $data): array
+    /** Best effort after a failure: never replace the original exception. */
+    private function cleanupImages(array $images): void
     {
-        $imagePaths = [];
-        $oldImages = $product->images ?? [];
-
-        foreach ($data['images'] as $index => $imageData) {
-            // Existing image kept by URL
-            if (isset($imageData['url']) && ! str_starts_with($imageData['preview'], 'data:image/')) {
-                $path = str_replace('/storage/', '', $imageData['url']);
-                $imagePaths[] = $path;
+        foreach ($images as $path => $disk) {
+            try {
+                if (Storage::disk($disk)->delete($path)) {
+                    continue;
+                }
+            } catch (\Throwable) {
             }
-            // New base64 image uploaded
-            elseif (isset($imageData['preview']) && str_starts_with($imageData['preview'], 'data:image/')) {
-                $this->validateBase64Image($imageData['preview']);
-
-                $base64 = substr($imageData['preview'], strpos($imageData['preview'], ',') + 1);
-                $imageContent = base64_decode($base64);
-
-                $extension = $this->getImageExtensionFromBase64($imageData['preview']);
-                $filename = 'products/'.uniqid().'_'.time().'.'.$extension;
-
-                Storage::disk('public')->put($filename, $imageContent);
-                $imagePaths[] = $filename;
-            }
-
-            if ($index === 0 && ! empty($imagePaths)) {
-                $data['thumbnail'] = end($imagePaths);
-            }
+            Log::warning('Could not remove an unused product image.', ['disk' => $disk, 'path' => $path]);
         }
-
-        // Delete removed images
-        foreach ($oldImages as $oldImage) {
-            if (! in_array($oldImage, $imagePaths)) {
-                Storage::disk('public')->delete($oldImage);
-            }
-        }
-
-        $data['images'] = $imagePaths;
-
-        return $data;
     }
 
     /**

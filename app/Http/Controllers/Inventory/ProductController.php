@@ -218,6 +218,7 @@ class ProductController extends Controller
      */
     public function show(Product $product): Response
     {
+        $product->append('image_urls');
         $eagerLoad = ['category', 'location', 'organization', 'options', 'variants', 'batches', 'serials', 'suppliers'];
 
         // Eager-load components for kits and assemblies
@@ -328,6 +329,7 @@ class ProductController extends Controller
      */
     public function edit(Request $request, Product $product): Response
     {
+        $product->append('image_urls');
         // Ensure user can only edit products from their organization
         if ($product->organization_id !== $request->user()->organization_id) {
             abort(403, 'Unauthorized action.');

@@ -94,6 +94,23 @@ class ShipmentApiLabelsTest extends TestCase
         Http::assertNothingSent();
     }
 
+    public function test_external_label_stays_downloadable_after_switching_the_upload_disk(): void
+    {
+        $this->fakeEasyPost();
+        Storage::fake('s3');
+        config(['filesystems.uploads_disk' => 's3']);
+        Sanctum::actingAs($this->admin, ['*']);
+        $shipment = $this->pending();
+        $this->postJson("/api/v1/shipments/{$shipment->id}/rates")->assertOk();
+        $this->postJson("/api/v1/shipments/{$shipment->id}/buy-label", ['rate_id' => self::RATE])->assertOk();
+        $shipment->refresh();
+        $this->assertSame('s3', $shipment->label_disk);
+        Storage::disk('s3')->assertExists($shipment->label_path);
+        Storage::disk('local')->assertMissing($shipment->label_path);
+        config(['filesystems.uploads_disk' => null]);
+        $this->assertSame('%PDF-1.4 label', app(ShipmentService::class)->labelContents($shipment));
+    }
+
     public function test_carrier_errors_are_422_with_the_readable_message(): void
     {
         $shipment = $this->pending();

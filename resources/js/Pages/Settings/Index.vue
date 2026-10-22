@@ -17,6 +17,7 @@ import {
     Webhook,
     Truck,
     RefreshCw,
+    HardDrive,
     ChevronRight,
 } from 'lucide-vue-next';
 
@@ -33,6 +34,13 @@ const { hasPermission } = usePermissions();
  * the server's route guards.
  */
 const allSections = [
+    {
+        href: route('settings.storage.index'),
+        icon: HardDrive,
+        title: t('storage.title'),
+        description: t('storage.description'),
+        storageOnly: true,
+    },
     {
         href: route('settings.account.index'),
         icon: UserCircle,
@@ -96,7 +104,7 @@ const allSections = [
 ];
 
 const settingsSections = computed(() =>
-    allSections.filter((s) => (!s.perm || hasPermission(s.perm)) && (!s.updatesOnly || page.props.auth?.canManageUpdates))
+    allSections.filter((s) => (!s.perm || hasPermission(s.perm)) && (!s.updatesOnly || page.props.auth?.canManageUpdates) && (!s.storageOnly || page.props.auth?.canManageStorage))
 );
 </script>
 

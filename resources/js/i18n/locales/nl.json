@@ -3851,5 +3851,38 @@
   "warehouseStock": {
     "title": "Voorraad per magazijn",
     "includeZero": "Nulstanden tonen"
-  }
+  },
+    "storage": {
+        "title": "Bestandsopslag",
+        "description": "Lokale en externe opslag voor geüploade bestanden.",
+        "configure": "Configureer INVENTOROS_UPLOADS_DISK en AWS-inloggegevens in .env of config/filesystems.php, vernieuw de configuratiecache en herstart wachtrijwerkers.",
+        "existingFiles": "Bestaande bestanden behouden hun opgeslagen schijf. Bewaar oude schijfdefinities bij het wijzigen van opslag.",
+        "probe": "De verbindingstest schrijft, leest en verwijdert een klein tijdelijk privébestand.",
+        "driver": "Stuurprogramma",
+        "notConfigured": "Niet geconfigureerd",
+        "usedFor": "Gebruikt voor",
+        "bucket": "Bucket",
+        "region": "Regio",
+        "connected": "Verbinding bevestigd: schrijven, lezen en verwijderen geslaagd.",
+        "failed": "Verbinding mislukt tijdens {step}. Controleer serverconfiguratie en rechten.",
+        "unchecked": "Geen recente verbindingstest.",
+        "checkedAt": "Gecontroleerd: {time}",
+        "cleanupFailed": "Het testbestand kon niet worden verwijderd. Controleer het voorvoegsel connection-checks na het herstellen van de rechten.",
+        "requestFailed": "Test kon niet worden uitgevoerd. Probeer het zo opnieuw.",
+        "checking": "Controleren…",
+        "check": "Verbinding testen",
+        "purposes": {
+            "products": "Productafbeeldingen",
+            "logos": "Organisatielogos",
+            "labels": "Verzendlabels",
+            "imports": "Importen in wachtrij",
+            "exports": "Gegenereerde exporten"
+        },
+        "steps": {
+            "connect": "verbinden",
+            "write": "schrijven",
+            "read": "lezen",
+            "delete": "verwijderen"
+        }
+    }
 }

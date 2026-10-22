@@ -3851,5 +3851,38 @@
   "warehouseStock": {
     "title": "Estoque por depósito",
     "includeZero": "Incluir saldos zerados"
-  }
+  },
+    "storage": {
+        "title": "Armazenamento de arquivos",
+        "description": "Armazenamento local e externo para arquivos enviados.",
+        "configure": "Configure INVENTOROS_UPLOADS_DISK e as credenciais AWS em .env ou config/filesystems.php, atualize o cache de configuração e reinicie os processos de fila.",
+        "existingFiles": "Os arquivos existentes mantêm seu disco registrado. Preserve as definições antigas ao mudar o armazenamento.",
+        "probe": "O teste grava, lê e exclui um pequeno arquivo privado temporário.",
+        "driver": "Driver",
+        "notConfigured": "Não configurado",
+        "usedFor": "Usado para",
+        "bucket": "Bucket",
+        "region": "Região",
+        "connected": "Conexão confirmada: gravação, leitura e exclusão bem-sucedidas.",
+        "failed": "Falha de conexão durante {step}. Verifique a configuração do servidor e as permissões.",
+        "unchecked": "Nenhum teste recente.",
+        "checkedAt": "Verificado: {time}",
+        "cleanupFailed": "Não foi possível remover o arquivo de teste. Verifique o prefixo connection-checks após corrigir as permissões.",
+        "requestFailed": "Não foi possível executar o teste. Tente novamente em breve.",
+        "checking": "Verificando…",
+        "check": "Testar conexão",
+        "purposes": {
+            "products": "Imagens de produtos",
+            "logos": "Logotipos das organizações",
+            "labels": "Etiquetas de envio",
+            "imports": "Importações em fila",
+            "exports": "Exportações geradas"
+        },
+        "steps": {
+            "connect": "conexão",
+            "write": "gravação",
+            "read": "leitura",
+            "delete": "exclusão"
+        }
+    }
 }

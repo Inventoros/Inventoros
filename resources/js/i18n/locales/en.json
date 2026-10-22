@@ -3851,5 +3851,38 @@
   "warehouseStock": {
     "title": "Stock by warehouse",
     "includeZero": "Include zero balances"
-  }
+  },
+    "storage": {
+        "title": "File storage",
+        "description": "Local and external storage for uploaded files.",
+        "configure": "Configure INVENTOROS_UPLOADS_DISK and AWS credentials in .env or config/filesystems.php, then refresh the configuration cache and restart queue workers.",
+        "existingFiles": "Existing files keep their recorded disk. Keep old disk definitions available when changing storage.",
+        "probe": "The connection check writes, reads and deletes a small temporary private file.",
+        "driver": "Driver",
+        "notConfigured": "Not configured",
+        "usedFor": "Used for",
+        "bucket": "Bucket",
+        "region": "Region",
+        "connected": "Connection confirmed: write, read and delete passed.",
+        "failed": "Connection failed during {step}. Check server configuration and permissions.",
+        "unchecked": "No recent connection check.",
+        "checkedAt": "Checked: {time}",
+        "cleanupFailed": "The temporary test file could not be removed. Check the connection-checks prefix after fixing permissions.",
+        "requestFailed": "Unable to run the check. Try again shortly.",
+        "checking": "Checking…",
+        "check": "Check connection",
+        "purposes": {
+            "products": "Product images",
+            "logos": "Organization logos",
+            "labels": "Shipping labels",
+            "imports": "Queued imports",
+            "exports": "Generated exports"
+        },
+        "steps": {
+            "connect": "connecting",
+            "write": "writing",
+            "read": "reading",
+            "delete": "deleting"
+        }
+    }
 }

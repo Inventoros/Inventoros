@@ -3851,5 +3851,38 @@
   "warehouseStock": {
     "title": "Bestand nach Lager",
     "includeZero": "Nullbestände anzeigen"
-  }
+  },
+    "storage": {
+        "title": "Dateispeicher",
+        "description": "Lokaler und externer Speicher für hochgeladene Dateien.",
+        "configure": "INVENTOROS_UPLOADS_DISK und AWS-Zugangsdaten in .env oder config/filesystems.php konfigurieren, dann den Konfigurationscache erneuern und Queue-Worker neu starten.",
+        "existingFiles": "Vorhandene Dateien behalten ihren gespeicherten Datenträger. Alte Datenträgerdefinitionen beim Wechsel beibehalten.",
+        "probe": "Die Verbindungsprüfung schreibt, liest und löscht eine kleine temporäre private Datei.",
+        "driver": "Treiber",
+        "notConfigured": "Nicht konfiguriert",
+        "usedFor": "Verwendung",
+        "bucket": "Bucket",
+        "region": "Region",
+        "connected": "Verbindung bestätigt: Schreiben, Lesen und Löschen erfolgreich.",
+        "failed": "Verbindung bei {step} fehlgeschlagen. Serverkonfiguration und Berechtigungen prüfen.",
+        "unchecked": "Keine aktuelle Verbindungsprüfung.",
+        "checkedAt": "Geprüft: {time}",
+        "cleanupFailed": "Die temporäre Testdatei konnte nicht entfernt werden. Nach Korrektur der Berechtigungen das Präfix connection-checks prüfen.",
+        "requestFailed": "Prüfung nicht möglich. In Kürze erneut versuchen.",
+        "checking": "Wird geprüft…",
+        "check": "Verbindung prüfen",
+        "purposes": {
+            "products": "Produktbilder",
+            "logos": "Organisationslogos",
+            "labels": "Versandetiketten",
+            "imports": "Importe in der Warteschlange",
+            "exports": "Erstellte Exporte"
+        },
+        "steps": {
+            "connect": "Verbinden",
+            "write": "Schreiben",
+            "read": "Lesen",
+            "delete": "Löschen"
+        }
+    }
 }

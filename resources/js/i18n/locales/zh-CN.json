@@ -3851,5 +3851,38 @@
   "warehouseStock": {
     "title": "按仓库查看库存",
     "includeZero": "包含零库存"
-  }
+  },
+    "storage": {
+        "title": "文件存储",
+        "description": "上传文件的本地和外部存储。",
+        "configure": "在 .env 或 config/filesystems.php 中配置 INVENTOROS_UPLOADS_DISK 和 AWS 凭据，然后刷新配置缓存并重启队列工作进程。",
+        "existingFiles": "现有文件保留其记录的磁盘。更改存储时请保留旧磁盘定义。",
+        "probe": "连接检查会写入、读取并删除一个小型私有临时文件。",
+        "driver": "驱动",
+        "notConfigured": "未配置",
+        "usedFor": "用途",
+        "bucket": "存储桶",
+        "region": "区域",
+        "connected": "连接已确认：写入、读取和删除均成功。",
+        "failed": "连接在{step}期间失败。请检查服务器配置和权限。",
+        "unchecked": "最近没有连接检查。",
+        "checkedAt": "检查时间：{time}",
+        "cleanupFailed": "无法删除测试文件。修复权限后请检查 connection-checks 前缀。",
+        "requestFailed": "无法运行检查。请稍后重试。",
+        "checking": "正在检查…",
+        "check": "检查连接",
+        "purposes": {
+            "products": "产品图片",
+            "logos": "组织徽标",
+            "labels": "运输标签",
+            "imports": "排队导入",
+            "exports": "生成的导出"
+        },
+        "steps": {
+            "connect": "连接",
+            "write": "写入",
+            "read": "读取",
+            "delete": "删除"
+        }
+    }
 }
