@@ -45,6 +45,18 @@ final class InventoryCleanupTest extends TestCase
         $this->assertNotSoftDeleted($this->warehouseB);
     }
 
+    public function test_an_open_stock_count_keeps_its_warehouse_available_until_it_is_finished(): void
+    {
+        $this->productB->update(['stock' => 0]);
+        ProductLocationStock::where('location_id', $this->locationB->id)->update(['quantity' => 0]);
+        $audit = $this->makeAudit($this->locationB, 'Count before warehouse retirement');
+        $this->actingAs($this->admin)->delete(route('warehouses.destroy', $this->warehouseB))->assertSessionHasErrors('warehouse');
+        $this->assertNotSoftDeleted($this->warehouseB);
+        $audit->update(['status' => 'completed']);
+        $this->actingAs($this->admin)->delete(route('warehouses.destroy', $this->warehouseB))->assertSessionHasNoErrors();
+        $this->assertSoftDeleted($this->warehouseB);
+    }
+
     public function test_default_and_inaccessible_warehouses_remain_protected(): void
     {
         $this->actingAs($this->restricted)->delete(route('warehouses.destroy', $this->warehouseB))->assertForbidden();
