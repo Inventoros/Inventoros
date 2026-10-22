@@ -46,7 +46,7 @@ const initials = computed(() =>
 
 <template>
     <div class="flex min-h-screen flex-col bg-surface-canvas">
-        <header class="sticky top-0 z-30 border-b border-border-subtle bg-surface-base/95 backdrop-blur">
+        <header class="sticky top-0 z-30 border-b border-border-subtle bg-surface-base/95 backdrop-blur-sm">
             <div class="mx-auto flex h-14 max-w-6xl items-center gap-4 px-4 md:px-6">
                 <Link :href="route('portal.dashboard')" class="flex min-w-0 items-center gap-2.5 rounded-md ds-focus-ring">
                     <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-brand text-xs font-semibold text-brand-foreground">

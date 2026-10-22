@@ -82,13 +82,18 @@ class ReturnOrderController extends Controller
 
         $returns = app(ReturnOrderService::class);
         $returnedQuantities = $returns->returnedQuantities($order);
+        $shippedQuantities = $returns->shippedQuantities($order);
+        $paidNets = $returns->paidLineNets($order);
 
         return Inertia::render('Returns/Create', [
             'order' => $order,
             'returnedQuantities' => $returnedQuantities,
+            'returnableQuantities' => (object) $shippedQuantities->mapWithKeys(fn ($quantity, $id) => [$id => max(0, $quantity - (int) $returnedQuantities->get($id, 0))])->all(),
             // Per line, what the customer paid after line and order
             // discounts: the estimate matches the refund the service records.
-            'paidNets' => (object) $returns->paidLineNets($order),
+            'paidNets' => (object) $paidNets,
+            'refundedAmounts' => (object) $returns->refundedLineAmounts($order, $paidNets),
+            'refundableBalance' => $returns->remainingRefundBalance($order, $paidNets),
         ]);
     }
 

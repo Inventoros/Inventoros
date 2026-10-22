@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite';
 import laravel from 'laravel-vite-plugin';
 import vue from '@vitejs/plugin-vue';
+import tailwindcss from '@tailwindcss/vite';
 import { readdirSync, existsSync } from 'fs';
 import { resolve } from 'path';
 
@@ -39,6 +40,7 @@ export default defineConfig({
                 },
             },
         }),
+        tailwindcss(),
     ],
     define: {
         // vue-i18n's default message compiler uses new Function(), which a

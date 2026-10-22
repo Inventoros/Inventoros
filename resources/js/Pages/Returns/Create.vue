@@ -8,6 +8,7 @@ import { ref, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { ArrowLeft, Trash2 } from 'lucide-vue-next';
 import { formatMoney } from '@/lib/money';
+import { estimateRefund } from '@/lib/refundEstimate';
 import { usePermissions } from '@/composables/usePermissions';
 
 const { canVisit } = usePermissions();
@@ -20,9 +21,12 @@ const backHref = computed(() => (canVisit('orders.show') ? route('orders.show', 
 const props = defineProps({
     order: Object,
     returnedQuantities: Object,
+    returnableQuantities: Object,
     // Per order item id: what was paid for the whole line after line and
     // order discounts. The refund is that share, as the server computes it.
     paidNets: { type: Object, default: () => ({}) },
+    refundedAmounts: { type: Object, default: () => ({}) },
+    refundableBalance: { type: String, default: null },
 });
 
 const form = useForm({
@@ -38,6 +42,7 @@ const form = useForm({
         variant_title: item.variant?.title ?? null,
         sku: item.variant?.sku || item.sku,
         ordered_quantity: item.quantity,
+        returnable_quantity: Number(props.returnableQuantities?.[item.id] ?? 0),
         already_returned: props.returnedQuantities?.[item.id] || 0,
         quantity: 0,
         condition: 'new',
@@ -49,7 +54,7 @@ const form = useForm({
 const selectedItems = computed(() => form.items.filter(item => item.selected && item.quantity > 0));
 
 const maxReturnable = (item) => {
-    return item.ordered_quantity - item.already_returned;
+    return item.returnable_quantity;
 };
 
 const toggleItem = (item) => {
@@ -70,22 +75,17 @@ const updateCondition = (item) => {
     }
 };
 
-const estimatedRefund = computed(() => {
-    let total = 0;
-    for (const item of form.items) {
-        if (item.selected && item.quantity > 0) {
-            const orderItem = props.order.items.find(oi => oi.id === item.order_item_id);
-            if (orderItem) {
-                const paid = props.paidNets?.[orderItem.id];
-                const lineRefund = paid !== undefined && paid !== null && orderItem.quantity > 0
-                    ? (parseFloat(paid) * item.quantity) / orderItem.quantity
-                    : item.quantity * parseFloat(orderItem.unit_price);
-                total += Math.round(lineRefund * 100) / 100;
-            }
-        }
-    }
-    return total;
-});
+const estimatedRefund = computed(() => estimateRefund(selectedItems.value.map((item) => {
+    const orderItem = props.order.items.find((line) => line.id === item.order_item_id);
+    return {
+        orderedQuantity: orderItem.quantity,
+        returnQuantity: item.quantity,
+        alreadyReturned: item.already_returned,
+        alreadyRefunded: props.refundedAmounts?.[orderItem.id] ?? '0.00',
+        paidNet: props.paidNets?.[orderItem.id],
+        unitPrice: orderItem.unit_price,
+    };
+}), props.refundableBalance));
 
 const submit = () => {
     const payload = {

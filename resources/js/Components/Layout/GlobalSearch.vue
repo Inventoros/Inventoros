@@ -35,9 +35,9 @@ const flatResults = computed(() => {
     for (const cat of categories) {
         const catResults = results.value[cat.key] || [];
         if (catResults.length > 0) {
-            items.push({ type: 'header', label: cat.label, icon: cat.icon });
+            items.push({ kind: 'header', label: cat.label, icon: cat.icon });
             for (const item of catResults) {
-                items.push({ type: 'result', ...item, categoryIcon: cat.icon });
+                items.push({ ...item, kind: 'result', categoryIcon: cat.icon });
             }
         }
     }
@@ -45,7 +45,7 @@ const flatResults = computed(() => {
 });
 
 const selectableResults = computed(() => {
-    return flatResults.value.filter(item => item.type === 'result');
+    return flatResults.value.filter(item => item.kind === 'result');
 });
 
 const hasResults = computed(() => {
@@ -206,7 +206,7 @@ defineExpose({ open });
         >
             <div
                 v-if="isOpen"
-                class="fixed inset-0 z-[60] bg-black/50 backdrop-blur-sm"
+                class="fixed inset-0 z-60 bg-black/50 backdrop-blur-xs"
                 @click="close"
             ></div>
         </Transition>
@@ -222,7 +222,7 @@ defineExpose({ open });
         >
             <div
                 v-if="isOpen"
-                class="fixed inset-0 z-[61] flex items-start justify-center pt-[15vh] px-4"
+                class="fixed inset-0 z-61 flex items-start justify-center pt-[15vh] px-4"
                 @keydown="handleKeydown"
             >
                 <div
@@ -231,7 +231,7 @@ defineExpose({ open });
                 >
                     <!-- Search Input -->
                     <div class="flex items-center px-4 border-b border-gray-200 dark:border-gray-700">
-                        <svg class="w-5 h-5 text-gray-400 dark:text-gray-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="w-5 h-5 text-gray-400 dark:text-gray-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                         </svg>
                         <input
@@ -239,7 +239,7 @@ defineExpose({ open });
                             v-model="query"
                             type="text"
                             :placeholder="$t('nav.globalSearch.placeholder')"
-                            class="flex-1 px-3 py-4 bg-transparent border-0 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:ring-0 focus:outline-none text-sm"
+                            class="flex-1 px-3 py-4 bg-transparent border-0 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:ring-0 focus:outline-hidden text-sm"
                         />
                         <div class="flex items-center gap-2">
                             <span v-if="isLoading" class="text-gray-400">
@@ -267,7 +267,7 @@ defineExpose({ open });
                                 @click="navigateToResult(item)"
                                 class="w-full flex items-center gap-3 px-4 py-2.5 text-left hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
                             >
-                                <svg class="w-4 h-4 text-gray-400 dark:text-gray-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg class="w-4 h-4 text-gray-400 dark:text-gray-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                                 </svg>
                                 <div class="flex-1 min-w-0">
@@ -281,7 +281,7 @@ defineExpose({ open });
                         <div v-if="hasQuery && hasResults" class="py-2">
                             <template v-for="(item, index) in flatResults" :key="index">
                                 <!-- Category Header -->
-                                <div v-if="item.type === 'header'" class="px-4 py-1.5 mt-1 first:mt-0">
+                                <div v-if="item.kind === 'header'" class="px-4 py-1.5 mt-1 first:mt-0">
                                     <p class="text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">{{ $t(item.label) }}</p>
                                 </div>
 
@@ -297,7 +297,7 @@ defineExpose({ open });
                                             : 'hover:bg-gray-50 dark:hover:bg-gray-700/50'
                                     ]"
                                 >
-                                    <svg class="w-4 h-4 text-gray-400 dark:text-gray-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg class="w-4 h-4 text-gray-400 dark:text-gray-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="getIconPath(item.icon || item.type)" />
                                     </svg>
                                     <div class="flex-1 min-w-0">
@@ -306,7 +306,7 @@ defineExpose({ open });
                                     </div>
                                     <svg
                                         v-if="getSelectableIndex(item) === selectedIndex"
-                                        class="w-4 h-4 text-gray-400 dark:text-gray-500 flex-shrink-0"
+                                        class="w-4 h-4 text-gray-400 dark:text-gray-500 shrink-0"
                                         fill="none"
                                         stroke="currentColor"
                                         viewBox="0 0 24 24"

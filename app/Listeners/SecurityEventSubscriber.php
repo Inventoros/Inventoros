@@ -15,6 +15,7 @@ use Illuminate\Auth\Events\Logout;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Auth\Events\PasswordResetLinkSent;
 use Illuminate\Events\Dispatcher;
+use Illuminate\Support\Facades\Auth;
 use Laravel\Sanctum\Sanctum;
 
 /**
@@ -35,6 +36,11 @@ final class SecurityEventSubscriber
     {
         if (! $event->user instanceof User) {
             return;
+        }
+
+        // Bind newly authenticated staff sessions to the current password.
+        if ($event->guard === 'web' && request()->hasSession()) {
+            request()->session()->put('password_hash_web', Auth::guard('web')->hashPasswordForCookie($event->user->getAuthPassword()));
         }
 
         $this->logger->record(SecurityEvent::LOGIN, $event->user, $event->user, [

@@ -19,7 +19,7 @@ defineProps({
             <p v-if="eyebrow" class="text-xs font-medium uppercase tracking-wider text-text-tertiary">
                 {{ eyebrow }}
             </p>
-            <h1 class="mt-0.5 text-xl font-semibold text-text-primary tracking-tight break-words">
+            <h1 class="mt-0.5 text-xl font-semibold text-text-primary tracking-tight wrap-break-word">
                 {{ title }}
             </h1>
             <p v-if="description" class="mt-1 text-sm text-text-secondary">

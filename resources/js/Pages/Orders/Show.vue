@@ -419,7 +419,7 @@ const formatOrderDate = (date, long = false) =>
                         <div class="p-5">
                             <div class="space-y-4">
                                 <div class="flex items-start gap-3">
-                                    <div class="mt-2 h-2 w-2 flex-shrink-0 rounded-full bg-status-success"></div>
+                                    <div class="mt-2 h-2 w-2 shrink-0 rounded-full bg-status-success"></div>
                                     <div class="flex-1">
                                         <p class="text-sm font-medium text-text-primary">{{ t('orders.show.orderCreated') }}</p>
                                         <p class="text-xs text-text-tertiary">{{ formatOrderDate(order.order_date, true) }}</p>
@@ -427,7 +427,7 @@ const formatOrderDate = (date, long = false) =>
                                 </div>
 
                                 <div v-if="order.shipped_at" class="flex items-start gap-3">
-                                    <div class="mt-2 h-2 w-2 flex-shrink-0 rounded-full bg-brand"></div>
+                                    <div class="mt-2 h-2 w-2 shrink-0 rounded-full bg-brand"></div>
                                     <div class="flex-1">
                                         <p class="text-sm font-medium text-text-primary">{{ t('orders.show.orderShipped') }}</p>
                                         <p class="text-xs text-text-tertiary">{{ formatDate(order.shipped_at) }}</p>
@@ -435,7 +435,7 @@ const formatOrderDate = (date, long = false) =>
                                 </div>
 
                                 <div v-if="order.delivered_at" class="flex items-start gap-3">
-                                    <div class="mt-2 h-2 w-2 flex-shrink-0 rounded-full bg-status-success"></div>
+                                    <div class="mt-2 h-2 w-2 shrink-0 rounded-full bg-status-success"></div>
                                     <div class="flex-1">
                                         <p class="text-sm font-medium text-text-primary">{{ t('orders.show.orderDelivered') }}</p>
                                         <p class="text-xs text-text-tertiary">{{ formatDate(order.delivered_at) }}</p>
@@ -768,7 +768,7 @@ const formatOrderDate = (date, long = false) =>
                         </p>
                         <div class="rounded-lg border border-status-warning/20 bg-status-warning-soft p-4">
                             <div class="flex items-start gap-3">
-                                <AlertTriangle :size="20" class="mt-0.5 flex-shrink-0 text-status-warning" />
+                                <AlertTriangle :size="20" class="mt-0.5 shrink-0 text-status-warning" />
                                 <div class="text-sm text-status-warning">
                                     <p class="mb-1 font-semibold">{{ t('orders.show.cannotUndo') }}</p>
                                     <p>{{ t('orders.show.stockRestored') }}</p>

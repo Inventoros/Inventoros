@@ -1,4 +1,3 @@
-import { execSync } from 'child_process';
 import { readFileSync } from 'fs';
 import path from 'path';
 import { test, expect, type Page } from '@playwright/test';
@@ -34,7 +33,7 @@ test.describe.configure({ mode: 'serial' });
 test.use({ viewport: { width: 375, height: 812 } });
 
 test.beforeAll(() => {
-    execSync('php artisan db:seed --class=E2ELayoutSeeder --force', { cwd: process.cwd(), stdio: 'inherit' });
+    // Global setup seeds these records before the shared staff login is saved.
     fx = JSON.parse(readFileSync(path.join(process.cwd(), 'e2e/.auth/layout-fixtures.json'), 'utf8'));
 });
 

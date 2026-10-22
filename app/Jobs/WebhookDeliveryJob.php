@@ -8,6 +8,7 @@ use App\Models\Webhook;
 use App\Models\WebhookDelivery;
 use App\Services\WebhookService;
 use App\Support\PublicHostGuard;
+use GuzzleHttp\Handler\CurlHandler;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -255,17 +256,10 @@ final class WebhookDeliveryJob implements ShouldQueue
         $reported = false;
 
         try {
-            // Resolve the URL's host at delivery time and reject any non-
-            // public address. The create-time URL validator only inspects
-            // the host string; DNS rebinding ('attacker.com' resolves to
-            // 127.0.0.1 or 169.254.169.254 just before delivery) can slip
-            // past it. Re-check here so the actual outbound destination
-            // is what the operator intended.
-            PublicHostGuard::assertPublic($webhook->url);
-
-            // Disable redirect following so a 302 from an allowlisted host
-            // cannot smuggle the request to a private/metadata URL.
-            $response = Http::withOptions(['allow_redirects' => false])
+            // Resolve once, validate every address and pin that answer. Force
+            // cURL so a stream/TLS fallback cannot ignore the DNS override.
+            $response = Http::withOptions(PublicHostGuard::connectionOptions($webhook->url))
+                ->setHandler(new CurlHandler)
                 ->timeout($request['timeout'])
                 ->withHeaders($request['headers'])
                 ->withHeaders([

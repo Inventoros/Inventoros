@@ -7,9 +7,14 @@ namespace App\Exports;
 use App\Models\Inventory\Product;
 use App\Services\ReorderService;
 use App\Support\ProductCurrencyColumns;
+use App\Support\ProductSpreadsheetText;
+use App\Support\ProductSpreadsheetValueBinder;
+use Illuminate\Database\Eloquent\Builder;
 use Maatwebsite\Excel\Concerns\FromQuery;
+use Maatwebsite\Excel\Concerns\WithCustomValueBinder;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
+use Maatwebsite\Excel\Concerns\WithStrictNullComparison;
 use Maatwebsite\Excel\Concerns\WithStyles;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
@@ -18,7 +23,7 @@ use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
  *
  * Handles exporting product data with optional filtering by category, location, status, and stock level.
  */
-final class ProductsExport implements FromQuery, WithHeadings, WithMapping, WithStyles
+final class ProductsExport extends ProductSpreadsheetValueBinder implements FromQuery, WithCustomValueBinder, WithHeadings, WithMapping, WithStrictNullComparison, WithStyles
 {
     /**
      * The organization ID to filter products by.
@@ -44,8 +49,8 @@ final class ProductsExport implements FromQuery, WithHeadings, WithMapping, With
     /**
      * Create a new export instance.
      *
-     * @param int $organizationId The organization to export products from
-     * @param array $filters Optional filters (category_id, location_id, status, low_stock)
+     * @param  int  $organizationId  The organization to export products from
+     * @param  array  $filters  Optional filters (category_id, location_id, status, low_stock)
      */
     public function __construct($organizationId, array $filters = [])
     {
@@ -56,28 +61,28 @@ final class ProductsExport implements FromQuery, WithHeadings, WithMapping, With
     /**
      * Query for products to export
      */
-    public function query(): \Illuminate\Database\Eloquent\Builder
+    public function query(): Builder
     {
         $query = Product::query()
             ->with(array_merge(['category', 'location'], ReorderService::primarySupplierEagerLoad()))
             ->forOrganization($this->organizationId);
 
         // Apply filters
-        if (!empty($this->filters['category_id'])) {
+        if (! empty($this->filters['category_id'])) {
             $query->where('category_id', $this->filters['category_id']);
         }
 
-        if (!empty($this->filters['location_id'])) {
+        if (! empty($this->filters['location_id'])) {
             $query->where('location_id', $this->filters['location_id']);
         }
 
-        if (!empty($this->filters['status'])) {
+        if (! empty($this->filters['status'])) {
             // Convert status to is_active boolean
             $isActive = $this->filters['status'] === 'active';
             $query->where('is_active', $isActive);
         }
 
-        if (!empty($this->filters['low_stock'])) {
+        if (! empty($this->filters['low_stock'])) {
             $query->whereRaw(Product::effectiveStockSql().' <= products.min_stock');
         }
 
@@ -110,6 +115,7 @@ final class ProductsExport implements FromQuery, WithHeadings, WithMapping, With
             'Supplier SKU',
             'Supplier Cost',
             ...array_map(fn (string $code) => "Price {$code}", $this->currencies()),
+            ProductSpreadsheetText::HEADING,
         ];
     }
 
@@ -133,7 +139,7 @@ final class ProductsExport implements FromQuery, WithHeadings, WithMapping, With
         $primary = $product->suppliers->first();
         $prices = array_change_key_case((array) ($product->price_in_currencies ?? []), CASE_UPPER);
 
-        return \App\Support\SpreadsheetSafety::neutraliseRow([
+        return ProductSpreadsheetText::encodeRow([
             $product->id,
             $product->name,
             $product->sku,
@@ -157,7 +163,8 @@ final class ProductsExport implements FromQuery, WithHeadings, WithMapping, With
                 fn (string $code) => $prices[$code] ?? '',
                 $this->currencies(),
             ),
-        ]);
+            ProductSpreadsheetText::ENCODING,
+        ], $this->headings());
     }
 
     /**

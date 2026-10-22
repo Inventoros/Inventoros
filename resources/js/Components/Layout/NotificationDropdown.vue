@@ -183,7 +183,7 @@ defineExpose({ closeDropdown });
                     @click="markAsRead(notification)"
                     class="w-full flex items-start gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-slate-800/50 transition border-b border-gray-50 dark:border-border-subtle last:border-b-0 text-left"
                 >
-                    <div :class="['flex-shrink-0 w-9 h-9 rounded-lg flex items-center justify-center', getTypeColor(notification.type)]">
+                    <div :class="['shrink-0 w-9 h-9 rounded-lg flex items-center justify-center', getTypeColor(notification.type)]">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="getTypeIcon(notification.type)" />
                         </svg>
@@ -193,7 +193,7 @@ defineExpose({ closeDropdown });
                         <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5 line-clamp-2">{{ notification.message }}</p>
                         <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">{{ formatDate(notification.created_at) }}</p>
                     </div>
-                    <div class="flex-shrink-0 mt-1.5">
+                    <div class="shrink-0 mt-1.5">
                         <div class="w-2 h-2 bg-brand rounded-full"></div>
                     </div>
                 </button>

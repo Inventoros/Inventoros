@@ -94,6 +94,7 @@ class InAppJsonSessionAuthTest extends TestCase
         $store->setId(null);
         $store->start();
         $store->put(Auth::guard('web')->getName(), $user->getKey());
+        $store->put('password_hash_web', Auth::guard('web')->hashPasswordForCookie($user->getAuthPassword()));
         foreach ($extraSession as $key => $value) {
             $store->put($key, $value);
         }
