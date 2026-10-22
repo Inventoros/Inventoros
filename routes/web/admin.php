@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\ActivityLogController;
 use App\Http\Controllers\Admin\ApiTokenController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\OrganizationSettingsController;
+use App\Http\Controllers\Admin\OrganizationLogoController;
 use App\Http\Controllers\Admin\PluginController;
 use App\Http\Controllers\Admin\PluginMarketplaceController;
 use App\Http\Controllers\Admin\RoleController;
@@ -71,6 +72,8 @@ Route::prefix('plugins')->name('plugins.')->middleware('permission:view_plugins'
 });
 
 // Settings - Permission based
+Route::get('/organizations/{organization}/logo', [OrganizationLogoController::class, 'show'])->name('organization.logo');
+
 Route::prefix('settings')->name('settings.')->group(function () {
     // Settings hub. Open to every signed-in user: it links to account
     // settings and two-factor (everyone) and hides the admin-only sections.
@@ -79,6 +82,8 @@ Route::prefix('settings')->name('settings.')->group(function () {
     // Organization Settings
     Route::prefix('organization')->name('organization.')->middleware('permission:view_settings')->group(function () {
         Route::get('/', [OrganizationSettingsController::class, 'index'])->name('index');
+        Route::post('/logo', [OrganizationLogoController::class, 'store'])->middleware('permission:manage_organization')->name('logo.store');
+        Route::delete('/logo', [OrganizationLogoController::class, 'destroy'])->middleware('permission:manage_organization')->name('logo.destroy');
         Route::patch('/general', [OrganizationSettingsController::class, 'updateGeneral'])->middleware('permission:manage_organization')->name('update.general');
         Route::patch('/regional', [OrganizationSettingsController::class, 'updateRegional'])->middleware('permission:manage_organization')->name('update.regional');
         Route::patch('/approvals', [OrganizationSettingsController::class, 'updateApprovals'])->middleware('permission:manage_organization')->name('update.approvals');

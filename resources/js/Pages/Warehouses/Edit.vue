@@ -1,4 +1,7 @@
 <script setup>
+import CurrencySelect from '@/Components/CurrencySelect.vue';
+import { useCurrency } from '@/composables/useCurrency';
+
 import AppLayout from '@/Layouts/AppLayout.vue';
 import PageHeader from '@/Components/ui/PageHeader.vue';
 import Card from '@/Components/ui/Card.vue';
@@ -10,6 +13,7 @@ import { usePermissions } from '@/composables/usePermissions';
 import { ref, computed } from 'vue';
 import { ArrowLeft } from 'lucide-vue-next';
 
+const { organizationCurrency } = useCurrency();
 const { t } = useI18n();
 const { hasPermission } = usePermissions();
 
@@ -33,7 +37,7 @@ const form = useForm({
     email: props.warehouse.email || '',
     manager_name: props.warehouse.manager_name || '',
     timezone: props.warehouse.timezone || 'America/Toronto',
-    currency: props.warehouse.currency || 'CAD',
+    currency: props.warehouse.currency || organizationCurrency.value,
     priority: props.warehouse.priority ?? 0,
     capacity: props.warehouse.capacity ?? null,
     is_active: props.warehouse.is_active ?? true,
@@ -54,12 +58,6 @@ const timezones = [
     { value: 'America/Vancouver', label: t('warehouses.timezoneOptions.vancouver') },
 ];
 
-const currencies = [
-    { value: 'CAD', label: t('purchaseOrders.currencies.cad') },
-    { value: 'USD', label: t('purchaseOrders.currencies.usd') },
-    { value: 'EUR', label: t('purchaseOrders.currencies.eur') },
-    { value: 'GBP', label: t('purchaseOrders.currencies.gbp') },
-];
 
 const userSearch = ref('');
 
@@ -235,11 +233,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
 
                         <div>
                             <label for="currency" :class="fieldLabel">{{ t('warehouses.fields.currency') }}</label>
-                            <select id="currency" v-model="form.currency" :class="fieldInput">
-                                <option v-for="cur in currencies" :key="cur.value" :value="cur.value">
-                                    {{ cur.label }}
-                                </option>
-                            </select>
+                            <CurrencySelect id="currency" v-model="form.currency" :class="fieldInput" />
                             <p v-if="form.errors.currency" :class="fieldError">{{ form.errors.currency }}</p>
                         </div>
 
@@ -263,7 +257,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                     type="checkbox"
                                     v-model="form.is_active"
                                     class="rounded border-border-subtle bg-surface-canvas text-brand ds-focus-ring"
-                                />
+                            />
                                 <span class="ml-2 text-sm text-text-secondary">{{ t('warehouses.fields.isActive') }}</span>
                             </label>
                         </div>

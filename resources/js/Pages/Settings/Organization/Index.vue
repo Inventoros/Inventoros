@@ -26,6 +26,16 @@ const props = defineProps({
 
 const { t } = useI18n();
 const activeTab = ref('general');
+const logoInput = ref(null);
+const logoForm = useForm({ logo: null });
+const uploadLogo = () => logoForm.post(route('settings.organization.logo.store'), {
+    preserveScroll: true,
+    onSuccess: () => {
+        logoForm.reset();
+        if (logoInput.value) logoInput.value.value = '';
+    },
+});
+const removeLogo = () => logoForm.delete(route('settings.organization.logo.destroy'), { preserveScroll: true });
 
 // General settings form
 const generalForm = useForm({
@@ -192,6 +202,21 @@ const tabs = [
 
         <!-- General Information Tab -->
         <div v-show="activeTab === 'general'" class="mt-6">
+            <Card class="mb-4">
+                <form @submit.prevent="uploadLogo" class="space-y-3">
+                    <label for="organization-logo" :class="fieldLabel">{{ t('settings.organization.logoTitle') }}</label>
+                    <img v-if="organization.logo_url" :src="organization.logo_url" :alt="organization.name" class="h-16 w-16 object-contain" />
+                    <p class="text-sm text-text-secondary">{{ t('settings.organization.logoHint') }}</p>
+                    <template v-if="canManage">
+                        <input id="organization-logo" ref="logoInput" type="file" accept="image/png,image/jpeg,image/webp" :disabled="logoForm.processing" class="block w-full text-sm text-text-secondary ds-focus-ring" @change="logoForm.logo = $event.target.files[0] || null" />
+                        <p v-if="logoForm.errors.logo" :class="fieldError">{{ logoForm.errors.logo }}</p>
+                        <div class="flex gap-2">
+                            <Button type="submit" :disabled="!logoForm.logo || logoForm.processing" :loading="logoForm.processing">{{ t('common.save') }}</Button>
+                            <Button v-if="organization.logo_url" type="button" variant="secondary" :disabled="logoForm.processing" @click="removeLogo">{{ t('settings.organization.logoRemove') }}</Button>
+                        </div>
+                    </template>
+                </form>
+            </Card>
             <Card :padded="false">
                 <form @submit.prevent="submitGeneral">
                     <div class="px-5 pt-5">

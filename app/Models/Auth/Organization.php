@@ -87,7 +87,17 @@ class Organization extends Model
      */
     protected $hidden = [
         'marketplace_token',
+        'logo_path',
     ];
+
+    protected $appends = ['logo_url'];
+
+    public function getLogoUrlAttribute(): ?string
+    {
+        return $this->logo_path
+            ? route('organization.logo', ['organization' => $this->id, 'v' => sha1($this->logo_path)], absolute: false)
+            : null;
+    }
 
     /**
      * The attributes that should be cast.

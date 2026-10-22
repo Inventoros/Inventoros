@@ -1,4 +1,7 @@
 <script setup>
+import CurrencySelect from '@/Components/CurrencySelect.vue';
+import { useCurrency } from '@/composables/useCurrency';
+
 import AppLayout from '@/Layouts/AppLayout.vue';
 import PageHeader from '@/Components/ui/PageHeader.vue';
 import Card from '@/Components/ui/Card.vue';
@@ -7,6 +10,7 @@ import { Head, Link, useForm } from '@inertiajs/vue3';
 import { useI18n } from 'vue-i18n';
 import { ArrowLeft } from 'lucide-vue-next';
 
+const { organizationCurrency } = useCurrency();
 const { t } = useI18n();
 
 const props = defineProps({
@@ -28,13 +32,13 @@ const form = useForm({
     email: '',
     manager_name: '',
     timezone: props.defaults.timezone || 'America/Toronto',
-    currency: props.defaults.currency || 'CAD',
+    currency: props.defaults.currency || organizationCurrency.value,
     priority: 0,
     capacity: null,
     is_active: true,
 });
 
-// Keep the organization's own timezone / currency selectable even when it is
+// Keep the organization's own timezone selectable even when it is
 // not one of the common choices below.
 const withDefault = (options, value) =>
     value && !options.some((option) => option.value === value) ? [{ value, label: value }, ...options] : options;
@@ -47,13 +51,6 @@ const timezones = withDefault([
     { value: 'America/Edmonton', label: t('warehouses.timezoneOptions.edmonton') },
     { value: 'America/Vancouver', label: t('warehouses.timezoneOptions.vancouver') },
 ], props.defaults.timezone);
-
-const currencies = withDefault([
-    { value: 'CAD', label: t('purchaseOrders.currencies.cad') },
-    { value: 'USD', label: t('purchaseOrders.currencies.usd') },
-    { value: 'EUR', label: t('purchaseOrders.currencies.eur') },
-    { value: 'GBP', label: t('purchaseOrders.currencies.gbp') },
-], props.defaults.currency);
 
 const submit = () => {
     form.post(route('warehouses.store'));
@@ -275,15 +272,11 @@ const fieldError = 'mt-1 text-xs text-status-danger';
 
                         <div>
                             <label for="currency" :class="fieldLabel">{{ t('warehouses.fields.currency') }}</label>
-                            <select
+                            <CurrencySelect
                                 id="currency"
                                 v-model="form.currency"
                                 :class="fieldInput"
-                            >
-                                <option v-for="cur in currencies" :key="cur.value" :value="cur.value">
-                                    {{ cur.label }}
-                                </option>
-                            </select>
+                            />
                             <p v-if="form.errors.currency" :class="fieldError">{{ form.errors.currency }}</p>
                         </div>
 

@@ -1511,6 +1511,9 @@
   "settings": {
     "title": "Ustawienia",
     "organization": {
+      "logoTitle": "Logo firmy",
+      "logoHint": "PNG, JPEG lub WebP. Maksymalnie 2 MB i 2048 × 2048 pikseli.",
+      "logoRemove": "Usuń logo",
       "title": "Ustawienia organizacji",
       "generalInfo": "Informacje ogólne",
       "regionalSettings": "Ustawienia regionalne",
@@ -1753,6 +1756,10 @@
         "customRolesSelected": "Wybrane role niestandardowe: {count} | Wybrane role niestandardowe: {count}"
       },
       "show": {
+        "effectivePermissions": "Efektywne uprawnienia",
+        "effectivePermissionsHint": "Uprawnienia ról w tej organizacji. Nadal obowiązują ograniczenia dostępu do magazynów i rekordów.",
+        "allowed": "Przyznane",
+        "notGranted": "Nieprzyznane",
         "title": "Szczegóły użytkownika",
         "editUser": "Edytuj użytkownika",
         "backToUsers": "Wróć do użytkowników",

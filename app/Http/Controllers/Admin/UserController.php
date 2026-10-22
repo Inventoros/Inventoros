@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Admin;
 
+use App\Enums\Permission;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\User\StoreUserRequest;
 use App\Http\Requests\Admin\User\UpdateUserRequest;
@@ -113,6 +114,8 @@ class UserController extends Controller
 
         return Inertia::render('Admin/Users/Show', [
             'user' => $user,
+            'permissions' => Permission::grouped(),
+            'effectivePermissions' => $user->getAllPermissions(),
         ]);
     }
 
