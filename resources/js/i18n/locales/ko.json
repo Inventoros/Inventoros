@@ -131,6 +131,7 @@
     }
   },
   "common": {
+    "pagination": "페이지 탐색",
     "save": "저장",
     "saveChanges": "변경사항 저장",
     "saving": "저장 중...",
@@ -213,8 +214,7 @@
     "add": "추가",
     "export": "내보내기",
     "new": "새로 만들기",
-    "editWithName": "편집: {name}",
-    "pagination": "페이지 탐색"
+    "editWithName": "편집: {name}"
   },
   "nav": {
     "dashboard": "대시보드",

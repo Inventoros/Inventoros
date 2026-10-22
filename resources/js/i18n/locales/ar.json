@@ -131,6 +131,7 @@
     }
   },
   "common": {
+    "pagination": "ترقيم الصفحات",
     "save": "حفظ",
     "saveChanges": "حفظ التغييرات",
     "saving": "جارٍ الحفظ...",
@@ -213,8 +214,7 @@
     "add": "إضافة",
     "export": "تصدير",
     "new": "جديد",
-    "editWithName": "تعديل: {name}",
-    "pagination": "ترقيم الصفحات"
+    "editWithName": "تعديل: {name}"
   },
   "nav": {
     "dashboard": "لوحة التحكم",

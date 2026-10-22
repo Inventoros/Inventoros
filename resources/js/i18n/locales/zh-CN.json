@@ -131,6 +131,7 @@
     }
   },
   "common": {
+    "pagination": "分页",
     "save": "保存",
     "saveChanges": "保存更改",
     "saving": "保存中...",
@@ -213,8 +214,7 @@
     "add": "添加",
     "export": "导出",
     "new": "新建",
-    "editWithName": "编辑：{name}",
-    "pagination": "分页"
+    "editWithName": "编辑：{name}"
   },
   "nav": {
     "dashboard": "仪表盘",
@@ -367,7 +367,7 @@
     "printBarcodes": "打印条形码",
     "printQrLabels": "打印二维码标签",
     "scanBarcode": "扫描条形码 (Ctrl+B)",
-    "confirmDelete": "确定要删除“{name}”吗？",
+    "confirmDelete": "确定要删除\u201C{name}\u201D吗？",
     "create": {
       "title": "创建产品",
       "basicInfo": "基本信息",

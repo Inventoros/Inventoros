@@ -32,6 +32,7 @@
     "showing": "Showing {from} to {to} of {total}"
   },
   "common": {
+    "pagination": "Pagination",
     "save": "Save",
     "saveChanges": "Save Changes",
     "saving": "Saving...",
@@ -114,8 +115,7 @@
     "add": "Add",
     "export": "Export",
     "new": "New",
-    "editWithName": "Edit: {name}",
-    "pagination": "Pagination"
+    "editWithName": "Edit: {name}"
   },
   "nav": {
     "dashboard": "Dashboard",

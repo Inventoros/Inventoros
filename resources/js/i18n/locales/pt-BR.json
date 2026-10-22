@@ -131,6 +131,7 @@
     }
   },
   "common": {
+    "pagination": "Paginação",
     "save": "Salvar",
     "saveChanges": "Salvar Alterações",
     "saving": "Salvando...",
@@ -213,8 +214,7 @@
     "add": "Adicionar",
     "export": "Exportar",
     "new": "Novo",
-    "editWithName": "Editar: {name}",
-    "pagination": "Paginação"
+    "editWithName": "Editar: {name}"
   },
   "nav": {
     "dashboard": "Painel",

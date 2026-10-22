@@ -131,6 +131,7 @@
     }
   },
   "common": {
+    "pagination": "Paginering",
     "save": "Opslaan",
     "saveChanges": "Wijzigingen opslaan",
     "saving": "Opslaan...",
@@ -213,8 +214,7 @@
     "add": "Toevoegen",
     "export": "Exporteren",
     "new": "Nieuw",
-    "editWithName": "Bewerken: {name}",
-    "pagination": "Paginering"
+    "editWithName": "Bewerken: {name}"
   },
   "nav": {
     "dashboard": "Dashboard",

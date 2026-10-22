@@ -131,6 +131,7 @@
     }
   },
   "common": {
+    "pagination": "Pagination",
     "save": "Enregistrer",
     "saveChanges": "Enregistrer les modifications",
     "saving": "Enregistrement...",
@@ -213,8 +214,7 @@
     "add": "Ajouter",
     "export": "Exporter",
     "new": "Nouveau",
-    "editWithName": "Modifier : {name}",
-    "pagination": "Pagination"
+    "editWithName": "Modifier : {name}"
   },
   "nav": {
     "dashboard": "Tableau de bord",

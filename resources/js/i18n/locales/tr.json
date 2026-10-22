@@ -131,6 +131,7 @@
     }
   },
   "common": {
+    "pagination": "Sayfalama",
     "save": "Kaydet",
     "saveChanges": "Değişiklikleri Kaydet",
     "saving": "Kaydediliyor...",
@@ -213,8 +214,7 @@
     "add": "Ekle",
     "export": "Dışa Aktar",
     "new": "Yeni",
-    "editWithName": "Düzenle: {name}",
-    "pagination": "Sayfalama"
+    "editWithName": "Düzenle: {name}"
   },
   "nav": {
     "dashboard": "Gösterge Paneli",

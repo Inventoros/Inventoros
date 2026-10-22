@@ -131,6 +131,7 @@
     }
   },
   "common": {
+    "pagination": "ページ送り",
     "save": "保存",
     "saveChanges": "変更を保存",
     "saving": "保存中...",
@@ -213,8 +214,7 @@
     "add": "追加",
     "export": "エクスポート",
     "new": "新規",
-    "editWithName": "編集: {name}",
-    "pagination": "ページ送り"
+    "editWithName": "編集: {name}"
   },
   "nav": {
     "dashboard": "ダッシュボード",
