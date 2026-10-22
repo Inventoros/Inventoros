@@ -11,6 +11,10 @@ return new class extends Migration
 {
     public function up(): void
     {
+        // PostgreSQL represents enum columns as varchar plus a separate check.
+        if (DB::getDriverName() === 'pgsql') {
+            DB::statement('ALTER TABLE stock_transfers DROP CONSTRAINT IF EXISTS stock_transfers_status_check');
+        }
         Schema::table('stock_transfers', function (Blueprint $table): void {
             $table->string('status')->default('pending')->change();
             $table->timestamp('prepared_at')->nullable();
