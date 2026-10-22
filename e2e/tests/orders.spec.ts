@@ -130,3 +130,19 @@ test.describe('Order Approval', () => {
         }
     });
 });
+
+
+test('draft order planning preserves customer details and clears stale quantities', async ({ page }) => {
+    await page.goto('/orders/create');
+    await page.locator('#customer_name').fill('Planning draft');
+    await page.locator('#add_product').selectOption({ label: await page.locator('#add_product option').filter({ hasText: 'SKU-10001' }).innerText() });
+    await page.getByRole('button', { name: 'Add', exact: true }).click();
+    const response = page.waitForResponse(response => new URL(response.url()).pathname === '/orders/fulfilment-plan');
+    await page.getByRole('button', { name: 'Compare warehouses', exact: true }).click();
+    expect((await response).status()).toBe(200);
+    await expect(page.locator('#customer_name')).toHaveValue('Planning draft');
+    await expect(page.getByRole('heading', { name: 'Fulfilment plan', exact: true })).toBeVisible();
+    await page.locator('#item_0_quantity').fill('2');
+    await expect(page.getByRole('button', { name: 'Use warehouse', exact: true })).toHaveCount(0);
+    await expect(page).toHaveURL(/orders\/create$/);
+});

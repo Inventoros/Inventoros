@@ -1,4 +1,34 @@
 {
+  "stockReset": {
+    "title": "Restablecer existencias a cero",
+    "hint": "Restablece las existencias de toda la organización, incluidos productos inactivos y eliminados. Se conservan productos, pedidos e historial. Se dan de baja los números de serie disponibles y los lotes quedan a cero.",
+    "products": "Productos con existencias",
+    "variants": "Variantes con existencias",
+    "locations": "Saldos por ubicación",
+    "serials": "Números de serie disponibles",
+    "batches": "Saldos de lotes",
+    "blocked": "Finaliza o cancela transferencias, recuentos y producción, y libera las reservas antes de restablecer las existencias.",
+    "reason": "Motivo",
+    "password": "Contraseña actual",
+    "confirm": "Escribe {phrase} para confirmar",
+    "writtenOff": "Dado de baja"
+  },
+  "orderPlanning": {
+    "title": "Plan de preparación",
+    "hint": "El plan usa almacenes accesibles y no reserva existencias.",
+    "check": "Comparar almacenes",
+    "failed": "No se pudo cargar el plan. Inténtalo de nuevo.",
+    "empty": "No hay almacenes activos accesibles.",
+    "ready": "Todos los artículos disponibles",
+    "shortfall": "Faltan {count} unidades",
+    "use": "Usar almacén",
+    "line": "{available} de {requested} disponibles; {incoming} en tránsito",
+    "transfer": "Transferir {count} × {sku} desde {warehouse}"
+  },
+  "inventoryCleanup": {
+    "perPage": "Productos por página",
+    "selectionHint": "La selección se mantiene al cambiar de página."
+  },
   "auditLabels": {
     "notCounted": "Sin contar",
     "never": "Nunca"

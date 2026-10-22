@@ -1,4 +1,34 @@
 {
+  "stockReset": {
+    "title": "Voorraad op nul zetten",
+    "hint": "Zet de voorraad van de hele organisatie op nul, inclusief inactieve en verwijderde producten. Producten, orders en geschiedenis blijven behouden. Beschikbare serienummers worden afgeboekt en partijen op nul gezet.",
+    "products": "Producten met voorraad",
+    "variants": "Varianten met voorraad",
+    "locations": "Locatiesaldi",
+    "serials": "Beschikbare serienummers",
+    "batches": "Partijsaldi",
+    "blocked": "Voltooi of annuleer overboekingen, tellingen en productie en geef reserveringen vrij voordat u de voorraad reset.",
+    "reason": "Reden",
+    "password": "Huidig wachtwoord",
+    "confirm": "Typ {phrase} om te bevestigen",
+    "writtenOff": "Afgeboekt"
+  },
+  "orderPlanning": {
+    "title": "Leveringsplan",
+    "hint": "Het plan gebruikt toegankelijke magazijnen en reserveert geen voorraad.",
+    "check": "Magazijnen vergelijken",
+    "failed": "Het plan kon niet worden geladen. Probeer opnieuw.",
+    "empty": "Geen toegankelijke actieve magazijnen.",
+    "ready": "Alle artikelen beschikbaar",
+    "shortfall": "Er ontbreken {count} eenheden",
+    "use": "Magazijn gebruiken",
+    "line": "{available} van {requested} beschikbaar; {incoming} onderweg",
+    "transfer": "{count} × {sku} overboeken vanuit {warehouse}"
+  },
+  "inventoryCleanup": {
+    "perPage": "Producten per pagina",
+    "selectionHint": "Selecties blijven behouden wanneer u van pagina wisselt."
+  },
   "auditLabels": {
     "notCounted": "Niet geteld",
     "never": "Nooit"

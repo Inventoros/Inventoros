@@ -23,8 +23,9 @@ final class StockBalanceService
     public function query(User $viewer, array $filters = []): Builder
     {
         $organizationId = (int) $viewer->organization_id;
-        $targets = $this->targets($organizationId);
-        $bins = $this->bins($organizationId);
+        $productIds = isset($filters['product_ids']) ? array_values(array_unique(array_map('intval', $filters['product_ids']))) : null;
+        $targets = $this->targets($organizationId, $productIds);
+        $bins = $this->bins($organizationId, $productIds);
         $assigned = DB::query()->fromSub(clone $bins, 's')->groupBy('product_id', 'product_variant_id')
             ->selectRaw('product_id, product_variant_id, SUM(quantity) as assigned');
 
@@ -35,6 +36,7 @@ final class StockBalanceService
 
         $incoming = DB::table('stock_transfer_items as i')->join('stock_transfers as st', 'st.id', '=', 'i.stock_transfer_id')
             ->where('st.organization_id', $organizationId)->where('st.status', 'in_transit')
+            ->when($productIds !== null, fn ($q) => $q->whereIn('i.product_id', $productIds))
             ->groupBy('i.product_id', 'i.product_variant_id', 'st.to_location_id')
             ->selectRaw('i.product_id, i.product_variant_id, st.to_location_id as location_id, 0 as quantity, SUM(i.quantity) as incoming');
 
@@ -42,7 +44,8 @@ final class StockBalanceService
             ->groupBy('product_id', 'product_variant_id', 'location_id')
             ->selectRaw('product_id, product_variant_id, location_id, SUM(quantity) as on_hand, SUM(incoming) as in_transit');
 
-        $holds = StockReservation::withoutGlobalScopes()->active()->where('organization_id', $organizationId)->toBase();
+        $holds = StockReservation::withoutGlobalScopes()->active()->where('organization_id', $organizationId)
+            ->when($productIds !== null, fn ($q) => $q->whereIn('product_id', $productIds))->toBase();
         $binHolds = (clone $holds)->selectRaw('product_id, product_variant_id, location_id, SUM(quantity) as held')
             ->groupBy('product_id', 'product_variant_id', 'location_id');
         $totalHolds = (clone $holds)->selectRaw('product_id, product_variant_id, SUM(quantity) as held')
@@ -113,25 +116,29 @@ final class StockBalanceService
         return $row;
     }
 
-    private function targets(int $organizationId): Builder
+    private function targets(int $organizationId, ?array $productIds = null): Builder
     {
         $plain = DB::table('products as p')->where('p.organization_id', $organizationId)->whereNull('p.deleted_at')
+            ->when($productIds !== null, fn ($q) => $q->whereIn('p.id', $productIds))
             ->whereRaw('NOT (p.has_variants = TRUE AND EXISTS (SELECT 1 FROM product_variants v WHERE v.product_id = p.id AND v.deleted_at IS NULL))')
             ->selectRaw("p.id as product_id, NULL as product_variant_id, p.sku, p.name as product_name, '' as variant_title, p.stock, p.location_id as primary_location_id, COALESCE(p.min_stock, 0) as min_stock, CASE WHEN p.is_active THEN 1 ELSE 0 END as active");
         $variants = DB::table('product_variants as v')->join('products as p', 'p.id', '=', 'v.product_id')
             ->where('p.organization_id', $organizationId)->where('v.organization_id', $organizationId)
+            ->when($productIds !== null, fn ($q) => $q->whereIn('p.id', $productIds))
             ->where('p.has_variants', true)->whereNull('p.deleted_at')->whereNull('v.deleted_at')
             ->selectRaw('p.id as product_id, v.id as product_variant_id, COALESCE(NULLIF(v.sku, \'\'), p.sku) as sku, p.name as product_name, COALESCE(v.title, \'\') as variant_title, v.stock, p.location_id as primary_location_id, COALESCE(v.min_stock, p.min_stock, 0) as min_stock, CASE WHEN p.is_active AND v.is_active THEN 1 ELSE 0 END as active');
 
         return $plain->unionAll($variants);
     }
 
-    private function bins(int $organizationId): Builder
+    private function bins(int $organizationId, ?array $productIds = null): Builder
     {
         $plain = DB::table('product_location_stocks')->where('organization_id', $organizationId)
+            ->when($productIds !== null, fn ($q) => $q->whereIn('product_id', $productIds))
             ->selectRaw('product_id, NULL as product_variant_id, location_id, quantity, 0 as incoming');
         $variants = DB::table('variant_location_stocks as b')->join('product_variants as v', 'v.id', '=', 'b.product_variant_id')
             ->where('b.organization_id', $organizationId)->where('v.organization_id', $organizationId)
+            ->when($productIds !== null, fn ($q) => $q->whereIn('v.product_id', $productIds))
             ->selectRaw('v.product_id, v.id as product_variant_id, b.location_id, b.quantity, 0 as incoming');
 
         return $plain->unionAll($variants);

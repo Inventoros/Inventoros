@@ -97,7 +97,25 @@ class StockTransferController extends Controller
             ->with('activeVariants:id,product_id,title,sku,stock')
             ->get(['id', 'name', 'sku', 'stock', 'has_variants']);
 
+        $prefill = null;
+        if ($request->hasAny(['from_location_id', 'to_location_id', 'product_id'])) {
+            $data = $request->validate([
+                'from_location_id' => ['required', 'integer'], 'to_location_id' => ['required', 'integer', 'different:from_location_id'],
+                'product_id' => ['required', 'integer'], 'product_variant_id' => ['nullable', 'integer'],
+                'quantity' => ['required', 'integer', 'min:1', 'max:2147483647'],
+            ]);
+            $source = $locations->firstWhere('id', (int) $data['from_location_id']);
+            $destination = $locations->firstWhere('id', (int) $data['to_location_id']);
+            $product = $products->firstWhere('id', (int) $data['product_id']);
+            abort_unless($source && $destination && $product, 404);
+            $this->warehouseAccess->authorizeLocation($request->user(), $source);
+            $variantId = ! empty($data['product_variant_id']) ? (int) $data['product_variant_id'] : null;
+            abort_if(($variantId && ! $product->activeVariants->contains('id', $variantId)) || ($product->has_variants && ! $variantId), 422);
+            $prefill = array_map(fn ($value) => $value === null ? null : (int) $value, $data);
+        }
+
         return Inertia::render('StockTransfers/Create', [
+            'prefill' => $prefill,
             'locations' => $locations,
             'sourceLocationIds' => $sourceLocationIds,
             'products' => $products,
@@ -176,6 +194,7 @@ class StockTransferController extends Controller
     public function prepare(Request $request, StockTransfer $stockTransfer, StockTransferService $transfers)
     {
         $this->authorizeTransfer($request, $stockTransfer);
+
         return $this->transition($stockTransfer, fn () => $transfers->prepare($stockTransfer, $request->user()), 'Stock reserved for transfer.');
     }
 
@@ -183,6 +202,7 @@ class StockTransferController extends Controller
     {
         $this->authorizeTransfer($request, $stockTransfer);
         $data = $request->validate(['shipping_method' => 'nullable|string|max:255', 'tracking_number' => 'nullable|string|max:255', 'estimated_arrival' => 'nullable|date']);
+
         return $this->transition($stockTransfer, fn () => $transfers->ship($stockTransfer, $request->user(), $data), 'Stock transfer shipped.');
     }
 

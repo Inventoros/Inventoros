@@ -1,4 +1,34 @@
 {
+  "stockReset": {
+    "title": "Wyzeruj zapasy",
+    "hint": "Zeruje zapasy całej organizacji, także produktów nieaktywnych i usuniętych. Produkty, zamówienia i historia zostają zachowane. Dostępne numery seryjne są odpisywane, a partie zerowane.",
+    "products": "Produkty z zapasami",
+    "variants": "Warianty z zapasami",
+    "locations": "Salda lokalizacji",
+    "serials": "Dostępne numery seryjne",
+    "batches": "Salda partii",
+    "blocked": "Zakończ lub anuluj przesunięcia, inwentaryzacje i produkcję oraz zwolnij rezerwacje przed wyzerowaniem zapasów.",
+    "reason": "Powód",
+    "password": "Aktualne hasło",
+    "confirm": "Wpisz {phrase}, aby potwierdzić",
+    "writtenOff": "Odpisano"
+  },
+  "orderPlanning": {
+    "title": "Plan realizacji",
+    "hint": "Plan używa dostępnych magazynów i nie rezerwuje zapasów.",
+    "check": "Porównaj magazyny",
+    "failed": "Nie udało się wczytać planu. Spróbuj ponownie.",
+    "empty": "Brak dostępnych aktywnych magazynów.",
+    "ready": "Wszystkie pozycje dostępne",
+    "shortfall": "Brakuje {count} sztuk",
+    "use": "Użyj magazynu",
+    "line": "Dostępne {available} z {requested}; w drodze {incoming}",
+    "transfer": "Przenieś {count} × {sku} z {warehouse}"
+  },
+  "inventoryCleanup": {
+    "perPage": "Produkty na stronie",
+    "selectionHint": "Wybór zostaje zachowany przy zmianie strony."
+  },
   "auditLabels": {
     "notCounted": "Nie policzono",
     "never": "Nigdy"

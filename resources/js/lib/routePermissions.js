@@ -7,6 +7,7 @@
 // the routes; regenerate the object from `php artisan route:list --json`.
 
 export const ROUTE_PERMISSIONS = {
+    "products.stock-reset.preview": ["manage_stock"],
     "stock.index": ["view_products"],
     "stock.export": ["view_products", "export_data"],
     "activity-log.export": [

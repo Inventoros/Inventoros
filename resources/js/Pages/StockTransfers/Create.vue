@@ -16,6 +16,7 @@ const { t } = useI18n();
 const props = defineProps({
     locations: Array,
     products: Array,
+    prefill: { type: Object, default: null },
     // Null when the user may send from any location; otherwise the ids of
     // locations in the warehouses they are assigned to.
     sourceLocationIds: { type: Array, default: null },
@@ -27,11 +28,11 @@ const availableFromLocations = computed(() => {
 });
 
 const form = useForm({
-    from_location_id: '',
-    to_location_id: '',
+    from_location_id: props.prefill?.from_location_id ?? '',
+    to_location_id: props.prefill?.to_location_id ?? '',
     notes: '',
     items: [
-        { product_id: '', product_variant_id: '', quantity: 1, notes: '' },
+        { product_id: props.prefill?.product_id ?? '', product_variant_id: props.prefill?.product_variant_id ?? '', quantity: props.prefill?.quantity ?? 1, notes: '' },
     ],
 });
 

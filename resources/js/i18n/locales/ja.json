@@ -1,4 +1,34 @@
 {
+  "stockReset": {
+    "title": "在庫をゼロにリセット",
+    "hint": "組織全体の在庫を無効・削除済み商品も含めてゼロにします。商品、注文、履歴は保持されます。利用可能なシリアルは償却され、ロット残高はゼロになります。",
+    "products": "在庫のある商品",
+    "variants": "在庫のあるバリエーション",
+    "locations": "保管場所の残高",
+    "serials": "利用可能なシリアル",
+    "batches": "ロット残高",
+    "blocked": "リセット前に移動、棚卸、製造を完了またはキャンセルし、予約を解除してください。",
+    "reason": "理由",
+    "password": "現在のパスワード",
+    "confirm": "確認のため {phrase} と入力",
+    "writtenOff": "償却済み"
+  },
+  "orderPlanning": {
+    "title": "出荷計画",
+    "hint": "アクセス可能な倉庫を比較します。在庫は予約されません。",
+    "check": "倉庫を比較",
+    "failed": "計画を読み込めませんでした。再試行してください。",
+    "empty": "アクセス可能な有効な倉庫がありません。",
+    "ready": "すべての商品に在庫あり",
+    "shortfall": "{count} 個不足",
+    "use": "この倉庫を使用",
+    "line": "{requested} 個中 {available} 個あり、入荷予定 {incoming} 個",
+    "transfer": "{warehouse} から {sku} を {count} 個移動"
+  },
+  "inventoryCleanup": {
+    "perPage": "ページあたりの商品数",
+    "selectionHint": "ページを切り替えても選択は維持されます。"
+  },
   "auditLabels": {
     "notCounted": "未カウント",
     "never": "なし"

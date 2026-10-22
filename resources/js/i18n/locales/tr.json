@@ -1,4 +1,34 @@
 {
+  "stockReset": {
+    "title": "Stokları sıfırla",
+    "hint": "Etkin olmayan ve silinen ürünler dahil tüm kuruluşun stoklarını sıfırlar. Ürünler, siparişler ve geçmiş korunur. Kullanılabilir seri numaraları kayıttan düşülür ve parti bakiyeleri sıfırlanır.",
+    "products": "Stoklu ürünler",
+    "variants": "Stoklu varyantlar",
+    "locations": "Konum bakiyeleri",
+    "serials": "Kullanılabilir seri numaraları",
+    "batches": "Parti bakiyeleri",
+    "blocked": "Stokları sıfırlamadan önce aktarımları, sayımları ve üretimi tamamlayın veya iptal edin ve ayırmaları kaldırın.",
+    "reason": "Neden",
+    "password": "Mevcut parola",
+    "confirm": "Onaylamak için {phrase} yazın",
+    "writtenOff": "Kayıttan düşüldü"
+  },
+  "orderPlanning": {
+    "title": "Sipariş hazırlama planı",
+    "hint": "Plan erişilebilir depoları kullanır ve stok ayırmaz.",
+    "check": "Depoları karşılaştır",
+    "failed": "Plan yüklenemedi. Tekrar deneyin.",
+    "empty": "Erişilebilir etkin depo yok.",
+    "ready": "Tüm ürünler mevcut",
+    "shortfall": "{count} birim eksik",
+    "use": "Depoyu kullan",
+    "line": "{requested} birimin {available} birimi mevcut; {incoming} birim yolda",
+    "transfer": "{warehouse} deposundan {count} × {sku} aktar"
+  },
+  "inventoryCleanup": {
+    "perPage": "Sayfa başına ürün",
+    "selectionHint": "Sayfalar arasında geçiş yaparken seçimler korunur."
+  },
   "auditLabels": {
     "notCounted": "Sayılmadı",
     "never": "Hiç"

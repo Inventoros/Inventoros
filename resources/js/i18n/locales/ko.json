@@ -1,4 +1,34 @@
 {
+  "stockReset": {
+    "title": "재고를 0으로 초기화",
+    "hint": "비활성 및 삭제된 제품을 포함한 조직 전체의 재고를 0으로 만듭니다. 제품, 주문 및 이력은 유지됩니다. 사용 가능한 일련번호는 제각 처리되고 배치 잔액은 0이 됩니다.",
+    "products": "재고가 있는 제품",
+    "variants": "재고가 있는 옵션",
+    "locations": "위치별 잔액",
+    "serials": "사용 가능한 일련번호",
+    "batches": "배치 잔액",
+    "blocked": "초기화 전에 이동, 재고 조사 및 생산을 완료하거나 취소하고 예약을 해제하세요.",
+    "reason": "사유",
+    "password": "현재 비밀번호",
+    "confirm": "확인하려면 {phrase} 입력",
+    "writtenOff": "제각 처리됨"
+  },
+  "orderPlanning": {
+    "title": "출고 계획",
+    "hint": "접근 가능한 창고를 비교하며 재고를 예약하지 않습니다.",
+    "check": "창고 비교",
+    "failed": "계획을 불러올 수 없습니다. 다시 시도하세요.",
+    "empty": "접근 가능한 활성 창고가 없습니다.",
+    "ready": "모든 품목 재고 있음",
+    "shortfall": "{count}개 부족",
+    "use": "창고 사용",
+    "line": "{requested}개 중 {available}개 있음, {incoming}개 입고 예정",
+    "transfer": "{warehouse}에서 {sku} {count}개 이동"
+  },
+  "inventoryCleanup": {
+    "perPage": "페이지당 제품 수",
+    "selectionHint": "페이지를 이동해도 선택이 유지됩니다."
+  },
   "auditLabels": {
     "notCounted": "미집계",
     "never": "없음"

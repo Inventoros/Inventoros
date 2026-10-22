@@ -101,7 +101,7 @@ Add an entry to `~/.cursor/mcp.json` (or the workspace-level `.cursor/mcp.json`)
 
 ### Tool catalog
 
-32 tools across 8 surfaces. Tools marked destructive mutate state and should be confirmed before invocation.
+33 tools across 8 surfaces. Tools marked destructive mutate state and should be confirmed before invocation.
 
 Identity:
 
@@ -116,6 +116,7 @@ Catalog (read):
 - `list_categories` (`manage_categories` or `view_products`). Category list.
 - `list_locations` (`manage_locations` or `view_products`). Storage locations, optionally filtered by warehouse.
 - `list_warehouses` (`view_warehouses` or `view_products`). Warehouse list.
+- `plan_order_fulfilment` (`view_products` or `create_orders`). Compare warehouse coverage and suggested transfers for a draft order without reserving stock.
 - `list_stock_balances` (`view_products`). Stock by SKU, variant, warehouse and location, including reserved, available and in-transit quantities, sorting and pagination.
 
 Stock:

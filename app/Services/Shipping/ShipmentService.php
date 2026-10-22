@@ -626,6 +626,7 @@ final class ShipmentService
     private function notifyCustomer(Shipment $shipment): void
     {
         if (! $shipment->notify_customer
+            || ! apply_filters('shipment_should_notify_customer', true, $shipment)
             || $shipment->customer_notification_queued_at !== null
             || $shipment->customer_notified_at !== null) {
             return;

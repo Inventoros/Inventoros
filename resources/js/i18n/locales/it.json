@@ -1,4 +1,34 @@
 {
+  "stockReset": {
+    "title": "Azzera scorte",
+    "hint": "Azzera le scorte dell’intera organizzazione, inclusi i prodotti inattivi ed eliminati. Prodotti, ordini e cronologia vengono conservati. I seriali disponibili vengono scaricati e i lotti azzerati.",
+    "products": "Prodotti con scorte",
+    "variants": "Varianti con scorte",
+    "locations": "Saldi per ubicazione",
+    "serials": "Seriali disponibili",
+    "batches": "Saldi dei lotti",
+    "blocked": "Completa o annulla trasferimenti, inventari e produzione e rilascia le prenotazioni prima di azzerare le scorte.",
+    "reason": "Motivo",
+    "password": "Password attuale",
+    "confirm": "Digita {phrase} per confermare",
+    "writtenOff": "Scaricato"
+  },
+  "orderPlanning": {
+    "title": "Piano di evasione",
+    "hint": "Il piano usa i magazzini accessibili e non riserva scorte.",
+    "check": "Confronta magazzini",
+    "failed": "Impossibile caricare il piano. Riprova.",
+    "empty": "Nessun magazzino attivo accessibile.",
+    "ready": "Tutti gli articoli disponibili",
+    "shortfall": "Mancano {count} unità",
+    "use": "Usa magazzino",
+    "line": "{available} di {requested} disponibili; {incoming} in arrivo",
+    "transfer": "Trasferisci {count} × {sku} da {warehouse}"
+  },
+  "inventoryCleanup": {
+    "perPage": "Prodotti per pagina",
+    "selectionHint": "La selezione viene mantenuta quando cambi pagina."
+  },
   "auditLabels": {
     "notCounted": "Non contato",
     "never": "Mai"

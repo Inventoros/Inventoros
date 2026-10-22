@@ -1,4 +1,34 @@
 {
+  "stockReset": {
+    "title": "Reset stock to zero",
+    "hint": "This resets stock across the entire organization, including inactive and deleted products. Products, orders and history are kept. Available serials are written off and batch balances become zero.",
+    "products": "Products with stock",
+    "variants": "Variants with stock",
+    "locations": "Location balances",
+    "serials": "Available serials",
+    "batches": "Batch balances",
+    "blocked": "Finish or cancel transfers, stock counts and production, and release reservations before resetting stock.",
+    "reason": "Reason",
+    "password": "Current password",
+    "confirm": "Type {phrase} to confirm",
+    "writtenOff": "Written off"
+  },
+  "orderPlanning": {
+    "title": "Fulfilment plan",
+    "hint": "Plans use accessible warehouses and do not reserve stock.",
+    "check": "Compare warehouses",
+    "failed": "The plan could not be loaded. Try again.",
+    "empty": "No accessible active warehouses.",
+    "ready": "All items available",
+    "shortfall": "Short by {count} units",
+    "use": "Use warehouse",
+    "line": "{available} of {requested} available; {incoming} incoming",
+    "transfer": "Transfer {count} × {sku} from {warehouse}"
+  },
+  "inventoryCleanup": {
+    "perPage": "Products per page",
+    "selectionHint": "Selections stay selected when you move between pages."
+  },
   "auditLabels": {
     "notCounted": "Not counted",
     "never": "Never"
