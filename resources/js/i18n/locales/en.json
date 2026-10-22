@@ -3835,5 +3835,9 @@
     "amount": "Tax amount",
     "rate": "Rate",
     "rateHint": "Optional: enter a tax rate to calculate the amount from the subtotal after discounts. Only the amount is saved."
+  },
+  "warehouseStock": {
+    "title": "Stock by warehouse",
+    "includeZero": "Include zero balances"
   }
 }

@@ -224,7 +224,7 @@ TOKEN="1|paste-your-token-here"
 curl -G "${APP_URL}/api/v1/products" \
   -H "Authorization: Bearer ${TOKEN}" \
   -H "Accept: application/json" \
-  --data-urlencode "low_stock=1" \
+  --data-urlencode "out_of_stock=1" \
   --data-urlencode "per_page=25"
 ```
 
@@ -354,7 +354,7 @@ const api = (path, init = {}) =>
   });
 
 // List products
-const { data: products } = await api("/products?low_stock=1&per_page=25");
+const { data: products } = await api("/products?out_of_stock=1&per_page=25");
 
 // Create an order
 const { data: order } = await api("/orders", {
@@ -388,7 +388,7 @@ Events are fired by model observers after the database transaction commits, so t
 
 | Group | Events |
 | --- | --- |
-| Product | `product.created`, `product.updated`, `product.deleted`, `product.low_stock`, `product.out_of_stock` |
+| Product | `product.created`, `product.updated`, `product.deleted`, `product.out_of_stock`, `product.out_of_stock` |
 | Order | `order.created`, `order.updated`, `order.status_changed`, `order.approved`, `order.rejected` |
 | Payment | `payment.recorded`, `payment.voided` (a refund is a recorded payment of type `refund`) |
 | Shipment | `shipment.created`, `shipment.delivered` |
@@ -422,3 +422,9 @@ curl -X POST "${APP_URL}/graphql" \
 ## Versioning
 
 The current API is `v1`, served at `/api/v1`. Future incompatible changes will be released under `/api/v2`; `v1` will continue to receive non-breaking additions.
+
+### Warehouse stock balances
+
+`GET /api/v1/stock-balances` requires `view_products` and lists stock per product or variant SKU and location. Filter by `search`, `warehouse_id`, `location_id`, `out_of_stock` or `include_zero`; sort by any displayed column with `sort_by` and `sort_dir`. Pagination defaults to 25 and is capped at 100. Warehouse assignments are enforced, including for filters. Unassigned units are visible only to unrestricted users.
+
+Rows include `on_hand`, location-scoped `reserved`, `available` and `in_transit`. Available is capped by total SKU availability; when unlocated reservations also constrain that total, availability at different bins must not be summed. Incoming stock is unavailable until receipt. The Stock by warehouse screen and its permission-gated CSV export use the same query; MCP exposes `list_stock_balances`.

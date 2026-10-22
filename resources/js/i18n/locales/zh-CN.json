@@ -3835,5 +3835,9 @@
     "amount": "税额",
     "rate": "税率",
     "rateHint": "可选：输入税率，即可根据折扣后的小计计算税额。仅保存税额。"
+  },
+  "warehouseStock": {
+    "title": "按仓库查看库存",
+    "includeZero": "包含零库存"
   }
 }
