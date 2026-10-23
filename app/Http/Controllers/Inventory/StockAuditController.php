@@ -347,10 +347,11 @@ class StockAuditController extends Controller
      */
     public function updateCount(Request $request, StockAudit $stockAudit, StockAuditItem $item, StockAuditService $audits): JsonResponse
     {
-        if ($stockAudit->organization_id !== $request->user()->organization_id
-            || ! $this->warehouseAccess->canAccessLocation($request->user(), $stockAudit->warehouse_location_id)) {
+        if ($stockAudit->organization_id !== $request->user()->organization_id) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
+
+        $this->warehouseAccess->authorizeStockAudit($request->user(), $stockAudit);
 
         if ($stockAudit->status !== 'in_progress') {
             return response()->json(['message' => 'Audit is not in progress'], 422);
