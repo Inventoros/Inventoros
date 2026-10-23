@@ -550,6 +550,7 @@
     }
   },
   "orders": {
+      "channelOrderNumber": "Número de pedido del canal",
     "itemsCol": "Artículos",
     "sources": {
       "manual": "Manual",

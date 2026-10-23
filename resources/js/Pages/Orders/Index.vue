@@ -186,6 +186,7 @@ const selectClass =
             <DataTable :columns="columns" :rows="orders.data" dense>
                 <template #cell-order_number="{ row }">
                     <Link :href="route('orders.show', row.id)" class="font-mono text-xs font-medium text-text-primary hover:text-brand">{{ row.order_number }}</Link>
+                    <p v-if="row.channel_order_number" class="mt-1 text-xs text-text-secondary">{{ t('orders.channelOrderNumber') }}: {{ row.channel_order_number }}</p>
                 </template>
                 <template #cell-customer_name="{ row }">
                     <div class="flex flex-col">

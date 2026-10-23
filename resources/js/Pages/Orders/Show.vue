@@ -522,6 +522,11 @@ const formatOrderDate = (date, long = false) =>
                                     <dd class="mt-1 text-sm text-text-primary">{{ order.order_number }}</dd>
                                 </div>
 
+                                <div v-if="order.channel_order_number">
+                                    <dt class="text-xs text-text-tertiary">{{ t('orders.channelOrderNumber') }}</dt>
+                                    <dd class="mt-1 text-sm text-text-primary">{{ order.channel_order_number }}</dd>
+                                </div>
+
                                 <div>
                                     <dt class="text-xs text-text-tertiary">{{ t('orders.source') }}</dt>
                                     <dd class="mt-1">

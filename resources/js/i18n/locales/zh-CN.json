@@ -550,6 +550,7 @@
     }
   },
   "orders": {
+      "channelOrderNumber": "销售渠道订单号",
     "itemsCol": "商品",
     "sources": {
       "manual": "手动",

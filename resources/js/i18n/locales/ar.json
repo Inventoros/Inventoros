@@ -550,6 +550,7 @@
     }
   },
   "orders": {
+      "channelOrderNumber": "رقم طلب قناة البيع",
     "itemsCol": "الأصناف",
     "sources": {
       "manual": "يدوي",

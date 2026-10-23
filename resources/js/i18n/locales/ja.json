@@ -550,6 +550,7 @@
     }
   },
   "orders": {
+      "channelOrderNumber": "販売チャネルの注文番号",
     "itemsCol": "明細",
     "sources": {
       "manual": "手動",

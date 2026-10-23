@@ -550,6 +550,7 @@
     }
   },
   "orders": {
+      "channelOrderNumber": "Numer zamówienia w kanale",
     "itemsCol": "Pozycje",
     "sources": {
       "manual": "Ręcznie",
