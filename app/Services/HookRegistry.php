@@ -535,6 +535,11 @@ final class HookRegistry
     public static function getFilters(): array
     {
         return [
+            'order_invoice_document' => [
+                'description' => 'Render an issued provider-specific invoice snapshot; null means its renderer is unavailable',
+                'parameters' => ['$documentOrNull', '$provider', '$order', '$forCustomerPortal'],
+                'example' => "add_filter('order_invoice_document', function (\$document, \$provider, \$order, \$forCustomerPortal) { return \$document; });",
+            ],
             'customer_form_data' => [
                 'description' => 'Initial namespaced customer form values',
                 'parameters' => ['$values', '$customerOrNull', '$request'],
