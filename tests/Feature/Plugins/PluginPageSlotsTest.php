@@ -41,6 +41,8 @@ final class PluginPageSlotsTest extends TestCase
     /** page id => [Vue page, slots] */
     private const PAGES = [
         'customers.index' => ['Customers/Index', ['header', 'footer']],
+        'customers.create' => ['Customers/Create', ['header', 'before-form', 'business-details', 'after-form']],
+        'customers.edit' => ['Customers/Edit', ['header', 'before-form', 'business-details', 'after-form']],
         'customers.show' => ['Customers/Show', ['header', 'actions', 'business-details', 'footer']],
         'warehouses.index' => ['Warehouses/Index', ['header', 'footer']],
         'warehouses.show' => ['Warehouses/Show', ['header', 'actions', 'footer']],
@@ -127,6 +129,8 @@ final class PluginPageSlotsTest extends TestCase
 
         return [
             'customers.index' => route('customers.index'),
+            'customers.create' => route('customers.create'),
+            'customers.edit' => route('customers.edit', $customer),
             'customers.show' => route('customers.show', $customer),
             'warehouses.index' => route('warehouses.index'),
             'warehouses.show' => route('warehouses.show', $warehouse),
