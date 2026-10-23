@@ -132,6 +132,28 @@
       "deleteConfirm": "Weet u zeker dat u deze controle wilt verwijderen? Deze actie kan niet ongedaan worden gemaakt.",
       "updateCountFailed": "Telling bijwerken mislukt",
       "saveCountError": "Er is een fout opgetreden bij het opslaan van de telling"
+    },
+    "drafts": {
+      "title": "Telconcepten ({count})",
+      "hint": "Concepten blijven in dit tabblad tot u ze verzendt of verwijdert. Houd het tabblad offline open.",
+      "offline": "Offline. Voer hier aantallen in en verzend ze zodra u verbonden bent.",
+      "savedLocally": "De server heeft de telling niet bevestigd. Uw concept blijft in dit tabblad.",
+      "serverRejected": "De server heeft deze telling geweigerd. Het concept blijft bewaard. Vernieuw en controleer uw rechten en de inventarisatiestatus.",
+      "storageUnavailable": "Deze browser kan concepten na vernieuwen niet bewaren. Houd de pagina open tot uw tellingen zijn verzonden.",
+      "send": "Opgeslagen tellingen verzenden",
+      "discardAll": "Alle concepten verwijderen",
+      "discard": "Concept verwijderen",
+      "discardConfirm": "Deze niet-verzonden telling verwijderen?",
+      "discardAllConfirm": "Alle niet-verzonden tellingen voor deze inventarisatie verwijderen?",
+      "review": "Concept controleren",
+      "localCount": "Concept: {count}",
+      "conflict": "Deze telling is op de server gewijzigd. Controleer de huidige telling voordat u uw concept opslaat.",
+      "latest": "Huidige opgeslagen telling: {count}. Notities: {notes}",
+      "reviewConfirm": "De opgeslagen telling is {count}. Notities: {notes}. Hebt u deze gecontroleerd en wilt u in plaats daarvan uw concept opslaan?",
+      "reviewLatest": "Ik heb de opgeslagen telling gecontroleerd",
+      "invalidCount": "Voer een geheel getal van 0 tot 2147483647 in en notities van minder dan 500 tekens.",
+      "completeHint": "Verzend of verwijder elk concept voordat u deze inventarisatie voltooit.",
+      "keepDraft": "Sluiten en concept bewaren"
     }
   },
   "common": {

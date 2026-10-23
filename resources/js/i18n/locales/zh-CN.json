@@ -132,6 +132,28 @@
       "deleteConfirm": "确定要删除此次盘点吗？此操作无法撤销。",
       "updateCountFailed": "更新盘点数量失败",
       "saveCountError": "保存盘点数量时出错"
+    },
+    "drafts": {
+      "title": "盘点草稿（{count}）",
+      "hint": "草稿保存在此标签页中，直到发送或丢弃。离线时请保持标签页打开。",
+      "offline": "当前离线。在此输入数量，连接后再发送。",
+      "savedLocally": "服务器尚未确认此盘点数量。草稿已保存在此标签页中。",
+      "serverRejected": "服务器未接受此数量。草稿已保留。请刷新并检查权限及盘点状态，然后重试。",
+      "storageUnavailable": "此浏览器无法在刷新后保留草稿。请保持页面打开，直到发送数量。",
+      "send": "发送已保存的数量",
+      "discardAll": "丢弃所有草稿",
+      "discard": "丢弃草稿",
+      "discardConfirm": "丢弃此未发送的数量吗？",
+      "discardAllConfirm": "丢弃本次盘点所有未发送的数量吗？",
+      "review": "检查草稿",
+      "localCount": "草稿：{count}",
+      "conflict": "此数量已在服务器上更改。保存草稿前请检查当前数量。",
+      "latest": "当前已保存数量：{count}。备注：{notes}",
+      "reviewConfirm": "已保存数量为 {count}。备注：{notes}。是否已检查并希望用草稿替换？",
+      "reviewLatest": "我已检查保存的数量",
+      "invalidCount": "请输入 0 到 2147483647 之间的整数，备注须少于 500 个字符。",
+      "completeHint": "完成盘点前，请发送或丢弃所有草稿。",
+      "keepDraft": "关闭并保留草稿"
     }
   },
   "common": {

@@ -132,6 +132,28 @@
       "deleteConfirm": "¿Estás seguro de que deseas eliminar esta auditoría? Esta acción no se puede deshacer.",
       "updateCountFailed": "No se pudo actualizar el conteo",
       "saveCountError": "Se produjo un error al guardar el conteo"
+    },
+    "drafts": {
+      "title": "Borradores de conteo ({count})",
+      "hint": "Los borradores permanecen en esta pestaña hasta enviarlos o descartarlos. Manténgala abierta sin conexión.",
+      "offline": "Sin conexión. Introduzca cantidades aquí y envíelas al conectarse.",
+      "savedLocally": "El servidor no ha confirmado el conteo. El borrador se conserva en esta pestaña.",
+      "serverRejected": "El servidor rechazó este conteo. El borrador se conserva. Actualice y compruebe sus permisos y el estado del inventario antes de reintentar.",
+      "storageUnavailable": "Este navegador no puede conservar borradores al actualizar. Mantenga la página abierta hasta enviar los conteos.",
+      "send": "Enviar conteos guardados",
+      "discardAll": "Descartar todos los borradores",
+      "discard": "Descartar borrador",
+      "discardConfirm": "¿Descartar este conteo sin enviar?",
+      "discardAllConfirm": "¿Descartar todos los conteos sin enviar de esta auditoría?",
+      "review": "Revisar borrador",
+      "localCount": "Borrador: {count}",
+      "conflict": "Este conteo cambió en el servidor. Revise el conteo actual antes de guardar el borrador.",
+      "latest": "Conteo guardado actual: {count}. Notas: {notes}",
+      "reviewConfirm": "El conteo guardado es {count}. Notas: {notes}. ¿Lo ha revisado y desea guardar su borrador en su lugar?",
+      "reviewLatest": "He revisado el conteo guardado",
+      "invalidCount": "Introduzca un entero de 0 a 2147483647 y notas de menos de 500 caracteres.",
+      "completeHint": "Envíe o descarte cada borrador antes de completar esta auditoría.",
+      "keepDraft": "Cerrar y conservar borrador"
     }
   },
   "common": {

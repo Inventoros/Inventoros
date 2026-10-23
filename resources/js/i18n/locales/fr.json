@@ -132,6 +132,28 @@
       "deleteConfirm": "Êtes-vous sûr de vouloir supprimer cet inventaire ? Cette action est irréversible.",
       "updateCountFailed": "Échec de la mise à jour du comptage",
       "saveCountError": "Une erreur s'est produite lors de l'enregistrement du comptage"
+    },
+    "drafts": {
+      "title": "Brouillons de comptage ({count})",
+      "hint": "Les brouillons restent dans cet onglet jusqu’à leur envoi ou suppression. Gardez cet onglet ouvert hors connexion.",
+      "offline": "Hors connexion. Saisissez les quantités ici et envoyez-les une fois connecté.",
+      "savedLocally": "Comptage non confirmé par le serveur. Votre brouillon est conservé dans cet onglet.",
+      "serverRejected": "Le serveur a refusé ce comptage. Le brouillon est conservé. Actualisez et vérifiez vos droits et le statut de l’inventaire avant de réessayer.",
+      "storageUnavailable": "Ce navigateur ne peut pas conserver les brouillons après actualisation. Gardez cette page ouverte jusqu’à leur envoi.",
+      "send": "Envoyer les comptages enregistrés",
+      "discardAll": "Supprimer tous les brouillons",
+      "discard": "Supprimer le brouillon",
+      "discardConfirm": "Supprimer ce comptage non envoyé ?",
+      "discardAllConfirm": "Supprimer tous les comptages non envoyés de cet inventaire ?",
+      "review": "Vérifier le brouillon",
+      "localCount": "Brouillon : {count}",
+      "conflict": "Ce comptage a changé sur le serveur. Vérifiez le comptage actuel avant d’enregistrer votre brouillon.",
+      "latest": "Comptage enregistré actuel : {count}. Notes : {notes}",
+      "reviewConfirm": "Le comptage enregistré est {count}. Notes : {notes}. L’avez-vous vérifié et souhaitez-vous enregistrer votre brouillon à la place ?",
+      "reviewLatest": "J’ai vérifié le comptage enregistré",
+      "invalidCount": "Saisissez un entier entre 0 et 2147483647 et des notes de moins de 500 caractères.",
+      "completeHint": "Envoyez ou supprimez chaque brouillon avant de terminer cet inventaire.",
+      "keepDraft": "Fermer et conserver le brouillon"
     }
   },
   "common": {

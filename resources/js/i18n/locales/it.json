@@ -132,6 +132,28 @@
       "deleteConfirm": "Sei sicuro di voler eliminare questo inventario? Questa azione non può essere annullata.",
       "updateCountFailed": "Impossibile aggiornare il conteggio",
       "saveCountError": "Si è verificato un errore durante il salvataggio del conteggio"
+    },
+    "drafts": {
+      "title": "Bozze di conteggio ({count})",
+      "hint": "Le bozze restano in questa scheda fino all’invio o all’eliminazione. Tenga aperta la scheda quando è offline.",
+      "offline": "Offline. Inserisca qui le quantità e le invii quando torna online.",
+      "savedLocally": "Conteggio non confermato dal server. La bozza rimane in questa scheda.",
+      "serverRejected": "Il server ha rifiutato il conteggio. La bozza è conservata. Aggiorni e verifichi i permessi e lo stato dell’inventario prima di riprovare.",
+      "storageUnavailable": "Questo browser non può conservare le bozze dopo un aggiornamento. Tenga aperta la pagina fino all’invio.",
+      "send": "Invia conteggi salvati",
+      "discardAll": "Elimina tutte le bozze",
+      "discard": "Elimina bozza",
+      "discardConfirm": "Eliminare questo conteggio non inviato?",
+      "discardAllConfirm": "Eliminare tutti i conteggi non inviati di questo inventario?",
+      "review": "Rivedi bozza",
+      "localCount": "Bozza: {count}",
+      "conflict": "Questo conteggio è cambiato sul server. Riveda il conteggio attuale prima di salvare la bozza.",
+      "latest": "Conteggio salvato attuale: {count}. Note: {notes}",
+      "reviewConfirm": "Il conteggio salvato è {count}. Note: {notes}. Lo ha verificato e desidera salvare la bozza al suo posto?",
+      "reviewLatest": "Ho verificato il conteggio salvato",
+      "invalidCount": "Inserisca un intero da 0 a 2147483647 e note di meno di 500 caratteri.",
+      "completeHint": "Invii o elimini tutte le bozze prima di completare l’inventario.",
+      "keepDraft": "Chiudi e conserva bozza"
     }
   },
   "common": {

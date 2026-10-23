@@ -3319,6 +3319,28 @@
       "deleteConfirm": "Are you sure you want to delete this audit? This action cannot be undone.",
       "updateCountFailed": "Failed to update count",
       "saveCountError": "An error occurred while saving the count"
+    },
+    "drafts": {
+      "title": "Count drafts ({count})",
+      "hint": "Drafts stay in this tab until sent or discarded. Keep this tab open while offline.",
+      "offline": "Offline. Enter counts here and send them when connected.",
+      "savedLocally": "Count not confirmed by the server. Your draft is kept in this tab.",
+      "serverRejected": "The server did not accept this count. Your draft is retained. Refresh and check your access and the audit status before retrying.",
+      "storageUnavailable": "This browser cannot retain drafts after a refresh. Keep this page open until your counts are sent.",
+      "send": "Send saved counts",
+      "discardAll": "Discard all drafts",
+      "discard": "Discard draft",
+      "discardConfirm": "Discard this unsent count?",
+      "discardAllConfirm": "Discard all unsent counts for this audit?",
+      "review": "Review draft",
+      "localCount": "Draft: {count}",
+      "conflict": "This count changed on the server. Review the current count before saving your draft.",
+      "latest": "Current saved count: {count}. Notes: {notes}",
+      "reviewConfirm": "The saved count is {count}. Notes: {notes}. Have you reviewed it and want to save your draft instead?",
+      "reviewLatest": "I've reviewed the saved count",
+      "invalidCount": "Enter a whole number from 0 to 2147483647 and keep notes under 500 characters.",
+      "completeHint": "Send or discard every draft before completing this audit.",
+      "keepDraft": "Close and keep draft"
     }
   },
   "cycleCounts": {

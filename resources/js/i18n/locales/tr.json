@@ -132,6 +132,28 @@
       "deleteConfirm": "Bu sayımı silmek istediğinize emin misiniz? Bu işlem geri alınamaz.",
       "updateCountFailed": "Sayım güncellenemedi",
       "saveCountError": "Sayım kaydedilirken bir hata oluştu"
+    },
+    "drafts": {
+      "title": "Sayım taslakları ({count})",
+      "hint": "Taslaklar gönderilene veya silinene kadar bu sekmede kalır. Çevrimdışıyken sekmeyi açık tutun.",
+      "offline": "Çevrimdışı. Miktarları buraya girin ve bağlandığınızda gönderin.",
+      "savedLocally": "Sayım sunucu tarafından onaylanmadı. Taslağınız bu sekmede saklanıyor.",
+      "serverRejected": "Sunucu bu sayımı kabul etmedi. Taslak korundu. Yeniden denemeden önce sayfayı yenileyip yetkilerinizi ve sayım durumunu kontrol edin.",
+      "storageUnavailable": "Bu tarayıcı yenilemeden sonra taslakları koruyamıyor. Sayımlar gönderilene kadar sayfayı açık tutun.",
+      "send": "Kaydedilen sayımları gönder",
+      "discardAll": "Tüm taslakları sil",
+      "discard": "Taslağı sil",
+      "discardConfirm": "Gönderilmemiş bu sayım silinsin mi?",
+      "discardAllConfirm": "Bu denetimin gönderilmemiş tüm sayımları silinsin mi?",
+      "review": "Taslağı incele",
+      "localCount": "Taslak: {count}",
+      "conflict": "Bu sayım sunucuda değişti. Taslağı kaydetmeden önce güncel sayımı inceleyin.",
+      "latest": "Güncel kayıtlı sayım: {count}. Notlar: {notes}",
+      "reviewConfirm": "Kayıtlı sayım {count}. Notlar: {notes}. İncelediniz mi ve yerine taslağınızı kaydetmek istiyor musunuz?",
+      "reviewLatest": "Kayıtlı sayımı inceledim",
+      "invalidCount": "0 ile 2147483647 arasında bir tam sayı ve 500 karakterden kısa notlar girin.",
+      "completeHint": "Bu denetimi tamamlamadan önce tüm taslakları gönderin veya silin.",
+      "keepDraft": "Kapat ve taslağı koru"
     }
   },
   "common": {
