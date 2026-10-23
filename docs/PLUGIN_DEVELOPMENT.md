@@ -935,6 +935,7 @@ Resolve services from the container (`app(OrderService::class)`). Methods that t
 |-------|---------|
 | `App\Models\Inventory\StockAdjustment` | `adjust()`, `adjustVariant()` (static) |
 | `App\Services\OrderService` | `create()`, `cancel()`, `approve()`, `reject()`, `restockForDeletion()`, `replaceItems()`, `transitionStatus()`, `restockableQuantities()` |
+| `App\Services\OrderPaymentService` | `recordImported()` |
 | `App\Services\ReturnOrderService` | `create()`, `approve()`, `updateLines()`, `receive()`, `complete()`, `reject()`, `returnedQuantities()` |
 | `App\Services\Shipping\ShipmentService` | `create()`, `markShipped()`, `applyTrackingStatus()`, `cancel()`, `remainingQuantities()` |
 | `App\Services\StockAuditService` | `create()`, `start()`, `recordCount()`, `complete()` |
@@ -948,6 +949,8 @@ Resolve services from the container (`app(OrderService::class)`). Methods that t
 | `App\Services\Organizations\InterCompanyTransferService` | `transfer()` |
 
 Check a method's docblock for its rules (locks it takes, exceptions it throws, which hooks it fires). On an older core, feature-detect a newer parameter with `(new \ReflectionMethod(OrderService::class, 'cancel'))->getNumberOfParameters()`.
+
+`OrderPaymentService::recordImported()` records money already processed by a verified external provider, including historical receipts on cancelled orders. It requires a stable reference, is idempotent within the order and stays silent by default. See [the imported-payment contract](features/imported-order-payments.md) for currency checks, refunds, manual ledger reconciliation and announcement behavior. Feature-detect it with `method_exists(OrderPaymentService::class, 'recordImported')` before offering automated payment import on an older core.
 
 ## Building and packaging a plugin
 
