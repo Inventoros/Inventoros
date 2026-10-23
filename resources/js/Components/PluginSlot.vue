@@ -4,6 +4,9 @@ import { usePage } from '@inertiajs/vue3';
 import { pageIdFromComponent, resolvePluginComponent, runtimeSlotComponents } from '@/plugins/runtime';
 
 const props = defineProps({
+    // Mutable page state intentionally shared with trusted plugin components,
+    // such as the Inertia form and its namespaced plugin_fields values.
+    context: { type: Object, default: () => ({}) },
     slot: {
         type: String,
         required: true,
@@ -54,7 +57,7 @@ const rendered = computed(() => {
             v-for="item in rendered"
             :key="item.key"
             :is="item.is"
-            v-bind="item.props"
+            v-bind="{ ...item.props, ...context }"
         />
     </template>
 </template>
