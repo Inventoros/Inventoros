@@ -1760,7 +1760,7 @@ paths:
     post:
       tags: [Stock Audits]
       summary: Record the physical count for an audit item
-      description: "Requires `manage_stock_audits`."
+      description: "Requires `manage_stock_audits`. Send the item's `count_revision` as `expected_revision` to refuse overwriting a count changed by another request. Omit it for the existing unconditional write behavior."
       requestBody:
         required: true
         content:
@@ -1771,9 +1771,11 @@ paths:
               properties:
                 counted_quantity: { type: integer, minimum: 0 }
                 notes: { type: string, maxLength: 500 }
+                expected_revision: { type: string, pattern: '^[a-f0-9]{64}$' }
       responses:
         '200': { description: Count recorded }
         '404': { $ref: '#/components/responses/NotFound' }
+        '409': { description: "Count evidence changed (`stale_count`); fetch the audit and review before retrying with the current revision" }
         '422': { description: "Audit not in progress (`invalid_status`) or item belongs to another audit (`item_mismatch`)" }
 
   /stock-audits/{stockAudit}/complete:

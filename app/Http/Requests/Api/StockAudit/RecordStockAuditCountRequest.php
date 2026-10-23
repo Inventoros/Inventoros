@@ -20,6 +20,7 @@ final class RecordStockAuditCountRequest extends FormRequest
         return [
             'counted_quantity' => ['required', 'integer', 'min:0'],
             'notes' => ['nullable', 'string', 'max:500'],
+            'expected_revision' => ['sometimes', 'string', 'regex:/\A[a-f0-9]{64}\z/'],
         ];
     }
 }

@@ -949,6 +949,8 @@ Resolve services from the container (`app(OrderService::class)`). Methods that t
 
 Check a method's docblock for its rules (locks it takes, exceptions it throws, which hooks it fires). On an older core, feature-detect a newer parameter with `(new \ReflectionMethod(OrderService::class, 'cancel'))->getNumberOfParameters()`.
 
+For delayed stock-audit counts, pass the item's `count_revision` as the optional sixth `StockAuditService::recordCount()` argument, `expectedRevision`. The service compares the current evidence under the audit and item locks and throws `InvalidStateException` with `errorCode = 'stale_count'` if it changed. The web and REST count endpoints accept the same token as `expected_revision` and return HTTP 409 on a conflict. Fetch and review the current count before deliberately retrying with its revision. Callers that omit the token keep the existing write behavior.
+
 ## Building and packaging a plugin
 
 1. Copy `plugins/hello-world/ui/vite.config.js` and `ui/package.json` into your plugin's `ui/` folder and put your entry in `ui/src/main.js`. The config maps every `import ... from 'vue'` to `window.Inventoros.Vue`, writes `dist/plugin.js` and `dist/plugin.css`, and ignores the app's PostCSS setup.
