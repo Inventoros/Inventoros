@@ -150,7 +150,7 @@ final class TaxBillingTest extends TestCase
         $order->unsetRelation('items');
         $snapshot = $this->issue($order);
         $this->assertCount(1, $snapshot['rows']);
-        $this->assertSame(['S' => 1, 'M' => 1], $snapshot['rows'][0]['sizes']);
+        $this->assertEquals(['S' => 1, 'M' => 1], $snapshot['rows'][0]['sizes']);
         $this->assertSame('90.00', $snapshot['rows'][0]['amount']);
         $this->assertSame('90.00', $snapshot['taxable_value']);
         $this->assertSame(10, $product->fresh()->stock);
