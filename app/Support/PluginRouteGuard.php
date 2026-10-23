@@ -6,7 +6,9 @@ namespace App\Support;
 
 use App\Services\PluginUIService;
 use Illuminate\Http\Request;
+use Illuminate\Routing\CompiledRouteCollection;
 use Illuminate\Routing\Route as RoutingRoute;
+use Illuminate\Routing\RouteCollection;
 use Illuminate\Support\Facades\Route;
 use RuntimeException;
 
@@ -48,6 +50,16 @@ final class PluginRouteGuard
      */
     public static function snapshot(): array
     {
+        // Compiled collections hydrate fresh Route objects on every getRoutes()
+        // call. Compare stable objects so cached core routes are never mistaken
+        // for routes newly registered by the plugin under inspection.
+        if (Route::getRoutes() instanceof CompiledRouteCollection) {
+            $collection = new RouteCollection;
+            foreach (Route::getRoutes()->getRoutes() as $route) {
+                $collection->add($route);
+            }
+            Route::setRoutes($collection);
+        }
         $routes = [];
 
         foreach (Route::getRoutes()->getRoutes() as $route) {

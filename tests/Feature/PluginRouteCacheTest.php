@@ -129,6 +129,6 @@ final class PluginRouteCacheTest extends TestCase
 
         app(PluginService::class)->activatePlugin($slug);
 
-        Artisan::shouldNotHaveReceived('call');
+        Artisan::shouldHaveReceived('call')->once()->with('queue:restart');
     }
 }
