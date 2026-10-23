@@ -111,4 +111,26 @@ final class VariantStockAuditTest extends TestCase
         app(StockAuditService::class)->start($audit, $this->admin);
     }
 
+    public function test_assigned_staff_can_resume_a_warehouse_wide_count_but_not_another_warehouses_count(): void
+    {
+        $allowed = $this->create(['warehouse_id' => $this->warehouseA->id]);
+        $denied = $this->create(['warehouse_id' => $this->warehouseB->id]);
+        $service = app(StockAuditService::class);
+        $service->start($allowed, $this->admin);
+        $service->start($denied, $this->admin);
+        $allowedItem = $allowed->items()->firstOrFail();
+        $deniedItem = $denied->items()->firstOrFail();
+
+        $this->actingAs($this->restricted)->postJson(route('stock-audits.items.count', [
+            'stockAudit' => $allowed, 'item' => $allowedItem,
+        ]), ['counted_quantity' => 8, 'expected_revision' => $allowedItem->count_revision])
+            ->assertOk()->assertJsonPath('item.counted_quantity', 8);
+
+        $this->postJson(route('stock-audits.items.count', [
+            'stockAudit' => $denied, 'item' => $deniedItem,
+        ]), ['counted_quantity' => 1, 'expected_revision' => $deniedItem->count_revision])
+            ->assertForbidden()->assertJsonMissingPath('item');
+        $this->assertNull($deniedItem->fresh()->counted_quantity);
+    }
+
 }

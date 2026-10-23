@@ -69,7 +69,7 @@ final class CorePhpApiContractTest extends TestCase
         'App\Services\StockAuditService::create' => ['returns' => 'App\Models\Inventory\StockAudit', 'params' => ['int $organizationId', 'App\Models\User $actor', 'array $data']],
         'App\Services\StockAuditService::start' => ['returns' => 'App\Models\Inventory\StockAudit', 'params' => ['App\Models\Inventory\StockAudit $stockAudit', 'App\Models\User $actor']],
         'App\Services\StockAuditService::recordCount' => ['returns' => 'App\Models\Inventory\StockAuditItem', 'params' => [
-            'App\Models\Inventory\StockAudit $stockAudit', 'App\Models\Inventory\StockAuditItem $item', 'App\Models\User $actor', 'int $countedQuantity', '?string $notes = NULL',
+            'App\Models\Inventory\StockAudit $stockAudit', 'App\Models\Inventory\StockAuditItem $item', 'App\Models\User $actor', 'int $countedQuantity', '?string $notes = NULL', '?string $expectedRevision = NULL',
         ]],
         'App\Services\StockAuditService::complete' => ['returns' => 'int', 'params' => ['App\Models\Inventory\StockAudit $stockAudit', 'App\Models\User $actor', 'bool $allowUncounted = false']],
 

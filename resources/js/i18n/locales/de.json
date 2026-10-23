@@ -132,6 +132,29 @@
       "deleteConfirm": "Sind Sie sicher, dass Sie diese Inventur löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.",
       "updateCountFailed": "Zählung konnte nicht aktualisiert werden",
       "saveCountError": "Beim Speichern der Zählung ist ein Fehler aufgetreten"
+    },
+    "drafts": {
+      "title": "Zählentwürfe ({count})",
+      "hint": "Entwürfe bleiben bis zum Senden oder Verwerfen in diesem Tab. Lassen Sie ihn offline geöffnet.",
+      "offline": "Offline. Erfassen Sie hier Mengen und senden Sie sie nach dem Verbinden.",
+      "savedLocally": "Die Zählung wurde vom Server nicht bestätigt. Ihr Entwurf bleibt in diesem Tab.",
+      "serverRejected": "Der Server hat diese Zählung abgelehnt. Der Entwurf bleibt erhalten. Aktualisieren Sie die Seite und prüfen Sie Berechtigungen und Inventurstatus.",
+      "storageUnavailable": "Dieser Browser kann Entwürfe beim Neuladen nicht behalten. Lassen Sie die Seite bis zum Senden geöffnet.",
+      "send": "Gespeicherte Zählungen senden",
+      "discardAll": "Alle Entwürfe verwerfen",
+      "discard": "Entwurf verwerfen",
+      "discardConfirm": "Diese ungesendete Zählung verwerfen?",
+      "discardAllConfirm": "Alle ungesendeten Zählungen dieser Inventur verwerfen?",
+      "review": "Entwurf prüfen",
+      "localCount": "Entwurf: {count}",
+      "conflict": "Diese Zählung wurde auf dem Server geändert. Prüfen Sie den aktuellen Stand vor dem Speichern.",
+      "latest": "Aktuell gespeicherte Menge: {count}. Notizen: {notes}",
+      "reviewConfirm": "Die gespeicherte Menge ist {count}. Notizen: {notes}. Haben Sie diese geprüft und möchten stattdessen Ihren Entwurf speichern?",
+      "reviewLatest": "Ich habe die gespeicherte Zählung geprüft",
+      "invalidCount": "Geben Sie eine ganze Zahl von 0 bis 2147483647 und Notizen mit weniger als 500 Zeichen ein.",
+      "completeHint": "Senden oder verwerfen Sie alle Entwürfe vor Abschluss der Inventur.",
+      "keepDraft": "Schließen und Entwurf behalten",
+      "queuedScans": "Scan-Warteschlange: {count}"
     }
   },
   "common": {

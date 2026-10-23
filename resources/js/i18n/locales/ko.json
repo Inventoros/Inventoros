@@ -132,6 +132,29 @@
       "deleteConfirm": "이 실사를 정말 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.",
       "updateCountFailed": "집계 업데이트에 실패했습니다",
       "saveCountError": "집계를 저장하는 중 오류가 발생했습니다"
+    },
+    "drafts": {
+      "title": "실사 초안 ({count})",
+      "hint": "초안은 전송하거나 삭제할 때까지 이 탭에 보관됩니다. 오프라인에서는 탭을 열어 두세요.",
+      "offline": "오프라인입니다. 여기에 수량을 입력하고 연결되면 전송하세요.",
+      "savedLocally": "서버에서 수량을 확인하지 못했습니다. 초안은 이 탭에 보관됩니다.",
+      "serverRejected": "서버가 이 수량을 거부했습니다. 초안은 보관됩니다. 새로고침 후 권한과 실사 상태를 확인하고 다시 시도하세요.",
+      "storageUnavailable": "이 브라우저는 새로고침 후 초안을 보관할 수 없습니다. 수량을 전송할 때까지 페이지를 열어 두세요.",
+      "send": "저장된 수량 전송",
+      "discardAll": "모든 초안 삭제",
+      "discard": "초안 삭제",
+      "discardConfirm": "전송하지 않은 이 수량을 삭제할까요?",
+      "discardAllConfirm": "이 실사의 전송하지 않은 수량을 모두 삭제할까요?",
+      "review": "초안 검토",
+      "localCount": "초안: {count}",
+      "conflict": "서버에서 이 수량이 변경되었습니다. 초안을 저장하기 전에 현재 수량을 검토하세요.",
+      "latest": "현재 저장된 수량: {count}. 메모: {notes}",
+      "reviewConfirm": "저장된 수량은 {count}입니다. 메모: {notes}. 검토했으며 초안으로 바꾸어 저장할까요?",
+      "reviewLatest": "저장된 수량을 검토했습니다",
+      "invalidCount": "0에서 2147483647까지의 정수를 입력하고 메모는 500자 미만으로 작성하세요.",
+      "completeHint": "실사를 완료하기 전에 모든 초안을 전송하거나 삭제하세요.",
+      "keepDraft": "닫고 초안 보관",
+      "queuedScans": "스캔 대기: {count}"
     }
   },
   "common": {
