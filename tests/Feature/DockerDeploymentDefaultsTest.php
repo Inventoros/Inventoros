@@ -79,4 +79,16 @@ final class DockerDeploymentDefaultsTest extends TestCase
         $this->assertSame('${APP_URL:-http://localhost:${APP_PORT:-8080}}', $env['APP_URL']);
         $this->assertSame(['${APP_PORT:-8080}:8080'], $this->compose('docker-compose.prod.yml')['services']['app']['ports']);
     }
+
+    public function test_direct_https_keeps_urls_consistent_and_persists_certificates(): void
+    {
+        $config = $this->compose('docker-compose.https.yml');
+        foreach (['app', 'worker', 'scheduler'] as $service) {
+            $this->assertSame('https://${INVENTOROS_DOMAIN:?Set INVENTOROS_DOMAIN to your public hostname}', $config['services'][$service]['environment']['APP_URL']);
+        }
+        $ports = $config['services']['app']['ports'];
+        $this->assertSame('override', $ports->getTag());
+        $this->assertSame(['80:80', '443:443', '443:443/udp'], $ports->getValue());
+        $this->assertSame(['caddy-data:/data', 'caddy-config:/config'], $config['services']['app']['volumes']);
+    }
 }

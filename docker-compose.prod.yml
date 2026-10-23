@@ -7,6 +7,7 @@
 #      Optional: APP_PORT=8088 publishes the app on another host port
 #      (default 8080). Change APP_PORT only; the container keeps listening
 #      on 8080 inside, and SERVER_NAME stays as it is.
+#      For direct HTTPS on 80/443, also use docker-compose.https.yml.
 #   2. docker compose -f docker-compose.prod.yml up -d
 #   3. Open APP_URL/install to create the first organization and admin.
 #
