@@ -3,6 +3,7 @@
 Each folder here is one plugin; the folder name is its slug. Plugins are managed from **Admin > Plugins**.
 
 - `hello-world/` is a working example: actions, filters, lifecycle files (`hooks/`) and a UI bundle built from `ui/` into `dist/`. Start by copying it.
+- [Tax Billing](tax-billing/README.md) adds configurable country tax profiles, domestic India GST details and retained size-matrix invoices. It is optional and inactive by default.
 - The full guide, with every action and filter the application fires, is [docs/PLUGIN_DEVELOPMENT.md](../docs/PLUGIN_DEVELOPMENT.md).
 
 Minimal plugin:

@@ -46,6 +46,17 @@ class DocumentPdfService
      */
     public function orderInvoice(Order $order, bool $forCustomerPortal = false): DomPdf
     {
+        // Issued plugin documents must not silently fall back to a different,
+        // mutable invoice when their renderer is unavailable or deactivated.
+        $provider = $order->metadata['invoice_document_provider'] ?? null;
+        if (is_string($provider) && $provider !== '') {
+            $document = apply_filters('order_invoice_document', null, $provider, $order, $forCustomerPortal);
+            abort_unless(is_array($document) && isset($document['view'], $document['data']), 409,
+                'The plugin used to issue this invoice must be active before it can be downloaded or emailed.');
+
+            return Pdf::loadView($document['view'], $document['data']);
+        }
+
         return Pdf::loadView('pdf.invoice', $this->orderInvoiceViewData($order, $forCustomerPortal));
     }
 
