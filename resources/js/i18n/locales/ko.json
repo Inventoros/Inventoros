@@ -153,7 +153,8 @@
       "reviewLatest": "저장된 수량을 검토했습니다",
       "invalidCount": "0에서 2147483647까지의 정수를 입력하고 메모는 500자 미만으로 작성하세요.",
       "completeHint": "실사를 완료하기 전에 모든 초안을 전송하거나 삭제하세요.",
-      "keepDraft": "닫고 초안 보관"
+      "keepDraft": "닫고 초안 보관",
+      "queuedScans": "스캔 대기: {count}"
     }
   },
   "common": {

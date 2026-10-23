@@ -153,7 +153,8 @@
       "reviewLatest": "Kayıtlı sayımı inceledim",
       "invalidCount": "0 ile 2147483647 arasında bir tam sayı ve 500 karakterden kısa notlar girin.",
       "completeHint": "Bu denetimi tamamlamadan önce tüm taslakları gönderin veya silin.",
-      "keepDraft": "Kapat ve taslağı koru"
+      "keepDraft": "Kapat ve taslağı koru",
+      "queuedScans": "Tarama kuyruğu: {count}"
     }
   },
   "common": {

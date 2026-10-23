@@ -153,7 +153,8 @@
       "reviewLatest": "He revisado el conteo guardado",
       "invalidCount": "Introduzca un entero de 0 a 2147483647 y notas de menos de 500 caracteres.",
       "completeHint": "Envíe o descarte cada borrador antes de completar esta auditoría.",
-      "keepDraft": "Cerrar y conservar borrador"
+      "keepDraft": "Cerrar y conservar borrador",
+      "queuedScans": "Cola de escaneos: {count}"
     }
   },
   "common": {

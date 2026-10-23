@@ -3340,7 +3340,8 @@
       "reviewLatest": "I've reviewed the saved count",
       "invalidCount": "Enter a whole number from 0 to 2147483647 and keep notes under 500 characters.",
       "completeHint": "Send or discard every draft before completing this audit.",
-      "keepDraft": "Close and keep draft"
+      "keepDraft": "Close and keep draft",
+      "queuedScans": "Scan queue: {count}"
     }
   },
   "cycleCounts": {

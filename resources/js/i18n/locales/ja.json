@@ -153,7 +153,8 @@
       "reviewLatest": "保存済みの数量を確認しました",
       "invalidCount": "0～2147483647の整数を入力し、メモは500文字未満にしてください。",
       "completeHint": "棚卸しを完了する前にすべての下書きを送信または破棄してください。",
-      "keepDraft": "閉じて下書きを保持"
+      "keepDraft": "閉じて下書きを保持",
+      "queuedScans": "スキャン待機数：{count}"
     }
   },
   "common": {

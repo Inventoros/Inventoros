@@ -153,7 +153,8 @@
       "reviewLatest": "Ho verificato il conteggio salvato",
       "invalidCount": "Inserisca un intero da 0 a 2147483647 e note di meno di 500 caratteri.",
       "completeHint": "Invii o elimini tutte le bozze prima di completare l’inventario.",
-      "keepDraft": "Chiudi e conserva bozza"
+      "keepDraft": "Chiudi e conserva bozza",
+      "queuedScans": "Scansioni in coda: {count}"
     }
   },
   "common": {

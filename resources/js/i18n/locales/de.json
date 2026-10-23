@@ -153,7 +153,8 @@
       "reviewLatest": "Ich habe die gespeicherte Zählung geprüft",
       "invalidCount": "Geben Sie eine ganze Zahl von 0 bis 2147483647 und Notizen mit weniger als 500 Zeichen ein.",
       "completeHint": "Senden oder verwerfen Sie alle Entwürfe vor Abschluss der Inventur.",
-      "keepDraft": "Schließen und Entwurf behalten"
+      "keepDraft": "Schließen und Entwurf behalten",
+      "queuedScans": "Scan-Warteschlange: {count}"
     }
   },
   "common": {

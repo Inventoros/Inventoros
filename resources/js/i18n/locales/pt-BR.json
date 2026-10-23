@@ -153,7 +153,8 @@
       "reviewLatest": "Revisei a contagem salva",
       "invalidCount": "Insira um inteiro de 0 a 2147483647 e notas com menos de 500 caracteres.",
       "completeHint": "Envie ou descarte cada rascunho antes de concluir esta auditoria.",
-      "keepDraft": "Fechar e manter rascunho"
+      "keepDraft": "Fechar e manter rascunho",
+      "queuedScans": "Fila de leituras: {count}"
     }
   },
   "common": {

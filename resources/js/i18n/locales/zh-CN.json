@@ -153,7 +153,8 @@
       "reviewLatest": "我已检查保存的数量",
       "invalidCount": "请输入 0 到 2147483647 之间的整数，备注须少于 500 个字符。",
       "completeHint": "完成盘点前，请发送或丢弃所有草稿。",
-      "keepDraft": "关闭并保留草稿"
+      "keepDraft": "关闭并保留草稿",
+      "queuedScans": "扫描队列：{count}"
     }
   },
   "common": {

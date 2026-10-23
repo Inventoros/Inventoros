@@ -47,6 +47,7 @@ const countNotes = ref('');
 const savingCount = ref(false);
 const editingRevision = ref(null);
 const syncingDrafts = ref(false);
+const pendingScans = ref(0);
 const draftMessage = ref('');
 const online = ref(typeof navigator === 'undefined' || navigator.onLine);
 const { drafts, count: draftCount, storageAvailable, scopeKey, remember, forget, clear: clearDrafts } = useAuditCountDrafts(() => props.audit);
@@ -126,7 +127,7 @@ const startAudit = () => {
 const uncountedCount = computed(() => (props.audit.items || []).filter((item) => item.counted_quantity === null || item.counted_quantity === undefined).length);
 
 const completeAudit = () => {
-    if (draftCount.value > 0 || savingCount.value || syncingDrafts.value || !online.value) return;
+    if (draftCount.value > 0 || savingCount.value || syncingDrafts.value || pendingScans.value > 0 || !online.value) return;
     const total = (props.audit.items || []).length;
     const uncounted = uncountedCount.value;
     const message = uncounted > 0
@@ -173,7 +174,8 @@ watch([countValue, countNotes], () => {
 }, { flush: 'sync' });
 
 const refreshCounts = () => {
-    if (mounted) router.reload({ only: ['audit', 'summary'] });
+    if (!mounted) return Promise.resolve();
+    return new Promise((resolve) => router.reload({ only: ['audit', 'summary'], onFinish: resolve }));
 };
 
 const transmitDraft = async (item, draft) => {
@@ -241,7 +243,7 @@ const saveCount = async (item) => {
 };
 
 const sendDrafts = async () => {
-    if (!canCount.value || savingCount.value || syncingDrafts.value || !online.value) return;
+    if (!canCount.value || savingCount.value || syncingDrafts.value || pendingScans.value > 0 || !online.value) return;
     syncingDrafts.value = true;
     const sendingScope = scopeKey.value;
     try {
@@ -258,14 +260,14 @@ const sendDrafts = async () => {
 };
 
 const discardDraft = (item) => {
-    if (savingCount.value || syncingDrafts.value || !confirm(t('stockAudits.drafts.discardConfirm'))) return;
+    if (savingCount.value || syncingDrafts.value || pendingScans.value > 0 || !confirm(t('stockAudits.drafts.discardConfirm'))) return;
     if (editingItemId.value === item.id) cancelCounting();
     forget(item.id);
     draftMessage.value = '';
 };
 
 const discardAllDrafts = () => {
-    if (savingCount.value || syncingDrafts.value || !confirm(t('stockAudits.drafts.discardAllConfirm'))) return;
+    if (savingCount.value || syncingDrafts.value || pendingScans.value > 0 || !confirm(t('stockAudits.drafts.discardAllConfirm'))) return;
     cancelCounting();
     clearDrafts();
     draftMessage.value = '';
@@ -329,7 +331,7 @@ const incrementLine = async (item) => {
     if (!remember(item, next, existing?.notes ?? (item.notes || ''))) return;
     if (await transmitDraft(item, drafts.value[item.id])) {
         setScanMessage(t('scanning.countedOne', { name: item.product?.name || '', count: next }), 'success');
-        refreshCounts();
+        await refreshCounts();
     }
 };
 
@@ -358,7 +360,7 @@ const onScannedProduct = async (product, variant = null) => {
     await incrementLine(item);
 };
 
-const onScannedCode = async (code) => {
+const processScannedCode = async (code) => {
     try {
         const found = await lookup(code);
         if (!found) {
@@ -371,7 +373,23 @@ const onScannedCode = async (code) => {
     }
 };
 
-useBarcodeWedge(onScannedCode, { enabled: () => canCount.value && !showScanner.value && !savingCount.value && !syncingDrafts.value && editingItemId.value === null });
+// A scanner can send the next code before lookup, save and page refresh finish.
+// Complete that sequence before reading the next baseline, without dropping
+// codes that arrived while a previous count was being acknowledged.
+let scanQueue = Promise.resolve();
+const onScannedCode = (code) => {
+    pendingScans.value += 1;
+    scanQueue = scanQueue.then(async () => {
+        try {
+            if (mounted && canCount.value) await processScannedCode(code);
+        } finally {
+            pendingScans.value -= 1;
+        }
+    });
+    return scanQueue;
+};
+
+useBarcodeWedge(onScannedCode, { enabled: () => canCount.value && !showScanner.value && !syncingDrafts.value && editingItemId.value === null });
 
 const getDiscrepancyClass = (item) => {
     if (item.counted_quantity === null) return 'text-text-tertiary';
@@ -436,10 +454,10 @@ const thClass = 'px-6 py-3 text-left text-xs font-medium uppercase tracking-wide
             <p v-if="!storageAvailable && draftCount > 0" class="mt-2 text-sm text-status-danger" role="alert">{{ t('stockAudits.drafts.storageUnavailable') }}</p>
             <p v-if="draftMessage" class="mt-2 text-sm text-status-warning" role="status">{{ draftMessage }}</p>
             <div v-if="draftCount > 0" class="mt-3 flex flex-wrap gap-2">
-                <Button v-if="canCount" size="sm" :loading="syncingDrafts" :disabled="!online || savingCount || syncingDrafts" @click="sendDrafts">
+                <Button v-if="canCount" size="sm" :loading="syncingDrafts" :disabled="!online || savingCount || syncingDrafts || pendingScans > 0" @click="sendDrafts">
                     {{ t('stockAudits.drafts.send') }}
                 </Button>
-                <Button variant="secondary" size="sm" :disabled="savingCount || syncingDrafts" @click="discardAllDrafts">
+                <Button variant="secondary" size="sm" :disabled="savingCount || syncingDrafts || pendingScans > 0" @click="discardAllDrafts">
                     {{ t('stockAudits.drafts.discardAll') }}
                 </Button>
             </div>
@@ -543,11 +561,11 @@ const thClass = 'px-6 py-3 text-left text-xs font-medium uppercase tracking-wide
                 <!-- Scan to count -->
                 <div v-if="canCount" class="mt-4 rounded-lg border border-border-subtle bg-surface-sunken p-3">
                     <div class="flex flex-wrap items-center gap-3">
-                        <select v-if="scanLocations.length > 1" v-model="scanLocationId" :aria-label="t('products.location')" class="min-h-11 rounded-md border border-border-subtle bg-surface-canvas px-3 text-sm ds-focus-ring">
+                        <select v-if="scanLocations.length > 1" v-model="scanLocationId" :disabled="pendingScans > 0 || savingCount || syncingDrafts" :aria-label="t('products.location')" class="min-h-11 rounded-md border border-border-subtle bg-surface-canvas px-3 text-sm ds-focus-ring">
                             <option value="">{{ t('products.create.selectLocation') }}</option>
                             <option v-for="location in scanLocations" :key="location.id" :value="location.id">{{ location.name }}</option>
                         </select>
-                        <Button size="lg" class="min-h-11" @click="showScanner = true">
+                        <Button size="lg" class="min-h-11" :disabled="pendingScans > 0 || savingCount || syncingDrafts" @click="showScanner = true">
                             <ScanLine :size="18" />
                             {{ t('scanning.scan') }}
                         </Button>
@@ -556,6 +574,7 @@ const thClass = 'px-6 py-3 text-left text-xs font-medium uppercase tracking-wide
                                 type="button"
                                 role="radio"
                                 :aria-checked="scanMode === 'increment'"
+                                :disabled="pendingScans > 0 || savingCount || syncingDrafts"
                                 class="min-h-11 rounded-md border px-3 text-sm font-medium ds-focus-ring"
                                 :class="scanMode === 'increment' ? 'border-brand bg-brand-soft text-brand' : 'border-border-subtle bg-surface-raised text-text-secondary'"
                                 @click="scanMode = 'increment'"
@@ -566,6 +585,7 @@ const thClass = 'px-6 py-3 text-left text-xs font-medium uppercase tracking-wide
                                 type="button"
                                 role="radio"
                                 :aria-checked="scanMode === 'enter'"
+                                :disabled="pendingScans > 0 || savingCount || syncingDrafts"
                                 class="min-h-11 rounded-md border px-3 text-sm font-medium ds-focus-ring"
                                 :class="scanMode === 'enter' ? 'border-brand bg-brand-soft text-brand' : 'border-border-subtle bg-surface-raised text-text-secondary'"
                                 @click="scanMode = 'enter'"
@@ -575,6 +595,7 @@ const thClass = 'px-6 py-3 text-left text-xs font-medium uppercase tracking-wide
                         </div>
                     </div>
                     <p class="mt-2 text-xs text-text-tertiary">{{ t('scanning.auditHint') }}</p>
+                    <p v-if="pendingScans > 0" class="mt-2 text-sm text-text-secondary" role="status">{{ t('stockAudits.drafts.queuedScans', { count: pendingScans }) }}</p>
                     <p
                         v-if="scanMessage"
                         class="mt-2 text-sm font-medium"
@@ -637,7 +658,7 @@ const thClass = 'px-6 py-3 text-left text-xs font-medium uppercase tracking-wide
                                 <td v-if="canCount" class="whitespace-nowrap px-6 py-4 text-sm">
                                     <button
                                         @click="startCounting(item)"
-                                        :disabled="savingCount || syncingDrafts"
+                                        :disabled="savingCount || syncingDrafts || pendingScans > 0"
                                         class="text-sm font-medium text-brand hover:underline"
                                     >
                                         {{ drafts[item.id] ? t('stockAudits.drafts.review') : item.counted_quantity !== null ? t('stockAudits.show.recount') : t('stockAudits.show.count') }}
@@ -749,7 +770,7 @@ const thClass = 'px-6 py-3 text-left text-xs font-medium uppercase tracking-wide
                     <Button
                         v-if="canComplete"
                         :loading="processing"
-                        :disabled="processing || savingCount || syncingDrafts || draftCount > 0 || !online"
+                        :disabled="processing || savingCount || syncingDrafts || pendingScans > 0 || draftCount > 0 || !online"
                         @click="completeAudit"
                     >
                         <CheckCircle2 :size="16" />
