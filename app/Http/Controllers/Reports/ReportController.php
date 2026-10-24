@@ -246,7 +246,9 @@ class ReportController extends Controller
         $organizationId = $request->user()->organization_id;
 
         $query = StockAdjustment::with(['product', 'user'])
-            ->forOrganization($organizationId);
+            ->forOrganization($organizationId)
+            ->tap(fn ($query) => app(WarehouseAccessService::class)
+                ->scopeByLocation($query, $request->user(), 'stock_adjustments.location_id'));
 
         // Date filters
         if ($request->filled('date_from')) {

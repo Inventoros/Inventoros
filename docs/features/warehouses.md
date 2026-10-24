@@ -29,6 +29,7 @@ For a restricted user:
 
 - **Locations**: lists show only locations in their warehouses; creating, editing or deleting a location outside them is refused. A location with no warehouse is outside every assignment.
 - **Stock adjustments**: must name a location in their warehouses (an adjustment without a location changes the organization-wide total). History shows only adjustments made at their locations. GraphQL `createStockAdjustment` and the MCP `adjust_stock` tool accept `location_id` for this.
+- **Movement reports**: fixed pages, summaries, exports and custom reports use the viewing user's warehouse scope. Scheduled attachments use the owner's scope and are delivered only to recipients who can access every warehouse in that scope. An organization-wide attachment is not sent to a warehouse-restricted recipient.
 - **Transfers**: visible and actionable when either end is in their warehouses; stock can only be sent from a location they can access (sending to another warehouse is allowed).
 - **Stock audits**: only audits of a location in their warehouses; whole-organization audits (no location) are hidden and cannot be created.
 - **Purchase order receiving**: goods are booked into each product's primary location, so a line can only be received when that location is in their warehouses.

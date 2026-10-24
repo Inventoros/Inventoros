@@ -188,7 +188,8 @@ export const ROUTE_PERMISSIONS = {
         "view_reports"
     ],
     "reports.category-performance": [
-        "view_reports"
+        "view_reports",
+        "view_products"
     ],
     "reports.dead-stock": [
         "view_reports",
@@ -202,10 +203,12 @@ export const ROUTE_PERMISSIONS = {
         "view_products|view_orders,all"
     ],
     "reports.inventory-valuation": [
-        "view_reports"
+        "view_reports",
+        "view_products"
     ],
     "reports.low-stock": [
-        "view_reports"
+        "view_reports",
+        "view_products"
     ],
     "reports.profit-margin": [
         "view_reports",
@@ -216,7 +219,8 @@ export const ROUTE_PERMISSIONS = {
         "view_payments"
     ],
     "reports.sales-analysis": [
-        "view_reports"
+        "view_reports",
+        "view_orders"
     ],
     "reports.sales-by-location": [
         "view_reports",
