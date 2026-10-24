@@ -32,6 +32,7 @@ use Illuminate\Support\Carbon;
  * @property array|null $to_address
  * @property array|null $from_address
  * @property string|null $label_path
+ * @property string|null $label_disk
  * @property string|null $label_url
  * @property string|null $carrier_shipment_id
  * @property string|null $carrier_tracker_id

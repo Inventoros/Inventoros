@@ -109,6 +109,21 @@ class QueuedExportTest extends TestCase
         Queue::assertPushed(GenerateDataExportJob::class, 1);
     }
 
+    public function test_external_export_retains_its_disk_for_worker_and_download(): void
+    {
+        config(['exports.sync_row_limit' => 1, 'exports.disk' => 's3']);
+        Queue::fake();
+        Storage::fake('s3');
+        $this->makeProducts(2);
+        $this->actingAs($this->exporter)->get(route('import-export.export-products'))->assertRedirect();
+        $export = DataExport::firstOrFail();
+        $this->assertSame('s3', $export->disk);
+        config(['exports.disk' => 'local']);
+        (new GenerateDataExportJob($export->id))->handle();
+        Storage::disk('s3')->assertExists($export->path);
+        $this->get(route('import-export.download', $export))->assertOk()->assertDownload();
+    }
+
     public function test_generate_job_writes_file_and_notifies(): void
     {
         Storage::fake('local');

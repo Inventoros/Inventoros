@@ -21,5 +21,5 @@ return [
     | Storage disk for queued import uploads
     |--------------------------------------------------------------------------
     */
-    'disk' => env('IMPORT_DISK', 'local'),
+    'disk' => env('IMPORT_DISK', env('INVENTOROS_UPLOADS_DISK', 'local')),
 ];

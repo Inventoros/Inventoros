@@ -3874,5 +3874,38 @@
   "warehouseStock": {
     "title": "Depoya göre stok",
     "includeZero": "Sıfır bakiyeleri dahil et"
-  }
+  },
+    "storage": {
+        "title": "Dosya depolama",
+        "description": "Yüklenen dosyalar için yerel ve harici depolama.",
+        "configure": "INVENTOROS_UPLOADS_DISK ve AWS kimlik bilgilerini .env veya config/filesystems.php içinde yapılandırın, yapılandırma önbelleğini yenileyin ve kuyruk çalışanlarını yeniden başlatın.",
+        "existingFiles": "Mevcut dosyalar kayıtlı disklerini korur. Depolamayı değiştirirken eski disk tanımlarını saklayın.",
+        "probe": "Bağlantı testi küçük, geçici ve özel bir dosya yazar, okur ve siler.",
+        "driver": "Sürücü",
+        "notConfigured": "Yapılandırılmadı",
+        "usedFor": "Kullanım",
+        "bucket": "Kova",
+        "region": "Bölge",
+        "connected": "Bağlantı doğrulandı: yazma, okuma ve silme başarılı.",
+        "failed": "{step} sırasında bağlantı başarısız. Sunucu yapılandırmasını ve izinleri kontrol edin.",
+        "unchecked": "Yakın zamanda bağlantı testi yapılmadı.",
+        "checkedAt": "Kontrol zamanı: {time}",
+        "cleanupFailed": "Test dosyası kaldırılamadı. İzinleri düzelttikten sonra connection-checks önekini kontrol edin.",
+        "requestFailed": "Test çalıştırılamadı. Kısa süre sonra tekrar deneyin.",
+        "checking": "Kontrol ediliyor…",
+        "check": "Bağlantıyı kontrol et",
+        "purposes": {
+            "products": "Ürün görselleri",
+            "logos": "Kuruluş logoları",
+            "labels": "Kargo etiketleri",
+            "imports": "Kuyruktaki içe aktarmalar",
+            "exports": "Oluşturulan dışa aktarmalar"
+        },
+        "steps": {
+            "connect": "bağlanma",
+            "write": "yazma",
+            "read": "okuma",
+            "delete": "silme"
+        }
+    }
 }

@@ -11,6 +11,7 @@ use App\Http\Controllers\Inventory\BulkProductController;
 use App\Http\Controllers\Inventory\ProductCategoryController;
 use App\Http\Controllers\Inventory\ProductComponentController;
 use App\Http\Controllers\Inventory\ProductController;
+use App\Http\Controllers\Inventory\ProductImageController;
 use App\Http\Controllers\Inventory\ProductLocationController;
 use App\Http\Controllers\Inventory\ProductWarehouseLevelController;
 use App\Http\Controllers\Inventory\QrCodeController;
@@ -37,6 +38,7 @@ Route::get('/products/create', [ProductController::class, 'create'])->name('prod
 Route::post('/products', [ProductController::class, 'store'])->name('products.store')->middleware('permission:create_products');
 Route::get('/products/{product}', [ProductController::class, 'show'])->name('products.show')->middleware('permission:view_products');
 Route::get('/products/{product}/edit', [ProductController::class, 'edit'])->name('products.edit')->middleware('permission:edit_products');
+Route::get('/products/{product}/images/{index}', ProductImageController::class)->whereNumber('index')->name('products.images.show')->middleware('permission:view_products|edit_products');
 Route::put('/products/{product}', [ProductController::class, 'update'])->name('products.update')->middleware('permission:edit_products');
 Route::patch('/products/{product}', [ProductController::class, 'update'])->middleware('permission:edit_products');
 Route::delete('/products/{product}', [ProductController::class, 'destroy'])->name('products.destroy')->middleware('permission:delete_products');
