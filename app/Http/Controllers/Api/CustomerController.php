@@ -52,7 +52,7 @@ class CustomerController extends Controller
      */
     public function store(StoreCustomerRequest $request): JsonResponse
     {
-        $validated = $request->validated();
+        $validated = \App\Support\CustomerForm::payload($request->validated(), $request);
         $validated['organization_id'] = $request->user()->organization_id;
         $validated['is_active'] = $validated['is_active'] ?? true;
 
@@ -83,7 +83,7 @@ class CustomerController extends Controller
     {
         $this->ensureOwned($request, $customer, 'Customer');
 
-        $customer->update($request->validated());
+        $customer->update(\App\Support\CustomerForm::payload($request->validated(), $request, $customer));
 
         return response()->json([
             'message' => 'Customer updated successfully',

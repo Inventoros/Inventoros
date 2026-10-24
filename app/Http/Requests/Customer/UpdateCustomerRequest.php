@@ -20,7 +20,7 @@ final class UpdateCustomerRequest extends FormRequest
     {
         $organizationId = $this->user()->organization_id;
 
-        return [
+        return apply_filters('customer_update_validation_rules', [
             'name' => ['sometimes', 'string', 'max:255'],
             'code' => ['nullable', 'string', 'max:255', Rule::unique('customers', 'code')->where('organization_id', $organizationId)->ignore($this->route('customer'))],
             'company_name' => ['nullable', 'string', 'max:255'],
@@ -43,6 +43,6 @@ final class UpdateCustomerRequest extends FormRequest
             'currency' => ['nullable', 'string', 'max:3'],
             'notes' => ['nullable', 'string'],
             'is_active' => ['nullable', 'boolean'],
-        ];
+        ], $this->route('customer'), $this);
     }
 }

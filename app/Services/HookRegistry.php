@@ -535,6 +535,31 @@ final class HookRegistry
     public static function getFilters(): array
     {
         return [
+            'customer_form_data' => [
+                'description' => 'Initial namespaced customer form values',
+                'parameters' => ['$values', '$customerOrNull', '$request'],
+                'example' => "add_filter('customer_form_data', function (\$values, \$customerOrNull, \$request) { return \$values; });",
+            ],
+            'customer_store_validation_rules' => [
+                'description' => 'Customer create validation rules on web and REST',
+                'parameters' => ['$rules', '$request'],
+                'example' => "add_filter('customer_store_validation_rules', function (\$rules, \$request) { return \$rules; });",
+            ],
+            'customer_update_validation_rules' => [
+                'description' => 'Customer update validation rules on web and REST',
+                'parameters' => ['$rules', '$customer', '$request'],
+                'example' => "add_filter('customer_update_validation_rules', function (\$rules, \$customer, \$request) { return \$rules; });",
+            ],
+            'customer_store_data' => [
+                'description' => 'Transform validated customer create fields before persistence',
+                'parameters' => ['$data', '$request'],
+                'example' => "add_filter('customer_store_data', function (\$data, \$request) { return \$data; });",
+            ],
+            'customer_update_data' => [
+                'description' => 'Transform validated customer update fields before persistence',
+                'parameters' => ['$data', '$customer', '$request'],
+                'example' => "add_filter('customer_update_data', function (\$data, \$customer, \$request) { return \$data; });",
+            ],
             // ========================================
             // PRODUCT FILTERS
             // ========================================
