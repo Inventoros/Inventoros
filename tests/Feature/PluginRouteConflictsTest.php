@@ -8,6 +8,7 @@ use App\Models\Plugin;
 use App\Services\PluginService;
 use App\Support\PluginPageRoutes;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Route;
 use Tests\Feature\Concerns\CreatesPluginUiUsers;
 use Tests\Feature\Concerns\InteractsWithFixturePlugins;
@@ -138,5 +139,31 @@ final class PluginRouteConflictsTest extends TestCase
             $this->assertFalse($uri === 'p' || str_starts_with($uri, 'p/'), "Core route /{$uri} is inside the plugin URI namespace /p/.");
             $this->assertFalse(str_starts_with((string) $route->getName(), 'plg.'), "Core route {$route->getName()} is inside the plugin name namespace plg.*.");
         }
+    }
+
+    public function test_valid_plugin_activation_with_a_compiled_route_collection(): void
+    {
+        app('router')->setCompiledRoutes(Route::getRoutes()->compile());
+        $slug = $this->pluginWith("Route::middleware(['web', 'auth'])->post('/p/'.\$slug.'/save', fn () => response()->noContent())->name('plg.'.\$slug.'.save');");
+        app(PluginService::class)->activatePlugin($slug);
+        $this->assertTrue((bool) Plugin::where('slug', $slug)->value('is_active'));
+        $this->actingAs($this->admin)->post("/p/{$slug}/save")->assertNoContent();
+    }
+
+    public function test_compiled_routes_still_reject_real_core_collisions(): void
+    {
+        app('router')->setCompiledRoutes(Route::getRoutes()->compile());
+        $slug = $this->pluginWith("Route::middleware(['web', 'auth'])->post('/cycle-counts', fn () => 'mine')->name('plg.'.\$slug.'.store');");
+        $this->assertRefused($slug, 'POST /cycle-counts', 'cycle-counts.store');
+    }
+
+    public function test_lifecycle_changes_signal_long_running_workers(): void
+    {
+        $slug = $this->makeFixturePlugin();
+        app(PluginService::class)->activatePlugin($slug);
+        $this->assertNotNull(Cache::get('illuminate:queue:restart'));
+        Cache::forget('illuminate:queue:restart');
+        app(PluginService::class)->deactivatePlugin($slug);
+        $this->assertNotNull(Cache::get('illuminate:queue:restart'));
     }
 }
