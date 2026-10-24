@@ -45,9 +45,11 @@ class BatchExpiryReportController extends Controller
             ->whereNotNull('b.expiry_date');
 
         if ($filters['window'] === 'expired') {
-            $query->whereDate('b.expiry_date', '<', $asOf);
+            $query->where('b.expiry_date', '<', $asOf);
         } elseif ($filters['window'] !== 'all') {
-            $query->whereDate('b.expiry_date', '<=', $today->addDays((int) $filters['window'])->toDateString());
+            // Exclusive next-day bound also includes SQLite date casts stored
+            // at midnight, while keeping the expiry index usable on all DBs.
+            $query->where('b.expiry_date', '<', $today->addDays((int) $filters['window'] + 1)->toDateString());
         }
         if ($filters['search'] !== '') {
             $query->where(function ($search) use ($filters): void {
@@ -59,7 +61,7 @@ class BatchExpiryReportController extends Controller
 
         $totals = (clone $query)->selectRaw(
             'COUNT(*) as batches, COALESCE(SUM(b.quantity), 0) as units, '
-            .'COALESCE(SUM(CASE WHEN DATE(b.expiry_date) < ? THEN b.quantity ELSE 0 END), 0) as expired_units',
+            .'COALESCE(SUM(CASE WHEN b.expiry_date < ? THEN b.quantity ELSE 0 END), 0) as expired_units',
             [$asOf],
         )->first();
         $summary = [

@@ -81,8 +81,8 @@ const ariaSort = (key) => props.filters.sort_by !== key ? 'none' : (props.filter
 
         <Card class="mt-4" :padded="false">
             <p v-if="batches.data.length === 0" class="px-5 py-12 text-center text-sm text-text-secondary">{{ t('batchExpiryReport.empty') }}</p>
-            <div v-else class="overflow-x-auto">
-                <table class="w-full text-sm">
+            <div v-else class="overflow-x-auto ds-focus-ring" role="region" :aria-label="t('batchExpiryReport.title')" tabindex="0">
+                <table class="w-full min-w-[48rem] text-sm">
                     <caption class="sr-only">{{ t('batchExpiryReport.title') }}</caption>
                     <thead>
                         <tr class="border-b border-border-subtle">
@@ -96,7 +96,7 @@ const ariaSort = (key) => props.filters.sort_by !== key ? 'none' : (props.filter
                     </thead>
                     <tbody>
                         <tr v-for="batch in batches.data" :key="batch.id" class="border-b border-border-subtle last:border-0 hover:bg-surface-overlay">
-                            <td class="px-4 py-3">
+                            <td class="min-w-64 max-w-sm px-4 py-3">
                                 <span v-if="batch.archived" class="font-medium text-text-primary">{{ batch.product_name }}</span>
                                 <Link v-else :href="route('products.show', batch.product_id)" class="font-medium text-text-primary hover:text-brand">{{ batch.product_name }}</Link>
                                 <p class="font-mono text-xs text-text-tertiary">{{ batch.sku }}</p>
