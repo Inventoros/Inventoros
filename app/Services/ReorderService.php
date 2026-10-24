@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Models\ActivityLog;
+use App\Models\Auth\Organization;
 use App\Models\Inventory\Product;
 use App\Models\Inventory\Supplier;
 use App\Models\Purchasing\PurchaseOrder;
@@ -162,13 +163,19 @@ final class ReorderService
         string $activityAction,
         string $activityDescription,
     ): PurchaseOrder {
-        return PurchaseOrder::createWithNumber($organizationId, function (string $poNumber) use ($organizationId, $supplierId, $products, $userId, $notes, $activityAction, $activityDescription) {
+        $supplier = Supplier::forOrganization($organizationId)->findOrFail($supplierId);
+        $currency = filled($supplier->currency)
+            ? strtoupper(trim((string) $supplier->currency))
+            : Organization::currencyFor($organizationId);
+
+        return PurchaseOrder::createWithNumber($organizationId, function (string $poNumber) use ($organizationId, $supplierId, $products, $userId, $notes, $activityAction, $activityDescription, $currency) {
             $po = PurchaseOrder::create([
                 'organization_id' => $organizationId,
                 'supplier_id' => $supplierId,
                 'created_by' => $userId,
                 'po_number' => $poNumber,
                 'status' => PurchaseOrder::STATUS_DRAFT,
+                'currency' => $currency,
                 'order_date' => now(),
                 'subtotal' => 0,
                 'tax' => 0,

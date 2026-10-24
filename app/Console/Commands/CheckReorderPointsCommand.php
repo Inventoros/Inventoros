@@ -77,10 +77,12 @@ class CheckReorderPointsCommand extends Command
             return Command::SUCCESS;
         }
 
-        // Get product IDs that already have pending/sent POs
+        // Count only outstanding lines. A partial PO still covers its open
+        // units, but a fully received line on it must not block replenishment.
         $productsWithExistingPOs = PurchaseOrderItem::whereHas('purchaseOrder', function ($query) {
-            $query->whereIn('status', [PurchaseOrder::STATUS_DRAFT, PurchaseOrder::STATUS_SENT]);
+            $query->whereIn('status', [PurchaseOrder::STATUS_DRAFT, PurchaseOrder::STATUS_SENT, PurchaseOrder::STATUS_PARTIAL]);
         })
+            ->whereColumn('purchase_order_items.quantity_ordered', '>', 'purchase_order_items.quantity_received')
             ->pluck('product_id')
             ->unique()
             ->toArray();
@@ -159,7 +161,7 @@ class CheckReorderPointsCommand extends Command
         }
 
         if ($skippedExistingPO > 0) {
-            $this->info("Skipped {$skippedExistingPO} products with existing pending/sent POs.");
+            $this->info("Skipped {$skippedExistingPO} products with outstanding purchase orders.");
         }
 
         return Command::SUCCESS;
