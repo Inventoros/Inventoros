@@ -1,0 +1,6 @@
+{
+  "ssh_host": "my-inventoros-server",
+  "ssh_port": 22,
+  "app_dir": "/home/username/inventoros",
+  "php_binary": "/opt/cpanel/ea-php84/root/usr/bin/php"
+}
