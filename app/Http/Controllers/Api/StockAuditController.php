@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Api;
 
 use App\Exceptions\BusinessRuleException;
+use App\Exceptions\InvalidStateException;
 use App\Http\Controllers\Api\Concerns\HandlesApiResponses;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\StockAudit\RecordStockAuditCountRequest;
@@ -139,8 +140,12 @@ class StockAuditController extends Controller
         $validated = $request->validated();
 
         try {
-            $audits->recordCount($stockAudit, $item, $request->user(), (int) $validated['counted_quantity'], $validated['notes'] ?? null);
+            $audits->recordCount($stockAudit, $item, $request->user(), (int) $validated['counted_quantity'], $validated['notes'] ?? null, $validated['expected_revision'] ?? null);
         } catch (BusinessRuleException $e) {
+            if ($e instanceof InvalidStateException && $e->errorCode === 'stale_count') {
+                return response()->json(['message' => $e->getMessage(), 'error' => 'stale_count'], 409);
+            }
+
             return $this->stateError($e);
         }
 

@@ -132,6 +132,29 @@
       "deleteConfirm": "Czy na pewno chcesz usunąć tę inwentaryzację? Tej operacji nie można cofnąć.",
       "updateCountFailed": "Nie udało się zaktualizować liczenia",
       "saveCountError": "Wystąpił błąd podczas zapisywania liczenia"
+    },
+    "drafts": {
+      "title": "Szkice zliczeń ({count})",
+      "hint": "Szkice pozostają w tej karcie do wysłania lub odrzucenia. Zachowaj otwartą kartę bez połączenia.",
+      "offline": "Brak połączenia. Wprowadź ilości tutaj i wyślij je po połączeniu.",
+      "savedLocally": "Serwer nie potwierdził zliczenia. Szkic pozostaje w tej karcie.",
+      "serverRejected": "Serwer odrzucił to zliczenie. Szkic zachowano. Odśwież stronę i sprawdź uprawnienia oraz stan inwentaryzacji przed ponowieniem.",
+      "storageUnavailable": "Ta przeglądarka nie zachowa szkiców po odświeżeniu. Pozostaw stronę otwartą do wysłania zliczeń.",
+      "send": "Wyślij zapisane zliczenia",
+      "discardAll": "Odrzuć wszystkie szkice",
+      "discard": "Odrzuć szkic",
+      "discardConfirm": "Odrzucić to niewysłane zliczenie?",
+      "discardAllConfirm": "Odrzucić wszystkie niewysłane zliczenia tej inwentaryzacji?",
+      "review": "Sprawdź szkic",
+      "localCount": "Szkic: {count}",
+      "conflict": "To zliczenie zmieniło się na serwerze. Sprawdź aktualne zliczenie przed zapisaniem szkicu.",
+      "latest": "Aktualne zapisane zliczenie: {count}. Uwagi: {notes}",
+      "reviewConfirm": "Zapisane zliczenie to {count}. Uwagi: {notes}. Czy sprawdzono je i zapisać zamiast niego szkic?",
+      "reviewLatest": "Sprawdzono zapisane zliczenie",
+      "invalidCount": "Wprowadź liczbę całkowitą od 0 do 2147483647 i uwagi krótsze niż 500 znaków.",
+      "completeHint": "Wyślij lub odrzuć wszystkie szkice przed zakończeniem tej inwentaryzacji.",
+      "keepDraft": "Zamknij i zachowaj szkic",
+      "queuedScans": "Kolejka skanów: {count}"
     }
   },
   "common": {

@@ -952,6 +952,8 @@ Check a method's docblock for its rules (locks it takes, exceptions it throws, w
 
 `OrderPaymentService::recordImported()` records money already processed by a verified external provider, including historical receipts on cancelled orders. It requires a stable reference, is idempotent within the order and stays silent by default. See [the imported-payment contract](features/imported-order-payments.md) for currency checks, refunds, manual ledger reconciliation and announcement behavior. Feature-detect it with `method_exists(OrderPaymentService::class, 'recordImported')` before offering automated payment import on an older core.
 
+For delayed stock-audit counts, pass the item's `count_revision` as the optional sixth `StockAuditService::recordCount()` argument, `expectedRevision`. The service compares the current evidence under the audit and item locks and throws `InvalidStateException` with `errorCode = 'stale_count'` if it changed. The web and REST count endpoints accept the same token as `expected_revision` and return HTTP 409 on a conflict. Fetch and review the current count before deliberately retrying with its revision. Callers that omit the token keep the existing write behavior.
+
 ## Building and packaging a plugin
 
 1. Copy `plugins/hello-world/ui/vite.config.js` and `ui/package.json` into your plugin's `ui/` folder and put your entry in `ui/src/main.js`. The config maps every `import ... from 'vue'` to `window.Inventoros.Vue`, writes `dist/plugin.js` and `dist/plugin.css`, and ignores the app's PostCSS setup.

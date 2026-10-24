@@ -132,6 +132,29 @@
       "deleteConfirm": "Tem certeza de que deseja excluir esta auditoria? Esta ação não pode ser desfeita.",
       "updateCountFailed": "Falha ao atualizar a contagem",
       "saveCountError": "Ocorreu um erro ao salvar a contagem"
+    },
+    "drafts": {
+      "title": "Rascunhos de contagem ({count})",
+      "hint": "Os rascunhos ficam nesta aba até serem enviados ou descartados. Mantenha a aba aberta sem conexão.",
+      "offline": "Sem conexão. Insira as quantidades aqui e envie quando se conectar.",
+      "savedLocally": "Contagem não confirmada pelo servidor. Seu rascunho fica nesta aba.",
+      "serverRejected": "O servidor recusou esta contagem. O rascunho foi mantido. Atualize e confira suas permissões e o status da auditoria antes de tentar novamente.",
+      "storageUnavailable": "Este navegador não pode manter rascunhos após atualizar. Mantenha a página aberta até enviar as contagens.",
+      "send": "Enviar contagens salvas",
+      "discardAll": "Descartar todos os rascunhos",
+      "discard": "Descartar rascunho",
+      "discardConfirm": "Descartar esta contagem não enviada?",
+      "discardAllConfirm": "Descartar todas as contagens não enviadas desta auditoria?",
+      "review": "Revisar rascunho",
+      "localCount": "Rascunho: {count}",
+      "conflict": "Esta contagem mudou no servidor. Revise a contagem atual antes de salvar o rascunho.",
+      "latest": "Contagem salva atual: {count}. Notas: {notes}",
+      "reviewConfirm": "A contagem salva é {count}. Notas: {notes}. Você a revisou e deseja salvar seu rascunho no lugar?",
+      "reviewLatest": "Revisei a contagem salva",
+      "invalidCount": "Insira um inteiro de 0 a 2147483647 e notas com menos de 500 caracteres.",
+      "completeHint": "Envie ou descarte cada rascunho antes de concluir esta auditoria.",
+      "keepDraft": "Fechar e manter rascunho",
+      "queuedScans": "Fila de leituras: {count}"
     }
   },
   "common": {

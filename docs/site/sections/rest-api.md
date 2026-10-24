@@ -120,6 +120,7 @@ All paths are relative to `/api/v1`. See the OpenAPI spec for full schemas:
 - Shipments: `GET /shipments`, `GET /shipments/{id}`, `GET /orders/{id}/shipments`, create with `POST /orders/{id}/shipments` (manual or EasyPost), then `rates`, `buy-label`, `void-label`, `ship` (`view_shipments` / `create_shipments`; see [Shipping & Carriers](shipping))
 - Stock Adjustments: list, show, and record signed deltas with a `type` (`manual`, `count`, `damage`, `return`, `transfer`) and an optional reason. When the organization's approval rules cover an adjustment it is held for approval and the response is `202` with `status: "pending_approval"`
 - Stock Audits: list, show, create, `start`, `items/{item}/count`, `complete` (books recount adjustments)
+- Delayed audit counts: send the item's `count_revision` as `expected_revision` to the count endpoint. A changed count returns HTTP `409` with `error: "stale_count"`; fetch and review the latest evidence before retrying. Omitting the token retains the existing unconditional write behavior.
 - Suppliers: CRUD
 - Purchase Orders: CRUD plus `send`, `receive`, `cancel` and `submit-for-approval`
 - Approvals: `GET /approvals` (what the caller may decide), `GET /approvals/mine` (the caller's own requests), and `POST /approvals/{type}/{id}/approve` or `/reject` for a `purchase_order`, `stock_adjustment`, `stock_transfer` or `sales_order` (needs the matching `approve_*` permission; rejecting needs notes)

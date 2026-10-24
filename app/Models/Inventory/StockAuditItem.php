@@ -33,6 +33,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 class StockAuditItem extends Model
 {
+    protected $appends = ['count_revision'];
+
     protected $fillable = [
         'stock_audit_id',
         'product_id',
@@ -55,6 +57,20 @@ class StockAuditItem extends Model
             'discrepancy' => 'integer',
             'counted_at' => 'datetime',
         ];
+    }
+
+    /**
+     * Compare count evidence, rather than timestamp precision, when a client
+     * resumes an interrupted count. This is a concurrency token, not a secret.
+     */
+    public function getCountRevisionAttribute(): string
+    {
+        return hash('sha256', json_encode([
+            $this->id, $this->stock_audit_id, $this->product_id,
+            $this->product_variant_id, $this->location_id,
+            $this->system_quantity, $this->counted_quantity, $this->status,
+            $this->counted_by, $this->counted_at?->toISOString(), $this->notes,
+        ], JSON_THROW_ON_ERROR));
     }
 
     /**

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Inventory;
 
 use App\Exceptions\BusinessRuleException;
+use App\Exceptions\InvalidStateException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StockAudit\StoreStockAuditRequest;
 use App\Http\Requests\StockAudit\UpdateStockAuditRequest;
@@ -346,10 +347,11 @@ class StockAuditController extends Controller
      */
     public function updateCount(Request $request, StockAudit $stockAudit, StockAuditItem $item, StockAuditService $audits): JsonResponse
     {
-        if ($stockAudit->organization_id !== $request->user()->organization_id
-            || ! $this->warehouseAccess->canAccessLocation($request->user(), $stockAudit->warehouse_location_id)) {
+        if ($stockAudit->organization_id !== $request->user()->organization_id) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
+
+        $this->warehouseAccess->authorizeStockAudit($request->user(), $stockAudit);
 
         if ($stockAudit->status !== 'in_progress') {
             return response()->json(['message' => 'Audit is not in progress'], 422);
@@ -362,11 +364,20 @@ class StockAuditController extends Controller
         $validated = $request->validate([
             'counted_quantity' => 'required|integer|min:0',
             'notes' => 'nullable|string|max:500',
+            'expected_revision' => ['sometimes', 'string', 'regex:/\A[a-f0-9]{64}\z/'],
         ]);
 
         try {
-            $audits->recordCount($stockAudit, $item, $request->user(), (int) $validated['counted_quantity'], $validated['notes'] ?? null);
+            $audits->recordCount($stockAudit, $item, $request->user(), (int) $validated['counted_quantity'], $validated['notes'] ?? null, $validated['expected_revision'] ?? null);
         } catch (BusinessRuleException $e) {
+            if ($e instanceof InvalidStateException && $e->errorCode === 'stale_count') {
+                return response()->json([
+                    'message' => $e->getMessage(),
+                    'error' => 'stale_count',
+                    'item' => $item->fresh(['product', 'countedByUser']),
+                ], 409);
+            }
+
             return response()->json(['message' => $e->getMessage()], 422);
         }
 

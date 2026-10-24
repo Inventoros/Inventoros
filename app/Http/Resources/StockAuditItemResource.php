@@ -28,6 +28,7 @@ class StockAuditItemResource extends JsonResource
             'location_id' => $this->location_id,
             'system_quantity' => $this->system_quantity,
             'counted_quantity' => $this->counted_quantity,
+            'count_revision' => $this->count_revision,
             'discrepancy' => $this->discrepancy,
             'status' => $this->status,
             'counted_by' => $this->counted_by,

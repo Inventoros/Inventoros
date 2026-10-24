@@ -147,13 +147,17 @@ final class StockAuditService
     /**
      * Record the physical count for one audit item.
      *
+     * Pass the item's count_revision as expectedRevision to reject a delayed
+     * update when its evidence has changed. Omitting it retains the existing
+     * unconditional write contract. A conflict throws stale_count.
+     *
      * @api
      */
-    public function recordCount(StockAudit $stockAudit, StockAuditItem $item, User $actor, int $countedQuantity, ?string $notes = null): StockAuditItem
+    public function recordCount(StockAudit $stockAudit, StockAuditItem $item, User $actor, int $countedQuantity, ?string $notes = null, ?string $expectedRevision = null): StockAuditItem
     {
         $this->warehouseAccess->authorizeStockAudit($actor, $stockAudit);
 
-        return DB::transaction(function () use ($stockAudit, $item, $actor, $countedQuantity, $notes) {
+        return DB::transaction(function () use ($stockAudit, $item, $actor, $countedQuantity, $notes, $expectedRevision) {
             // Parent before item: serialize counts with completion so no
             // count can overwrite the evidence after its stock was booked.
             $locked = StockAudit::whereKey($stockAudit->getKey())->lockForUpdate()->firstOrFail();
@@ -167,6 +171,10 @@ final class StockAuditService
             $lockedItem = StockAuditItem::whereKey($item->getKey())->lockForUpdate()->firstOrFail();
             if ($lockedItem->stock_audit_id !== $locked->id) {
                 throw new InvalidStateException('Item does not belong to this audit', 'item_mismatch');
+            }
+
+            if ($expectedRevision !== null && ! hash_equals($lockedItem->count_revision, $expectedRevision)) {
+                throw new InvalidStateException('This count has changed. Review the latest count before saving yours.', 'stale_count');
             }
 
             $lockedItem->update([
