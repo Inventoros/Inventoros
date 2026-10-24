@@ -833,7 +833,9 @@
     "suggestedQty": "Qtà suggerita",
     "noSupplier": "Nessun fornitore",
     "addSupplier": "Aggiungi un fornitore",
-    "hint": "Crea una bozza di ordine di acquisto per ogni fornitore principale. I prodotti senza fornitore vengono ignorati."
+    "hint": "Crea una bozza di ordine di acquisto per ogni fornitore principale. I prodotti senza fornitore vengono ignorati.",
+    "chooseVariants": "Scegli varianti",
+    "variantHint": "Seleziona gli SKU delle varianti in un ordine di acquisto per rifornire questo prodotto."
   },
   "suppliers": {
     "title": "Fornitori",

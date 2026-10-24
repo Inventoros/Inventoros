@@ -833,7 +833,9 @@
     "suggestedQty": "Vorgeschlagene Menge",
     "noSupplier": "Kein Lieferant",
     "addSupplier": "Lieferant hinzufügen",
-    "hint": "Erstellt einen Entwurf einer Einkaufsbestellung pro Hauptlieferant. Produkte ohne Lieferant werden übersprungen."
+    "hint": "Erstellt einen Entwurf einer Einkaufsbestellung pro Hauptlieferant. Produkte ohne Lieferant werden übersprungen.",
+    "chooseVariants": "Varianten wählen",
+    "variantHint": "Wählen Sie die Varianten-SKUs in einer Bestellung, um dieses Produkt nachzubestellen."
   },
   "suppliers": {
     "title": "Lieferanten",

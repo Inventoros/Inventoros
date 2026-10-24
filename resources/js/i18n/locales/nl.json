@@ -833,7 +833,9 @@
     "suggestedQty": "Voorgesteld aantal",
     "noSupplier": "Geen leverancier",
     "addSupplier": "Leverancier toevoegen",
-    "hint": "Maakt één concept-inkooporder per primaire leverancier aan. Producten zonder leverancier worden overgeslagen."
+    "hint": "Maakt één concept-inkooporder per primaire leverancier aan. Producten zonder leverancier worden overgeslagen.",
+    "chooseVariants": "Varianten kiezen",
+    "variantHint": "Selecteer variant-SKUs op een inkooporder om dit product aan te vullen."
   },
   "suppliers": {
     "title": "Leveranciers",

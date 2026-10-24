@@ -5,13 +5,16 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use App\Models\Inventory\Product;
+use App\Models\Inventory\ProductVariant;
 use App\Models\Inventory\Supplier;
 use App\Models\Purchasing\PurchaseOrder;
 use App\Models\User;
+use App\Services\ReorderService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Validation\ValidationException;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\Feature\Api\Concerns\BuildsApiFixtures;
 use Tests\TestCase;
@@ -111,5 +114,68 @@ final class ReorderPurchaseSafetyTest extends TestCase
         $this->assertSame($expected, $po->currency);
         $this->assertEquals('275.00', $po->total);
         $this->assertEquals('5.50', $po->items()->sole()->unit_cost);
+    }
+
+    private function variant(bool $active = true): ProductVariant
+    {
+        $this->product->update(['has_variants' => true]);
+
+        return ProductVariant::create([
+            'organization_id' => $this->product->organization_id, 'product_id' => $this->product->id,
+            'sku' => 'SIZE-M', 'stock' => 0, 'is_active' => $active, 'option_values' => ['Size' => 'M'],
+        ]);
+    }
+
+    public static function activeVariants(): array
+    {
+        return ['active variant' => [true], 'only inactive variants' => [false]];
+    }
+
+    #[DataProvider('activeVariants')]
+    public function test_automatic_reorder_never_buys_a_variant_parents_unused_stock(bool $active): void
+    {
+        $this->variant($active);
+        $this->artisan('inventory:check-reorder-points')->assertSuccessful();
+        $this->assertDatabaseCount('purchase_orders', 0);
+    }
+
+    public function test_forged_quick_reorder_cannot_create_a_parent_only_variant_line(): void
+    {
+        $this->variant();
+        $this->post(route('purchase-orders.quick-reorder'), ['product_ids' => [$this->product->id]])
+            ->assertSessionHas('error');
+        $this->assertDatabaseCount('purchase_orders', 0);
+    }
+
+    public function test_shared_creation_service_also_requires_a_specific_variant(): void
+    {
+        $this->variant();
+        try {
+            app(ReorderService::class)->createDraftPurchaseOrder(
+                $this->product->organization_id, $this->supplier->id, [$this->product->fresh()],
+                $this->admin->id, 'Test', 'quick_reorder', 'Draft purchase order',
+            );
+            $this->fail('The shared service must not order unused parent stock.');
+        } catch (ValidationException $exception) {
+            $this->assertArrayHasKey('product_ids', $exception->errors());
+        }
+        $this->assertDatabaseCount('purchase_orders', 0);
+    }
+
+    public function test_mixed_quick_selection_orders_plain_products_and_names_the_skipped_variant_parent(): void
+    {
+        $this->variant();
+        $plain = $this->makeProduct($this->product->organization, ['stock' => 2, 'reorder_quantity' => 5]);
+        $plain->suppliers()->attach($this->supplier, ['is_primary' => true]);
+        $this->post(route('purchase-orders.quick-reorder'), ['product_ids' => [$this->product->id, $plain->id]])
+            ->assertSessionHas('success')->assertSessionHas('warning', fn ($warning) => str_contains($warning, $this->product->name));
+        $this->assertSame($plain->id, PurchaseOrder::sole()->items()->sole()->product_id);
+    }
+
+    public function test_a_variant_flag_without_non_deleted_variants_still_orders_parent_stock(): void
+    {
+        $this->variant()->delete();
+        $this->artisan('inventory:check-reorder-points')->assertSuccessful();
+        $this->assertDatabaseCount('purchase_orders', 1);
     }
 }

@@ -68,6 +68,7 @@ class CheckReorderPointsCommand extends Command
 
         // Get all products that need reorder
         $products = Product::needsReorder()
+            ->withExists('variants')
             ->with(ReorderService::primarySupplierEagerLoad())
             ->get();
 
@@ -91,8 +92,17 @@ class CheckReorderPointsCommand extends Command
         $grouped = [];
         $skippedNoSupplier = 0;
         $skippedExistingPO = 0;
+        $skippedVariants = 0;
+        $reorder = app(ReorderService::class);
 
         foreach ($products as $product) {
+            if ($reorder->requiresVariantSelection($product)) {
+                $skippedVariants++;
+                $this->warn("  Skipping {$product->name}: choose specific variant SKUs on a purchase order.");
+
+                continue;
+            }
+
             // Skip if product already has a pending/sent PO
             if (in_array($product->id, $productsWithExistingPOs)) {
                 $skippedExistingPO++;
@@ -127,7 +137,6 @@ class CheckReorderPointsCommand extends Command
         // Create POs for each group. Quantity and cost come from the shared
         // ReorderService so the quick "Create PO" action suggests the same.
         $createdPOs = 0;
-        $reorder = app(ReorderService::class);
 
         foreach ($grouped as $group) {
             try {
@@ -162,6 +171,10 @@ class CheckReorderPointsCommand extends Command
 
         if ($skippedExistingPO > 0) {
             $this->info("Skipped {$skippedExistingPO} products with outstanding purchase orders.");
+        }
+
+        if ($skippedVariants > 0) {
+            $this->warn("Skipped {$skippedVariants} products requiring variant selection.");
         }
 
         return Command::SUCCESS;

@@ -833,7 +833,9 @@
     "suggestedQty": "Sugerowana ilość",
     "noSupplier": "Brak dostawcy",
     "addSupplier": "Dodaj dostawcę",
-    "hint": "Tworzy jeden szkic zamówienia zakupu dla każdego głównego dostawcy. Produkty bez dostawcy są pomijane."
+    "hint": "Tworzy jeden szkic zamówienia zakupu dla każdego głównego dostawcy. Produkty bez dostawcy są pomijane.",
+    "chooseVariants": "Wybierz warianty",
+    "variantHint": "Wybierz SKU wariantów w zamówieniu zakupu, aby uzupełnić ten produkt."
   },
   "suppliers": {
     "title": "Dostawcy",

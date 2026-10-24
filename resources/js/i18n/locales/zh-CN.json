@@ -833,7 +833,9 @@
     "suggestedQty": "建议数量",
     "noSupplier": "无供应商",
     "addSupplier": "添加供应商",
-    "hint": "为每个主要供应商创建一张采购订单草稿。没有供应商的产品将被跳过。"
+    "hint": "为每个主要供应商创建一张采购订单草稿。没有供应商的产品将被跳过。",
+    "chooseVariants": "选择变体",
+    "variantHint": "请在采购单中选择具体的变体 SKU，以补充此产品。"
   },
   "suppliers": {
     "title": "供应商",

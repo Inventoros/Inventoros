@@ -17,7 +17,7 @@ export function useQuickReorder(rows) {
     const selected = ref([]);
     const submitting = ref(false);
 
-    const orderable = computed(() => (unref(rows) || []).filter((row) => row.supplier_id));
+    const orderable = computed(() => (unref(rows) || []).filter((row) => row.supplier_id && row.can_quick_reorder !== false));
 
     const isSelected = (id) => selected.value.includes(id);
 

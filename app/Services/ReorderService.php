@@ -14,6 +14,7 @@ use App\Support\Money;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Support\Collection;
+use Illuminate\Validation\ValidationException;
 
 /**
  * Reorder quantities and draft purchase orders built from a product's primary
@@ -30,6 +31,12 @@ use Illuminate\Support\Collection;
 final class ReorderService
 {
     public function __construct(private readonly WarehouseStockLevelService $warehouseLevels) {}
+
+    /** Aggregate product demand cannot choose which variant SKU to buy. */
+    public function requiresVariantSelection(Product $product): bool
+    {
+        return $product->has_variants && (bool) ($product->getAttribute('variants_exists') ?? $product->variants()->exists());
+    }
 
     /**
      * Eager-load constraint that loads only a product's primary supplier link.
@@ -163,6 +170,14 @@ final class ReorderService
         string $activityAction,
         string $activityDescription,
     ): PurchaseOrder {
+        foreach ($products as $product) {
+            if ($this->requiresVariantSelection($product)) {
+                throw ValidationException::withMessages([
+                    'product_ids' => 'Choose specific variant SKUs on the purchase order form for '.$product->name.'.',
+                ]);
+            }
+        }
+
         $supplier = Supplier::forOrganization($organizationId)->findOrFail($supplierId);
         $currency = filled($supplier->currency)
             ? strtoupper(trim((string) $supplier->currency))
@@ -241,6 +256,7 @@ final class ReorderService
     {
         return Product::query()
             ->where('organization_id', $organizationId)
+            ->withExists('variants')
             ->with(self::primarySupplierEagerLoad());
     }
 
