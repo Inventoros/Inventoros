@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Resources;
 
 use App\Models\Inventory\ProductBatch;
+use App\Support\OrganizationCalendar;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -20,6 +21,11 @@ class ProductBatchResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
+        $organization = $request->user()?->organization;
+        if ($organization?->id !== $this->organization_id) {
+            $organization = $this->organization;
+        }
+
         return [
             'id' => $this->id,
             'product_id' => $this->product_id,
@@ -27,7 +33,7 @@ class ProductBatchResource extends JsonResource
             'quantity' => $this->quantity,
             'manufactured_date' => $this->manufactured_date?->toDateString(),
             'expiry_date' => $this->expiry_date?->toDateString(),
-            'is_expired' => $this->isExpired(),
+            'is_expired' => $this->isExpired(OrganizationCalendar::today($organization)),
             'notes' => $this->notes,
             'created_at' => $this->created_at?->toIso8601String(),
             'updated_at' => $this->updated_at?->toIso8601String(),
