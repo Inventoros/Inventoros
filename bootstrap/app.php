@@ -53,6 +53,8 @@ $app = Application::configure(basePath: dirname(__DIR__))
         },
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // Inventory installations and their customer portals are private apps.
+        $middleware->prepend(\App\Http\Middleware\PreventSearchIndexing::class);
         // Behind a TLS-terminating reverse proxy, believe the proxy's
         // X-Forwarded-* headers so URLs, redirects and Secure cookies use the
         // public scheme and host. Which proxies are trusted comes from
