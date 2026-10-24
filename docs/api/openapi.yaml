@@ -2295,6 +2295,7 @@ components:
       properties:
         id: { type: integer }
         order_number: { type: string }
+        channel_order_number: { type: string, nullable: true, description: Human-readable sales-channel order number }
         source: { type: string, nullable: true }
         external_id: { type: string, nullable: true }
         customer_name: { type: string }

@@ -573,6 +573,7 @@
     }
   },
   "orders": {
+      "channelOrderNumber": "Numéro de commande du canal",
     "itemsCol": "Articles",
     "sources": {
       "manual": "Manuelle",

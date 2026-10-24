@@ -50,7 +50,11 @@ class ListOrdersTool extends Tool
                 $q->where(function ($q) use ($search) {
                     $q->where('order_number', 'like', "%{$search}%")
                         ->orWhere('customer_name', 'like', "%{$search}%")
-                        ->orWhere('customer_email', 'like', "%{$search}%");
+                        ->orWhere('customer_email', 'like', "%{$search}%")
+                        ->orWhere('external_id', 'like', "%{$search}%")
+                        ->orWhere('external_reference', 'like', "%{$search}%")
+                        ->orWhere('metadata->channel_order_number', 'like', "%{$search}%")
+                        ->orWhere('metadata->shopify->name', 'like', "%{$search}%");
                 });
             })
             ->when($request->get('status'), fn ($q, $status) => $q->byStatus($status))
@@ -72,6 +76,7 @@ class ListOrdersTool extends Tool
             'data' => collect($paginator->items())->map(fn (Order $o) => [
                 'id' => $o->id,
                 'order_number' => $o->order_number,
+                'channel_order_number' => $o->channel_order_number,
                 'customer_name' => $o->customer_name,
                 'customer_email' => $o->customer_email,
                 'status' => $o->status,
