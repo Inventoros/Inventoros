@@ -3874,5 +3874,37 @@
   "warehouseStock": {
     "title": "Depoya göre stok",
     "includeZero": "Sıfır bakiyeleri dahil et"
+  },
+  "batchExpiryReport": {
+    "title": "Parti son kullanma tarihleri",
+    "description": "Süresi dolmuş partileri bulun ve yaklaşan tarihleri planlayın.",
+    "scope": "Arşivlenmiş ürünler dahil tüm kuruluşun kalan parti miktarları. Partiler depolara atanmaz. Yalnızca tarihi olan ve birim kalan partiler gösterilir.",
+    "asOf": "Kuruluşun takvim gününe göre {date} itibarıyla. Bugün süresi dolan partiler gün sonuna kadar geçerlidir.",
+    "search": "Ürün, SKU veya parti",
+    "window": "Son kullanma dönemi",
+    "export": "CSV dışa aktar",
+    "product": "Ürün",
+    "batch": "Parti",
+    "units": "Kalan birimler",
+    "expiry": "Son kullanma tarihi",
+    "status": "Durum",
+    "archived": "Arşivlenmiş ürün",
+    "expiredUnits": "Süresi dolmuş birimler",
+    "notExpiredUnits": "Henüz süresi dolmamış birimler",
+    "lotCount": "{count} eşleşen parti",
+    "exportLimit": "CSV geçerli sıralamadaki ilk {count} partiyi içerir. Daha az parti aktarmak için filtreleri daraltın.",
+    "empty": "Bu filtrelerle eşleşen tarihli kalan parti yok.",
+    "windows": {
+      "7": "Süresi dolanlar + gelecek 7 gün",
+      "30": "Süresi dolanlar + gelecek 30 gün",
+      "90": "Süresi dolanlar + gelecek 90 gün",
+      "expired": "Yalnızca süresi dolanlar",
+      "all": "Tüm tarihler"
+    },
+    "statuses": {
+      "expired": "Süresi dolmuş",
+      "today": "Bugün doluyor",
+      "upcoming": "Yaklaşıyor"
+    }
   }
 }

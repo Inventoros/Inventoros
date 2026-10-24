@@ -3874,5 +3874,37 @@
   "warehouseStock": {
     "title": "Bestand nach Lager",
     "includeZero": "Nullbestände anzeigen"
+  },
+  "batchExpiryReport": {
+    "title": "Chargenablauf",
+    "description": "Abgelaufene Chargen finden und kommende Ablaufdaten planen.",
+    "scope": "Restmengen der gesamten Organisation, einschließlich archivierter Produkte. Chargen sind keinen Lagern zugeordnet. Nur datierte Chargen mit Restbestand werden angezeigt.",
+    "asOf": "Stand {date}, nach dem Kalendertag der Organisation. Heute ablaufende Chargen bleiben bis Tagesende gültig.",
+    "search": "Produkt, SKU oder Charge",
+    "window": "Ablaufzeitraum",
+    "export": "CSV exportieren",
+    "product": "Produkt",
+    "batch": "Charge",
+    "units": "Verbleibende Einheiten",
+    "expiry": "Ablaufdatum",
+    "status": "Status",
+    "archived": "Archiviertes Produkt",
+    "expiredUnits": "Abgelaufene Einheiten",
+    "notExpiredUnits": "Noch gültige Einheiten",
+    "lotCount": "{count} passende Chargen",
+    "exportLimit": "CSV enthält die ersten {count} Chargen in der aktuellen Sortierung. Filter eingrenzen, um weniger Chargen zu exportieren.",
+    "empty": "Keine datierten Restchargen entsprechen diesen Filtern.",
+    "windows": {
+      "7": "Abgelaufen + nächste 7 Tage",
+      "30": "Abgelaufen + nächste 30 Tage",
+      "90": "Abgelaufen + nächste 90 Tage",
+      "expired": "Nur abgelaufen",
+      "all": "Alle Ablaufdaten"
+    },
+    "statuses": {
+      "expired": "Abgelaufen",
+      "today": "Läuft heute ab",
+      "upcoming": "Bevorstehend"
+    }
   }
 }

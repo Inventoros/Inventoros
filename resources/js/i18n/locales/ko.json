@@ -3874,5 +3874,37 @@
   "warehouseStock": {
     "title": "창고별 재고",
     "includeZero": "재고 0 포함"
+  },
+  "batchExpiryReport": {
+    "title": "로트 유효기간",
+    "description": "만료된 로트를 찾고 다가오는 유효기간을 계획합니다.",
+    "scope": "보관된 상품을 포함한 조직 전체의 로트 잔여 수량입니다. 로트는 창고에 할당되지 않습니다. 날짜와 잔여 수량이 있는 로트만 표시됩니다.",
+    "asOf": "조직의 달력 날짜로 {date} 기준입니다. 오늘 만료되는 로트는 오늘이 끝날 때까지 유효합니다.",
+    "search": "상품, SKU 또는 로트",
+    "window": "유효기간 범위",
+    "export": "CSV 내보내기",
+    "product": "상품",
+    "batch": "로트",
+    "units": "잔여 수량",
+    "expiry": "유효기간",
+    "status": "상태",
+    "archived": "보관된 상품",
+    "expiredUnits": "만료 수량",
+    "notExpiredUnits": "아직 유효한 수량",
+    "lotCount": "일치하는 로트 {count}개",
+    "exportLimit": "CSV에는 현재 정렬 순서의 처음 {count}개 로트가 포함됩니다. 필터를 좁혀 더 적은 로트를 내보내세요.",
+    "empty": "필터에 맞는 날짜가 있는 잔여 로트가 없습니다.",
+    "windows": {
+      "7": "만료 + 향후 7일",
+      "30": "만료 + 향후 30일",
+      "90": "만료 + 향후 90일",
+      "expired": "만료만",
+      "all": "모든 날짜"
+    },
+    "statuses": {
+      "expired": "만료됨",
+      "today": "오늘 만료",
+      "upcoming": "예정"
+    }
   }
 }

@@ -3874,5 +3874,37 @@
   "warehouseStock": {
     "title": "Scorte per magazzino",
     "includeZero": "Includi saldi a zero"
+  },
+  "batchExpiryReport": {
+    "title": "Scadenza lotti",
+    "description": "Trova i lotti scaduti e pianifica le prossime scadenze.",
+    "scope": "Quantità residue di tutta l’organizzazione, inclusi i prodotti archiviati. I lotti non sono assegnati ai magazzini. Sono mostrati solo lotti datati con unità residue.",
+    "asOf": "Al {date}, secondo il giorno dell’organizzazione. I lotti in scadenza oggi restano validi fino a fine giornata.",
+    "search": "Prodotto, SKU o lotto",
+    "window": "Periodo di scadenza",
+    "export": "Esporta CSV",
+    "product": "Prodotto",
+    "batch": "Lotto",
+    "units": "Unità residue",
+    "expiry": "Data di scadenza",
+    "status": "Stato",
+    "archived": "Prodotto archiviato",
+    "expiredUnits": "Unità scadute",
+    "notExpiredUnits": "Unità non ancora scadute",
+    "lotCount": "{count} lotti corrispondenti",
+    "exportLimit": "Il CSV include i primi {count} lotti nell’ordine attuale. Restringi i filtri per esportare meno lotti.",
+    "empty": "Nessun lotto datato residuo corrisponde ai filtri.",
+    "windows": {
+      "7": "Scaduti + prossimi 7 giorni",
+      "30": "Scaduti + prossimi 30 giorni",
+      "90": "Scaduti + prossimi 90 giorni",
+      "expired": "Solo scaduti",
+      "all": "Tutte le scadenze"
+    },
+    "statuses": {
+      "expired": "Scaduto",
+      "today": "Scade oggi",
+      "upcoming": "In scadenza"
+    }
   }
 }

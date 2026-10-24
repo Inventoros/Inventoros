@@ -3874,5 +3874,37 @@
   "warehouseStock": {
     "title": "按仓库查看库存",
     "includeZero": "包含零库存"
+  },
+  "batchExpiryReport": {
+    "title": "批次有效期",
+    "description": "查找过期批次并安排即将到期的批次。",
+    "scope": "显示整个组织的批次剩余数量，包括已归档产品。批次未分配到仓库。仅显示有到期日期且仍有剩余数量的批次。",
+    "asOf": "截至组织日历日期 {date}。今天到期的批次在今天结束前仍然有效。",
+    "search": "产品、SKU 或批次",
+    "window": "到期范围",
+    "export": "导出 CSV",
+    "product": "产品",
+    "batch": "批次",
+    "units": "剩余数量",
+    "expiry": "到期日期",
+    "status": "状态",
+    "archived": "已归档产品",
+    "expiredUnits": "已过期数量",
+    "notExpiredUnits": "尚未过期数量",
+    "lotCount": "{count} 个匹配批次",
+    "exportLimit": "CSV 按当前排序包含前 {count} 个批次。请缩小筛选范围以导出更少的批次。",
+    "empty": "没有符合筛选条件的有日期剩余批次。",
+    "windows": {
+      "7": "已过期 + 未来 7 天",
+      "30": "已过期 + 未来 30 天",
+      "90": "已过期 + 未来 90 天",
+      "expired": "仅已过期",
+      "all": "所有到期日期"
+    },
+    "statuses": {
+      "expired": "已过期",
+      "today": "今天到期",
+      "upcoming": "即将到期"
+    }
   }
 }

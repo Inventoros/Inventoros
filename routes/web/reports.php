@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Http\Controllers\Reports\AnalyticsReportController;
+use App\Http\Controllers\Reports\BatchExpiryReportController;
 use App\Http\Controllers\Reports\ReportBuilderController;
 use App\Http\Controllers\Reports\ReportController;
 use App\Http\Controllers\Reports\ReportScheduleController;
@@ -23,6 +24,7 @@ Route::prefix('reports')->name('reports.')->middleware('permission:view_reports'
     // Outstanding balances: a report (view_reports, from the group) built
     // from payments, so it also needs view_payments.
     Route::get('/receivables', [ReportController::class, 'receivables'])->name('receivables')->middleware('permission:view_payments');
+    Route::get('/batch-expiry', BatchExpiryReportController::class)->name('batch-expiry')->middleware('permission:view_products');
 
     // Analytics reports. Each also needs the view permission of every data
     // source it reads (the report builder's per-source rule): products for

@@ -3874,5 +3874,37 @@
   "warehouseStock": {
     "title": "Stock by warehouse",
     "includeZero": "Include zero balances"
+  },
+  "batchExpiryReport": {
+    "title": "Batch expiry",
+    "description": "Find expired lots and plan for approaching expiry dates.",
+    "scope": "Organization-wide remaining lot quantities, including archived products. Lots are not assigned to warehouses. Only dated lots with units remaining are shown.",
+    "asOf": "As of {date}, using the organization’s calendar day. Lots expiring today remain valid through today.",
+    "search": "Product, SKU or batch",
+    "window": "Expiry window",
+    "export": "Export CSV",
+    "product": "Product",
+    "batch": "Batch",
+    "units": "Remaining units",
+    "expiry": "Expiry date",
+    "status": "Status",
+    "archived": "Archived product",
+    "expiredUnits": "Expired units",
+    "notExpiredUnits": "Not yet expired units",
+    "lotCount": "{count} matching lots",
+    "exportLimit": "CSV includes the first {count} lots in the current sort order. Narrow the filters to export fewer lots.",
+    "empty": "No remaining dated lots match these filters.",
+    "windows": {
+      "7": "Expired + next 7 days",
+      "30": "Expired + next 30 days",
+      "90": "Expired + next 90 days",
+      "expired": "Expired only",
+      "all": "All expiry dates"
+    },
+    "statuses": {
+      "expired": "Expired",
+      "today": "Due today",
+      "upcoming": "Upcoming"
+    }
   }
 }

@@ -80,7 +80,7 @@ const formatDate = (value) => displayCalendarDate(value);
 const isExpired = (batch) => {
     if (typeof batch.is_expired === 'boolean') return batch.is_expired;
     const date = toIsoDate(batch.expiry_date);
-    return date !== null && date < (page.props.regional?.today || todayIsoDate());
+    return Boolean(date) && date < (page.props.regional?.today || todayIsoDate());
 };
 </script>
 

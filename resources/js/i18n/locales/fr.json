@@ -3874,5 +3874,37 @@
   "warehouseStock": {
     "title": "Stock par entrepôt",
     "includeZero": "Inclure les stocks nuls"
+  },
+  "batchExpiryReport": {
+    "title": "Péremption des lots",
+    "description": "Repérez les lots périmés et anticipez les prochaines péremptions.",
+    "scope": "Quantités restantes de toute l’organisation, produits archivés inclus. Les lots ne sont pas affectés aux entrepôts. Seuls les lots datés avec un solde positif sont affichés.",
+    "asOf": "Au {date}, selon le jour de l’organisation. Les lots expirant aujourd’hui restent valides jusqu’à la fin de la journée.",
+    "search": "Produit, référence ou lot",
+    "window": "Période de péremption",
+    "export": "Exporter en CSV",
+    "product": "Produit",
+    "batch": "Lot",
+    "units": "Unités restantes",
+    "expiry": "Date de péremption",
+    "status": "Statut",
+    "archived": "Produit archivé",
+    "expiredUnits": "Unités périmées",
+    "notExpiredUnits": "Unités non périmées",
+    "lotCount": "{count} lots correspondants",
+    "exportLimit": "Le CSV contient les {count} premiers lots selon le tri actuel. Affinez les filtres pour exporter moins de lots.",
+    "empty": "Aucun lot daté restant ne correspond aux filtres.",
+    "windows": {
+      "7": "Périmés + 7 prochains jours",
+      "30": "Périmés + 30 prochains jours",
+      "90": "Périmés + 90 prochains jours",
+      "expired": "Périmés uniquement",
+      "all": "Toutes les dates"
+    },
+    "statuses": {
+      "expired": "Périmé",
+      "today": "Expire aujourd’hui",
+      "upcoming": "À venir"
+    }
   }
 }
