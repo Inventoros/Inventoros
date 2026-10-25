@@ -3910,5 +3910,37 @@
             "read": "leitura",
             "delete": "exclusão"
         }
+    },
+  "batchExpiryReport": {
+    "title": "Validade dos lotes",
+    "description": "Encontre lotes vencidos e planeje os próximos vencimentos.",
+    "scope": "Quantidades restantes de toda a organização, incluindo produtos arquivados. Os lotes não são atribuídos a depósitos. Apenas lotes datados com unidades restantes são exibidos.",
+    "asOf": "Em {date}, conforme o dia da organização. Lotes que vencem hoje continuam válidos até o fim do dia.",
+    "search": "Produto, SKU ou lote",
+    "window": "Período de validade",
+    "export": "Exportar CSV",
+    "product": "Produto",
+    "batch": "Lote",
+    "units": "Unidades restantes",
+    "expiry": "Data de validade",
+    "status": "Status",
+    "archived": "Produto arquivado",
+    "expiredUnits": "Unidades vencidas",
+    "notExpiredUnits": "Unidades ainda válidas",
+    "lotCount": "{count} lotes encontrados",
+    "exportLimit": "O CSV inclui os primeiros {count} lotes na ordem atual. Restrinja os filtros para exportar menos lotes.",
+    "empty": "Nenhum lote datado restante corresponde aos filtros.",
+    "windows": {
+      "7": "Vencidos + próximos 7 dias",
+      "30": "Vencidos + próximos 30 dias",
+      "90": "Vencidos + próximos 90 dias",
+      "expired": "Somente vencidos",
+      "all": "Todas as datas"
+    },
+    "statuses": {
+      "expired": "Vencido",
+      "today": "Vence hoje",
+      "upcoming": "A vencer"
     }
+  }
 }

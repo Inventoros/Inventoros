@@ -1,8 +1,9 @@
 <script setup>
 import { ref } from 'vue';
+import { usePage } from '@inertiajs/vue3';
 import axios from 'axios';
 import { useI18n } from 'vue-i18n';
-import { displayCalendarDate, isBeforeToday } from '@/lib/dates';
+import { displayCalendarDate, toIsoDate, todayIsoDate } from '@/lib/dates';
 
 const props = defineProps({
     productId: Number,
@@ -13,6 +14,7 @@ const props = defineProps({
 });
 
 const { t } = useI18n();
+const page = usePage();
 
 const emit = defineEmits(['batch-created']);
 
@@ -74,8 +76,12 @@ const createBatch = async () => {
 const formatDate = (value) => displayCalendarDate(value);
 
 // An expiry date is a calendar day: a batch expiring today is not expired
-// yet, in any timezone.
-const isExpired = (expiryDate) => isBeforeToday(expiryDate);
+// yet. Prefer the API's decision, otherwise use the organization's day.
+const isExpired = (batch) => {
+    if (typeof batch.is_expired === 'boolean') return batch.is_expired;
+    const date = toIsoDate(batch.expiry_date);
+    return Boolean(date) && date < (page.props.regional?.today || todayIsoDate());
+};
 </script>
 
 <template>
@@ -177,12 +183,12 @@ const isExpired = (expiryDate) => isBeforeToday(expiryDate);
                         <td class="py-2 px-3 text-gray-600 dark:text-gray-400">{{ formatDate(batch.manufactured_date) }}</td>
                         <td class="py-2 px-3">
                             <span v-if="batch.expiry_date" :class="[
-                                isExpired(batch.expiry_date)
+                                isExpired(batch)
                                     ? 'text-red-600 dark:text-red-400 font-medium'
                                     : 'text-gray-600 dark:text-gray-400'
                             ]">
                                 {{ formatDate(batch.expiry_date) }}
-                                <span v-if="isExpired(batch.expiry_date)" class="text-xs ml-1">{{ t('components.batchList.expired') }}</span>
+                                <span v-if="isExpired(batch)" class="text-xs ml-1">{{ t('components.batchList.expired') }}</span>
                             </span>
                             <span v-else class="text-gray-400">-</span>
                         </td>

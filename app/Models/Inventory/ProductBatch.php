@@ -6,6 +6,8 @@ namespace App\Models\Inventory;
 
 use App\Models\Auth\Organization;
 use App\Models\Concerns\BelongsToOrganization;
+use App\Support\OrganizationCalendar;
+use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -96,9 +98,11 @@ class ProductBatch extends Model
     /**
      * Check if the batch is expired.
      */
-    public function isExpired(): bool
+    public function isExpired(?CarbonInterface $onDate = null): bool
     {
-        return $this->expiry_date && $this->expiry_date->isPast();
+        return $this->expiry_date !== null
+            && $this->expiry_date->toDateString()
+                < ($onDate ?? OrganizationCalendar::today($this->organization))->toDateString();
     }
 
     /**

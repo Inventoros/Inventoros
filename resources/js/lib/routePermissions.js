@@ -8,6 +8,7 @@
 
 export const ROUTE_PERMISSIONS = {
     "products.images.show": ["view_products|edit_products"],
+    "reports.batch-expiry": ["view_reports", "view_products"],
     "stock.index": ["view_products"],
     "stock.export": ["view_products", "export_data"],
     "activity-log.export": [

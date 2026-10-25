@@ -11,6 +11,7 @@ use App\Services\PluginService;
 use App\Services\PluginUIService;
 use App\Support\StorageAdministration;
 use App\Support\UpdateAdministration;
+use App\Support\OrganizationCalendar;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -136,7 +137,7 @@ class HandleInertiaRequests extends Middleware
     /**
      * The regional settings the frontend formatters honour.
      *
-     * @return array{currency: string, currencies: array<int, string>, date_format: string|null, time_format: string|null}
+     * @return array{currency: string, currencies: array<int, string>, date_format: string|null, time_format: string|null, today: string}
      */
     public static function regional(?Organization $organization): array
     {
@@ -145,6 +146,7 @@ class HandleInertiaRequests extends Middleware
             'currencies' => array_keys((array) config('currencies.supported', [])),
             'date_format' => $organization?->date_format ?: null,
             'time_format' => $organization?->time_format ?: null,
+            'today' => OrganizationCalendar::today($organization)->toDateString(),
         ];
     }
 }

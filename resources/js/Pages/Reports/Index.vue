@@ -24,6 +24,7 @@ import {
     MapPin,
     BarChart3,
     Wallet,
+    CalendarClock,
 } from 'lucide-vue-next';
 
 const { t, te } = useI18n();
@@ -115,6 +116,13 @@ const reportCards = [
         title: t('receivables.title'),
         description: t('receivables.description'),
         requires: ['view_payments'],
+    },
+    {
+        href: route('reports.batch-expiry'),
+        icon: CalendarClock,
+        title: t('batchExpiryReport.title'),
+        description: t('batchExpiryReport.description'),
+        requires: ['view_products'],
     },
     {
         href: route('reports.builder.index'),

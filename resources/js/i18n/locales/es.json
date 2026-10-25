@@ -3910,5 +3910,37 @@
             "read": "lectura",
             "delete": "eliminación"
         }
+    },
+  "batchExpiryReport": {
+    "title": "Caducidad de lotes",
+    "description": "Encuentre lotes caducados y planifique las próximas caducidades.",
+    "scope": "Cantidades restantes de toda la organización, incluidos productos archivados. Los lotes no están asignados a almacenes. Solo se muestran lotes fechados con unidades restantes.",
+    "asOf": "A fecha de {date}, según el día de la organización. Los lotes que caducan hoy siguen siendo válidos hasta el final del día.",
+    "search": "Producto, SKU o lote",
+    "window": "Periodo de caducidad",
+    "export": "Exportar CSV",
+    "product": "Producto",
+    "batch": "Lote",
+    "units": "Unidades restantes",
+    "expiry": "Fecha de caducidad",
+    "status": "Estado",
+    "archived": "Producto archivado",
+    "expiredUnits": "Unidades caducadas",
+    "notExpiredUnits": "Unidades sin caducar",
+    "lotCount": "{count} lotes coincidentes",
+    "exportLimit": "El CSV incluye los primeros {count} lotes en el orden actual. Acote los filtros para exportar menos lotes.",
+    "empty": "Ningún lote fechado restante coincide con estos filtros.",
+    "windows": {
+      "7": "Caducados + próximos 7 días",
+      "30": "Caducados + próximos 30 días",
+      "90": "Caducados + próximos 90 días",
+      "expired": "Solo caducados",
+      "all": "Todas las fechas"
+    },
+    "statuses": {
+      "expired": "Caducado",
+      "today": "Caduca hoy",
+      "upcoming": "Próximo"
     }
+  }
 }
