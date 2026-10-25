@@ -359,6 +359,11 @@ A filter callback receives the value first, then the listed context, and must re
 | `product_show_page_data` | `$data`, `$product` | All props of the product detail page. |
 | `product_store_validation_rules` | `$rules`, `$request` | Validation rules of the web product create form. |
 | `product_store_data` | `$validated_data`, `$request` | Validated data before a product is created from the web form. |
+| `customer_form_data` | `$values`, `$customerOrNull`, `$request` | Initial namespaced extension values for customer forms. |
+| `customer_store_validation_rules` | `$rules`, `$request` | Customer create rules on web and REST. |
+| `customer_update_validation_rules` | `$rules`, `$customer`, `$request` | Customer update rules on web and REST. |
+| `customer_store_data` | `$data`, `$request` | Validated customer create payload, before persistence. |
+| `customer_update_data` | `$data`, `$customer`, `$request` | Validated customer update payload; preserve other metadata namespaces. |
 | `product_store_response` | `$response`, `$product`, `$request` | The response after a product is created from the web form. |
 | `product_update_validation_rules` | `$rules`, `$product`, `$request` | Validation rules of the web product edit form. |
 | `product_update_data` | `$validated_data`, `$product`, `$request` | Validated data before a product is updated from the web form. |
@@ -483,7 +488,9 @@ Pages and slots that render plugin components:
 | `suppliers.show`, `suppliers.create`, `suppliers.edit` | `header`, `footer` |
 | `categories.index`, `locations.index` | `header`, `footer` |
 | `customers.index`, `warehouses.index`, `stock-audits.index`, `cycle-counts.index`, `stock-transfers.index`, `returns.index`, `work-orders.index` | `header`, `footer` |
-| `customers.show`, `warehouses.show`, `stock-audits.show`, `stock-transfers.show`, `returns.show`, `work-orders.show` | `header`, `actions`, `footer` |
+| `customers.show` | `header`, `actions`, `business-details`, `footer` |
+| `customers.create`, `customers.edit` | `header`, `before-form`, `business-details`, `after-form` |
+| `warehouses.show`, `stock-audits.show`, `stock-transfers.show`, `returns.show`, `work-orders.show` | `header`, `actions`, `footer` |
 | `settings.index` | `header`, `sections`, `footer` |
 
 `actions` renders inside the page header's action bar, before the page's own buttons: keep it to small buttons or links. On the settings hub, each component in `sections` is one card in the grid of settings pages; render a `Card` linking to your settings page (the hub does not check the link, so give the placement the same `permission` as the page). Pages without plugin placements render exactly as before.
