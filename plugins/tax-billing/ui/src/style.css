@@ -1,0 +1,12 @@
+.tb-stack { margin-top: 1.5rem; display: flex; flex-direction: column; align-items: stretch; gap: 1rem; }
+.tb-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr)); gap: 1rem; margin-top: 1rem; }
+.tb-wide { grid-column: 1 / -1; }
+.tb-field { display: flex; flex-direction: column; gap: .4rem; font-size: .875rem; color: hsl(var(--text-primary)); }
+.tb-control { border: 1px solid hsl(var(--border-subtle)); border-radius: .375rem; padding: .5rem .65rem; background: hsl(var(--surface-canvas)); color: hsl(var(--text-primary)); font: inherit; width: 100%; }
+.tb-control:focus { outline: 2px solid #2563eb; outline-offset: 2px; }
+.tb-check { display: flex; align-items: start; gap: .6rem; font-size: .875rem; margin-top: 1rem; color: hsl(var(--text-primary)); }
+.tb-check input { margin-top: .2rem; flex-shrink: 0; }
+.tb-help { font-size: .875rem; color: hsl(var(--text-secondary)); line-height: 1.6; margin: .4rem 0; }
+.tb-title { font-size: 1rem; font-weight: 600; color: hsl(var(--text-primary)); }
+.tb-row { padding: 1rem 0; border-bottom: 1px solid hsl(var(--border-subtle)); }
+.tb-errors { color: #b91c1c; font-size: .875rem; line-height: 1.6; }

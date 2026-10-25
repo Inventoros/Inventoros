@@ -1,0 +1,10 @@
+{
+    "name": "Tax Billing",
+    "description": "Organization tax profiles, India GST invoice details and size-matrix invoice presentation. Configurable tax labels for other countries.",
+    "version": "1.0.0",
+    "author": "Inventoros Team",
+    "requires": "2.0.0",
+    "requires_php": "8.4.1",
+    "main_file": "Plugin.php",
+    "ui": { "entry": "plugin.js", "styles": ["plugin.css"] }
+}
