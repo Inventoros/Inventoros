@@ -54,6 +54,7 @@ final class UpdateProductRequest extends FormRequest
             // leaves any existing ones untouched.
             'images' => ['nullable', 'array', 'max:5'],
             'images.*.preview' => ['nullable', 'string'],
+            'images.*.url' => ['nullable', 'string'],
             'images.*.name' => ['nullable', 'string'],
             'has_variants' => ['boolean'],
             'options' => ['nullable', 'array', 'max:3'],

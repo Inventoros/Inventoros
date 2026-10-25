@@ -88,9 +88,9 @@ const form = useForm({
     barcode: props.product.barcode || '',
     barcode_type: props.product.barcode_type || '',
     notes: props.product.notes || '',
-    images: (props.product.images || []).map(url => ({
-        url: `/storage/${url}`,
-        preview: `/storage/${url}`,
+    images: (props.product.images || []).map((path, index) => ({
+        url: props.product.image_urls[index],
+        preview: props.product.image_urls[index],
         name: url.split('/').pop(),
         size: 0
     })),

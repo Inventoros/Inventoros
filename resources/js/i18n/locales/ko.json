@@ -3874,5 +3874,38 @@
   "warehouseStock": {
     "title": "창고별 재고",
     "includeZero": "재고 0 포함"
-  }
+  },
+    "storage": {
+        "title": "파일 저장소",
+        "description": "업로드 파일의 로컬 및 외부 저장소입니다.",
+        "configure": ".env 또는 config/filesystems.php에서 INVENTOROS_UPLOADS_DISK와 AWS 자격 증명을 설정한 후 설정 캐시를 갱신하고 큐 워커를 재시작하세요.",
+        "existingFiles": "기존 파일은 기록된 디스크를 유지합니다. 저장소 변경 시 이전 디스크 정의를 유지하세요.",
+        "probe": "연결 검사는 작은 비공개 임시 파일을 쓰고 읽은 후 삭제합니다.",
+        "driver": "드라이버",
+        "notConfigured": "설정되지 않음",
+        "usedFor": "용도",
+        "bucket": "버킷",
+        "region": "리전",
+        "connected": "연결 확인 완료: 쓰기, 읽기 및 삭제 성공.",
+        "failed": "{step} 중 연결 실패. 서버 설정과 권한을 확인하세요.",
+        "unchecked": "최근 연결 검사 없음.",
+        "checkedAt": "검사 시간: {time}",
+        "cleanupFailed": "테스트 파일을 삭제할 수 없습니다. 권한 수정 후 connection-checks 접두사를 확인하세요.",
+        "requestFailed": "검사를 실행할 수 없습니다. 잠시 후 다시 시도하세요.",
+        "checking": "검사 중…",
+        "check": "연결 검사",
+        "purposes": {
+            "products": "제품 이미지",
+            "logos": "조직 로고",
+            "labels": "배송 라벨",
+            "imports": "대기 중인 가져오기",
+            "exports": "생성된 내보내기"
+        },
+        "steps": {
+            "connect": "연결",
+            "write": "쓰기",
+            "read": "읽기",
+            "delete": "삭제"
+        }
+    }
 }

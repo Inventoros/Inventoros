@@ -164,7 +164,7 @@ const productImages = computed(() => {
     if (!props.product.images || props.product.images.length === 0) {
         return [];
     }
-    return props.product.images.map(imagePath => `/storage/${imagePath}`);
+    return props.product.image_urls || [];
 });
 
 // Variants

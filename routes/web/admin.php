@@ -6,11 +6,12 @@ use App\Http\Controllers\Admin\AccountSettingsController;
 use App\Http\Controllers\Admin\ActivityLogController;
 use App\Http\Controllers\Admin\ApiTokenController;
 use App\Http\Controllers\Admin\DashboardController;
-use App\Http\Controllers\Admin\OrganizationSettingsController;
 use App\Http\Controllers\Admin\OrganizationLogoController;
+use App\Http\Controllers\Admin\OrganizationSettingsController;
 use App\Http\Controllers\Admin\PluginController;
 use App\Http\Controllers\Admin\PluginMarketplaceController;
 use App\Http\Controllers\Admin\RoleController;
+use App\Http\Controllers\Admin\StorageSettingsController;
 use App\Http\Controllers\Admin\UpdateController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\SettingsController;
@@ -78,6 +79,9 @@ Route::prefix('settings')->name('settings.')->group(function () {
     // Settings hub. Open to every signed-in user: it links to account
     // settings and two-factor (everyone) and hides the admin-only sections.
     Route::get('/', [SettingsController::class, 'hub'])->name('index');
+
+    Route::get('/storage', [StorageSettingsController::class, 'index'])->name('storage.index');
+    Route::post('/storage/check', [StorageSettingsController::class, 'check'])->middleware('throttle:6,1')->name('storage.check');
 
     // Organization Settings
     Route::prefix('organization')->name('organization.')->middleware('permission:view_settings')->group(function () {

@@ -310,6 +310,25 @@ paths:
         '200': { description: Deleted, content: { application/json: { schema: { $ref: '#/components/schemas/MessageResponse' } } } }
         '404': { $ref: '#/components/responses/NotFound' }
 
+  /products/{product}/images/{index}:
+    parameters:
+      - { name: product, in: path, required: true, schema: { type: integer } }
+      - { name: index, in: path, required: true, schema: { type: integer, minimum: 0 } }
+    get:
+      tags: [Products]
+      summary: Read a product image from its recorded storage disk
+      description: Requires view_products and the usual bearer token. Works with private external storage. Use image_urls from the product response; images remain raw storage paths.
+      responses:
+        '200':
+          description: Image streamed privately through Inventoros
+          content:
+            image/png: { schema: { type: string, format: binary } }
+            image/jpeg: { schema: { type: string, format: binary } }
+            image/webp: { schema: { type: string, format: binary } }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
   /products/{product}/options:
     parameters:
       - { name: product, in: path, required: true, schema: { type: integer } }
@@ -2200,6 +2219,10 @@ components:
         notes: { type: string, nullable: true }
         image: { type: string, nullable: true }
         images: { type: array, items: { type: string } }
+        image_urls:
+          type: array
+          description: Authenticated API URLs for images, including private external files. On update, send an existing URL as images[].url to retain it, or a base64 data URL as images[].preview for a new image.
+          items: { type: string }
         thumbnail: { type: string, nullable: true }
         is_active: { type: boolean }
         has_variants: { type: boolean }

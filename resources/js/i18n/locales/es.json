@@ -3874,5 +3874,38 @@
   "warehouseStock": {
     "title": "Existencias por almacén",
     "includeZero": "Incluir saldos cero"
-  }
+  },
+    "storage": {
+        "title": "Almacenamiento de archivos",
+        "description": "Almacenamiento local y externo de archivos subidos.",
+        "configure": "Configura INVENTOROS_UPLOADS_DISK y las credenciales de AWS en .env o config/filesystems.php, actualiza la caché de configuración y reinicia los trabajadores de colas.",
+        "existingFiles": "Los archivos existentes conservan su disco. Mantén las definiciones de discos anteriores al cambiar el almacenamiento.",
+        "probe": "La prueba escribe, lee y elimina un pequeño archivo privado temporal.",
+        "driver": "Controlador",
+        "notConfigured": "Sin configurar",
+        "usedFor": "Uso",
+        "bucket": "Bucket",
+        "region": "Región",
+        "connected": "Conexión confirmada: escritura, lectura y eliminación correctas.",
+        "failed": "La conexión falló durante {step}. Revisa la configuración del servidor y los permisos.",
+        "unchecked": "Sin comprobaciones recientes.",
+        "checkedAt": "Comprobado: {time}",
+        "cleanupFailed": "No se pudo eliminar el archivo de prueba. Revisa el prefijo connection-checks tras corregir los permisos.",
+        "requestFailed": "No se pudo ejecutar la prueba. Inténtalo de nuevo en breve.",
+        "checking": "Comprobando…",
+        "check": "Comprobar conexión",
+        "purposes": {
+            "products": "Imágenes de productos",
+            "logos": "Logotipos de organización",
+            "labels": "Etiquetas de envío",
+            "imports": "Importaciones en cola",
+            "exports": "Exportaciones generadas"
+        },
+        "steps": {
+            "connect": "conexión",
+            "write": "escritura",
+            "read": "lectura",
+            "delete": "eliminación"
+        }
+    }
 }

@@ -15,6 +15,7 @@ use App\Models\Shipping\ShipmentItem;
 use App\Models\Shipping\ShippingSetting;
 use App\Models\User;
 use App\Models\Warehouse;
+use App\Services\FileStorageService;
 use App\Services\OrderService;
 use App\Services\WarehouseAccessService;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -235,7 +236,7 @@ final class ShipmentService
      */
     public function labelContents(Shipment $shipment): string
     {
-        $disk = Storage::disk(self::LABEL_DISK);
+        $disk = Storage::disk($shipment->label_disk ?? self::LABEL_DISK);
 
         if ($shipment->label_path !== null && $disk->exists($shipment->label_path)) {
             return (string) $disk->get($shipment->label_path);
@@ -245,7 +246,7 @@ final class ShipmentService
             throw new ShippingException('The label file is not available.');
         }
 
-        return (string) $disk->get((string) $shipment->label_path);
+        return (string) Storage::disk($shipment->label_disk ?? self::LABEL_DISK)->get((string) $shipment->label_path);
     }
 
     /**
@@ -605,14 +606,17 @@ final class ShipmentService
                 : 'png';
             $path = "shipping-labels/{$shipment->organization_id}/shipment-{$shipment->id}.{$extension}";
 
-            Storage::disk(self::LABEL_DISK)->put($path, $response->body());
-            $shipment->forceFill(['label_path' => $path])->save();
+            $disk = app(FileStorageService::class)->uploadsDisk();
+            if (! Storage::disk($disk)->put($path, $response->body(), ['visibility' => 'private'])) {
+                throw new \RuntimeException('The shipping label could not be stored.');
+            }
+            $shipment->forceFill(['label_path' => $path, 'label_disk' => $disk])->save();
 
             return true;
         } catch (\Throwable $e) {
             Log::warning('Could not download shipping label; it can be retried from the order page', [
                 'shipment_id' => $shipment->id,
-                'error' => $e->getMessage(),
+                'error_type' => $e::class,
             ]);
 
             return false;

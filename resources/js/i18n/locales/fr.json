@@ -3874,5 +3874,38 @@
   "warehouseStock": {
     "title": "Stock par entrepôt",
     "includeZero": "Inclure les stocks nuls"
-  }
+  },
+    "storage": {
+        "title": "Stockage des fichiers",
+        "description": "Stockage local et externe des fichiers téléversés.",
+        "configure": "Configurez INVENTOROS_UPLOADS_DISK et les identifiants AWS dans .env ou config/filesystems.php, actualisez le cache de configuration et redémarrez les workers de file.",
+        "existingFiles": "Les fichiers existants conservent leur disque enregistré. Gardez les anciennes définitions de disques lors du changement.",
+        "probe": "Le test écrit, lit et supprime un petit fichier privé temporaire.",
+        "driver": "Pilote",
+        "notConfigured": "Non configuré",
+        "usedFor": "Utilisation",
+        "bucket": "Bucket",
+        "region": "Région",
+        "connected": "Connexion confirmée : écriture, lecture et suppression réussies.",
+        "failed": "Échec de connexion pendant {step}. Vérifiez la configuration du serveur et les autorisations.",
+        "unchecked": "Aucun test récent.",
+        "checkedAt": "Vérifié : {time}",
+        "cleanupFailed": "Le fichier de test ne peut pas être supprimé. Vérifiez le préfixe connection-checks après correction des autorisations.",
+        "requestFailed": "Impossible de lancer le test. Réessayez dans un instant.",
+        "checking": "Vérification…",
+        "check": "Tester la connexion",
+        "purposes": {
+            "products": "Images de produits",
+            "logos": "Logos des organisations",
+            "labels": "Étiquettes d’expédition",
+            "imports": "Imports en file",
+            "exports": "Exports générés"
+        },
+        "steps": {
+            "connect": "la connexion",
+            "write": "l’écriture",
+            "read": "la lecture",
+            "delete": "la suppression"
+        }
+    }
 }
