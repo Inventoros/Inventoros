@@ -360,6 +360,7 @@ A filter callback receives the value first, then the listed context, and must re
 | `product_store_validation_rules` | `$rules`, `$request` | Validation rules of the web product create form. |
 | `product_store_data` | `$validated_data`, `$request` | Validated data before a product is created from the web form. |
 | `customer_form_data` | `$values`, `$customerOrNull`, `$request` | Initial namespaced extension values for customer forms. |
+| `order_invoice_document` | `$documentOrNull`, `$provider`, `$order`, `$forCustomerPortal` | For orders with `metadata.invoice_document_provider`, return `['view' => 'plugin::invoice', 'data' => [...]]` to render the issued snapshot. An unavailable renderer returns 409 instead of substituting a different invoice. Downloads, email attachments and customer portal PDFs share this path. |
 | `customer_store_validation_rules` | `$rules`, `$request` | Customer create rules on web and REST. |
 | `customer_update_validation_rules` | `$rules`, `$customer`, `$request` | Customer update rules on web and REST. |
 | `customer_store_data` | `$data`, `$request` | Validated customer create payload, before persistence. |
