@@ -1,4 +1,5 @@
 import { test, expect, generateTestId } from '../fixtures';
+import { fileURLToPath } from 'node:url';
 
 test.describe('Products', () => {
     test.beforeEach(async ({ page }) => {
@@ -75,6 +76,39 @@ test.describe('Products', () => {
             // Wait for search results
             await page.waitForTimeout(500);
         }
+    });
+
+    test('can reopen and save a product with an existing image', async ({ page }) => {
+        const errors: string[] = [];
+        page.on('pageerror', error => errors.push(error.message));
+        const testId = generateTestId();
+        const sku = `IMAGE-${testId}`;
+        await page.goto('/products/create');
+        await page.locator('#name').fill(`Image fixture ${testId}`);
+        await page.locator('#sku').fill(sku);
+        await page.locator('#price').fill('10');
+        await page.locator('#stock').fill('0');
+        await page.locator('#min_stock').fill('0');
+        await page.locator('#category').selectOption({ index: 1 });
+        await page.locator('#location').selectOption({ index: 1 });
+        await page.locator('input[type="file"]').setInputFiles(fileURLToPath(new URL('../../public/images/brand/inventoros_icon_transparent_512.png', import.meta.url)));
+        await expect(page.locator('img[src^="data:image"]')).toHaveCount(1);
+        await page.locator('button[type="submit"]').click();
+        await expect(page).not.toHaveURL(/products\/create/);
+
+        await page.goto(`/products?search=${encodeURIComponent(sku)}`);
+        await page.locator('tbody tr').filter({ hasText: sku }).locator('a[href$="/edit"]').click();
+        const image = page.locator('img[src*="/images/0"]');
+        await expect(image).toBeVisible();
+        const imageUrl = await image.getAttribute('src');
+        expect((await page.request.get(imageUrl!)).status()).toBe(200);
+        await page.getByRole('button', { name: 'Update Product', exact: true }).click();
+        await expect(page).not.toHaveURL(/\/edit$/);
+
+        await page.goto(`/products?search=${encodeURIComponent(sku)}`);
+        await page.locator('tbody tr').filter({ hasText: sku }).locator('a[href$="/edit"]').click();
+        await expect(page.locator('img[src*="/images/0"]')).toBeVisible();
+        expect(errors).toEqual([]);
     });
 
     test('should filter products by category', async ({ page }) => {

@@ -91,7 +91,7 @@ const form = useForm({
     images: (props.product.images || []).map((path, index) => ({
         url: props.product.image_urls[index],
         preview: props.product.image_urls[index],
-        name: url.split('/').pop(),
+        name: path.split('/').pop(),
         size: 0
     })),
     has_variants: props.product.has_variants || false,
