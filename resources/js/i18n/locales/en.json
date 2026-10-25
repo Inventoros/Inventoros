@@ -451,6 +451,7 @@
     }
   },
   "orders": {
+      "channelOrderNumber": "Channel order number",
     "title": "Orders",
     "createOrder": "Create Order",
     "searchOrders": "Search Orders",

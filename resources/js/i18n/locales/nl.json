@@ -573,6 +573,7 @@
     }
   },
   "orders": {
+      "channelOrderNumber": "Bestelnummer van verkoopkanaal",
     "itemsCol": "Artikelen",
     "sources": {
       "manual": "Handmatig",

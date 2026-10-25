@@ -573,6 +573,7 @@
     }
   },
   "orders": {
+      "channelOrderNumber": "Kanal sipariş numarası",
     "itemsCol": "Ürünler",
     "sources": {
       "manual": "Manuel",

@@ -573,6 +573,7 @@
     }
   },
   "orders": {
+      "channelOrderNumber": "Номер заказа в канале",
     "itemsCol": "Позиции",
     "sources": {
       "manual": "Вручную",

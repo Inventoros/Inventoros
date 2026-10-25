@@ -573,6 +573,7 @@
     }
   },
   "orders": {
+      "channelOrderNumber": "판매 채널 주문 번호",
     "itemsCol": "품목",
     "sources": {
       "manual": "수동",
