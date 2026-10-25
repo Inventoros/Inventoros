@@ -14,7 +14,7 @@ import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { formatMoney } from '@/lib/money';
 import { displayDate } from '@/lib/dates';
-import { Pencil, ArrowLeft, Trash2, ShoppingCart, Wallet, PackageOpen, UserPlus, Send, Ban, ExternalLink } from 'lucide-vue-next';
+import { Pencil, ArrowLeft, Trash2, ShoppingCart, Wallet, PackageOpen, UserPlus, Send, Ban, ExternalLink } from '@lucide/vue';
 import { usePermissions } from '@/composables/usePermissions';
 
 const { canVisit } = usePermissions();
@@ -315,6 +315,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                                 <dd class="mt-1 whitespace-pre-wrap text-sm text-text-primary">{{ customer.notes }}</dd>
                             </div>
                         </dl>
+                        <PluginSlot slot="business-details" :components="pluginComponents?.businessDetails" :context="{ customer }" />
                     </div>
                 </Card>
 

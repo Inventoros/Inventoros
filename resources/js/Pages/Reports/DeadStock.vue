@@ -11,7 +11,7 @@ import { formatCurrency, formatNumber, formatDay, formatTimestampDate, otherCurr
 import { Head, Link, router } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { ArrowLeft, Boxes, Layers, DollarSign, PackageCheck } from 'lucide-vue-next';
+import { ArrowLeft, Boxes, Layers, DollarSign, PackageCheck } from '@lucide/vue';
 
 const { t } = useI18n();
 

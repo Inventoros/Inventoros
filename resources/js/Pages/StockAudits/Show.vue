@@ -22,7 +22,7 @@ import {
     Layers,
     AlertTriangle,
     ScanLine,
-} from 'lucide-vue-next';
+} from '@lucide/vue';
 import { usePermissions } from '@/composables/usePermissions';
 import { auditItemStatus } from '@/lib/auditItemStatus';
 import { useAuditCountDrafts } from '@/composables/useAuditCountDrafts';

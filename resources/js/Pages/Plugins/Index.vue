@@ -9,7 +9,7 @@ import { Head, Link, useForm, router } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { formatMoney } from '@/lib/money';
-import { UploadCloud, Loader2, Puzzle, ExternalLink, ShieldCheck, Store } from 'lucide-vue-next';
+import { UploadCloud, Loader2, Puzzle, ExternalLink, ShieldCheck, Store } from '@lucide/vue';
 import { usePermissions } from '@/composables/usePermissions';
 
 const props = defineProps({

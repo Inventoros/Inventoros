@@ -29,6 +29,7 @@ For a restricted user:
 
 - **Locations**: lists show only locations in their warehouses; creating, editing or deleting a location outside them is refused. A location with no warehouse is outside every assignment.
 - **Stock adjustments**: must name a location in their warehouses (an adjustment without a location changes the organization-wide total). History shows only adjustments made at their locations. GraphQL `createStockAdjustment` and the MCP `adjust_stock` tool accept `location_id` for this.
+- **Movement reports**: fixed pages, summaries, exports and custom reports use the viewing user's warehouse scope. Scheduled attachments use the owner's scope and are delivered only to recipients who can access every warehouse in that scope. An organization-wide attachment is not sent to a warehouse-restricted recipient.
 - **Transfers**: visible and actionable when either end is in their warehouses; stock can only be sent from a location they can access (sending to another warehouse is allowed).
 - **Stock audits**: only audits of a location in their warehouses; whole-organization audits (no location) are hidden and cannot be created.
 - **Purchase order receiving**: goods are booked into each product's primary location, so a line can only be received when that location is in their warehouses.
@@ -51,6 +52,8 @@ The product page's **Stock by warehouse** table shows on-hand per warehouse and 
 - A warehouse with no row is not tracked separately; the product-level thresholds keep applying to the product's total stock.
 - `Product::lowStock()` and `Product::needsReorder()` match a product that is low or due in total **or** in any warehouse with its own thresholds, so the low-stock filter and report, `inventory:check-reorder-points`, and the dashboard's reorder suggestions all pick it up.
 - `ReorderService::suggestedQuantity()` orders what the short warehouses need (each warehouse's reorder quantity, or the gap up to its max stock), still never below the supplier's minimum order. `ReorderService::warehouseShortfalls()` lists them.
+
+Generated draft purchase orders use the supplier's currency, with the organization currency as fallback. Automatic checks skip products already covered by outstanding lines on draft, sent or partially received orders; a fully received line no longer blocks replenishment. Products sold by variant require an explicit variant SKU selection on the purchase order form, available through **Choose variants** on reorder suggestions. Aggregate product demand cannot decide which sizes or colours to buy. Warehouse thresholds count active variant bins for those products.
 - When a bin change takes a warehouse across its own minimum, stock managers who can access that warehouse get an in-app "Low stock in {warehouse}" alert (type `warehouse_low_stock`, hook `warehouse_low_stock_alert`). The product-level low-stock alert and email are unchanged.
 
 ## Capacity and utilisation

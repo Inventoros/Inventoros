@@ -19,7 +19,7 @@ import {
     DollarSign,
     Boxes,
     TrendingUp,
-} from 'lucide-vue-next';
+} from '@lucide/vue';
 import { usePermissions } from '@/composables/usePermissions';
 
 const { canVisit } = usePermissions();

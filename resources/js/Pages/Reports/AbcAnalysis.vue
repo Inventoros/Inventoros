@@ -11,7 +11,7 @@ import PeriodFilter from '@/Components/Reports/PeriodFilter.vue';
 import { formatCurrency, formatNumber, formatPercent } from '@/lib/reportFormat';
 import { Head, Link } from '@inertiajs/vue3';
 import { useI18n } from 'vue-i18n';
-import { ArrowLeft, Award, Medal, CircleDot } from 'lucide-vue-next';
+import { ArrowLeft, Award, Medal, CircleDot } from '@lucide/vue';
 
 const { t } = useI18n();
 

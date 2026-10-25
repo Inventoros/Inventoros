@@ -11,7 +11,7 @@ import { Head, Link, router } from '@inertiajs/vue3';
 import { useI18n } from 'vue-i18n';
 import { formatDateValue } from '@/lib/dates';
 import { formatMoney } from '@/lib/money';
-import { ArrowLeft, Pencil, Trash2, Database, Columns3, Rows3, FileSpreadsheet } from 'lucide-vue-next';
+import { ArrowLeft, Pencil, Trash2, Database, Columns3, Rows3, FileSpreadsheet } from '@lucide/vue';
 
 const { t } = useI18n();
 

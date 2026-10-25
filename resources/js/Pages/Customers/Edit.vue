@@ -1,4 +1,5 @@
 <script setup>
+import PluginSlot from '@/Components/PluginSlot.vue';
 import CurrencySelect from '@/Components/CurrencySelect.vue';
 import { useCurrency } from '@/composables/useCurrency';
 
@@ -9,16 +10,19 @@ import Button from '@/Components/ui/Button.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import { ref, watch, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { ArrowLeft, Eye } from 'lucide-vue-next';
+import { ArrowLeft, Eye } from '@lucide/vue';
 
 const { organizationCurrency } = useCurrency();
 const { t } = useI18n();
 
 const props = defineProps({
     customer: Object,
+    pluginFields: { type: Object, default: () => ({}) },
+    pluginComponents: Object,
 });
 
 const form = useForm({
+    plugin_fields: props.pluginFields,
     name: props.customer.name,
     code: props.customer.code || '',
     company_name: props.customer.company_name || '',
@@ -100,7 +104,9 @@ const fieldError = 'mt-1 text-xs text-status-danger';
             </template>
         </PageHeader>
 
+        <PluginSlot slot="header" :components="pluginComponents?.header" />
         <form @submit.prevent="submit" class="mt-6 space-y-4">
+            <PluginSlot slot="before-form" :components="pluginComponents?.beforeForm" :context="{ form }" />
             <!-- Basic Information -->
             <Card :padded="false">
                 <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">{{ t('customers.create.basicInfo') }}</h3></div>
@@ -237,9 +243,11 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                             </label>
                         </div>
                     </div>
+                    <PluginSlot slot="business-details" :components="pluginComponents?.businessDetails" :context="{ form }" />
                 </div>
             </Card>
 
+            <PluginSlot slot="after-form" :components="pluginComponents?.afterForm" :context="{ form }" />
             <!-- Actions -->
             <div class="flex items-center justify-end gap-2 border-t border-border-subtle pt-4">
                 <Button variant="secondary" as="Link" :href="route('customers.index')">{{ t('common.cancel') }}</Button>

@@ -48,6 +48,10 @@ final class CorePhpApiContractTest extends TestCase
         'App\Services\OrderService::transitionStatus' => ['returns' => 'App\Models\Order\Order', 'params' => ['App\Models\Order\Order $order', 'App\Enums\OrderStatus $to']],
         'App\Services\OrderService::restockableQuantities' => ['returns' => 'array', 'params' => ['App\Models\Order\Order $order']],
 
+        'App\Services\OrderPaymentService::recordImported' => ['returns' => 'App\Models\Order\OrderPayment', 'params' => [
+            'App\Models\Order\Order $order', 'App\Models\User $actor', 'array $data', 'bool $announce = false',
+        ]],
+
         'App\Services\ReturnOrderService::create' => ['returns' => 'App\Models\Order\ReturnOrder', 'params' => ['int $organizationId', '?App\Models\User $actor', 'array $data']],
         'App\Services\ReturnOrderService::approve' => ['returns' => 'App\Models\Order\ReturnOrder', 'params' => ['App\Models\Order\ReturnOrder $returnOrder', 'App\Models\User $actor']],
         'App\Services\ReturnOrderService::updateLines' => ['returns' => 'App\Models\Order\ReturnOrder', 'params' => ['App\Models\Order\ReturnOrder $returnOrder', 'App\Models\User $actor', 'array $lines']],

@@ -9,7 +9,7 @@
 import { computed, ref, onMounted, onUnmounted } from 'vue';
 import { router, usePage } from '@inertiajs/vue3';
 import { useI18n } from 'vue-i18n';
-import { Building2, Check, ChevronDown } from 'lucide-vue-next';
+import { Building2, Check, ChevronDown } from '@lucide/vue';
 
 const { t } = useI18n();
 const page = usePage();

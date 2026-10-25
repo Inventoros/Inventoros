@@ -96,6 +96,23 @@ class QueuedImportTest extends TestCase
         Queue::assertPushed(ProcessProductImportJob::class, 1);
     }
 
+    public function test_external_import_keeps_its_original_disk_on_the_queue(): void
+    {
+        config(['imports.sync_max_kb' => 0, 'imports.disk' => 's3']);
+        Queue::fake();
+        Storage::fake('s3');
+        $this->actingAs($this->importer)
+            ->post(route('import-export.import-products'), ['file' => $this->csv()])
+            ->assertRedirect()->assertSessionHas('success');
+        $job = Queue::pushed(ProcessProductImportJob::class)->first();
+        $this->assertSame('s3', $job->disk);
+        Storage::disk('s3')->assertExists($job->path);
+        config(['imports.disk' => 'local']);
+        $job->handle();
+        $this->assertDatabaseHas('products', ['sku' => 'QImp-001']);
+        Storage::disk('s3')->assertMissing($job->path);
+    }
+
     public function test_import_job_processes_file_and_notifies(): void
     {
         Storage::fake('local');

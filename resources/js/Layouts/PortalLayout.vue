@@ -10,7 +10,7 @@ import LanguageSwitcher from '@/Components/LanguageSwitcher.vue';
 import { Link, router, usePage } from '@inertiajs/vue3';
 import { computed, onBeforeUnmount, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { LayoutDashboard, LogOut, Menu, Package, RotateCcw, X } from 'lucide-vue-next';
+import { LayoutDashboard, LogOut, Menu, Package, RotateCcw, X } from '@lucide/vue';
 
 const { t } = useI18n();
 const page = usePage();

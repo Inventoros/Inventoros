@@ -573,6 +573,7 @@
     }
   },
   "orders": {
+      "channelOrderNumber": "Número do pedido no canal",
     "itemsCol": "Itens",
     "sources": {
       "manual": "Manual",
@@ -833,7 +834,9 @@
     "suggestedQty": "Qtd. sugerida",
     "noSupplier": "Sem fornecedor",
     "addSupplier": "Adicionar um fornecedor",
-    "hint": "Cria uma ordem de compra em rascunho por fornecedor principal. Produtos sem fornecedor são ignorados."
+    "hint": "Cria uma ordem de compra em rascunho por fornecedor principal. Produtos sem fornecedor são ignorados.",
+    "chooseVariants": "Escolher variantes",
+    "variantHint": "Selecione os SKUs das variantes em um pedido de compra para repor este produto."
   },
   "suppliers": {
     "title": "Fornecedores",
@@ -3874,5 +3877,70 @@
   "warehouseStock": {
     "title": "Estoque por depósito",
     "includeZero": "Incluir saldos zerados"
+  },
+    "storage": {
+        "title": "Armazenamento de arquivos",
+        "description": "Armazenamento local e externo para arquivos enviados.",
+        "configure": "Configure INVENTOROS_UPLOADS_DISK e as credenciais AWS em .env ou config/filesystems.php, atualize o cache de configuração e reinicie os processos de fila.",
+        "existingFiles": "Os arquivos existentes mantêm seu disco registrado. Preserve as definições antigas ao mudar o armazenamento.",
+        "probe": "O teste grava, lê e exclui um pequeno arquivo privado temporário.",
+        "driver": "Driver",
+        "notConfigured": "Não configurado",
+        "usedFor": "Usado para",
+        "bucket": "Bucket",
+        "region": "Região",
+        "connected": "Conexão confirmada: gravação, leitura e exclusão bem-sucedidas.",
+        "failed": "Falha de conexão durante {step}. Verifique a configuração do servidor e as permissões.",
+        "unchecked": "Nenhum teste recente.",
+        "checkedAt": "Verificado: {time}",
+        "cleanupFailed": "Não foi possível remover o arquivo de teste. Verifique o prefixo connection-checks após corrigir as permissões.",
+        "requestFailed": "Não foi possível executar o teste. Tente novamente em breve.",
+        "checking": "Verificando…",
+        "check": "Testar conexão",
+        "purposes": {
+            "products": "Imagens de produtos",
+            "logos": "Logotipos das organizações",
+            "labels": "Etiquetas de envio",
+            "imports": "Importações em fila",
+            "exports": "Exportações geradas"
+        },
+        "steps": {
+            "connect": "conexão",
+            "write": "gravação",
+            "read": "leitura",
+            "delete": "exclusão"
+        }
+    },
+  "batchExpiryReport": {
+    "title": "Validade dos lotes",
+    "description": "Encontre lotes vencidos e planeje os próximos vencimentos.",
+    "scope": "Quantidades restantes de toda a organização, incluindo produtos arquivados. Os lotes não são atribuídos a depósitos. Apenas lotes datados com unidades restantes são exibidos.",
+    "asOf": "Em {date}, conforme o dia da organização. Lotes que vencem hoje continuam válidos até o fim do dia.",
+    "search": "Produto, SKU ou lote",
+    "window": "Período de validade",
+    "export": "Exportar CSV",
+    "product": "Produto",
+    "batch": "Lote",
+    "units": "Unidades restantes",
+    "expiry": "Data de validade",
+    "status": "Status",
+    "archived": "Produto arquivado",
+    "expiredUnits": "Unidades vencidas",
+    "notExpiredUnits": "Unidades ainda válidas",
+    "lotCount": "{count} lotes encontrados",
+    "exportLimit": "O CSV inclui os primeiros {count} lotes na ordem atual. Restrinja os filtros para exportar menos lotes.",
+    "empty": "Nenhum lote datado restante corresponde aos filtros.",
+    "windows": {
+      "7": "Vencidos + próximos 7 dias",
+      "30": "Vencidos + próximos 30 dias",
+      "90": "Vencidos + próximos 90 dias",
+      "expired": "Somente vencidos",
+      "all": "Todas as datas"
+    },
+    "statuses": {
+      "expired": "Vencido",
+      "today": "Vence hoje",
+      "upcoming": "A vencer"
+    }
   }
 }

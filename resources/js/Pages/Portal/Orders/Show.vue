@@ -9,7 +9,7 @@ import { Head, Link } from '@inertiajs/vue3';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import Badge from '@/Components/ui/Badge.vue';
-import { ArrowLeft, CheckCircle2, Circle, ExternalLink, FileDown, RotateCcw, Truck } from 'lucide-vue-next';
+import { ArrowLeft, CheckCircle2, Circle, ExternalLink, FileDown, RotateCcw, Truck } from '@lucide/vue';
 
 const props = defineProps({
     order: { type: Object, required: true },

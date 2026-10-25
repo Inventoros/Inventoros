@@ -573,6 +573,7 @@
     }
   },
   "orders": {
+      "channelOrderNumber": "販売チャネルの注文番号",
     "itemsCol": "明細",
     "sources": {
       "manual": "手動",
@@ -833,7 +834,9 @@
     "suggestedQty": "推奨数量",
     "noSupplier": "仕入先なし",
     "addSupplier": "仕入先を追加",
-    "hint": "優先仕入先ごとに下書き発注を1件作成します。仕入先のない商品はスキップされます。"
+    "hint": "優先仕入先ごとに下書き発注を1件作成します。仕入先のない商品はスキップされます。",
+    "chooseVariants": "バリエーションを選択",
+    "variantHint": "この商品の補充には、発注書でバリエーションのSKUを選択してください。"
   },
   "suppliers": {
     "title": "仕入先",
@@ -3874,5 +3877,70 @@
   "warehouseStock": {
     "title": "倉庫別在庫",
     "includeZero": "在庫ゼロを含める"
+  },
+    "storage": {
+        "title": "ファイルストレージ",
+        "description": "アップロードファイルのローカル・外部ストレージ。",
+        "configure": "INVENTOROS_UPLOADS_DISK と AWS 認証情報を .env または config/filesystems.php で設定し、設定キャッシュを更新してキューワーカーを再起動してください。",
+        "existingFiles": "既存ファイルは記録されたディスクを使用します。ストレージ変更時は古いディスク定義を残してください。",
+        "probe": "接続テストは小さな非公開の一時ファイルを書き込み、読み取り、削除します。",
+        "driver": "ドライバー",
+        "notConfigured": "未設定",
+        "usedFor": "用途",
+        "bucket": "バケット",
+        "region": "リージョン",
+        "connected": "接続を確認しました。書き込み・読み取り・削除に成功しました。",
+        "failed": "{step}で接続に失敗しました。サーバー設定と権限を確認してください。",
+        "unchecked": "最近の接続テストはありません。",
+        "checkedAt": "確認日時: {time}",
+        "cleanupFailed": "テストファイルを削除できませんでした。権限を修正後、connection-checks プレフィックスを確認してください。",
+        "requestFailed": "テストを実行できませんでした。しばらくしてから再試行してください。",
+        "checking": "確認中…",
+        "check": "接続を確認",
+        "purposes": {
+            "products": "商品画像",
+            "logos": "組織ロゴ",
+            "labels": "配送ラベル",
+            "imports": "キュー内のインポート",
+            "exports": "生成されたエクスポート"
+        },
+        "steps": {
+            "connect": "接続",
+            "write": "書き込み",
+            "read": "読み取り",
+            "delete": "削除"
+        }
+    },
+  "batchExpiryReport": {
+    "title": "ロットの有効期限",
+    "description": "期限切れのロットを確認し、期限が近いロットに備えます。",
+    "scope": "アーカイブ済み商品を含む組織全体のロット残数です。ロットは倉庫に割り当てられていません。期限が設定され、残数があるロットのみ表示します。",
+    "asOf": "組織の暦日による{date}時点の情報です。本日期限のロットは本日末まで有効です。",
+    "search": "商品・SKU・ロット",
+    "window": "期限の範囲",
+    "export": "CSVを出力",
+    "product": "商品",
+    "batch": "ロット",
+    "units": "残数",
+    "expiry": "有効期限",
+    "status": "状態",
+    "archived": "アーカイブ済み商品",
+    "expiredUnits": "期限切れ数量",
+    "notExpiredUnits": "有効な数量",
+    "lotCount": "該当ロット数：{count}",
+    "exportLimit": "CSVには現在の並び順で先頭{count}ロットを出力します。フィルターで件数を絞り込んでください。",
+    "empty": "条件に一致する期限付きの残存ロットはありません。",
+    "windows": {
+      "7": "期限切れ＋今後7日間",
+      "30": "期限切れ＋今後30日間",
+      "90": "期限切れ＋今後90日間",
+      "expired": "期限切れのみ",
+      "all": "すべての期限"
+    },
+    "statuses": {
+      "expired": "期限切れ",
+      "today": "本日期限",
+      "upcoming": "期限前"
+    }
   }
 }

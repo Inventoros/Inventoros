@@ -573,6 +573,7 @@
     }
   },
   "orders": {
+      "channelOrderNumber": "Bestelnummer van verkoopkanaal",
     "itemsCol": "Artikelen",
     "sources": {
       "manual": "Handmatig",
@@ -833,7 +834,9 @@
     "suggestedQty": "Voorgesteld aantal",
     "noSupplier": "Geen leverancier",
     "addSupplier": "Leverancier toevoegen",
-    "hint": "Maakt één concept-inkooporder per primaire leverancier aan. Producten zonder leverancier worden overgeslagen."
+    "hint": "Maakt één concept-inkooporder per primaire leverancier aan. Producten zonder leverancier worden overgeslagen.",
+    "chooseVariants": "Varianten kiezen",
+    "variantHint": "Selecteer variant-SKUs op een inkooporder om dit product aan te vullen."
   },
   "suppliers": {
     "title": "Leveranciers",
@@ -3874,5 +3877,70 @@
   "warehouseStock": {
     "title": "Voorraad per magazijn",
     "includeZero": "Nulstanden tonen"
+  },
+    "storage": {
+        "title": "Bestandsopslag",
+        "description": "Lokale en externe opslag voor geüploade bestanden.",
+        "configure": "Configureer INVENTOROS_UPLOADS_DISK en AWS-inloggegevens in .env of config/filesystems.php, vernieuw de configuratiecache en herstart wachtrijwerkers.",
+        "existingFiles": "Bestaande bestanden behouden hun opgeslagen schijf. Bewaar oude schijfdefinities bij het wijzigen van opslag.",
+        "probe": "De verbindingstest schrijft, leest en verwijdert een klein tijdelijk privébestand.",
+        "driver": "Stuurprogramma",
+        "notConfigured": "Niet geconfigureerd",
+        "usedFor": "Gebruikt voor",
+        "bucket": "Bucket",
+        "region": "Regio",
+        "connected": "Verbinding bevestigd: schrijven, lezen en verwijderen geslaagd.",
+        "failed": "Verbinding mislukt tijdens {step}. Controleer serverconfiguratie en rechten.",
+        "unchecked": "Geen recente verbindingstest.",
+        "checkedAt": "Gecontroleerd: {time}",
+        "cleanupFailed": "Het testbestand kon niet worden verwijderd. Controleer het voorvoegsel connection-checks na het herstellen van de rechten.",
+        "requestFailed": "Test kon niet worden uitgevoerd. Probeer het zo opnieuw.",
+        "checking": "Controleren…",
+        "check": "Verbinding testen",
+        "purposes": {
+            "products": "Productafbeeldingen",
+            "logos": "Organisatielogos",
+            "labels": "Verzendlabels",
+            "imports": "Importen in wachtrij",
+            "exports": "Gegenereerde exporten"
+        },
+        "steps": {
+            "connect": "verbinden",
+            "write": "schrijven",
+            "read": "lezen",
+            "delete": "verwijderen"
+        }
+    },
+  "batchExpiryReport": {
+    "title": "Vervaldatums van partijen",
+    "description": "Vind verlopen partijen en plan voor naderende vervaldatums.",
+    "scope": "Resterende hoeveelheden voor de hele organisatie, inclusief gearchiveerde producten. Partijen zijn niet aan magazijnen toegewezen. Alleen gedateerde partijen met resterende eenheden worden getoond.",
+    "asOf": "Per {date}, volgens de kalenderdag van de organisatie. Partijen die vandaag verlopen blijven geldig tot het einde van de dag.",
+    "search": "Product, SKU of partij",
+    "window": "Vervalperiode",
+    "export": "CSV exporteren",
+    "product": "Product",
+    "batch": "Partij",
+    "units": "Resterende eenheden",
+    "expiry": "Vervaldatum",
+    "status": "Status",
+    "archived": "Gearchiveerd product",
+    "expiredUnits": "Verlopen eenheden",
+    "notExpiredUnits": "Nog geldige eenheden",
+    "lotCount": "{count} overeenkomende partijen",
+    "exportLimit": "CSV bevat de eerste {count} partijen in de huidige volgorde. Verfijn de filters om minder partijen te exporteren.",
+    "empty": "Geen resterende gedateerde partijen voldoen aan deze filters.",
+    "windows": {
+      "7": "Verlopen + komende 7 dagen",
+      "30": "Verlopen + komende 30 dagen",
+      "90": "Verlopen + komende 90 dagen",
+      "expired": "Alleen verlopen",
+      "all": "Alle vervaldatums"
+    },
+    "statuses": {
+      "expired": "Verlopen",
+      "today": "Verloopt vandaag",
+      "upcoming": "Binnenkort"
+    }
   }
 }

@@ -573,6 +573,7 @@
     }
   },
   "orders": {
+      "channelOrderNumber": "판매 채널 주문 번호",
     "itemsCol": "품목",
     "sources": {
       "manual": "수동",
@@ -833,7 +834,9 @@
     "suggestedQty": "권장 수량",
     "noSupplier": "공급업체 없음",
     "addSupplier": "공급업체 추가",
-    "hint": "기본 공급업체별로 발주 초안을 하나씩 생성합니다. 공급업체가 없는 제품은 건너뜁니다."
+    "hint": "기본 공급업체별로 발주 초안을 하나씩 생성합니다. 공급업체가 없는 제품은 건너뜁니다.",
+    "chooseVariants": "옵션 선택",
+    "variantHint": "이 상품을 보충하려면 구매 주문에서 옵션 SKU를 선택하세요."
   },
   "suppliers": {
     "title": "공급업체",
@@ -3874,5 +3877,70 @@
   "warehouseStock": {
     "title": "창고별 재고",
     "includeZero": "재고 0 포함"
+  },
+    "storage": {
+        "title": "파일 저장소",
+        "description": "업로드 파일의 로컬 및 외부 저장소입니다.",
+        "configure": ".env 또는 config/filesystems.php에서 INVENTOROS_UPLOADS_DISK와 AWS 자격 증명을 설정한 후 설정 캐시를 갱신하고 큐 워커를 재시작하세요.",
+        "existingFiles": "기존 파일은 기록된 디스크를 유지합니다. 저장소 변경 시 이전 디스크 정의를 유지하세요.",
+        "probe": "연결 검사는 작은 비공개 임시 파일을 쓰고 읽은 후 삭제합니다.",
+        "driver": "드라이버",
+        "notConfigured": "설정되지 않음",
+        "usedFor": "용도",
+        "bucket": "버킷",
+        "region": "리전",
+        "connected": "연결 확인 완료: 쓰기, 읽기 및 삭제 성공.",
+        "failed": "{step} 중 연결 실패. 서버 설정과 권한을 확인하세요.",
+        "unchecked": "최근 연결 검사 없음.",
+        "checkedAt": "검사 시간: {time}",
+        "cleanupFailed": "테스트 파일을 삭제할 수 없습니다. 권한 수정 후 connection-checks 접두사를 확인하세요.",
+        "requestFailed": "검사를 실행할 수 없습니다. 잠시 후 다시 시도하세요.",
+        "checking": "검사 중…",
+        "check": "연결 검사",
+        "purposes": {
+            "products": "제품 이미지",
+            "logos": "조직 로고",
+            "labels": "배송 라벨",
+            "imports": "대기 중인 가져오기",
+            "exports": "생성된 내보내기"
+        },
+        "steps": {
+            "connect": "연결",
+            "write": "쓰기",
+            "read": "읽기",
+            "delete": "삭제"
+        }
+    },
+  "batchExpiryReport": {
+    "title": "로트 유효기간",
+    "description": "만료된 로트를 찾고 다가오는 유효기간을 계획합니다.",
+    "scope": "보관된 상품을 포함한 조직 전체의 로트 잔여 수량입니다. 로트는 창고에 할당되지 않습니다. 날짜와 잔여 수량이 있는 로트만 표시됩니다.",
+    "asOf": "조직의 달력 날짜로 {date} 기준입니다. 오늘 만료되는 로트는 오늘이 끝날 때까지 유효합니다.",
+    "search": "상품, SKU 또는 로트",
+    "window": "유효기간 범위",
+    "export": "CSV 내보내기",
+    "product": "상품",
+    "batch": "로트",
+    "units": "잔여 수량",
+    "expiry": "유효기간",
+    "status": "상태",
+    "archived": "보관된 상품",
+    "expiredUnits": "만료 수량",
+    "notExpiredUnits": "아직 유효한 수량",
+    "lotCount": "일치하는 로트 {count}개",
+    "exportLimit": "CSV에는 현재 정렬 순서의 처음 {count}개 로트가 포함됩니다. 필터를 좁혀 더 적은 로트를 내보내세요.",
+    "empty": "필터에 맞는 날짜가 있는 잔여 로트가 없습니다.",
+    "windows": {
+      "7": "만료 + 향후 7일",
+      "30": "만료 + 향후 30일",
+      "90": "만료 + 향후 90일",
+      "expired": "만료만",
+      "all": "모든 날짜"
+    },
+    "statuses": {
+      "expired": "만료됨",
+      "today": "오늘 만료",
+      "upcoming": "예정"
+    }
   }
 }

@@ -7,7 +7,7 @@ import { Head, Link, useForm, router, usePage } from '@inertiajs/vue3';
 import { ref, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { displayDateTime } from '@/lib/dates';
-import { Plus, KeyRound, Trash2, X, Info } from 'lucide-vue-next';
+import { Plus, KeyRound, Trash2, X, Info } from '@lucide/vue';
 
 const props = defineProps({
     tokens: { type: Array, default: () => [] },

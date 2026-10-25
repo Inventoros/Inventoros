@@ -7,7 +7,7 @@ import Badge from '@/Components/ui/Badge.vue';
 import { Head, Link } from '@inertiajs/vue3';
 import { useI18n } from 'vue-i18n';
 import { roleDescription, roleName } from '@/lib/permissionLabels';
-import { Plus, Users, ShieldCheck } from 'lucide-vue-next';
+import { Plus, Users, ShieldCheck } from '@lucide/vue';
 import { usePermissions } from '@/composables/usePermissions';
 
 const { canVisit } = usePermissions();

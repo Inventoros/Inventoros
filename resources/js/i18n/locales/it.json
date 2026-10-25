@@ -573,6 +573,7 @@
     }
   },
   "orders": {
+      "channelOrderNumber": "Numero ordine del canale",
     "itemsCol": "Articoli",
     "sources": {
       "manual": "Manuale",
@@ -833,7 +834,9 @@
     "suggestedQty": "Qtà suggerita",
     "noSupplier": "Nessun fornitore",
     "addSupplier": "Aggiungi un fornitore",
-    "hint": "Crea una bozza di ordine di acquisto per ogni fornitore principale. I prodotti senza fornitore vengono ignorati."
+    "hint": "Crea una bozza di ordine di acquisto per ogni fornitore principale. I prodotti senza fornitore vengono ignorati.",
+    "chooseVariants": "Scegli varianti",
+    "variantHint": "Seleziona gli SKU delle varianti in un ordine di acquisto per rifornire questo prodotto."
   },
   "suppliers": {
     "title": "Fornitori",
@@ -3874,5 +3877,70 @@
   "warehouseStock": {
     "title": "Scorte per magazzino",
     "includeZero": "Includi saldi a zero"
+  },
+    "storage": {
+        "title": "Archiviazione file",
+        "description": "Archiviazione locale ed esterna per i file caricati.",
+        "configure": "Configura INVENTOROS_UPLOADS_DISK e le credenziali AWS in .env o config/filesystems.php, aggiorna la cache di configurazione e riavvia i processi delle code.",
+        "existingFiles": "I file esistenti mantengono il disco registrato. Conserva le vecchie definizioni dei dischi quando cambi archiviazione.",
+        "probe": "Il test scrive, legge ed elimina un piccolo file privato temporaneo.",
+        "driver": "Driver",
+        "notConfigured": "Non configurato",
+        "usedFor": "Utilizzo",
+        "bucket": "Bucket",
+        "region": "Regione",
+        "connected": "Connessione confermata: scrittura, lettura ed eliminazione riuscite.",
+        "failed": "Connessione fallita durante {step}. Controlla configurazione del server e permessi.",
+        "unchecked": "Nessun test recente.",
+        "checkedAt": "Verificato: {time}",
+        "cleanupFailed": "Impossibile rimuovere il file di prova. Controlla il prefisso connection-checks dopo aver corretto i permessi.",
+        "requestFailed": "Impossibile avviare il test. Riprova tra poco.",
+        "checking": "Verifica…",
+        "check": "Verifica connessione",
+        "purposes": {
+            "products": "Immagini prodotti",
+            "logos": "Loghi organizzazioni",
+            "labels": "Etichette di spedizione",
+            "imports": "Importazioni in coda",
+            "exports": "Esportazioni generate"
+        },
+        "steps": {
+            "connect": "connessione",
+            "write": "scrittura",
+            "read": "lettura",
+            "delete": "eliminazione"
+        }
+    },
+  "batchExpiryReport": {
+    "title": "Scadenza lotti",
+    "description": "Trova i lotti scaduti e pianifica le prossime scadenze.",
+    "scope": "Quantità residue di tutta l’organizzazione, inclusi i prodotti archiviati. I lotti non sono assegnati ai magazzini. Sono mostrati solo lotti datati con unità residue.",
+    "asOf": "Al {date}, secondo il giorno dell’organizzazione. I lotti in scadenza oggi restano validi fino a fine giornata.",
+    "search": "Prodotto, SKU o lotto",
+    "window": "Periodo di scadenza",
+    "export": "Esporta CSV",
+    "product": "Prodotto",
+    "batch": "Lotto",
+    "units": "Unità residue",
+    "expiry": "Data di scadenza",
+    "status": "Stato",
+    "archived": "Prodotto archiviato",
+    "expiredUnits": "Unità scadute",
+    "notExpiredUnits": "Unità non ancora scadute",
+    "lotCount": "{count} lotti corrispondenti",
+    "exportLimit": "Il CSV include i primi {count} lotti nell’ordine attuale. Restringi i filtri per esportare meno lotti.",
+    "empty": "Nessun lotto datato residuo corrisponde ai filtri.",
+    "windows": {
+      "7": "Scaduti + prossimi 7 giorni",
+      "30": "Scaduti + prossimi 30 giorni",
+      "90": "Scaduti + prossimi 90 giorni",
+      "expired": "Solo scaduti",
+      "all": "Tutte le scadenze"
+    },
+    "statuses": {
+      "expired": "Scaduto",
+      "today": "Scade oggi",
+      "upcoming": "In scadenza"
+    }
   }
 }

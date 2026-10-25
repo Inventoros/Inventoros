@@ -7,7 +7,7 @@ import { formatDate, formatDay, formatMoney } from '@/lib/portal';
 import { Head, Link, usePage } from '@inertiajs/vue3';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { PackageOpen } from 'lucide-vue-next';
+import { PackageOpen } from '@lucide/vue';
 
 defineProps({
     orders: { type: Object, required: true },

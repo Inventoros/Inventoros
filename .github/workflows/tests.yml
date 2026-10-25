@@ -81,11 +81,9 @@ jobs:
           php artisan route:list --path=mcp | grep -q 'mcp'
 
   # Known-vulnerable runtime and build dependencies must not drift back in. The
-  # full advisory list is always printed; the job fails on high or critical
-  # advisories, including development tools used to build the release.
-  # Low and medium ones are reported for the next routine
-  # update rather than blocking unrelated pull requests. Runs weekly as well,
-  # because a new advisory can land without any commit touching the lock files.
+  # job fails on advisories of any severity, including development tools used
+  # to build the release. Runs weekly too: a new advisory can land without
+  # any commit touching the lock files.
   dependency-audit:
     runs-on: ubuntu-latest
 
@@ -100,7 +98,7 @@ jobs:
           coverage: none
 
       - name: Composer audit (all locked dependencies)
-        run: composer audit --locked --abandoned=report --ignore-severity=low --ignore-severity=medium
+        run: composer audit --locked --abandoned=report
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -108,7 +106,7 @@ jobs:
           node-version: '22'
 
       - name: npm audit (all locked dependencies)
-        run: npm audit --package-lock-only --audit-level=high
+        run: npm audit --package-lock-only
 
   js-unit:
     if: github.event_name != 'schedule'
@@ -131,6 +129,12 @@ jobs:
 
       - name: Run JS unit tests
         run: npm run test:js
+
+      - name: Verify bundled plugin interfaces rebuild cleanly
+        run: |
+          npm run build:plugin:hello-world
+          npm run build:plugin:tax-billing
+          git diff --exit-code -- plugins/hello-world/dist plugins/tax-billing/dist
 
   # The docs promise MySQL and PostgreSQL support, so run the whole suite
   # against real servers too. phpunit.<db>.xml force DB_CONNECTION and

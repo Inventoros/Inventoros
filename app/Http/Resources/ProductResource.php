@@ -45,6 +45,7 @@ class ProductResource extends JsonResource
             'notes' => $this->notes,
             'image' => $this->image,
             'images' => $this->images,
+            'image_urls' => $this->resource->imageUrls(api: true),
             'thumbnail' => $this->thumbnail,
             'is_active' => $this->is_active,
             'has_variants' => $this->has_variants,

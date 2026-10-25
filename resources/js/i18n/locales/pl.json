@@ -573,6 +573,7 @@
     }
   },
   "orders": {
+      "channelOrderNumber": "Numer zamówienia w kanale",
     "itemsCol": "Pozycje",
     "sources": {
       "manual": "Ręcznie",
@@ -833,7 +834,9 @@
     "suggestedQty": "Sugerowana ilość",
     "noSupplier": "Brak dostawcy",
     "addSupplier": "Dodaj dostawcę",
-    "hint": "Tworzy jeden szkic zamówienia zakupu dla każdego głównego dostawcy. Produkty bez dostawcy są pomijane."
+    "hint": "Tworzy jeden szkic zamówienia zakupu dla każdego głównego dostawcy. Produkty bez dostawcy są pomijane.",
+    "chooseVariants": "Wybierz warianty",
+    "variantHint": "Wybierz SKU wariantów w zamówieniu zakupu, aby uzupełnić ten produkt."
   },
   "suppliers": {
     "title": "Dostawcy",
@@ -3874,5 +3877,70 @@
   "warehouseStock": {
     "title": "Stan według magazynu",
     "includeZero": "Uwzględnij stany zerowe"
+  },
+    "storage": {
+        "title": "Przechowywanie plików",
+        "description": "Lokalna i zewnętrzna pamięć dla przesłanych plików.",
+        "configure": "Ustaw INVENTOROS_UPLOADS_DISK i dane AWS w .env lub config/filesystems.php, odśwież pamięć konfiguracji i uruchom ponownie procesy kolejek.",
+        "existingFiles": "Istniejące pliki zachowują zapisany dysk. Przy zmianie pamięci zachowaj stare definicje dysków.",
+        "probe": "Test zapisuje, odczytuje i usuwa mały tymczasowy plik prywatny.",
+        "driver": "Sterownik",
+        "notConfigured": "Nie skonfigurowano",
+        "usedFor": "Zastosowanie",
+        "bucket": "Bucket",
+        "region": "Region",
+        "connected": "Połączenie potwierdzone: zapis, odczyt i usuwanie powiodły się.",
+        "failed": "Błąd połączenia podczas {step}. Sprawdź konfigurację serwera i uprawnienia.",
+        "unchecked": "Brak ostatniego testu połączenia.",
+        "checkedAt": "Sprawdzono: {time}",
+        "cleanupFailed": "Nie można usunąć pliku testowego. Po naprawie uprawnień sprawdź prefiks connection-checks.",
+        "requestFailed": "Nie można uruchomić testu. Spróbuj ponownie za chwilę.",
+        "checking": "Sprawdzanie…",
+        "check": "Sprawdź połączenie",
+        "purposes": {
+            "products": "Zdjęcia produktów",
+            "logos": "Logo organizacji",
+            "labels": "Etykiety wysyłkowe",
+            "imports": "Importy w kolejce",
+            "exports": "Wygenerowane eksporty"
+        },
+        "steps": {
+            "connect": "łączenia",
+            "write": "zapisywania",
+            "read": "odczytu",
+            "delete": "usuwania"
+        }
+    },
+  "batchExpiryReport": {
+    "title": "Ważność partii",
+    "description": "Znajdź przeterminowane partie i zaplanuj zbliżające się terminy ważności.",
+    "scope": "Pozostałe ilości w całej organizacji, także dla zarchiwizowanych produktów. Partie nie są przypisane do magazynów. Pokazywane są tylko partie z datą i pozostałymi sztukami.",
+    "asOf": "Stan na {date}, według dnia organizacji. Partie wygasające dzisiaj są ważne do końca dnia.",
+    "search": "Produkt, SKU lub partia",
+    "window": "Okres ważności",
+    "export": "Eksportuj CSV",
+    "product": "Produkt",
+    "batch": "Partia",
+    "units": "Pozostałe sztuki",
+    "expiry": "Termin ważności",
+    "status": "Status",
+    "archived": "Produkt zarchiwizowany",
+    "expiredUnits": "Przeterminowane sztuki",
+    "notExpiredUnits": "Ważne sztuki",
+    "lotCount": "Pasujące partie: {count}",
+    "exportLimit": "CSV zawiera pierwsze {count} partii w bieżącej kolejności. Zawęź filtry, aby wyeksportować mniej partii.",
+    "empty": "Brak pozostałych partii z datą pasujących do filtrów.",
+    "windows": {
+      "7": "Przeterminowane + kolejne 7 dni",
+      "30": "Przeterminowane + kolejne 30 dni",
+      "90": "Przeterminowane + kolejne 90 dni",
+      "expired": "Tylko przeterminowane",
+      "all": "Wszystkie terminy"
+    },
+    "statuses": {
+      "expired": "Przeterminowana",
+      "today": "Wygasa dzisiaj",
+      "upcoming": "Nadchodzący termin"
+    }
   }
 }

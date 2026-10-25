@@ -6,7 +6,7 @@ import Button from '@/Components/ui/Button.vue';
 import Badge from '@/Components/ui/Badge.vue';
 import { Head, Link, useForm, router, usePage } from '@inertiajs/vue3';
 import { ref, computed } from 'vue';
-import { Plus, Info, Eye, Pencil, Trash2, Webhook, X } from 'lucide-vue-next';
+import { Plus, Info, Eye, Pencil, Trash2, Webhook, X } from '@lucide/vue';
 
 import { useI18n } from 'vue-i18n';
 import { formatNumber } from '@/lib/money';

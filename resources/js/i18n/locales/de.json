@@ -573,6 +573,7 @@
     }
   },
   "orders": {
+      "channelOrderNumber": "Bestellnummer des Vertriebskanals",
     "itemsCol": "Artikel",
     "sources": {
       "manual": "Manuell",
@@ -833,7 +834,9 @@
     "suggestedQty": "Vorgeschlagene Menge",
     "noSupplier": "Kein Lieferant",
     "addSupplier": "Lieferant hinzufügen",
-    "hint": "Erstellt einen Entwurf einer Einkaufsbestellung pro Hauptlieferant. Produkte ohne Lieferant werden übersprungen."
+    "hint": "Erstellt einen Entwurf einer Einkaufsbestellung pro Hauptlieferant. Produkte ohne Lieferant werden übersprungen.",
+    "chooseVariants": "Varianten wählen",
+    "variantHint": "Wählen Sie die Varianten-SKUs in einer Bestellung, um dieses Produkt nachzubestellen."
   },
   "suppliers": {
     "title": "Lieferanten",
@@ -3874,5 +3877,70 @@
   "warehouseStock": {
     "title": "Bestand nach Lager",
     "includeZero": "Nullbestände anzeigen"
+  },
+    "storage": {
+        "title": "Dateispeicher",
+        "description": "Lokaler und externer Speicher für hochgeladene Dateien.",
+        "configure": "INVENTOROS_UPLOADS_DISK und AWS-Zugangsdaten in .env oder config/filesystems.php konfigurieren, dann den Konfigurationscache erneuern und Queue-Worker neu starten.",
+        "existingFiles": "Vorhandene Dateien behalten ihren gespeicherten Datenträger. Alte Datenträgerdefinitionen beim Wechsel beibehalten.",
+        "probe": "Die Verbindungsprüfung schreibt, liest und löscht eine kleine temporäre private Datei.",
+        "driver": "Treiber",
+        "notConfigured": "Nicht konfiguriert",
+        "usedFor": "Verwendung",
+        "bucket": "Bucket",
+        "region": "Region",
+        "connected": "Verbindung bestätigt: Schreiben, Lesen und Löschen erfolgreich.",
+        "failed": "Verbindung bei {step} fehlgeschlagen. Serverkonfiguration und Berechtigungen prüfen.",
+        "unchecked": "Keine aktuelle Verbindungsprüfung.",
+        "checkedAt": "Geprüft: {time}",
+        "cleanupFailed": "Die temporäre Testdatei konnte nicht entfernt werden. Nach Korrektur der Berechtigungen das Präfix connection-checks prüfen.",
+        "requestFailed": "Prüfung nicht möglich. In Kürze erneut versuchen.",
+        "checking": "Wird geprüft…",
+        "check": "Verbindung prüfen",
+        "purposes": {
+            "products": "Produktbilder",
+            "logos": "Organisationslogos",
+            "labels": "Versandetiketten",
+            "imports": "Importe in der Warteschlange",
+            "exports": "Erstellte Exporte"
+        },
+        "steps": {
+            "connect": "Verbinden",
+            "write": "Schreiben",
+            "read": "Lesen",
+            "delete": "Löschen"
+        }
+    },
+  "batchExpiryReport": {
+    "title": "Chargenablauf",
+    "description": "Abgelaufene Chargen finden und kommende Ablaufdaten planen.",
+    "scope": "Restmengen der gesamten Organisation, einschließlich archivierter Produkte. Chargen sind keinen Lagern zugeordnet. Nur datierte Chargen mit Restbestand werden angezeigt.",
+    "asOf": "Stand {date}, nach dem Kalendertag der Organisation. Heute ablaufende Chargen bleiben bis Tagesende gültig.",
+    "search": "Produkt, SKU oder Charge",
+    "window": "Ablaufzeitraum",
+    "export": "CSV exportieren",
+    "product": "Produkt",
+    "batch": "Charge",
+    "units": "Verbleibende Einheiten",
+    "expiry": "Ablaufdatum",
+    "status": "Status",
+    "archived": "Archiviertes Produkt",
+    "expiredUnits": "Abgelaufene Einheiten",
+    "notExpiredUnits": "Noch gültige Einheiten",
+    "lotCount": "{count} passende Chargen",
+    "exportLimit": "CSV enthält die ersten {count} Chargen in der aktuellen Sortierung. Filter eingrenzen, um weniger Chargen zu exportieren.",
+    "empty": "Keine datierten Restchargen entsprechen diesen Filtern.",
+    "windows": {
+      "7": "Abgelaufen + nächste 7 Tage",
+      "30": "Abgelaufen + nächste 30 Tage",
+      "90": "Abgelaufen + nächste 90 Tage",
+      "expired": "Nur abgelaufen",
+      "all": "Alle Ablaufdaten"
+    },
+    "statuses": {
+      "expired": "Abgelaufen",
+      "today": "Läuft heute ab",
+      "upcoming": "Bevorstehend"
+    }
   }
 }

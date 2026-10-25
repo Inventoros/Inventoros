@@ -17,7 +17,7 @@ import { usePermissions } from '@/composables/usePermissions';
 import axios from 'axios';
 import ImageUploader from '@/Components/ImageUploader.vue';
 import { formatMoney } from '@/lib/money';
-import { ArrowLeft, Eye, Zap, ChevronDown, Layers, Info, X, Trash2 } from 'lucide-vue-next';
+import { ArrowLeft, Eye, Zap, ChevronDown, Layers, Info, X, Trash2 } from '@lucide/vue';
 
 const { t } = useI18n();
 const { hasPermission } = usePermissions();
@@ -88,10 +88,10 @@ const form = useForm({
     barcode: props.product.barcode || '',
     barcode_type: props.product.barcode_type || '',
     notes: props.product.notes || '',
-    images: (props.product.images || []).map(url => ({
-        url: `/storage/${url}`,
-        preview: `/storage/${url}`,
-        name: url.split('/').pop(),
+    images: (props.product.images || []).map((path, index) => ({
+        url: props.product.image_urls[index],
+        preview: props.product.image_urls[index],
+        name: path.split('/').pop(),
         size: 0
     })),
     has_variants: props.product.has_variants || false,

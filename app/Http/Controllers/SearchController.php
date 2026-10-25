@@ -60,7 +60,7 @@ class SearchController extends Controller
 
         $orders = Search::apply(
             Order::where('organization_id', $organizationId),
-            ['order_number', 'customer_name'],
+            ['order_number', 'customer_name', 'external_id', 'external_reference', 'metadata->channel_order_number', 'metadata->shopify->name'],
             $query,
         )
             ->limit($limit)

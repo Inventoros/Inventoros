@@ -573,6 +573,7 @@
     }
   },
   "orders": {
+      "channelOrderNumber": "Kanal sipariş numarası",
     "itemsCol": "Ürünler",
     "sources": {
       "manual": "Manuel",
@@ -833,7 +834,9 @@
     "suggestedQty": "Önerilen adet",
     "noSupplier": "Tedarikçi yok",
     "addSupplier": "Tedarikçi ekle",
-    "hint": "Her birincil tedarikçi için bir taslak satın alma siparişi oluşturur. Tedarikçisi olmayan ürünler atlanır."
+    "hint": "Her birincil tedarikçi için bir taslak satın alma siparişi oluşturur. Tedarikçisi olmayan ürünler atlanır.",
+    "chooseVariants": "Varyant seç",
+    "variantHint": "Bu ürünü tedarik etmek için satın alma siparişinde varyant SKU’larını seçin."
   },
   "suppliers": {
     "title": "Tedarikçiler",
@@ -3874,5 +3877,70 @@
   "warehouseStock": {
     "title": "Depoya göre stok",
     "includeZero": "Sıfır bakiyeleri dahil et"
+  },
+    "storage": {
+        "title": "Dosya depolama",
+        "description": "Yüklenen dosyalar için yerel ve harici depolama.",
+        "configure": "INVENTOROS_UPLOADS_DISK ve AWS kimlik bilgilerini .env veya config/filesystems.php içinde yapılandırın, yapılandırma önbelleğini yenileyin ve kuyruk çalışanlarını yeniden başlatın.",
+        "existingFiles": "Mevcut dosyalar kayıtlı disklerini korur. Depolamayı değiştirirken eski disk tanımlarını saklayın.",
+        "probe": "Bağlantı testi küçük, geçici ve özel bir dosya yazar, okur ve siler.",
+        "driver": "Sürücü",
+        "notConfigured": "Yapılandırılmadı",
+        "usedFor": "Kullanım",
+        "bucket": "Kova",
+        "region": "Bölge",
+        "connected": "Bağlantı doğrulandı: yazma, okuma ve silme başarılı.",
+        "failed": "{step} sırasında bağlantı başarısız. Sunucu yapılandırmasını ve izinleri kontrol edin.",
+        "unchecked": "Yakın zamanda bağlantı testi yapılmadı.",
+        "checkedAt": "Kontrol zamanı: {time}",
+        "cleanupFailed": "Test dosyası kaldırılamadı. İzinleri düzelttikten sonra connection-checks önekini kontrol edin.",
+        "requestFailed": "Test çalıştırılamadı. Kısa süre sonra tekrar deneyin.",
+        "checking": "Kontrol ediliyor…",
+        "check": "Bağlantıyı kontrol et",
+        "purposes": {
+            "products": "Ürün görselleri",
+            "logos": "Kuruluş logoları",
+            "labels": "Kargo etiketleri",
+            "imports": "Kuyruktaki içe aktarmalar",
+            "exports": "Oluşturulan dışa aktarmalar"
+        },
+        "steps": {
+            "connect": "bağlanma",
+            "write": "yazma",
+            "read": "okuma",
+            "delete": "silme"
+        }
+    },
+  "batchExpiryReport": {
+    "title": "Parti son kullanma tarihleri",
+    "description": "Süresi dolmuş partileri bulun ve yaklaşan tarihleri planlayın.",
+    "scope": "Arşivlenmiş ürünler dahil tüm kuruluşun kalan parti miktarları. Partiler depolara atanmaz. Yalnızca tarihi olan ve birim kalan partiler gösterilir.",
+    "asOf": "Kuruluşun takvim gününe göre {date} itibarıyla. Bugün süresi dolan partiler gün sonuna kadar geçerlidir.",
+    "search": "Ürün, SKU veya parti",
+    "window": "Son kullanma dönemi",
+    "export": "CSV dışa aktar",
+    "product": "Ürün",
+    "batch": "Parti",
+    "units": "Kalan birimler",
+    "expiry": "Son kullanma tarihi",
+    "status": "Durum",
+    "archived": "Arşivlenmiş ürün",
+    "expiredUnits": "Süresi dolmuş birimler",
+    "notExpiredUnits": "Henüz süresi dolmamış birimler",
+    "lotCount": "{count} eşleşen parti",
+    "exportLimit": "CSV geçerli sıralamadaki ilk {count} partiyi içerir. Daha az parti aktarmak için filtreleri daraltın.",
+    "empty": "Bu filtrelerle eşleşen tarihli kalan parti yok.",
+    "windows": {
+      "7": "Süresi dolanlar + gelecek 7 gün",
+      "30": "Süresi dolanlar + gelecek 30 gün",
+      "90": "Süresi dolanlar + gelecek 90 gün",
+      "expired": "Yalnızca süresi dolanlar",
+      "all": "Tüm tarihler"
+    },
+    "statuses": {
+      "expired": "Süresi dolmuş",
+      "today": "Bugün doluyor",
+      "upcoming": "Yaklaşıyor"
+    }
   }
 }

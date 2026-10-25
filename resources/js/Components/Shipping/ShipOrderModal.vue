@@ -4,7 +4,7 @@ import Button from '@/Components/ui/Button.vue';
 import { router } from '@inertiajs/vue3';
 import { computed, reactive, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { X, Download, Truck } from 'lucide-vue-next';
+import { X, Download, Truck } from '@lucide/vue';
 
 /**
  * The order page "Ship" flow.

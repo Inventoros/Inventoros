@@ -88,10 +88,24 @@ class WarehouseReorderPoint extends Model
      */
     public static function onHandSql(): string
     {
-        return '(select coalesce(sum(pls.quantity), 0) from product_location_stocks pls'
+        $plain = '(select coalesce(sum(pls.quantity), 0) from product_location_stocks pls'
             .' inner join product_locations pl on pl.id = pls.location_id'
             .' where pls.product_id = warehouse_reorder_points.product_id'
             .' and pl.warehouse_id = warehouse_reorder_points.warehouse_id'
             .' and pl.deleted_at is null)';
+
+        $variants = '(select coalesce(sum(vls.quantity), 0) from variant_location_stocks vls'
+            .' inner join product_variants pv on pv.id = vls.product_variant_id'
+            .' inner join product_locations vl on vl.id = vls.location_id'
+            .' where pv.product_id = warehouse_reorder_points.product_id'
+            .' and pv.organization_id = warehouse_reorder_points.organization_id'
+            .' and vls.organization_id = warehouse_reorder_points.organization_id'
+            .' and pv.is_active = TRUE and pv.deleted_at is null'
+            .' and vl.warehouse_id = warehouse_reorder_points.warehouse_id and vl.deleted_at is null)';
+
+        return '(case when exists (select 1 from products rp'
+            .' where rp.id = warehouse_reorder_points.product_id and rp.has_variants = TRUE'
+            .' and exists (select 1 from product_variants rv where rv.product_id = rp.id and rv.deleted_at is null))'
+            ." then {$variants} else {$plain} end)";
     }
 }

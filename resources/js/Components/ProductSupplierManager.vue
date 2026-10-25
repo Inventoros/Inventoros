@@ -3,7 +3,7 @@ import { computed } from 'vue';
 import { Link } from '@inertiajs/vue3';
 import { useI18n } from 'vue-i18n';
 import Button from '@/Components/ui/Button.vue';
-import { Plus, Trash2, Truck } from 'lucide-vue-next';
+import { Plus, Trash2, Truck } from '@lucide/vue';
 
 /**
  * Edits a product's supplier links: supplier, supplier SKU, cost, lead time,

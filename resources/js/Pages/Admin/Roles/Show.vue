@@ -9,7 +9,7 @@ import { ref, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { permissionCategoryLabel, permissionDescription, permissionLabel, roleDescription, roleName } from '@/lib/permissionLabels';
 import { displayDate } from '@/lib/dates';
-import { Pencil, ArrowLeft, Trash2, CheckCircle2, ShieldAlert, Info, X, AlertTriangle } from 'lucide-vue-next';
+import { Pencil, ArrowLeft, Trash2, CheckCircle2, ShieldAlert, Info, X, AlertTriangle } from '@lucide/vue';
 import { usePermissions } from '@/composables/usePermissions';
 
 const { canVisit } = usePermissions();

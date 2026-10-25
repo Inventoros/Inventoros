@@ -31,8 +31,12 @@ class OrderType extends GraphQLType
                 'description' => 'Unique order number',
             ],
             'source' => [
-                'type' => Type::string(),
                 'description' => 'Order source (api, web, etc.)',
+                'type' => Type::string(),
+            ],
+            'channel_order_number' => [
+                'description' => 'Human-readable sales-channel order number',
+                'type' => Type::string(),
             ],
             'external_id' => [
                 'type' => Type::string(),

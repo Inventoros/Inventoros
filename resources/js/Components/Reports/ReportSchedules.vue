@@ -8,7 +8,7 @@ import { router, useForm } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { displayDateTime } from '@/lib/dates';
-import { CalendarClock, Plus, Pencil, Trash2, Pause, Play } from 'lucide-vue-next';
+import { CalendarClock, Plus, Pencil, Trash2, Pause, Play } from '@lucide/vue';
 
 // Scheduled email delivery for a saved report. Rendered for the report's
 // owner only; the server refuses schedule changes from anyone else.

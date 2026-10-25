@@ -573,6 +573,7 @@
     }
   },
   "orders": {
+      "channelOrderNumber": "销售渠道订单号",
     "itemsCol": "商品",
     "sources": {
       "manual": "手动",
@@ -833,7 +834,9 @@
     "suggestedQty": "建议数量",
     "noSupplier": "无供应商",
     "addSupplier": "添加供应商",
-    "hint": "为每个主要供应商创建一张采购订单草稿。没有供应商的产品将被跳过。"
+    "hint": "为每个主要供应商创建一张采购订单草稿。没有供应商的产品将被跳过。",
+    "chooseVariants": "选择变体",
+    "variantHint": "请在采购单中选择具体的变体 SKU，以补充此产品。"
   },
   "suppliers": {
     "title": "供应商",
@@ -3874,5 +3877,70 @@
   "warehouseStock": {
     "title": "按仓库查看库存",
     "includeZero": "包含零库存"
+  },
+    "storage": {
+        "title": "文件存储",
+        "description": "上传文件的本地和外部存储。",
+        "configure": "在 .env 或 config/filesystems.php 中配置 INVENTOROS_UPLOADS_DISK 和 AWS 凭据，然后刷新配置缓存并重启队列工作进程。",
+        "existingFiles": "现有文件保留其记录的磁盘。更改存储时请保留旧磁盘定义。",
+        "probe": "连接检查会写入、读取并删除一个小型私有临时文件。",
+        "driver": "驱动",
+        "notConfigured": "未配置",
+        "usedFor": "用途",
+        "bucket": "存储桶",
+        "region": "区域",
+        "connected": "连接已确认：写入、读取和删除均成功。",
+        "failed": "连接在{step}期间失败。请检查服务器配置和权限。",
+        "unchecked": "最近没有连接检查。",
+        "checkedAt": "检查时间：{time}",
+        "cleanupFailed": "无法删除测试文件。修复权限后请检查 connection-checks 前缀。",
+        "requestFailed": "无法运行检查。请稍后重试。",
+        "checking": "正在检查…",
+        "check": "检查连接",
+        "purposes": {
+            "products": "产品图片",
+            "logos": "组织徽标",
+            "labels": "运输标签",
+            "imports": "排队导入",
+            "exports": "生成的导出"
+        },
+        "steps": {
+            "connect": "连接",
+            "write": "写入",
+            "read": "读取",
+            "delete": "删除"
+        }
+    },
+  "batchExpiryReport": {
+    "title": "批次有效期",
+    "description": "查找过期批次并安排即将到期的批次。",
+    "scope": "显示整个组织的批次剩余数量，包括已归档产品。批次未分配到仓库。仅显示有到期日期且仍有剩余数量的批次。",
+    "asOf": "截至组织日历日期 {date}。今天到期的批次在今天结束前仍然有效。",
+    "search": "产品、SKU 或批次",
+    "window": "到期范围",
+    "export": "导出 CSV",
+    "product": "产品",
+    "batch": "批次",
+    "units": "剩余数量",
+    "expiry": "到期日期",
+    "status": "状态",
+    "archived": "已归档产品",
+    "expiredUnits": "已过期数量",
+    "notExpiredUnits": "尚未过期数量",
+    "lotCount": "{count} 个匹配批次",
+    "exportLimit": "CSV 按当前排序包含前 {count} 个批次。请缩小筛选范围以导出更少的批次。",
+    "empty": "没有符合筛选条件的有日期剩余批次。",
+    "windows": {
+      "7": "已过期 + 未来 7 天",
+      "30": "已过期 + 未来 30 天",
+      "90": "已过期 + 未来 90 天",
+      "expired": "仅已过期",
+      "all": "所有到期日期"
+    },
+    "statuses": {
+      "expired": "已过期",
+      "today": "今天到期",
+      "upcoming": "即将到期"
+    }
   }
 }

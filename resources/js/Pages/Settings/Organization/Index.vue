@@ -6,7 +6,7 @@ import Button from '@/Components/ui/Button.vue';
 import Badge from '@/Components/ui/Badge.vue';
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
-import { ExternalLink, Users } from 'lucide-vue-next';
+import { ExternalLink, Users } from '@lucide/vue';
 
 import { useI18n } from 'vue-i18n';
 import { usePermissions } from '@/composables/usePermissions';

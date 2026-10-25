@@ -11,7 +11,7 @@ import SupplierRating from '@/Components/SupplierRating.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { useI18n } from 'vue-i18n';
 import { formatMoney } from '@/lib/money';
-import { Pencil, ArrowLeft, Trash2, PackageOpen } from 'lucide-vue-next';
+import { Pencil, ArrowLeft, Trash2, PackageOpen } from '@lucide/vue';
 import { usePermissions } from '@/composables/usePermissions';
 
 const { canVisit } = usePermissions();

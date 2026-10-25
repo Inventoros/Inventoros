@@ -33,7 +33,7 @@ const EXCLUDE_TOP = [
     'node_modules', 'tests', 'e2e', 'screenshots', 'docker', 'docs', 'deploy',
     'public', 'storage', 'dist', 'cpanel-release', 'playwright-report',
     'blob-report', 'test-results',
-    'Dockerfile', 'docker-compose.yml', 'docker-compose.prod.yml',
+    'Dockerfile',
     'phpunit.xml', 'phpunit.mysql.xml', 'phpunit.pgsql.xml', 'playwright.config.ts',
     'auth.json', 'todo.txt', 'Homestead.json', 'Homestead.yaml',
     'jsconfig.json', 'postcss.config.js', 'tailwind.config.js', 'vite.config.js',
@@ -226,6 +226,9 @@ function build(string $root, string $version, string $out): string
             return true;
         }
         if (! str_contains($rel, '/')) {
+            if (preg_match('/^docker-compose[^\/]*\.ya?ml$/', $rel)) {
+                return true;
+            }
             // Top-level markdown (README, CHANGELOG, ...) and env files.
             if (str_ends_with($rel, '.md') || ($rel !== '.env.example' && preg_match('/^\.env(\..+)?$/', $rel))) {
                 return true;

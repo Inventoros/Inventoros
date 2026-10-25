@@ -12,7 +12,7 @@ import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { displayCalendarDate, displayDate } from '@/lib/dates';
 import { formatMoney } from '@/lib/money';
-import { ArrowLeft, Pencil, Download, Eye, Send, PackageCheck, Ban, Trash2 } from 'lucide-vue-next';
+import { ArrowLeft, Pencil, Download, Eye, Send, PackageCheck, Ban, Trash2 } from '@lucide/vue';
 import { usePermissions } from '@/composables/usePermissions';
 
 const { canVisit } = usePermissions();

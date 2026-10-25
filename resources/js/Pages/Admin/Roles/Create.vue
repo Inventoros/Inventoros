@@ -7,7 +7,7 @@ import Badge from '@/Components/ui/Badge.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import { useI18n } from 'vue-i18n';
 import { permissionCategoryLabel, permissionDescription, permissionLabel, permissionSetDescription, permissionSetName } from '@/lib/permissionLabels';
-import { ArrowLeft, Check } from 'lucide-vue-next';
+import { ArrowLeft, Check } from '@lucide/vue';
 
 const props = defineProps({
     permissions: Object,

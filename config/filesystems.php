@@ -15,6 +15,10 @@ return [
 
     'default' => env('FILESYSTEM_DISK', 'local'),
 
+    // Uploaded application files. Unset preserves the historical public/local
+    // disks. Set to s3 (or another configured disk) to store new uploads there.
+    'uploads_disk' => env('INVENTOROS_UPLOADS_DISK'),
+
     /*
     |--------------------------------------------------------------------------
     | Filesystem Disks
@@ -51,11 +55,19 @@ return [
             'driver' => 's3',
             'key' => env('AWS_ACCESS_KEY_ID'),
             'secret' => env('AWS_SECRET_ACCESS_KEY'),
+            'token' => env('AWS_SESSION_TOKEN'),
             'region' => env('AWS_DEFAULT_REGION'),
             'bucket' => env('AWS_BUCKET'),
             'url' => env('AWS_URL'),
             'endpoint' => env('AWS_ENDPOINT'),
             'use_path_style_endpoint' => env('AWS_USE_PATH_STYLE_ENDPOINT', false),
+            'root' => env('AWS_ROOT', ''),
+            'visibility' => 'private',
+            // Bucket policies control access; works with S3 Object Ownership
+            // (ACLs disabled) and S3-compatible providers without ACL support.
+            'omit_acl' => true,
+            'http' => ['connect_timeout' => 5, 'timeout' => 20],
+            'retries' => 1,
             'throw' => false,
             'report' => false,
         ],

@@ -49,6 +49,7 @@ use Illuminate\Support\Carbon;
  * @property string|null $notes
  * @property string|null $image
  * @property array|null $images
+ * @property array<string, string>|null $image_disks
  * @property string|null $thumbnail
  * @property int|null $category_id
  * @property int|null $location_id
@@ -109,6 +110,7 @@ class Product extends Model
         'notes',
         'image',
         'images',
+        'image_disks',
         'thumbnail',
         'category_id',
         'location_id',
@@ -154,6 +156,7 @@ class Product extends Model
             'metadata' => 'array',
             'price_in_currencies' => 'array',
             'images' => 'array',
+            'image_disks' => 'array',
         ];
     }
 
@@ -165,6 +168,20 @@ class Product extends Model
     public function organization(): BelongsTo
     {
         return $this->belongsTo(Organization::class);
+    }
+
+    /** Same-origin URLs work with private S3 buckets and the application's CSP. */
+    public function getImageUrlsAttribute(): array
+    {
+        return $this->imageUrls();
+    }
+
+    public function imageUrls(bool $api = false): array
+    {
+        return array_map(fn ($index) => route($api ? 'api.products.images.show' : 'products.images.show', [
+            'product' => $this->id, 'index' => $index,
+            'v' => sha1($this->images[$index]),
+        ], absolute: false), array_keys($this->images ?? []));
     }
 
     /**

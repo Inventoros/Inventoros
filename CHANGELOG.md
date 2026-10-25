@@ -8,6 +8,8 @@ Full release notes, with the pull request behind each change, are on [GitHub Rel
 
 ### Added
 
+- External file storage for uploads, including S3-compatible services, with configuration examples and an installation-admin connection check that verifies writing, reading and deleting a temporary private object. Existing files retain their original storage disks.
+
 - Stock by warehouse screen with sortable product/variant SKU and location balances, reserved and available quantities, incoming transfers, search, warehouse filters and CSV export. The same warehouse-scoped query backs REST stock-balances and MCP list_stock_balances.
 - Prepared warehouse transfers reserve source-bin stock, shipping removes it from on-hand, and receiving credits the destination. Transfer lines can name variants. Web, REST, GraphQL and MCP transitions share the same checks; existing in-transit transfers retain their original completion behavior.
 - Stock audits count individual variant SKUs. Select a whole warehouse to count each location separately, including variants held away from their parent product's primary location; discrepancies adjust only the counted bins. Scheduled warehouse cycle counts use the same scope.

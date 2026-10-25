@@ -9,7 +9,7 @@ import PeriodFilter from '@/Components/Reports/PeriodFilter.vue';
 import { formatCurrency, formatNumber, formatDelta } from '@/lib/reportFormat';
 import { Head, Link } from '@inertiajs/vue3';
 import { useI18n } from 'vue-i18n';
-import { ArrowLeft } from 'lucide-vue-next';
+import { ArrowLeft } from '@lucide/vue';
 
 const { t } = useI18n();
 

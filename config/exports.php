@@ -22,7 +22,7 @@ return [
     | Storage disk for generated exports
     |--------------------------------------------------------------------------
     */
-    'disk' => env('EXPORT_DISK', 'local'),
+    'disk' => env('EXPORT_DISK', env('INVENTOROS_UPLOADS_DISK', 'local')),
 
     /*
     |--------------------------------------------------------------------------

@@ -19,7 +19,7 @@ import {
     ArrowLeft,
     CheckCircle2,
     ClipboardList,
-} from 'lucide-vue-next';
+} from '@lucide/vue';
 import { usePermissions } from '@/composables/usePermissions';
 
 const { canVisit } = usePermissions();
@@ -161,7 +161,7 @@ const thClassRight = 'px-4 py-2.5 text-right text-xs font-medium tracking-tight 
                                     type="checkbox"
                                     class="rounded border-border-subtle text-brand ds-focus-ring disabled:opacity-40"
                                     :checked="quickReorder.isSelected(product.id)"
-                                    :disabled="!product.supplier_id"
+                                    :disabled="!product.supplier_id || product.can_quick_reorder === false"
                                     :aria-label="t('quickReorder.selectForReorder', { name: product.name })"
                                     @change="quickReorder.toggle(product.id)"
                                 />
@@ -200,7 +200,7 @@ const thClassRight = 'px-4 py-2.5 text-right text-xs font-medium tracking-tight 
                             <td class="px-4 py-3 text-right font-medium tabular-nums text-text-primary">{{ product.suggested_quantity }}</td>
                             <td v-if="quickReorder.canCreatePo.value" class="px-4 py-3 text-right">
                                 <Button
-                                    v-if="product.supplier_id"
+                                    v-if="product.supplier_id && product.can_quick_reorder !== false"
                                     variant="ghost"
                                     size="xs"
                                     :disabled="quickReorder.submitting.value"
@@ -208,6 +208,9 @@ const thClassRight = 'px-4 py-2.5 text-right text-xs font-medium tracking-tight 
                                 >
                                     <ClipboardList :size="12" />
                                     {{ t('quickReorder.createPo') }}
+                                </Button>
+                                <Button v-else-if="product.can_quick_reorder === false" variant="ghost" size="xs" as="Link" :href="route('purchase-orders.create')" :title="t('quickReorder.variantHint')">
+                                    {{ t('quickReorder.chooseVariants') }}
                                 </Button>
                             </td>
                         </tr>

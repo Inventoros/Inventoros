@@ -157,7 +157,7 @@ class ReceivablesReportTest extends TestCase
                 ->etc()
             );
 
-        $this->actingAs($this->userWith(['view_reports'], 'sales-no-pay'))->get(route('reports.sales-analysis'))
+        $this->actingAs($this->userWith(['view_reports', 'view_orders'], 'sales-no-pay'))->get(route('reports.sales-analysis'))
             ->assertInertia(fn (Assert $page) => $page
                 ->missing('byPaymentStatus')
                 ->missing('summary.total_outstanding')

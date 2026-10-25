@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Models\Inventory\Product;
 use App\Models\User;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Query\Builder;
@@ -151,7 +152,7 @@ class ReportDataService
         $rows = match ($dataSource) {
             'products' => $this->queryProducts($organizationId, $columns, $filters, $sort),
             'orders' => $this->queryOrders($organizationId, $columns, $filters, $sort),
-            'stock_adjustments' => $this->queryStockAdjustments($organizationId, $columns, $filters, $sort),
+            'stock_adjustments' => $this->queryStockAdjustments($user, $organizationId, $columns, $filters, $sort),
             'customers' => $this->queryCustomers($organizationId, $columns, $filters, $sort),
             'suppliers' => $this->querySuppliers($organizationId, $columns, $filters, $sort),
             'purchase_orders' => $this->queryPurchaseOrders($organizationId, $columns, $filters, $sort),
@@ -268,7 +269,12 @@ class ReportDataService
      */
     private function queryProducts(int $organizationId, array $columns, ?array $filters, ?array $sort): Collection
     {
-        $query = DB::table('products')
+        // Expose the computed quantity as a numeric column so selections,
+        // bound filters and sorting use exactly the same stock definition.
+        $integerType = in_array(DB::connection()->getDriverName(), ['mysql', 'mariadb'], true) ? 'SIGNED' : 'INTEGER';
+        $stock = DB::table('products')->select('products.*')
+            ->selectRaw('CAST('.Product::effectiveStockSql()." AS {$integerType}) AS report_stock");
+        $query = DB::query()->fromSub($stock, 'products')
             ->leftJoin('product_categories', 'products.category_id', '=', 'product_categories.id')
             ->leftJoin('product_locations', 'products.location_id', '=', 'product_locations.id')
             ->where('products.organization_id', $organizationId)
@@ -278,7 +284,7 @@ class ReportDataService
         $columnMap = [
             'name' => 'products.name',
             'sku' => 'products.sku',
-            'stock' => 'products.stock',
+            'stock' => 'products.report_stock as stock',
             'price' => 'products.price',
             'purchase_price' => 'products.purchase_price',
             'category_name' => 'product_categories.name as category_name',
@@ -292,7 +298,7 @@ class ReportDataService
         $filterMap = [
             'name' => 'products.name',
             'sku' => 'products.sku',
-            'stock' => 'products.stock',
+            'stock' => 'products.report_stock',
             'price' => 'products.price',
             'purchase_price' => 'products.purchase_price',
             'category_name' => 'product_categories.name',
@@ -354,11 +360,13 @@ class ReportDataService
     /**
      * Query stock adjustments data source.
      */
-    private function queryStockAdjustments(int $organizationId, array $columns, ?array $filters, ?array $sort): Collection
+    private function queryStockAdjustments(User $user, int $organizationId, array $columns, ?array $filters, ?array $sort): Collection
     {
         $query = DB::table('stock_adjustments')
             ->leftJoin('products', 'stock_adjustments.product_id', '=', 'products.id')
             ->where('stock_adjustments.organization_id', $organizationId);
+
+        app(WarehouseAccessService::class)->scopeByLocation($query, $user, 'stock_adjustments.location_id');
 
         $columnMap = [
             'product_name' => 'products.name as product_name',

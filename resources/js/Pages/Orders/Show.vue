@@ -16,7 +16,7 @@ import { formatMoney } from '@/lib/money';
 import { invoiceState } from '@/lib/invoiceState';
 import { approvalStatusLabel, approvalStatusVariant, orderSourceLabel, orderStatusLabel, orderStatusVariant } from '@/lib/orderLabels';
 import { useI18n } from 'vue-i18n';
-import { ArrowLeft, Pencil, Download, Eye, Undo2, Trash2, X, AlertTriangle, PackageOpen, Mail, Plus, RotateCcw, Wallet } from 'lucide-vue-next';
+import { ArrowLeft, Pencil, Download, Eye, Undo2, Trash2, X, AlertTriangle, PackageOpen, Mail, Plus, RotateCcw, Wallet } from '@lucide/vue';
 
 const { t, te } = useI18n();
 const statusText = (status) => orderStatusLabel(status, { t, te });
@@ -520,6 +520,11 @@ const formatOrderDate = (date, long = false) =>
                                 <div>
                                     <dt class="text-xs text-text-tertiary">{{ t('orders.show.orderNumber2') }}</dt>
                                     <dd class="mt-1 text-sm text-text-primary">{{ order.order_number }}</dd>
+                                </div>
+
+                                <div v-if="order.channel_order_number">
+                                    <dt class="text-xs text-text-tertiary">{{ t('orders.channelOrderNumber') }}</dt>
+                                    <dd class="mt-1 text-sm text-text-primary">{{ order.channel_order_number }}</dd>
                                 </div>
 
                                 <div>

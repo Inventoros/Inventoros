@@ -31,11 +31,19 @@ class QuickReorderController extends Controller
             ->orderBy('name')
             ->get();
 
+        $requiresVariants = $products->filter(fn ($product) => $this->reorder->requiresVariantSelection($product));
+        $products = $products->reject(fn ($product) => $this->reorder->requiresVariantSelection($product));
+
         ['groups' => $groups, 'withoutSupplier' => $withoutSupplier] = $this->reorder->groupByPrimarySupplier($products);
 
         $missingMessage = $withoutSupplier === []
             ? null
             : 'Skipped, no primary supplier: '.$this->reorder->describe($withoutSupplier).'. Link a supplier on the product to reorder it.';
+
+        if ($requiresVariants->isNotEmpty()) {
+            $missingMessage = trim(($missingMessage ?? '').' Skipped products requiring variant selection: '
+                .$this->reorder->describe($requiresVariants).'. Create a purchase order and choose the exact variant SKUs.');
+        }
 
         if ($groups === []) {
             return back()->with('error', $missingMessage ?? 'Select at least one product to reorder.');

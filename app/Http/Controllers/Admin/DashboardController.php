@@ -244,6 +244,7 @@ class DashboardController extends Controller
         $reorder = app(ReorderService::class);
         $reorderSuggestions = ! $canViewProducts ? collect() : Product::where('organization_id', $user->organization_id)
             ->needsReorder()
+            ->withExists('variants')
             ->withEffectiveStock()
             ->with(array_merge(['category'], ReorderService::primarySupplierEagerLoad()))
             ->orderBy('effective_stock', 'asc')
@@ -265,6 +266,7 @@ class DashboardController extends Controller
                     'category' => $product->category?->name,
                     'supplier' => $primarySupplier?->name,
                     'supplier_id' => $primarySupplier?->id,
+                    'can_quick_reorder' => ! $reorder->requiresVariantSelection($product),
                 ];
             });
 

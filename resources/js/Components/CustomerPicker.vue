@@ -2,7 +2,7 @@
 import { ref, watch, onBeforeUnmount } from 'vue';
 import axios from 'axios';
 import { useI18n } from 'vue-i18n';
-import { Search, UserRound, X } from 'lucide-vue-next';
+import { Search, UserRound, X } from '@lucide/vue';
 
 /**
  * Searchable picker over the organization's saved customers for the order

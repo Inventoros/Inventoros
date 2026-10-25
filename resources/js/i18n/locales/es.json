@@ -573,6 +573,7 @@
     }
   },
   "orders": {
+      "channelOrderNumber": "Número de pedido del canal",
     "itemsCol": "Artículos",
     "sources": {
       "manual": "Manual",
@@ -833,7 +834,9 @@
     "suggestedQty": "Cant. sugerida",
     "noSupplier": "Sin proveedor",
     "addSupplier": "Agregar un proveedor",
-    "hint": "Crea un borrador de orden de compra por cada proveedor principal. Los productos sin proveedor se omiten."
+    "hint": "Crea un borrador de orden de compra por cada proveedor principal. Los productos sin proveedor se omiten.",
+    "chooseVariants": "Elegir variantes",
+    "variantHint": "Seleccione los SKU de las variantes en una orden de compra para reponer este producto."
   },
   "suppliers": {
     "title": "Proveedores",
@@ -3874,5 +3877,70 @@
   "warehouseStock": {
     "title": "Existencias por almacén",
     "includeZero": "Incluir saldos cero"
+  },
+    "storage": {
+        "title": "Almacenamiento de archivos",
+        "description": "Almacenamiento local y externo de archivos subidos.",
+        "configure": "Configura INVENTOROS_UPLOADS_DISK y las credenciales de AWS en .env o config/filesystems.php, actualiza la caché de configuración y reinicia los trabajadores de colas.",
+        "existingFiles": "Los archivos existentes conservan su disco. Mantén las definiciones de discos anteriores al cambiar el almacenamiento.",
+        "probe": "La prueba escribe, lee y elimina un pequeño archivo privado temporal.",
+        "driver": "Controlador",
+        "notConfigured": "Sin configurar",
+        "usedFor": "Uso",
+        "bucket": "Bucket",
+        "region": "Región",
+        "connected": "Conexión confirmada: escritura, lectura y eliminación correctas.",
+        "failed": "La conexión falló durante {step}. Revisa la configuración del servidor y los permisos.",
+        "unchecked": "Sin comprobaciones recientes.",
+        "checkedAt": "Comprobado: {time}",
+        "cleanupFailed": "No se pudo eliminar el archivo de prueba. Revisa el prefijo connection-checks tras corregir los permisos.",
+        "requestFailed": "No se pudo ejecutar la prueba. Inténtalo de nuevo en breve.",
+        "checking": "Comprobando…",
+        "check": "Comprobar conexión",
+        "purposes": {
+            "products": "Imágenes de productos",
+            "logos": "Logotipos de organización",
+            "labels": "Etiquetas de envío",
+            "imports": "Importaciones en cola",
+            "exports": "Exportaciones generadas"
+        },
+        "steps": {
+            "connect": "conexión",
+            "write": "escritura",
+            "read": "lectura",
+            "delete": "eliminación"
+        }
+    },
+  "batchExpiryReport": {
+    "title": "Caducidad de lotes",
+    "description": "Encuentre lotes caducados y planifique las próximas caducidades.",
+    "scope": "Cantidades restantes de toda la organización, incluidos productos archivados. Los lotes no están asignados a almacenes. Solo se muestran lotes fechados con unidades restantes.",
+    "asOf": "A fecha de {date}, según el día de la organización. Los lotes que caducan hoy siguen siendo válidos hasta el final del día.",
+    "search": "Producto, SKU o lote",
+    "window": "Periodo de caducidad",
+    "export": "Exportar CSV",
+    "product": "Producto",
+    "batch": "Lote",
+    "units": "Unidades restantes",
+    "expiry": "Fecha de caducidad",
+    "status": "Estado",
+    "archived": "Producto archivado",
+    "expiredUnits": "Unidades caducadas",
+    "notExpiredUnits": "Unidades sin caducar",
+    "lotCount": "{count} lotes coincidentes",
+    "exportLimit": "El CSV incluye los primeros {count} lotes en el orden actual. Acote los filtros para exportar menos lotes.",
+    "empty": "Ningún lote fechado restante coincide con estos filtros.",
+    "windows": {
+      "7": "Caducados + próximos 7 días",
+      "30": "Caducados + próximos 30 días",
+      "90": "Caducados + próximos 90 días",
+      "expired": "Solo caducados",
+      "all": "Todas las fechas"
+    },
+    "statuses": {
+      "expired": "Caducado",
+      "today": "Caduca hoy",
+      "upcoming": "Próximo"
+    }
   }
 }

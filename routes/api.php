@@ -80,6 +80,8 @@ Route::prefix('v1')->as('api.')->middleware('throttle:api')->group(function () {
         Route::delete('/tokens/{tokenId}', [AuthController::class, 'revokeToken']);
 
         // Products
+        Route::get('products/{product}/images/{index}', \App\Http\Controllers\Inventory\ProductImageController::class)
+            ->whereNumber('index')->name('products.images.show')->middleware('api.permission:view_products');
         Route::apiResource('products', ProductController::class)->only(['index', 'show'])
             ->middleware('api.permission:view_products');
         Route::apiResource('products', ProductController::class)->only(['store'])

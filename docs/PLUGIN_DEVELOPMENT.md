@@ -359,6 +359,12 @@ A filter callback receives the value first, then the listed context, and must re
 | `product_show_page_data` | `$data`, `$product` | All props of the product detail page. |
 | `product_store_validation_rules` | `$rules`, `$request` | Validation rules of the web product create form. |
 | `product_store_data` | `$validated_data`, `$request` | Validated data before a product is created from the web form. |
+| `customer_form_data` | `$values`, `$customerOrNull`, `$request` | Initial namespaced extension values for customer forms. |
+| `order_invoice_document` | `$documentOrNull`, `$provider`, `$order`, `$forCustomerPortal` | For orders with `metadata.invoice_document_provider`, return `['view' => 'plugin::invoice', 'data' => [...]]` to render the issued snapshot. An unavailable renderer returns 409 instead of substituting a different invoice. Downloads, email attachments and customer portal PDFs share this path. |
+| `customer_store_validation_rules` | `$rules`, `$request` | Customer create rules on web and REST. |
+| `customer_update_validation_rules` | `$rules`, `$customer`, `$request` | Customer update rules on web and REST. |
+| `customer_store_data` | `$data`, `$request` | Validated customer create payload, before persistence. |
+| `customer_update_data` | `$data`, `$customer`, `$request` | Validated customer update payload; preserve other metadata namespaces. |
 | `product_store_response` | `$response`, `$product`, `$request` | The response after a product is created from the web form. |
 | `product_update_validation_rules` | `$rules`, `$product`, `$request` | Validation rules of the web product edit form. |
 | `product_update_data` | `$validated_data`, `$product`, `$request` | Validated data before a product is updated from the web form. |
@@ -483,7 +489,9 @@ Pages and slots that render plugin components:
 | `suppliers.show`, `suppliers.create`, `suppliers.edit` | `header`, `footer` |
 | `categories.index`, `locations.index` | `header`, `footer` |
 | `customers.index`, `warehouses.index`, `stock-audits.index`, `cycle-counts.index`, `stock-transfers.index`, `returns.index`, `work-orders.index` | `header`, `footer` |
-| `customers.show`, `warehouses.show`, `stock-audits.show`, `stock-transfers.show`, `returns.show`, `work-orders.show` | `header`, `actions`, `footer` |
+| `customers.show` | `header`, `actions`, `business-details`, `footer` |
+| `customers.create`, `customers.edit` | `header`, `before-form`, `business-details`, `after-form` |
+| `warehouses.show`, `stock-audits.show`, `stock-transfers.show`, `returns.show`, `work-orders.show` | `header`, `actions`, `footer` |
 | `settings.index` | `header`, `sections`, `footer` |
 
 `actions` renders inside the page header's action bar, before the page's own buttons: keep it to small buttons or links. On the settings hub, each component in `sections` is one card in the grid of settings pages; render a `Card` linking to your settings page (the hub does not check the link, so give the placement the same `permission` as the page). Pages without plugin placements render exactly as before.
@@ -935,6 +943,7 @@ Resolve services from the container (`app(OrderService::class)`). Methods that t
 |-------|---------|
 | `App\Models\Inventory\StockAdjustment` | `adjust()`, `adjustVariant()` (static) |
 | `App\Services\OrderService` | `create()`, `cancel()`, `approve()`, `reject()`, `restockForDeletion()`, `replaceItems()`, `transitionStatus()`, `restockableQuantities()` |
+| `App\Services\OrderPaymentService` | `recordImported()` |
 | `App\Services\ReturnOrderService` | `create()`, `approve()`, `updateLines()`, `receive()`, `complete()`, `reject()`, `returnedQuantities()` |
 | `App\Services\Shipping\ShipmentService` | `create()`, `markShipped()`, `applyTrackingStatus()`, `cancel()`, `remainingQuantities()` |
 | `App\Services\StockAuditService` | `create()`, `start()`, `recordCount()`, `complete()` |
@@ -948,6 +957,8 @@ Resolve services from the container (`app(OrderService::class)`). Methods that t
 | `App\Services\Organizations\InterCompanyTransferService` | `transfer()` |
 
 Check a method's docblock for its rules (locks it takes, exceptions it throws, which hooks it fires). On an older core, feature-detect a newer parameter with `(new \ReflectionMethod(OrderService::class, 'cancel'))->getNumberOfParameters()`.
+
+`OrderPaymentService::recordImported()` records money already processed by a verified external provider, including historical receipts on cancelled orders. It requires a stable reference, is idempotent within the order and stays silent by default. See [the imported-payment contract](features/imported-order-payments.md) for currency checks, refunds, manual ledger reconciliation and announcement behavior. Feature-detect it with `method_exists(OrderPaymentService::class, 'recordImported')` before offering automated payment import on an older core.
 
 For delayed stock-audit counts, pass the item's `count_revision` as the optional sixth `StockAuditService::recordCount()` argument, `expectedRevision`. The service compares the current evidence under the audit and item locks and throws `InvalidStateException` with `errorCode = 'stale_count'` if it changed. The web and REST count endpoints accept the same token as `expected_revision` and return HTTP 409 on a conflict. Fetch and review the current count before deliberately retrying with its revision. Callers that omit the token keep the existing write behavior.
 

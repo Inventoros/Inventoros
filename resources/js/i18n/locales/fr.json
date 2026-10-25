@@ -573,6 +573,7 @@
     }
   },
   "orders": {
+      "channelOrderNumber": "Numéro de commande du canal",
     "itemsCol": "Articles",
     "sources": {
       "manual": "Manuelle",
@@ -833,7 +834,9 @@
     "suggestedQty": "Qté suggérée",
     "noSupplier": "Aucun fournisseur",
     "addSupplier": "Ajouter un fournisseur",
-    "hint": "Crée un bon de commande brouillon par fournisseur principal. Les produits sans fournisseur sont ignorés."
+    "hint": "Crée un bon de commande brouillon par fournisseur principal. Les produits sans fournisseur sont ignorés.",
+    "chooseVariants": "Choisir les variantes",
+    "variantHint": "Sélectionnez les références des variantes sur un bon de commande pour réapprovisionner ce produit."
   },
   "suppliers": {
     "title": "Fournisseurs",
@@ -3874,5 +3877,70 @@
   "warehouseStock": {
     "title": "Stock par entrepôt",
     "includeZero": "Inclure les stocks nuls"
+  },
+    "storage": {
+        "title": "Stockage des fichiers",
+        "description": "Stockage local et externe des fichiers téléversés.",
+        "configure": "Configurez INVENTOROS_UPLOADS_DISK et les identifiants AWS dans .env ou config/filesystems.php, actualisez le cache de configuration et redémarrez les workers de file.",
+        "existingFiles": "Les fichiers existants conservent leur disque enregistré. Gardez les anciennes définitions de disques lors du changement.",
+        "probe": "Le test écrit, lit et supprime un petit fichier privé temporaire.",
+        "driver": "Pilote",
+        "notConfigured": "Non configuré",
+        "usedFor": "Utilisation",
+        "bucket": "Bucket",
+        "region": "Région",
+        "connected": "Connexion confirmée : écriture, lecture et suppression réussies.",
+        "failed": "Échec de connexion pendant {step}. Vérifiez la configuration du serveur et les autorisations.",
+        "unchecked": "Aucun test récent.",
+        "checkedAt": "Vérifié : {time}",
+        "cleanupFailed": "Le fichier de test ne peut pas être supprimé. Vérifiez le préfixe connection-checks après correction des autorisations.",
+        "requestFailed": "Impossible de lancer le test. Réessayez dans un instant.",
+        "checking": "Vérification…",
+        "check": "Tester la connexion",
+        "purposes": {
+            "products": "Images de produits",
+            "logos": "Logos des organisations",
+            "labels": "Étiquettes d’expédition",
+            "imports": "Imports en file",
+            "exports": "Exports générés"
+        },
+        "steps": {
+            "connect": "la connexion",
+            "write": "l’écriture",
+            "read": "la lecture",
+            "delete": "la suppression"
+        }
+    },
+  "batchExpiryReport": {
+    "title": "Péremption des lots",
+    "description": "Repérez les lots périmés et anticipez les prochaines péremptions.",
+    "scope": "Quantités restantes de toute l’organisation, produits archivés inclus. Les lots ne sont pas affectés aux entrepôts. Seuls les lots datés avec un solde positif sont affichés.",
+    "asOf": "Au {date}, selon le jour de l’organisation. Les lots expirant aujourd’hui restent valides jusqu’à la fin de la journée.",
+    "search": "Produit, référence ou lot",
+    "window": "Période de péremption",
+    "export": "Exporter en CSV",
+    "product": "Produit",
+    "batch": "Lot",
+    "units": "Unités restantes",
+    "expiry": "Date de péremption",
+    "status": "Statut",
+    "archived": "Produit archivé",
+    "expiredUnits": "Unités périmées",
+    "notExpiredUnits": "Unités non périmées",
+    "lotCount": "{count} lots correspondants",
+    "exportLimit": "Le CSV contient les {count} premiers lots selon le tri actuel. Affinez les filtres pour exporter moins de lots.",
+    "empty": "Aucun lot daté restant ne correspond aux filtres.",
+    "windows": {
+      "7": "Périmés + 7 prochains jours",
+      "30": "Périmés + 30 prochains jours",
+      "90": "Périmés + 90 prochains jours",
+      "expired": "Périmés uniquement",
+      "all": "Toutes les dates"
+    },
+    "statuses": {
+      "expired": "Périmé",
+      "today": "Expire aujourd’hui",
+      "upcoming": "À venir"
+    }
   }
 }

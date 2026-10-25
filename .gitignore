@@ -38,3 +38,5 @@ Thumbs.db
 .claude/
 CLAUDE.md
 AGENTS.md
+
+/deploy/cpanel/ssh-settings.local.json

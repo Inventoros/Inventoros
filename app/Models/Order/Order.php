@@ -75,6 +75,14 @@ use Illuminate\Support\Carbon;
  */
 class Order extends Model
 {
+    /** A channel's human-readable reference, separate from core/dedup IDs. */
+    public function getChannelOrderNumberAttribute(): ?string
+    {
+        $value = $this->metadata['channel_order_number'] ?? $this->metadata['shopify']['name'] ?? null;
+
+        return is_string($value) && trim($value) !== '' ? trim($value) : null;
+    }
+
     use BelongsToOrganization, HasFactory, LogsActivity, SoftDeletes;
 
     public const APPROVAL_STATUS_PENDING = 'pending';

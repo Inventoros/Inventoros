@@ -9,7 +9,7 @@ import StatTile from '@/Components/ui/StatTile.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { useI18n } from 'vue-i18n';
 import { usePermissions } from '@/composables/usePermissions';
-import { Pencil, ArrowLeft, MapPin, Boxes, Users, Trash2, Star, Gauge } from 'lucide-vue-next';
+import { Pencil, ArrowLeft, MapPin, Boxes, Users, Trash2, Star, Gauge } from '@lucide/vue';
 
 const { t } = useI18n();
 const { hasPermission } = usePermissions();

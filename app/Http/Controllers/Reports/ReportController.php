@@ -246,7 +246,9 @@ class ReportController extends Controller
         $organizationId = $request->user()->organization_id;
 
         $query = StockAdjustment::with(['product', 'user'])
-            ->forOrganization($organizationId);
+            ->forOrganization($organizationId)
+            ->tap(fn ($query) => app(WarehouseAccessService::class)
+                ->scopeByLocation($query, $request->user(), 'stock_adjustments.location_id'));
 
         // Date filters
         if ($request->filled('date_from')) {
@@ -644,6 +646,7 @@ class ReportController extends Controller
 
         $products = (clone $base)
             ->with(array_merge(['category', 'location'], ReorderService::primarySupplierEagerLoad()))
+            ->withExists('variants')
             ->withEffectiveStock()
             ->orderBy('effective_stock', 'asc')
             ->orderBy('products.id')
@@ -672,6 +675,7 @@ class ReportController extends Controller
                 'price' => $product->price,
                 'supplier' => $primarySupplier?->name,
                 'supplier_id' => $primarySupplier?->id,
+                'can_quick_reorder' => ! $reorder->requiresVariantSelection($product),
                 'suggested_quantity' => $reorder->suggestedQuantity($product, $primarySupplier, $warehouseOnHand[$product->id] ?? []),
                 // Reorder up to max_stock; fall back to reorder_point /
                 // min_stock when it's null, and never let a null or

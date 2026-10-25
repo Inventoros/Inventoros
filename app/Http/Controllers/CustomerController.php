@@ -56,7 +56,10 @@ class CustomerController extends Controller
      */
     public function create(): Response
     {
-        return Inertia::render('Customers/Create');
+        return Inertia::render('Customers/Create', [
+            'pluginFields' => apply_filters('customer_form_data', [], null, request()),
+            'pluginComponents' => plugin_slots('customers.create', ['header', 'before-form', 'business-details', 'after-form']),
+        ]);
     }
 
     /**
@@ -67,7 +70,7 @@ class CustomerController extends Controller
      */
     public function store(StoreCustomerRequest $request)
     {
-        $validated = $request->validated();
+        $validated = \App\Support\CustomerForm::payload($request->validated(), $request);
 
         $validated['organization_id'] = $request->user()->organization_id;
         $validated['is_active'] = $validated['is_active'] ?? true;
@@ -103,7 +106,7 @@ class CustomerController extends Controller
         $organization = $customer->organization;
 
         return Inertia::render('Customers/Show', [
-            'pluginComponents' => plugin_slots('customers.show', ['header', 'actions', 'footer']),
+            'pluginComponents' => plugin_slots('customers.show', ['header', 'actions', 'business-details', 'footer']),
             'customer' => $customer,
             'contacts' => $customer->contacts()
                 ->orderBy('id')
@@ -141,6 +144,8 @@ class CustomerController extends Controller
 
         return Inertia::render('Customers/Edit', [
             'customer' => $customer,
+            'pluginFields' => apply_filters('customer_form_data', [], $customer, $request),
+            'pluginComponents' => plugin_slots('customers.edit', ['header', 'before-form', 'business-details', 'after-form']),
         ]);
     }
 
@@ -157,7 +162,7 @@ class CustomerController extends Controller
             abort(404);
         }
 
-        $validated = $request->validated();
+        $validated = \App\Support\CustomerForm::payload($request->validated(), $request, $customer);
 
         $customer->update($validated);
 

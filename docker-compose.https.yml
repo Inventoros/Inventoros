@@ -1,0 +1,31 @@
+# Opt-in HTTPS served by Caddy, rather than a separate TLS reverse proxy.
+# Requires Docker Compose >= 2.24.4 for !override.
+# Set INVENTOROS_DOMAIN=inventory.example.com in .env, then run:
+# docker compose -f docker-compose.prod.yml -f docker-compose.https.yml up -d
+
+x-https-environment: &https-environment
+  APP_URL: https://${INVENTOROS_DOMAIN:?Set INVENTOROS_DOMAIN to your public hostname}
+  SERVER_NAME: ${INVENTOROS_DOMAIN:?Set INVENTOROS_DOMAIN to your public hostname}
+
+services:
+  app:
+    environment:
+      <<: *https-environment
+    # Replace the base stack's 8080 mapping, rather than appending new ports.
+    ports: !override
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - caddy-data:/data
+      - caddy-config:/config
+  worker:
+    environment:
+      <<: *https-environment
+  scheduler:
+    environment:
+      <<: *https-environment
+
+volumes:
+  caddy-data:
+  caddy-config:

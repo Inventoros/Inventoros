@@ -8,7 +8,7 @@ import { Head, useForm } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { displayDateTime } from '@/lib/dates';
-import { ClipboardList, SlidersHorizontal, ArrowLeftRight, Inbox, ExternalLink, ShoppingCart } from 'lucide-vue-next';
+import { ClipboardList, SlidersHorizontal, ArrowLeftRight, Inbox, ExternalLink, ShoppingCart } from '@lucide/vue';
 
 const { t } = useI18n();
 
