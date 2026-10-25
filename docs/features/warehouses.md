@@ -52,6 +52,8 @@ The product page's **Stock by warehouse** table shows on-hand per warehouse and 
 - A warehouse with no row is not tracked separately; the product-level thresholds keep applying to the product's total stock.
 - `Product::lowStock()` and `Product::needsReorder()` match a product that is low or due in total **or** in any warehouse with its own thresholds, so the low-stock filter and report, `inventory:check-reorder-points`, and the dashboard's reorder suggestions all pick it up.
 - `ReorderService::suggestedQuantity()` orders what the short warehouses need (each warehouse's reorder quantity, or the gap up to its max stock), still never below the supplier's minimum order. `ReorderService::warehouseShortfalls()` lists them.
+
+Generated draft purchase orders use the supplier's currency, with the organization currency as fallback. Automatic checks skip products already covered by outstanding lines on draft, sent or partially received orders; a fully received line no longer blocks replenishment. Products sold by variant require an explicit variant SKU selection on the purchase order form, available through **Choose variants** on reorder suggestions. Aggregate product demand cannot decide which sizes or colours to buy. Warehouse thresholds count active variant bins for those products.
 - When a bin change takes a warehouse across its own minimum, stock managers who can access that warehouse get an in-app "Low stock in {warehouse}" alert (type `warehouse_low_stock`, hook `warehouse_low_stock_alert`). The product-level low-stock alert and email are unchanged.
 
 ## Capacity and utilisation

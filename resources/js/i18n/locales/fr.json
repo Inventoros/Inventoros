@@ -834,7 +834,9 @@
     "suggestedQty": "Qté suggérée",
     "noSupplier": "Aucun fournisseur",
     "addSupplier": "Ajouter un fournisseur",
-    "hint": "Crée un bon de commande brouillon par fournisseur principal. Les produits sans fournisseur sont ignorés."
+    "hint": "Crée un bon de commande brouillon par fournisseur principal. Les produits sans fournisseur sont ignorés.",
+    "chooseVariants": "Choisir les variantes",
+    "variantHint": "Sélectionnez les références des variantes sur un bon de commande pour réapprovisionner ce produit."
   },
   "suppliers": {
     "title": "Fournisseurs",

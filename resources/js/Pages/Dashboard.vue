@@ -418,7 +418,7 @@ const secondaryStats = () => [
                                             type="checkbox"
                                             class="rounded border-border-subtle text-brand ds-focus-ring disabled:opacity-40"
                                             :checked="quickReorder.isSelected(row.id)"
-                                            :disabled="!row.supplier_id"
+                                            :disabled="!row.supplier_id || row.can_quick_reorder === false"
                                             :aria-label="t('quickReorder.selectForReorder', { name: row.name })"
                                             @change="quickReorder.toggle(row.id)"
                                         />
@@ -444,7 +444,7 @@ const secondaryStats = () => [
                                     <td class="px-3 py-2 text-right font-medium tabular-nums text-text-primary">{{ row.suggested_quantity }}</td>
                                     <td v-if="quickReorder.canCreatePo.value" class="px-3 py-2 text-right">
                                         <Button
-                                            v-if="row.supplier_id"
+                                            v-if="row.supplier_id && row.can_quick_reorder !== false"
                                             variant="ghost"
                                             size="xs"
                                             :disabled="quickReorder.submitting.value"
@@ -452,6 +452,9 @@ const secondaryStats = () => [
                                         >
                                             <ClipboardList :size="12" />
                                             {{ t('quickReorder.createPo') }}
+                                        </Button>
+                                        <Button v-else-if="row.can_quick_reorder === false" variant="ghost" size="xs" as="Link" :href="route('purchase-orders.create')" :title="t('quickReorder.variantHint')">
+                                            {{ t('quickReorder.chooseVariants') }}
                                         </Button>
                                     </td>
                                 </tr>

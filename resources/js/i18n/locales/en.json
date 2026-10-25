@@ -712,7 +712,9 @@
     "suggestedQty": "Suggested qty",
     "noSupplier": "No supplier",
     "addSupplier": "Add a supplier",
-    "hint": "Creates one draft purchase order per primary supplier. Products without a supplier are skipped."
+    "hint": "Creates one draft purchase order per primary supplier. Products without a supplier are skipped.",
+    "chooseVariants": "Choose variants",
+    "variantHint": "Select variant SKUs on a purchase order to replenish this product."
   },
   "suppliers": {
     "title": "Suppliers",

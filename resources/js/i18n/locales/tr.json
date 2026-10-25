@@ -834,7 +834,9 @@
     "suggestedQty": "Önerilen adet",
     "noSupplier": "Tedarikçi yok",
     "addSupplier": "Tedarikçi ekle",
-    "hint": "Her birincil tedarikçi için bir taslak satın alma siparişi oluşturur. Tedarikçisi olmayan ürünler atlanır."
+    "hint": "Her birincil tedarikçi için bir taslak satın alma siparişi oluşturur. Tedarikçisi olmayan ürünler atlanır.",
+    "chooseVariants": "Varyant seç",
+    "variantHint": "Bu ürünü tedarik etmek için satın alma siparişinde varyant SKU’larını seçin."
   },
   "suppliers": {
     "title": "Tedarikçiler",
