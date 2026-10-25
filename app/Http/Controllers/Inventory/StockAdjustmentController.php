@@ -68,8 +68,7 @@ class StockAdjustmentController extends Controller
         $adjustments = $query->paginate(20)->withQueryString();
 
         // Get filter options
-        $products = Product::forOrganization($organizationId)
-            ->active()
+        $products = Product::withTrashed()->forOrganization($organizationId)
             ->orderBy('name')
             ->get(['id', 'name', 'sku']);
 
