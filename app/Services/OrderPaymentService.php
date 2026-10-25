@@ -15,6 +15,8 @@ use App\Models\User;
 use App\Support\Money;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
 /**
@@ -156,6 +158,63 @@ final class OrderPaymentService
     }
 
     public const PRE_TRACKING_REFERENCE = 'Marked paid (pre-tracking)';
+
+    /**
+     * Record money already processed by an external system. Unlike receiving
+     * a new payment, a historical receipt may predate an order's cancellation
+     * and may exceed its current total. Refunds still cannot exceed receipts.
+     *
+     * The caller authorizes the integration, verifies the source and currency,
+     * and supplies a stable provider reference (unique within this order).
+     * Replays return the existing row, including a manually voided row; changed
+     * amounts/types are refused. No HTTP payment endpoint calls this method.
+     * Historical imports are silent unless the caller opts into announcements.
+     *
+     * @param  array{source: string, type: string, amount: mixed, method: string, reference: string, paid_at: mixed, notes?: string|null}  $data
+     *
+     * @api
+     */
+    public function recordImported(Order $order, User $actor, array $data, bool $announce = false): OrderPayment
+    {
+        $data = Validator::make($data, [
+            'source' => ['required', 'string', 'max:80'],
+            'type' => ['required', Rule::in(PaymentType::values())],
+            'amount' => ['required', 'numeric', 'decimal:0,2', 'min:0.01', 'max:9999999999.99'],
+            'method' => ['required', Rule::in(PaymentMethod::values())],
+            'reference' => ['required', 'string', 'max:255'],
+            'paid_at' => ['required', 'date'],
+            'notes' => ['nullable', 'string', 'max:2000'],
+        ])->validate();
+
+        [$payment, $locked, $created] = DB::transaction(function () use ($order, $actor, $data) {
+            $locked = $this->lock($order);
+            abort_unless((int) $actor->organization_id === (int) $locked->organization_id, 403);
+            $type = PaymentType::from($data['type']);
+            $amount = Money::of($data['amount']);
+            $existing = $locked->payments()->withoutGlobalScopes()->where('reference', $data['reference'])->get()
+                ->first(fn ($payment) => $payment->reference === $data['reference']);
+            if ($existing !== null) {
+                if ($existing->type !== $type || Money::compare($existing->amount, $amount) !== 0 || $existing->method->value !== $data['method']) {
+                    throw ValidationException::withMessages(['reference' => 'This external reference already records a different transaction. Review the ledger before retrying.']);
+                }
+
+                return [$existing, $locked, false];
+            }
+            if ($type === PaymentType::REFUND && Money::compare($amount, $locked->amount_paid) > 0) {
+                throw ValidationException::withMessages(['amount' => 'An imported refund cannot exceed the recorded receipts. Import the receipts first.']);
+            }
+            $payment = $this->insert($locked, $actor, $type, $amount, $data);
+            $this->settle($locked);
+            $this->log($locked, $actor, 'payment_imported', "Imported {$type->value} of {$amount} from {$data['source']}", $payment, ['source' => $data['source']]);
+
+            return [$payment, $locked, true];
+        });
+        if ($created && $announce) {
+            DB::afterCommit(fn () => do_action('payment_recorded', $payment, $locked, $actor));
+        }
+
+        return $payment;
+    }
 
     /**
      * Bring untracked orders (placed before payment tracking) dated before
