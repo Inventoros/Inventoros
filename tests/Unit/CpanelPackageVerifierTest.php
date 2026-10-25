@@ -102,6 +102,8 @@ final class CpanelPackageVerifierTest extends TestCase
             'screenshots' => ['inventoros/screenshots/dashboard.png'],
             'docker' => ['inventoros/docker/entrypoint.sh'],
             'Dockerfile' => ['inventoros/Dockerfile'],
+            'HTTPS compose' => ['inventoros/docker-compose.https.yml'],
+            'compose override' => ['inventoros/docker-compose.override.yaml'],
             'phpunit.xml' => ['inventoros/phpunit.xml'],
             'node_modules' => ['inventoros/plugins/hello-world/ui/node_modules/x.js'],
             'dev dependency' => ['inventoros/vendor/phpunit/phpunit/src/x.php'],
@@ -134,6 +136,47 @@ final class CpanelPackageVerifierTest extends TestCase
 
         $this->assertSame(1, $process->getExitCode());
         $this->assertStringContainsString('release.json: missing', $process->getErrorOutput());
+    }
+
+    public function test_build_excludes_docker_compose_variants_without_dropping_other_yaml(): void
+    {
+        $root = $this->dir.'/project';
+        $composeFiles = ['docker-compose.yml', 'docker-compose.prod.yml', 'docker-compose.https.yml', 'docker-compose.override.yaml'];
+        $files = [
+            'artisan' => '<?php',
+            '.env.example' => 'APP_KEY=',
+            'bootstrap/app.php' => '<?php',
+            'vendor/autoload.php' => '<?php',
+            'public/build/manifest.json' => '{}',
+            'composer.json' => json_encode(['require' => ['php' => '^8.4.1']]),
+            'composer.lock' => json_encode(['packages' => []]),
+            'operations.yaml' => 'enabled: true',
+        ];
+        foreach (['build-release.php', 'index.php', '.htaccess', 'INSTALL.md'] as $file) {
+            $files['deploy/cpanel/'.$file] = File::get(base_path('deploy/cpanel/'.$file));
+        }
+        foreach ($composeFiles as $file) {
+            $files[$file] = 'services: {}';
+        }
+        foreach ($files as $file => $contents) {
+            File::ensureDirectoryExists(dirname($root.'/'.$file));
+            File::put($root.'/'.$file, $contents);
+        }
+
+        $process = new Process([
+            (new PhpExecutableFinder)->find(), $root.'/deploy/cpanel/build-release.php',
+            '--version=2.0.0', '--out='.$this->dir.'/out',
+        ], env: ['GITHUB_SHA' => str_repeat('a', 40)]);
+        $process->run();
+        $this->assertSame(0, $process->getExitCode(), $process->getErrorOutput());
+
+        $zip = new ZipArchive;
+        $this->assertTrue($zip->open($this->dir.'/out/inventoros-cpanel-2.0.0.zip'));
+        foreach ($composeFiles as $file) {
+            $this->assertFalse($zip->locateName('inventoros/'.$file), $file);
+        }
+        $this->assertNotFalse($zip->locateName('inventoros/operations.yaml'));
+        $zip->close();
     }
 
     public function test_a_manifest_for_another_version_fails(): void
