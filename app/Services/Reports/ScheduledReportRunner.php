@@ -13,6 +13,7 @@ use App\Models\Scopes\OrganizationScope;
 use App\Models\User;
 use App\Services\Organizations\ActiveOrganization;
 use App\Services\ReportDataService;
+use App\Services\WarehouseAccessService;
 use Carbon\CarbonInterface;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\DB;
@@ -99,7 +100,7 @@ class ScheduledReportRunner
             return $this->record($schedule, $skip);
         }
 
-        $recipients = $this->currentRecipients($schedule, $report->data_source);
+        $recipients = $this->currentRecipients($schedule, $report->data_source, $owner);
         if ($recipients === []) {
             return $this->record($schedule, $this->skip($schedule, 'no_recipients'));
         }
@@ -138,7 +139,7 @@ class ScheduledReportRunner
         // membership, email or permissions may have changed while waiting.
         // Intersect so newly added recipients also wait for the next run.
         $recipients = array_values(array_intersect(
-            $this->currentRecipients($schedule, $report->data_source),
+            $this->currentRecipients($schedule, $report->data_source, $owner),
             $recipients,
         ));
         if ($recipients === []) {
@@ -235,12 +236,12 @@ class ScheduledReportRunner
      * The schedule's recipients that are still users of its organization and
      * may themselves see the report (view_reports plus the data source's view
      * permission), matched case-insensitively and returned as the stored
-     * user email. The report is generated with the owner's access, so without
-     * this an owner could mail data to colleagues who may not see it.
+     * user email. Movement-report recipients must also cover the owner's
+     * warehouse access: the attachment is generated with the owner's scope.
      *
      * @return array<int, string>
      */
-    private function currentRecipients(ReportSchedule $schedule, string $dataSource): array
+    private function currentRecipients(ReportSchedule $schedule, string $dataSource, User $owner): array
     {
         $required = ReportDataService::viewPermissionsFor($dataSource);
 
@@ -255,8 +256,24 @@ class ScheduledReportRunner
 
         // Members of the schedule's organization, at their current address,
         // who may see the report there.
-        return app(ActiveOrganization::class)
-            ->membersIn((int) $schedule->organization_id, $required, fn ($query) => $query->whereIn(DB::raw('LOWER(email)'), $wanted))
+        $members = app(ActiveOrganization::class)
+            ->membersIn((int) $schedule->organization_id, $required, fn ($query) => $query->whereIn(DB::raw('LOWER(email)'), $wanted));
+
+        if ($dataSource === 'stock_adjustments') {
+            // The attachment is rendered once with the owner's access. A
+            // recipient must cover that whole scope; otherwise an org-wide
+            // owner could email another warehouse's movement history to them.
+            $access = app(WarehouseAccessService::class);
+            $ownerIds = $access->accessibleWarehouseIds($owner);
+            $members = $members->filter(function (User $recipient) use ($access, $ownerIds): bool {
+                $recipientIds = $access->accessibleWarehouseIds($recipient);
+
+                return $recipientIds === null
+                    || ($ownerIds !== null && array_diff($ownerIds, $recipientIds) === []);
+            });
+        }
+
+        return $members
             ->sortBy('id')
             ->pluck('email')
             ->unique()

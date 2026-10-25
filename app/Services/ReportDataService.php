@@ -151,7 +151,7 @@ class ReportDataService
         $rows = match ($dataSource) {
             'products' => $this->queryProducts($organizationId, $columns, $filters, $sort),
             'orders' => $this->queryOrders($organizationId, $columns, $filters, $sort),
-            'stock_adjustments' => $this->queryStockAdjustments($organizationId, $columns, $filters, $sort),
+            'stock_adjustments' => $this->queryStockAdjustments($user, $organizationId, $columns, $filters, $sort),
             'customers' => $this->queryCustomers($organizationId, $columns, $filters, $sort),
             'suppliers' => $this->querySuppliers($organizationId, $columns, $filters, $sort),
             'purchase_orders' => $this->queryPurchaseOrders($organizationId, $columns, $filters, $sort),
@@ -354,11 +354,13 @@ class ReportDataService
     /**
      * Query stock adjustments data source.
      */
-    private function queryStockAdjustments(int $organizationId, array $columns, ?array $filters, ?array $sort): Collection
+    private function queryStockAdjustments(User $user, int $organizationId, array $columns, ?array $filters, ?array $sort): Collection
     {
         $query = DB::table('stock_adjustments')
             ->leftJoin('products', 'stock_adjustments.product_id', '=', 'products.id')
             ->where('stock_adjustments.organization_id', $organizationId);
+
+        app(WarehouseAccessService::class)->scopeByLocation($query, $user, 'stock_adjustments.location_id');
 
         $columnMap = [
             'product_name' => 'products.name as product_name',

@@ -42,6 +42,7 @@ const reportCards = [
         icon: DollarSign,
         title: t('reports.inventoryValuation.title'),
         description: t('reports.inventoryValuation.description'),
+        requires: ['view_products'],
     },
     {
         href: route('reports.stock-movement'),
@@ -54,18 +55,21 @@ const reportCards = [
         icon: TrendingUp,
         title: t('reports.salesAnalysis.title'),
         description: t('reports.salesAnalysis.description'),
+        requires: ['view_orders'],
     },
     {
         href: route('reports.low-stock'),
         icon: AlertTriangle,
         title: t('reports.lowStock.title'),
         description: t('reports.lowStock.description'),
+        requires: ['view_products'],
     },
     {
         href: route('reports.category-performance'),
         icon: Tag,
         title: t('reports.categoryPerformance.title'),
         description: t('reports.categoryPerformance.description'),
+        requires: ['view_products'],
     },
     // Analytics reports also need the view permission of each data source
     // they read; cards the user cannot open are hidden rather than 403ing.
