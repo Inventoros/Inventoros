@@ -14,7 +14,7 @@ import { useI18n } from 'vue-i18n';
 import { defaultSupplierSku, defaultUnitCost } from '@/lib/purchaseOrderLine';
 import { toIsoDate } from '@/lib/dates';
 import { formatMoney } from '@/lib/money';
-import { ArrowLeft, Plus, Trash2 } from 'lucide-vue-next';
+import { ArrowLeft, Plus, Trash2 } from '@lucide/vue';
 
 const { organizationCurrency } = useCurrency();
 const { t } = useI18n();

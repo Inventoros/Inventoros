@@ -11,7 +11,7 @@ import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { displayCalendarDate } from '@/lib/dates';
 import { formatMoney } from '@/lib/money';
-import { Plus, Search, Eye, Pencil, Trash2, PackageCheck, ClipboardList } from 'lucide-vue-next';
+import { Plus, Search, Eye, Pencil, Trash2, PackageCheck, ClipboardList } from '@lucide/vue';
 import { usePermissions } from '@/composables/usePermissions';
 
 const { hasPermission, canVisit } = usePermissions();

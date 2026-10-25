@@ -7,7 +7,7 @@ import { Head, Link, useForm } from '@inertiajs/vue3';
 
 import { useI18n } from 'vue-i18n';
 import { roleDescription, roleName } from '@/lib/permissionLabels';
-import { ArrowLeft } from 'lucide-vue-next';
+import { ArrowLeft } from '@lucide/vue';
 
 const props = defineProps({
     user: Object,

@@ -6,7 +6,7 @@ import PageHeader from '@/Components/ui/PageHeader.vue';
 import { formatDate, formatMoney } from '@/lib/portal';
 import { Head, Link } from '@inertiajs/vue3';
 import { useI18n } from 'vue-i18n';
-import { RotateCcw } from 'lucide-vue-next';
+import { RotateCcw } from '@lucide/vue';
 
 defineProps({
     returns: { type: Object, required: true },

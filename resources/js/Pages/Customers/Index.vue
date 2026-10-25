@@ -8,7 +8,7 @@ import Badge from '@/Components/ui/Badge.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { Plus, Search, Eye, Pencil, Trash2, Users } from 'lucide-vue-next';
+import { Plus, Search, Eye, Pencil, Trash2, Users } from '@lucide/vue';
 import { usePermissions } from '@/composables/usePermissions';
 
 const { hasPermission, canVisit } = usePermissions();

@@ -7,7 +7,7 @@ import Badge from '@/Components/ui/Badge.vue';
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { Copy, RefreshCw } from 'lucide-vue-next';
+import { Copy, RefreshCw } from '@lucide/vue';
 
 const { t } = useI18n();
 

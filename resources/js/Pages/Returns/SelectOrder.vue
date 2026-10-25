@@ -7,7 +7,7 @@ import Badge from '@/Components/ui/Badge.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { ArrowLeft, Search, RotateCcw, PackageOpen } from 'lucide-vue-next';
+import { ArrowLeft, Search, RotateCcw, PackageOpen } from '@lucide/vue';
 import { formatMoney } from '@/lib/money';
 import { displayCalendarDate } from '@/lib/dates';
 import { orderStatusLabel, orderStatusVariant } from '@/lib/orderLabels';

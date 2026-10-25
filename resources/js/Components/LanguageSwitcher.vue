@@ -10,7 +10,7 @@
 import { computed, ref, onMounted, onUnmounted } from 'vue';
 import { router, usePage } from '@inertiajs/vue3';
 import { useI18n } from 'vue-i18n';
-import { Languages, Check } from 'lucide-vue-next';
+import { Languages, Check } from '@lucide/vue';
 import { availableLocales, setLocale } from '@/i18n';
 
 const { locale, t } = useI18n();

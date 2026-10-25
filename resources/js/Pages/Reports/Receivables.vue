@@ -11,7 +11,7 @@ import { Head, Link } from '@inertiajs/vue3';
 import { useI18n } from 'vue-i18n';
 import { displayCalendarDate } from '@/lib/dates';
 import { formatMoney } from '@/lib/money';
-import { ArrowLeft, Wallet, ShoppingCart, Users, CircleCheck } from 'lucide-vue-next';
+import { ArrowLeft, Wallet, ShoppingCart, Users, CircleCheck } from '@lucide/vue';
 import { usePermissions } from '@/composables/usePermissions';
 
 const { canVisit } = usePermissions();

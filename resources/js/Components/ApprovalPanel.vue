@@ -12,7 +12,7 @@ import { computed, ref } from 'vue';
 import { useForm } from '@inertiajs/vue3';
 import { useI18n } from 'vue-i18n';
 import { displayDateTime } from '@/lib/dates';
-import { ShieldCheck, ShieldAlert, ShieldQuestion, Send } from 'lucide-vue-next';
+import { ShieldCheck, ShieldAlert, ShieldQuestion, Send } from '@lucide/vue';
 import Card from '@/Components/ui/Card.vue';
 import Badge from '@/Components/ui/Badge.vue';
 import Button from '@/Components/ui/Button.vue';

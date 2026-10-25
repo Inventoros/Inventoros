@@ -2,7 +2,7 @@
 import Button from '@/Components/ui/Button.vue';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { Download } from 'lucide-vue-next';
+import { Download } from '@lucide/vue';
 
 // Download links for a report route in each server-rendered format. The
 // current filters travel with the link so the file matches what is on screen.

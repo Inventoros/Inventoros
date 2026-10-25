@@ -9,7 +9,7 @@ import { Head, Link, router } from '@inertiajs/vue3';
 import { computed, reactive, ref } from 'vue';
 import { usePermissions } from '@/composables/usePermissions';
 import { useI18n } from 'vue-i18n';
-import { ArrowLeft, Check, PackageCheck, CheckCircle2, X, PackageOpen } from 'lucide-vue-next';
+import { ArrowLeft, Check, PackageCheck, CheckCircle2, X, PackageOpen } from '@lucide/vue';
 import { formatMoney } from '@/lib/money';
 import { displayDateTime } from '@/lib/dates';
 

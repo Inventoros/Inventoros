@@ -10,7 +10,7 @@ import { Head, Link, router } from '@inertiajs/vue3';
 import { computed, defineAsyncComponent, ref } from 'vue';
 import { useBarcodeWedge, useBarcodeLookup } from '@/composables/useBarcodeWedge';
 import { useI18n } from 'vue-i18n';
-import { ArrowLeft, CheckCircle2, XCircle, ScanLine, RotateCcw } from 'lucide-vue-next';
+import { ArrowLeft, CheckCircle2, XCircle, ScanLine, RotateCcw } from '@lucide/vue';
 import { displayDateTime } from '@/lib/dates';
 
 const BarcodeScannerModal = defineAsyncComponent(() => import('@/Components/BarcodeScannerModal.vue'));

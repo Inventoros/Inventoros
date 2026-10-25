@@ -8,7 +8,7 @@ import Badge from '@/Components/ui/Badge.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { Search, Eye, RotateCcw } from 'lucide-vue-next';
+import { Search, Eye, RotateCcw } from '@lucide/vue';
 import { formatMoney, formatNumber } from '@/lib/money';
 import { displayDate } from '@/lib/dates';
 import { usePermissions } from '@/composables/usePermissions';

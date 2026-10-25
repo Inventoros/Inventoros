@@ -9,7 +9,7 @@ import { Head, Link, router } from '@inertiajs/vue3';
 import { computed, reactive, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { formatNumber, formatDay } from '@/lib/reportFormat';
-import { ArrowLeft, ArrowUpDown, Download } from 'lucide-vue-next';
+import { ArrowLeft, ArrowUpDown, Download } from '@lucide/vue';
 
 const props = defineProps({
     batches: Object,

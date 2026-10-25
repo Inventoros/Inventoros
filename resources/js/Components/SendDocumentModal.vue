@@ -3,7 +3,7 @@ import Button from '@/Components/ui/Button.vue';
 import { useForm } from '@inertiajs/vue3';
 import { watch } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { X, Paperclip } from 'lucide-vue-next';
+import { X, Paperclip } from '@lucide/vue';
 
 /**
  * Modal for emailing a document (purchase order, invoice) with the recipient

@@ -7,7 +7,7 @@ import { formatDate, formatMoney } from '@/lib/portal';
 import { Head, Link } from '@inertiajs/vue3';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { ArrowLeft } from 'lucide-vue-next';
+import { ArrowLeft } from '@lucide/vue';
 
 const props = defineProps({
     returnOrder: { type: Object, required: true },

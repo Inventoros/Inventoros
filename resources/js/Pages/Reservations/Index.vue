@@ -7,7 +7,7 @@ import Badge from '@/Components/ui/Badge.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { Lock, Search, Unlock, X } from 'lucide-vue-next';
+import { Lock, Search, Unlock, X } from '@lucide/vue';
 import { displayDate } from '@/lib/dates';
 
 const { t } = useI18n();

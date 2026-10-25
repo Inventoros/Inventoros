@@ -19,7 +19,7 @@ import {
     FileText,
     Check,
     Info,
-} from 'lucide-vue-next';
+} from '@lucide/vue';
 
 const props = defineProps({
     categories: Array,

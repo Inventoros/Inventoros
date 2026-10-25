@@ -12,7 +12,7 @@ import { useI18n } from 'vue-i18n';
 import { displayCalendarDate, todayIsoDate } from '@/lib/dates';
 import { formatMoney } from '@/lib/money';
 import { orderSourceLabel, orderStatusLabel, orderStatusVariant } from '@/lib/orderLabels';
-import { Plus, Search, Eye, Pencil, Trash2, ShoppingCart, CheckCheck, X } from 'lucide-vue-next';
+import { Plus, Search, Eye, Pencil, Trash2, ShoppingCart, CheckCheck, X } from '@lucide/vue';
 import { usePermissions } from '@/composables/usePermissions';
 
 const { hasPermission, canVisit } = usePermissions();

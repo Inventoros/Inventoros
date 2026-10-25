@@ -38,7 +38,7 @@ import {
     Package,
     Truck,
     QrCode,
-} from 'lucide-vue-next';
+} from '@lucide/vue';
 
 const { organizationCurrency } = useCurrency();
 const { t } = useI18n();

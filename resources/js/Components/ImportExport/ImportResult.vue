@@ -11,7 +11,7 @@
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import Card from '@/Components/ui/Card.vue';
-import { AlertTriangle, Check, RefreshCw, SkipForward, X, Info } from 'lucide-vue-next';
+import { AlertTriangle, Check, RefreshCw, SkipForward, X, Info } from '@lucide/vue';
 
 const props = defineProps({
     result: {

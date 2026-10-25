@@ -19,7 +19,7 @@ import {
     ArrowLeft,
     CheckCircle2,
     ClipboardList,
-} from 'lucide-vue-next';
+} from '@lucide/vue';
 import { usePermissions } from '@/composables/usePermissions';
 
 const { canVisit } = usePermissions();

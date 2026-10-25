@@ -16,7 +16,7 @@ import { formatPercent } from '@/lib/reportFormat';
 import axios from 'axios';
 import ImageUploader from '@/Components/ImageUploader.vue';
 import { formatMoney } from '@/lib/money';
-import { ArrowLeft, Zap, X, Plus, Trash2, ChevronDown, Layers } from 'lucide-vue-next';
+import { ArrowLeft, Zap, X, Plus, Trash2, ChevronDown, Layers } from '@lucide/vue';
 
 const { t } = useI18n();
 

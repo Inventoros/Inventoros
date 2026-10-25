@@ -19,7 +19,7 @@ import {
     RefreshCw,
     HardDrive,
     ChevronRight,
-} from 'lucide-vue-next';
+} from '@lucide/vue';
 
 defineProps({
     pluginComponents: Object,

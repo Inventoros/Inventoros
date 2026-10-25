@@ -1,7 +1,7 @@
 <script setup>
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { Star } from 'lucide-vue-next';
+import { Star } from '@lucide/vue';
 
 /**
  * 1-5 supplier rating. Read-only by default; pass `editable` with v-model to

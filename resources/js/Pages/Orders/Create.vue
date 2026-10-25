@@ -14,7 +14,7 @@ import { useI18n } from 'vue-i18n';
 import { todayIsoDate } from '@/lib/dates';
 import { formatMoney } from '@/lib/money';
 import { linePrice } from '@/lib/orderLinePrice';
-import { ArrowLeft, Plus, Trash2, PackageOpen, ScanLine } from 'lucide-vue-next';
+import { ArrowLeft, Plus, Trash2, PackageOpen, ScanLine } from '@lucide/vue';
 
 const BarcodeScannerModal = defineAsyncComponent(() => import('@/Components/BarcodeScannerModal.vue'));
 

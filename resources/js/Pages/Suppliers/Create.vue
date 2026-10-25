@@ -10,7 +10,7 @@ import PluginSlot from '@/Components/PluginSlot.vue';
 import SupplierRating from '@/Components/SupplierRating.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import { useI18n } from 'vue-i18n';
-import { ArrowLeft } from 'lucide-vue-next';
+import { ArrowLeft } from '@lucide/vue';
 
 const { organizationCurrency } = useCurrency();
 const { t } = useI18n();

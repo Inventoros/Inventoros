@@ -17,7 +17,7 @@ import {
     PackageCheck,
     Bell,
     ArrowRight,
-} from 'lucide-vue-next';
+} from '@lucide/vue';
 
 const props = defineProps({
     notifications: Object,

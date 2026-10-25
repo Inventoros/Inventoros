@@ -47,7 +47,7 @@ import {
     Menu,
     LogOut,
     X,
-} from 'lucide-vue-next';
+} from '@lucide/vue';
 
 import { usePermissions } from '@/composables/usePermissions';
 import FlashMessages from '@/Components/Layout/FlashMessages.vue';

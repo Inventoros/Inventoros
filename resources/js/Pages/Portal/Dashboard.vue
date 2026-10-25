@@ -8,7 +8,7 @@ import { formatDate, formatDay, formatMoney } from '@/lib/portal';
 import { Head, Link, usePage } from '@inertiajs/vue3';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { ArrowRight, Package, PackageOpen, RotateCcw, Truck } from 'lucide-vue-next';
+import { ArrowRight, Package, PackageOpen, RotateCcw, Truck } from '@lucide/vue';
 
 defineProps({
     stats: { type: Object, required: true },

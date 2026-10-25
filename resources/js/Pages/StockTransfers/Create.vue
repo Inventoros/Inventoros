@@ -7,7 +7,7 @@ import { Head, Link, useForm } from '@inertiajs/vue3';
 import { computed, defineAsyncComponent, ref } from 'vue';
 import { useBarcodeWedge, useBarcodeLookup } from '@/composables/useBarcodeWedge';
 import { useI18n } from 'vue-i18n';
-import { ArrowLeft, ArrowRight, Plus, Trash2, ScanLine } from 'lucide-vue-next';
+import { ArrowLeft, ArrowRight, Plus, Trash2, ScanLine } from '@lucide/vue';
 
 const BarcodeScannerModal = defineAsyncComponent(() => import('@/Components/BarcodeScannerModal.vue'));
 

@@ -11,7 +11,7 @@ import { formatCurrency, formatNumber } from '@/lib/reportFormat';
 import { formatNumber as formatPlainNumber } from '@/lib/money';
 import { Head, Link } from '@inertiajs/vue3';
 import { useI18n } from 'vue-i18n';
-import { ArrowLeft, RefreshCw, CalendarClock, DollarSign, Info } from 'lucide-vue-next';
+import { ArrowLeft, RefreshCw, CalendarClock, DollarSign, Info } from '@lucide/vue';
 
 const { t } = useI18n();
 

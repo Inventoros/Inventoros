@@ -25,7 +25,7 @@ import {
     BarChart3,
     Wallet,
     CalendarClock,
-} from 'lucide-vue-next';
+} from '@lucide/vue';
 
 const { t, te } = useI18n();
 const { hasAllPermissions } = usePermissions();

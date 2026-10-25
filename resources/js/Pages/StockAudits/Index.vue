@@ -9,7 +9,7 @@ import { Head, Link, router } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { displayDate } from '@/lib/dates';
-import { Plus, Search, Eye, ClipboardList, CalendarClock } from 'lucide-vue-next';
+import { Plus, Search, Eye, ClipboardList, CalendarClock } from '@lucide/vue';
 import { usePermissions } from '@/composables/usePermissions';
 
 const { canVisit } = usePermissions();

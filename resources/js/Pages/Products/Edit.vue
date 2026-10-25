@@ -17,7 +17,7 @@ import { usePermissions } from '@/composables/usePermissions';
 import axios from 'axios';
 import ImageUploader from '@/Components/ImageUploader.vue';
 import { formatMoney } from '@/lib/money';
-import { ArrowLeft, Eye, Zap, ChevronDown, Layers, Info, X, Trash2 } from 'lucide-vue-next';
+import { ArrowLeft, Eye, Zap, ChevronDown, Layers, Info, X, Trash2 } from '@lucide/vue';
 
 const { t } = useI18n();
 const { hasPermission } = usePermissions();

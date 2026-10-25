@@ -10,7 +10,7 @@ import TaxInput from '@/Components/TaxInput.vue';
 import PluginSlot from '@/Components/PluginSlot.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import { defineAsyncComponent, ref, computed, watch } from 'vue';
-import { ArrowLeft, Plus, Trash2, ScanLine } from 'lucide-vue-next';
+import { ArrowLeft, Plus, Trash2, ScanLine } from '@lucide/vue';
 
 const BarcodeScannerModal = defineAsyncComponent(() => import('@/Components/BarcodeScannerModal.vue'));
 import { useI18n } from 'vue-i18n';

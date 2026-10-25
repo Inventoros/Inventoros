@@ -8,7 +8,7 @@ import Badge from '@/Components/ui/Badge.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { useI18n } from 'vue-i18n';
 import { displayDateTime } from '@/lib/dates';
-import { Plus, CalendarClock, Play, Pencil, Trash2, ArrowLeft } from 'lucide-vue-next';
+import { Plus, CalendarClock, Play, Pencil, Trash2, ArrowLeft } from '@lucide/vue';
 import { usePermissions } from '@/composables/usePermissions';
 
 const { canVisit } = usePermissions();

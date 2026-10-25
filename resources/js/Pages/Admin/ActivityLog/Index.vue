@@ -6,7 +6,7 @@ import Button from '@/Components/ui/Button.vue';
 import Badge from '@/Components/ui/Badge.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
-import { Search, Download, User, ChevronRight, FileText, Plus, Pencil, Trash2, Eye, ShieldAlert } from 'lucide-vue-next';
+import { Search, Download, User, ChevronRight, FileText, Plus, Pencil, Trash2, Eye, ShieldAlert } from '@lucide/vue';
 
 import { useI18n } from 'vue-i18n';
 import { actionLabel as labelForAction, subjectLabel } from '@/lib/activityLabels';

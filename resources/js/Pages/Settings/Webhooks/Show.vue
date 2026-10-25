@@ -6,7 +6,7 @@ import Button from '@/Components/ui/Button.vue';
 import Badge from '@/Components/ui/Badge.vue';
 import { Head, Link, useForm, router, usePage } from '@inertiajs/vue3';
 import { ref, computed } from 'vue';
-import { ArrowLeft, Pencil, Trash2, Send, RefreshCw, RotateCcw, ChevronDown, Inbox, X } from 'lucide-vue-next';
+import { ArrowLeft, Pencil, Trash2, Send, RefreshCw, RotateCcw, ChevronDown, Inbox, X } from '@lucide/vue';
 
 import { useI18n } from 'vue-i18n';
 import { displayDateTime } from '@/lib/dates';
