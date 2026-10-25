@@ -195,6 +195,8 @@ final class PluginService
 
         $this->refreshRouteCache();
 
+        $this->restartQueueWorkers();
+
         return true;
     }
 
@@ -240,6 +242,8 @@ final class PluginService
         $this->assets->remove($slug);
 
         $this->refreshRouteCache();
+
+        $this->restartQueueWorkers();
 
         if ($failure !== null) {
             throw new PluginHookFailed(
@@ -939,6 +943,18 @@ final class PluginService
     {
         if (! $this->isSafeSlug($slug)) {
             throw new \RuntimeException('Invalid plugin slug.');
+        }
+    }
+
+    /** Gracefully reload long-running workers after plugin hooks change. */
+    protected function restartQueueWorkers(): void
+    {
+        try {
+            if (Artisan::call('queue:restart') !== 0) {
+                Log::warning('Plugin state changed; run php artisan queue:restart to reload worker hooks.');
+            }
+        } catch (\Throwable) {
+            Log::warning('Could not signal queue workers after a plugin change; run php artisan queue:restart.');
         }
     }
 
