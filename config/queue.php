@@ -49,6 +49,15 @@ return [
 
     'connections' => [
 
+        'inventory-resets' => [
+            'driver' => 'database',
+            'connection' => null,
+            'table' => 'jobs',
+            'queue' => 'inventory-resets',
+            'retry_after' => 1200,
+            'after_commit' => false,
+        ],
+
         'sync' => [
             'driver' => 'sync',
         ],

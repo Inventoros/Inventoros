@@ -11,7 +11,29 @@
     "reason": "Reden",
     "password": "Huidig wachtwoord",
     "confirm": "Typ {phrase} om te bevestigen",
-    "writtenOff": "Afgeboekt"
+    "writtenOff": "Afgeboekt",
+    "refresh": "Voorbeeld vernieuwen",
+    "pending": "In wachtrij",
+    "running": "Voorraad wordt gewist",
+    "completed": "Voorraad op nul gezet",
+    "failed": "Voorraadreset mislukt",
+    "viewRun": "Huidige reset bekijken",
+    "runId": "Resetreferentie",
+    "queuedHint": "De resetworker of de planner per minuut verwerkt dit verzoek. Laat de planner draaien.",
+    "completedHint": "De voorraad is op nul gezet. Catalogus en transactiegeschiedenis blijven behouden.",
+    "failedHint": "De reset is niet voltooid. Controleer een nieuw voorbeeld voordat u het opnieuw probeert.",
+    "limitHint": "De ingestelde limiet is {limit} betrokken voorraadrecords. De serverbeheerder kan deze aanpassen voor groter onderhoud.",
+    "integrityHint": "Voorraadrecords hebben inconsistente organisatietoewijzingen. Corrigeer deze voor de reset.",
+    "reservedSerials": "Gereserveerde serienummers",
+    "errors": {
+      "changed": "De voorraad is gewijzigd sinds dit voorbeeld. Controleer een nieuw voorbeeld.",
+      "pending": "Er staat al een andere reset in de wachtrij of deze wordt uitgevoerd.",
+      "expired": "Dit voorbeeld is verlopen of al gebruikt. Controleer een nieuw voorbeeld.",
+      "limit": "Deze reset overschrijdt de ingestelde recordlimiet.",
+      "blocked": "Voltooi of annuleer overboekingen, tellingen en productie en geef reserveringen vrij voordat u de voorraad reset.",
+      "integrity": "Voorraadrecords hebben inconsistente organisatietoewijzingen. Corrigeer deze voor de reset.",
+      "failed": "De reset is niet voltooid. Controleer een nieuw voorbeeld voordat u het opnieuw probeert."
+    }
   },
   "inventoryCleanup": {
     "perPage": "Producten per pagina",

@@ -16,6 +16,7 @@ use App\Models\User;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 /**
  * The single implementation of the stock-transfer lifecycle: create, ship
@@ -62,6 +63,7 @@ final class StockTransferService
         $isInterWarehouse = $fromWarehouseId && $toWarehouseId && $fromWarehouseId !== $toWarehouseId;
 
         $transfer = DB::transaction(function () use ($data, $organizationId, $actor, $isInterWarehouse, $fromWarehouseId, $toWarehouseId) {
+            InventoryWorkflowLock::acquire((int) $organizationId);
             $transferData = [
                 'organization_id' => $organizationId,
                 'transfer_number' => StockTransfer::generateTransferNumber($organizationId),
@@ -93,7 +95,7 @@ final class StockTransferService
                 if ($variantId !== null) {
                     ProductVariant::where('organization_id', $organizationId)->where('product_id', $product->id)->findOrFail($variantId);
                 } elseif ($product->has_variants && $product->variants()->exists()) {
-                    throw \Illuminate\Validation\ValidationException::withMessages(['items' => 'Choose a variant for each product sold by variant.']);
+                    throw ValidationException::withMessages(['items' => 'Choose a variant for each product sold by variant.']);
                 }
 
                 StockTransferItem::create([
@@ -118,6 +120,7 @@ final class StockTransferService
     public function prepare(StockTransfer $transfer, User $actor): StockTransfer
     {
         $this->authorizeTransfer($actor, $transfer);
+
         return DB::transaction(function () use ($transfer, $actor): StockTransfer {
             $locked = StockTransfer::whereKey($transfer->id)->lockForUpdate()->firstOrFail();
             $this->warehouseAccess->authorizeLocation($actor, $locked->from_location_id);
@@ -131,6 +134,7 @@ final class StockTransferService
             }
             $locked->update(['status' => 'prepared', 'prepared_at' => $locked->prepared_at ?? now()]);
             $transfer->setRawAttributes($locked->getAttributes(), true);
+
             return $transfer;
         });
     }
@@ -221,6 +225,7 @@ final class StockTransferService
                 }
                 $locked->update(['status' => 'completed', 'completed_at' => now(), 'completed_by' => $actor->id]);
                 $stockTransfer->setRawAttributes($locked->getAttributes(), true);
+
                 return;
             }
             $this->stockTargets($locked);
@@ -342,6 +347,7 @@ final class StockTransferService
         }
         $this->warehouseAccess->authorizeAnyLocation($actor, [$transfer->from_location_id, $transfer->to_location_id]);
     }
+
     private function holdReference(StockTransfer $transfer): string
     {
         return 'stock-transfer:'.$transfer->id;
@@ -371,6 +377,7 @@ final class StockTransferService
             $targets[$key] ??= ['product' => $product, 'variant' => $variant, 'quantity' => 0];
             $targets[$key]['quantity'] += (int) $item->quantity;
         }
+
         return array_values($targets);
     }
 
@@ -382,5 +389,4 @@ final class StockTransferService
             StockAdjustment::adjust($line['product'], $quantity, $type, 'Transfer '.$transfer->transfer_number, reference: $transfer, allowNegative: false, actor: $actor, locationId: $locationId);
         }
     }
-
 }

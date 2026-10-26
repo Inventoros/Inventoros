@@ -6,6 +6,7 @@ namespace App\Observers;
 
 use App\Models\Inventory\ProductLocation;
 use App\Models\Inventory\ProductLocationStock;
+use App\Models\Inventory\ProductVariant;
 use App\Models\Inventory\VariantLocationStock;
 use App\Models\Inventory\WarehouseReorderPoint;
 use App\Services\Hooks\DomainHooks;
@@ -63,7 +64,7 @@ class ProductLocationStockObserver
     {
         $delta = (int) $bin->quantity - $before;
 
-        if ($bin instanceof VariantLocationStock && ! $bin->variant?->is_active) {
+        if ($bin instanceof VariantLocationStock && (! $bin->variant?->is_active || $bin->variant->trashed())) {
             return;
         }
 
@@ -107,14 +108,22 @@ class ProductLocationStockObserver
             });
         }
     }
+
     private function productId(ProductLocationStock|VariantLocationStock $bin): int
     {
-        return (int) ($bin instanceof VariantLocationStock ? $bin->variant->product_id : $bin->product_id);
+        if (! $bin instanceof VariantLocationStock) {
+            return (int) $bin->product_id;
+        }
+        if (! $bin->relationLoaded('variant')) {
+            $bin->setRelation('variant', ProductVariant::withTrashed()->where('organization_id', $bin->organization_id)
+                ->find($bin->product_variant_id));
+        }
+
+        return (int) $bin->variant?->product_id;
     }
 
     private function variantId(ProductLocationStock|VariantLocationStock $bin): ?int
     {
         return $bin instanceof VariantLocationStock ? (int) $bin->product_variant_id : null;
     }
-
 }

@@ -11,7 +11,29 @@
     "reason": "Motivo",
     "password": "Contraseña actual",
     "confirm": "Escribe {phrase} para confirmar",
-    "writtenOff": "Dado de baja"
+    "writtenOff": "Dado de baja",
+    "refresh": "Actualizar vista previa",
+    "pending": "En cola",
+    "running": "Restableciendo existencias",
+    "completed": "Existencias restablecidas",
+    "failed": "Error al restablecer existencias",
+    "viewRun": "Ver restablecimiento actual",
+    "runId": "Referencia",
+    "queuedHint": "El proceso de restablecimiento o el planificador por minuto procesa esta solicitud. Mantenga activo el planificador.",
+    "completedHint": "Las existencias se restablecieron a cero. Se conservaron el catálogo y el historial de transacciones.",
+    "failedHint": "El restablecimiento no se completó. Revise una nueva vista previa antes de reintentarlo.",
+    "limitHint": "El límite configurado es de {limit} registros de existencias afectados. El administrador del servidor puede ajustarlo para un mantenimiento mayor.",
+    "integrityHint": "Hay registros de existencias con una organización incoherente. Corríjalos antes de restablecer.",
+    "reservedSerials": "Números de serie reservados",
+    "errors": {
+      "changed": "Las existencias cambiaron después de esta vista previa. Revise una nueva.",
+      "pending": "Ya hay otro restablecimiento en cola o en curso.",
+      "expired": "Esta vista previa caducó o ya se utilizó. Revise una nueva.",
+      "limit": "El restablecimiento supera el límite configurado de registros.",
+      "blocked": "Finaliza o cancela transferencias, recuentos y producción, y libera las reservas antes de restablecer las existencias.",
+      "integrity": "Hay registros de existencias con una organización incoherente. Corríjalos antes de restablecer.",
+      "failed": "El restablecimiento no se completó. Revise una nueva vista previa antes de reintentarlo."
+    }
   },
   "inventoryCleanup": {
     "perPage": "Productos por página",

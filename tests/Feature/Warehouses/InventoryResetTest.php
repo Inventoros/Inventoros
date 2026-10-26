@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Warehouses;
 
+use App\Jobs\RunInventoryReset;
+use App\Models\Inventory\InventoryResetRun;
 use App\Models\Inventory\Product;
 use App\Models\Inventory\ProductBatch;
 use App\Models\Inventory\ProductSerial;
@@ -13,6 +15,7 @@ use App\Services\InventoryResetService;
 use App\Services\StockReservationService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Queue;
 use Tests\TestCase;
 
 final class InventoryResetTest extends TestCase
@@ -23,6 +26,7 @@ final class InventoryResetTest extends TestCase
     {
         parent::setUp();
         $this->setUpWarehouseAccess();
+        Queue::fake([RunInventoryReset::class]);
     }
 
     private function preview(): array
@@ -34,9 +38,14 @@ final class InventoryResetTest extends TestCase
 
     private function submit(array $preview, array $overrides = [])
     {
-        return $this->post(route('products.stock-reset.store'), array_merge([
+        $response = $this->from(route('products.stock-reset.preview'))->post(route('products.stock-reset.store'), array_merge([
             'token' => $preview['token'], 'confirmation' => 'ZERO STOCK', 'password' => 'password', 'reason' => 'Restarting stock records after test import',
         ], $overrides));
+        if (str_contains((string) $response->headers->get('Location'), '/stock-reset/status/')) {
+            app()->call([new RunInventoryReset(InventoryResetRun::latest('id')->firstOrFail()->id), 'handle']);
+        }
+
+        return $response;
     }
 
     public function test_reset_zeroes_all_bins_variants_and_tracked_stock_without_deleting_records_or_crossing_tenants(): void
@@ -50,7 +59,8 @@ final class InventoryResetTest extends TestCase
         $available = ProductSerial::create(['organization_id' => $this->organization->id, 'product_id' => $this->productB->id, 'serial_number' => 'RESET-1', 'status' => 'available']);
         $sold = ProductSerial::create(['organization_id' => $this->organization->id, 'product_id' => $this->productB->id, 'serial_number' => 'RESET-2', 'status' => 'sold']);
         $batch = ProductBatch::create(['organization_id' => $this->organization->id, 'product_id' => $this->productB->id, 'batch_number' => 'RESET-BATCH', 'quantity' => 9]);
-        $this->submit($this->preview())->assertRedirect(route('products.index'))->assertSessionHasNoErrors();
+        $this->submit($this->preview())->assertRedirect()->assertSessionHasNoErrors();
+        $this->assertDatabaseHas('inventory_reset_runs', ['status' => 'completed', 'actor_id' => $this->admin->id]);
         $this->assertSame(0, $this->productA->fresh()->stock);
         $this->assertSame(0, $this->productB->fresh()->stock);
         $this->assertSame(0, $variant->fresh()->stock);
@@ -78,7 +88,7 @@ final class InventoryResetTest extends TestCase
         $this->submit($preview, ['confirmation' => 'zero'])->assertSessionHasErrors('confirmation');
         $this->assertSame(100, $this->productA->fresh()->stock);
         $this->submit($preview)->assertSessionHasNoErrors();
-        $this->submit($preview)->assertStatus(419);
+        $this->submit($preview)->assertSessionHasErrors('reset');
     }
 
     public function test_changes_after_the_preview_prevent_a_stale_reset(): void

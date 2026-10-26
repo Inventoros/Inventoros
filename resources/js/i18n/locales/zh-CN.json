@@ -11,7 +11,29 @@
     "reason": "原因",
     "password": "当前密码",
     "confirm": "输入 {phrase} 以确认",
-    "writtenOff": "已核销"
+    "writtenOff": "已核销",
+    "refresh": "刷新预览",
+    "pending": "已排队",
+    "running": "正在清零库存",
+    "completed": "库存清零完成",
+    "failed": "库存清零失败",
+    "viewRun": "查看当前操作",
+    "runId": "操作编号",
+    "queuedHint": "库存清零工作进程或每分钟的调度器处理此请求。请保持调度器运行。",
+    "completedHint": "库存已清零。产品目录和交易历史已保留。",
+    "failedHint": "操作未完成。请查看新的预览后重试。",
+    "limitHint": "当前上限为 {limit} 条受影响的库存记录。较大维护操作可由服务器管理员调整上限。",
+    "integrityHint": "库存记录的组织归属不一致。请先修正记录再清零。",
+    "reservedSerials": "已预留的序列号",
+    "errors": {
+      "changed": "预览后库存已发生变化。请查看新的预览。",
+      "pending": "已有其他清零操作在排队或运行。",
+      "expired": "此预览已过期或已使用。请查看新的预览。",
+      "limit": "此操作超出了配置的记录数量上限。",
+      "blocked": "重置前请完成或取消调拨、盘点和生产，并释放预留库存。",
+      "integrity": "库存记录的组织归属不一致。请先修正记录再清零。",
+      "failed": "操作未完成。请查看新的预览后重试。"
+    }
   },
   "inventoryCleanup": {
     "perPage": "每页商品数",

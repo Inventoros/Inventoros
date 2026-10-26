@@ -11,7 +11,29 @@
     "reason": "Neden",
     "password": "Mevcut parola",
     "confirm": "Onaylamak için {phrase} yazın",
-    "writtenOff": "Kayıttan düşüldü"
+    "writtenOff": "Kayıttan düşüldü",
+    "refresh": "Önizlemeyi yenile",
+    "pending": "Kuyrukta",
+    "running": "Stok sıfırlanıyor",
+    "completed": "Stok sıfırlandı",
+    "failed": "Stok sıfırlama başarısız",
+    "viewRun": "Geçerli işlemi görüntüle",
+    "runId": "İşlem referansı",
+    "queuedHint": "Stok sıfırlama işçisi veya dakikalık zamanlayıcı bu isteği işler. Zamanlayıcıyı çalışır tutun.",
+    "completedHint": "Stok sıfıra ayarlandı. Katalog ve işlem geçmişi korundu.",
+    "failedHint": "İşlem tamamlanmadı. Yeniden denemeden önce yeni bir önizlemeyi inceleyin.",
+    "limitHint": "Yapılandırılmış sınır {limit} etkilenen stok kaydıdır. Sunucu yöneticisi daha büyük bakım için sınırı ayarlayabilir.",
+    "integrityHint": "Stok kayıtlarının kuruluş sahipliği tutarsız. Sıfırlamadan önce kayıtları düzeltin.",
+    "reservedSerials": "Ayrılmış seri numaraları",
+    "errors": {
+      "changed": "Bu önizlemeden sonra stok değişti. Yeni bir önizlemeyi inceleyin.",
+      "pending": "Başka bir sıfırlama zaten kuyrukta veya çalışıyor.",
+      "expired": "Bu önizlemenin süresi doldu veya kullanıldı. Yeni bir önizlemeyi inceleyin.",
+      "limit": "Bu sıfırlama yapılandırılmış kayıt sınırını aşıyor.",
+      "blocked": "Stokları sıfırlamadan önce aktarımları, sayımları ve üretimi tamamlayın veya iptal edin ve ayırmaları kaldırın.",
+      "integrity": "Stok kayıtlarının kuruluş sahipliği tutarsız. Sıfırlamadan önce kayıtları düzeltin.",
+      "failed": "İşlem tamamlanmadı. Yeniden denemeden önce yeni bir önizlemeyi inceleyin."
+    }
   },
   "inventoryCleanup": {
     "perPage": "Sayfa başına ürün",

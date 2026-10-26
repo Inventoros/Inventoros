@@ -184,6 +184,7 @@ final class WorkOrderService
     public function start(WorkOrder $workOrder): void
     {
         DB::transaction(function () use ($workOrder): void {
+            InventoryWorkflowLock::acquire((int) $workOrder->organization_id);
             $locked = WorkOrder::whereKey($workOrder->getKey())->lockForUpdate()->firstOrFail();
 
             if (! in_array($locked->status, ['draft', 'pending'], true)) {

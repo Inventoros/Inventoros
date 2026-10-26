@@ -11,7 +11,29 @@
     "reason": "Motivo",
     "password": "Senha atual",
     "confirm": "Digite {phrase} para confirmar",
-    "writtenOff": "Baixado"
+    "writtenOff": "Baixado",
+    "refresh": "Atualizar prévia",
+    "pending": "Na fila",
+    "running": "Zerando estoque",
+    "completed": "Estoque zerado",
+    "failed": "Falha ao zerar estoque",
+    "viewRun": "Ver operação atual",
+    "runId": "Referência",
+    "queuedHint": "O processo de estoque ou o agendador a cada minuto executa esta solicitação. Mantenha o agendador ativo.",
+    "completedHint": "O estoque foi zerado. O catálogo e o histórico de transações foram preservados.",
+    "failedHint": "A operação não foi concluída. Revise uma nova prévia antes de tentar novamente.",
+    "limitHint": "O limite configurado é de {limit} registros de estoque afetados. O administrador do servidor pode ajustá-lo para uma manutenção maior.",
+    "integrityHint": "Há registros de estoque com organização inconsistente. Corrija-os antes de zerar.",
+    "reservedSerials": "Números de série reservados",
+    "errors": {
+      "changed": "O estoque mudou após esta prévia. Revise uma nova prévia.",
+      "pending": "Outra operação já está na fila ou em execução.",
+      "expired": "Esta prévia expirou ou já foi usada. Revise uma nova prévia.",
+      "limit": "Esta operação excede o limite configurado de registros.",
+      "blocked": "Conclua ou cancele transferências, contagens e produção e libere as reservas antes de zerar o estoque.",
+      "integrity": "Há registros de estoque com organização inconsistente. Corrija-os antes de zerar.",
+      "failed": "A operação não foi concluída. Revise uma nova prévia antes de tentar novamente."
+    }
   },
   "inventoryCleanup": {
     "perPage": "Produtos por página",

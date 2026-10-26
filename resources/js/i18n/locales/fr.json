@@ -11,7 +11,29 @@
     "reason": "Motif",
     "password": "Mot de passe actuel",
     "confirm": "Saisissez {phrase} pour confirmer",
-    "writtenOff": "Sorti du stock"
+    "writtenOff": "Sorti du stock",
+    "refresh": "Actualiser l’aperçu",
+    "pending": "En attente",
+    "running": "Mise à zéro en cours",
+    "completed": "Stock remis à zéro",
+    "failed": "Échec de la mise à zéro",
+    "viewRun": "Voir la mise à zéro en cours",
+    "runId": "Référence",
+    "queuedHint": "Le processus de mise à zéro ou le planificateur minute traite cette demande. Gardez le planificateur actif.",
+    "completedHint": "Le stock a été remis à zéro. Le catalogue et l’historique des transactions sont conservés.",
+    "failedHint": "La mise à zéro n’a pas abouti. Consultez un nouvel aperçu avant de réessayer.",
+    "limitHint": "La limite configurée est de {limit} enregistrements de stock affectés. Demandez à l’administrateur du serveur de l’adapter pour une maintenance plus importante.",
+    "integrityHint": "L’appartenance des enregistrements de stock à l’organisation est incohérente. Corrigez ces données avant la mise à zéro.",
+    "reservedSerials": "Numéros de série réservés",
+    "errors": {
+      "changed": "Le stock a changé depuis cet aperçu. Consultez un nouvel aperçu.",
+      "pending": "Une autre mise à zéro est déjà en attente ou en cours.",
+      "expired": "Cet aperçu a expiré ou a déjà été utilisé. Consultez un nouvel aperçu.",
+      "limit": "Cette mise à zéro dépasse la limite configurée.",
+      "blocked": "Terminez ou annulez les transferts, inventaires et fabrications, puis libérez les réservations avant la remise à zéro.",
+      "integrity": "L’appartenance des enregistrements de stock à l’organisation est incohérente. Corrigez ces données avant la mise à zéro.",
+      "failed": "La mise à zéro n’a pas abouti. Consultez un nouvel aperçu avant de réessayer."
+    }
   },
   "inventoryCleanup": {
     "perPage": "Produits par page",

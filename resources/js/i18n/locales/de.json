@@ -11,7 +11,29 @@
     "reason": "Grund",
     "password": "Aktuelles Passwort",
     "confirm": "Zur Bestätigung {phrase} eingeben",
-    "writtenOff": "Ausgebucht"
+    "writtenOff": "Ausgebucht",
+    "refresh": "Vorschau aktualisieren",
+    "pending": "Eingereiht",
+    "running": "Bestand wird zurückgesetzt",
+    "completed": "Bestand zurückgesetzt",
+    "failed": "Zurücksetzen fehlgeschlagen",
+    "viewRun": "Aktuellen Vorgang anzeigen",
+    "runId": "Vorgangsreferenz",
+    "queuedHint": "Der zuständige Worker oder der minütliche Zeitplan verarbeitet diese Anfrage. Lassen Sie den Zeitplan laufen.",
+    "completedHint": "Der Bestand wurde auf null gesetzt. Katalog und Transaktionsverlauf bleiben erhalten.",
+    "failedHint": "Der Vorgang wurde nicht abgeschlossen. Prüfen Sie vor einem neuen Versuch eine aktuelle Vorschau.",
+    "limitHint": "Das konfigurierte Limit beträgt {limit} betroffene Bestandsdatensätze. Der Serveradministrator kann es für größere Wartungen anpassen.",
+    "integrityHint": "Bestandsdatensätze haben widersprüchliche Organisationszuordnungen. Korrigieren Sie diese vor dem Zurücksetzen.",
+    "reservedSerials": "Reservierte Seriennummern",
+    "errors": {
+      "changed": "Der Bestand hat sich seit der Vorschau geändert. Prüfen Sie eine neue Vorschau.",
+      "pending": "Ein weiterer Vorgang ist bereits eingereiht oder läuft.",
+      "expired": "Diese Vorschau ist abgelaufen oder wurde schon verwendet. Prüfen Sie eine neue Vorschau.",
+      "limit": "Der Vorgang überschreitet das konfigurierte Datensatzlimit.",
+      "blocked": "Vor dem Zurücksetzen Umlagerungen, Inventuren und Produktion abschließen oder abbrechen und Reservierungen freigeben.",
+      "integrity": "Bestandsdatensätze haben widersprüchliche Organisationszuordnungen. Korrigieren Sie diese vor dem Zurücksetzen.",
+      "failed": "Der Vorgang wurde nicht abgeschlossen. Prüfen Sie vor einem neuen Versuch eine aktuelle Vorschau."
+    }
   },
   "inventoryCleanup": {
     "perPage": "Produkte pro Seite",

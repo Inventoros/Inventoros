@@ -36,6 +36,7 @@ Route::get('/stock/export', [StockBalanceController::class, 'export'])->name('st
 
 Route::get('/products/stock-reset', [InventoryResetController::class, 'preview'])->name('products.stock-reset.preview')->middleware(['admin', 'permission:manage_stock']);
 Route::post('/products/stock-reset', [InventoryResetController::class, 'store'])->name('products.stock-reset.store')->middleware(['admin', 'permission:manage_stock']);
+Route::get('/products/stock-reset/status/{resetRun:public_id}', [InventoryResetController::class, 'show'])->name('products.stock-reset.show')->middleware(['admin', 'permission:manage_stock']);
 
 // Inventory Management - Permission based
 Route::get('/products', [ProductController::class, 'index'])->name('products.index')->middleware('permission:view_products');
