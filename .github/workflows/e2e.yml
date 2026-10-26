@@ -67,6 +67,7 @@ jobs:
             e2e/tests/warehouse-stock.spec.ts \
             e2e/tests/storage-settings.spec.ts \
             e2e/tests/stock-reset.spec.ts \
+            e2e/tests/stock-audit-history.spec.ts \
             --project=setup --project=chromium
         env:
           CI: true

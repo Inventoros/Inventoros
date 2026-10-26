@@ -73,6 +73,13 @@
     "showing": "{from}–{to} z {total}"
   },
   "stockAudits": {
+    "history": {
+      "title": "Historia zliczeń",
+      "hint": "Każde zapisane zliczenie jest zachowane. Dla zliczeń sprzed włączenia historii dostępna jest tylko ostatnia wartość.",
+      "snapshot": "Ostatnie wcześniejsze zliczenie",
+      "view": "Pokaż historię zliczeń",
+      "empty": "Brak zapisanych zliczeń."
+    },
     "completeConfirm": "Zakończyć tę inwentaryzację? Dla każdej rozbieżności zostanie utworzona korekta stanu.",
     "completeUncountedConfirm": "Nie policzono {uncounted} z {total} pozycji. Mimo to zakończyć inwentaryzację? Niepoliczone pozycje zachowują obecny stan; korygowane są tylko policzone.",
     "backToList": "Wróć do listy",

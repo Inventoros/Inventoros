@@ -7,6 +7,7 @@ namespace App\Models\Inventory;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 
 /**
  * Represents an individual item line in a stock audit.
@@ -21,15 +22,15 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int $discrepancy
  * @property string $status
  * @property int|null $counted_by
- * @property \Illuminate\Support\Carbon|null $counted_at
+ * @property Carbon|null $counted_at
  * @property string|null $notes
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read \App\Models\Inventory\StockAudit $stockAudit
- * @property-read \App\Models\Inventory\Product $product
- * @property-read \App\Models\Inventory\ProductVariant|null $variant
- * @property-read \App\Models\Inventory\ProductLocation|null $location
- * @property-read \App\Models\User|null $countedByUser
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @property-read StockAudit $stockAudit
+ * @property-read Product $product
+ * @property-read ProductVariant|null $variant
+ * @property-read ProductLocation|null $location
+ * @property-read User|null $countedByUser
  */
 class StockAuditItem extends Model
 {
@@ -56,6 +57,7 @@ class StockAuditItem extends Model
             'counted_quantity' => 'integer',
             'discrepancy' => 'integer',
             'counted_at' => 'datetime',
+            'count_sequence' => 'integer',
         ];
     }
 
@@ -65,18 +67,25 @@ class StockAuditItem extends Model
      */
     public function getCountRevisionAttribute(): string
     {
-        return hash('sha256', json_encode([
+        $evidence = [
             $this->id, $this->stock_audit_id, $this->product_id,
             $this->product_variant_id, $this->location_id,
             $this->system_quantity, $this->counted_quantity, $this->status,
             $this->counted_by, $this->counted_at?->toISOString(), $this->notes,
-        ], JSON_THROW_ON_ERROR));
+        ];
+        // Preserve pre-upgrade tokens until the next accepted count, then
+        // distinguish even identical recounts within the same second.
+        if ($this->count_sequence > 0) {
+            $evidence[] = $this->count_sequence;
+        }
+
+        return hash('sha256', json_encode($evidence, JSON_THROW_ON_ERROR));
     }
 
     /**
      * Get the stock audit that owns this item.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\Inventory\StockAudit, $this>
+     * @return BelongsTo<StockAudit, $this>
      */
     public function stockAudit(): BelongsTo
     {
@@ -86,7 +95,7 @@ class StockAuditItem extends Model
     /**
      * Get the product for this audit item.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\Inventory\Product, $this>
+     * @return BelongsTo<Product, $this>
      */
     public function product(): BelongsTo
     {
@@ -96,7 +105,7 @@ class StockAuditItem extends Model
     /**
      * Get the variant for this audit item.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\Inventory\ProductVariant, $this>
+     * @return BelongsTo<ProductVariant, $this>
      */
     public function variant(): BelongsTo
     {
@@ -106,7 +115,7 @@ class StockAuditItem extends Model
     /**
      * Get the location for this audit item.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\Inventory\ProductLocation, $this>
+     * @return BelongsTo<ProductLocation, $this>
      */
     public function location(): BelongsTo
     {
@@ -116,7 +125,7 @@ class StockAuditItem extends Model
     /**
      * Get the user who counted this item.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\User, $this>
+     * @return BelongsTo<User, $this>
      */
     public function countedByUser(): BelongsTo
     {

@@ -73,6 +73,13 @@
     "showing": "{total} kayıttan {from}-{to} gösteriliyor"
   },
   "stockAudits": {
+    "history": {
+      "title": "Sayım geçmişi",
+      "hint": "Kaydedilen her sayım saklanır. Geçmiş etkinleştirilmeden önceki sayımlar için yalnızca son değer kullanılabilir.",
+      "snapshot": "Önceki son kayıtlı sayım",
+      "view": "Sayım geçmişini görüntüle",
+      "empty": "Henüz kaydedilmiş sayım yok."
+    },
     "completeConfirm": "Bu sayım tamamlansın mı? Her fark için stok düzeltmesi oluşturulur.",
     "completeUncountedConfirm": "{total} üründen {uncounted} tanesi sayılmadı. Sayım yine de tamamlansın mı? Sayılmayan ürünler mevcut stoklarını korur; yalnızca sayılanlar düzeltilir.",
     "backToList": "Listeye Dön",

@@ -73,6 +73,13 @@
     "showing": "Affichage de {from} à {to} sur {total}"
   },
   "stockAudits": {
+    "history": {
+      "title": "Historique des comptages",
+      "hint": "Chaque comptage enregistré est conservé. Pour les comptages antérieurs à l’activation de l’historique, seule la dernière valeur est disponible.",
+      "snapshot": "Dernier comptage antérieur",
+      "view": "Voir l’historique des comptages",
+      "empty": "Aucun comptage enregistré."
+    },
     "completeConfirm": "Terminer cet inventaire ? Des ajustements de stock seront créés pour chaque écart.",
     "completeUncountedConfirm": "{uncounted} articles sur {total} n'ont pas été comptés. Terminer l'inventaire quand même ? Les articles non comptés gardent leur stock actuel ; seuls les articles comptés sont ajustés.",
     "backToList": "Retour à la liste",

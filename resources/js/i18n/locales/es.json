@@ -73,6 +73,13 @@
     "showing": "Mostrando {from} a {to} de {total}"
   },
   "stockAudits": {
+    "history": {
+      "title": "Historial de recuentos",
+      "hint": "Se conserva cada recuento guardado. De los recuentos anteriores a la activación del historial solo está disponible el último valor.",
+      "snapshot": "Último recuento anterior",
+      "view": "Ver historial de recuentos",
+      "empty": "Todavía no hay recuentos guardados."
+    },
     "completeConfirm": "¿Completar esta auditoría? Se crearán ajustes de stock para cada discrepancia.",
     "completeUncountedConfirm": "{uncounted} de {total} artículos no se han contado. ¿Completar la auditoría de todos modos? Los artículos sin contar mantienen su stock actual; solo se ajustan los contados.",
     "backToList": "Volver a la lista",
