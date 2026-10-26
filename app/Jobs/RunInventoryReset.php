@@ -26,7 +26,10 @@ class RunInventoryReset implements ShouldQueue
 
     public bool $failOnTimeout = true;
 
-    public function __construct(public readonly int $runId) {}
+    public function __construct(public readonly int $runId)
+    {
+        $this->onConnection('inventory-resets')->onQueue('inventory-resets');
+    }
 
     public function handle(InventoryResetService $resets, ActiveOrganization $organizations): void
     {

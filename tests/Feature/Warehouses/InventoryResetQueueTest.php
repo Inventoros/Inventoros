@@ -61,7 +61,7 @@ final class InventoryResetQueueTest extends TestCase
         $this->assertStringNotContainsString('ZERO STOCK', $payload);
         $this->assertDatabaseHas('jobs', ['queue' => 'inventory-resets']);
 
-        Artisan::call('queue:work', ['connection' => 'inventory-resets', '--queue' => 'inventory-resets', '--once' => true, '--tries' => 1]);
+        Artisan::call('queue:work', ['connection' => 'inventory-resets', '--queue' => 'inventory-resets', '--once' => true, '--stop-when-empty' => true, '--tries' => 1]);
         $this->assertSame('completed', $run->fresh()->status);
         $this->assertSame(0, $this->productA->fresh()->stock);
         $this->assertDatabaseCount('jobs', 0);
@@ -126,6 +126,10 @@ final class InventoryResetQueueTest extends TestCase
 
     public function test_failed_worker_retains_its_result_but_rolls_back_stock_and_ledger(): void
     {
+        $events = [];
+        add_action('stock_changed', static function (...$arguments) use (&$events): void {
+            $events[] = $arguments;
+        });
         $run = $this->enqueue();
         $writes = 0;
         StockAdjustment::creating(static function () use (&$writes): void {
@@ -139,6 +143,23 @@ final class InventoryResetQueueTest extends TestCase
         $this->assertSame(150, (int) DB::table('product_location_stocks')->sum('quantity'));
         $this->assertDatabaseCount('stock_adjustments', 0);
         $this->assertDatabaseMissing('activity_logs', ['action' => 'inventory_reset']);
+        $this->assertSame([], $events);
+    }
+
+    public function test_integrations_receive_only_committed_zero_balances(): void
+    {
+        $events = [];
+        add_action('stock_changed', static function ($product, $variant, $change) use (&$events): void {
+            $events[] = $change;
+        });
+        $this->assertSame('completed', $this->process($this->enqueue())->status);
+        $this->assertCount(2, $events);
+        foreach ($events as $change) {
+            $this->assertSame(0, $change['after']);
+            foreach ($change['locations'] as $bin) {
+                $this->assertSame(0, $bin['after']);
+            }
+        }
     }
 
     public function test_run_status_requires_an_admin_in_the_same_organization(): void

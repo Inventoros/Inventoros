@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use App\Models\Auth\Organization;
+use App\Models\Inventory\InventoryResetRun;
 use App\Models\System\SystemSetting;
 use App\Models\User;
 use App\Support\SchedulerHealth;
@@ -14,7 +15,9 @@ use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Inertia\Testing\AssertableInertia as Assert;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
 /**
@@ -39,7 +42,28 @@ class SchedulerQueueHealthTest extends TestCase
 
     private function queueWorkerEvent(): ?Event
     {
-        return $this->scheduledEvent(fn (Event $e) => str_contains((string) $e->command, 'queue:work'));
+        return $this->scheduledEvent(fn (Event $e) => str_contains((string) $e->command, 'queue:work --'));
+    }
+
+    public function test_the_dedicated_reset_worker_runs_only_while_operations_need_processing(): void
+    {
+        config(['queue.run_via_scheduler' => false]);
+        $event = $this->scheduledEvent(fn (Event $e) => str_contains((string) $e->command, 'queue:work inventory-resets'));
+        $this->assertNotNull($event);
+        $this->assertStringContainsString('--queue=inventory-resets', $event->command);
+        $this->assertStringContainsString('--timeout=900', $event->command);
+        $this->assertStringContainsString('--tries=1', $event->command);
+        $this->assertSame('* * * * *', $event->expression);
+        $this->assertTrue($event->withoutOverlapping);
+        $this->assertFalse($event->filtersPass($this->app));
+        $organization = Organization::create(['name' => 'Reset scheduler']);
+        $run = InventoryResetRun::create(['organization_id' => $organization->id, 'public_id' => (string) Str::uuid(),
+            'status' => 'pending', 'signature' => str_repeat('a', 64), 'counts' => [], 'reason' => 'Test scheduler']);
+        $this->assertTrue($event->filtersPass($this->app));
+        $run->update(['status' => 'running']);
+        $this->assertTrue($event->filtersPass($this->app));
+        $run->update(['status' => 'completed']);
+        $this->assertFalse($event->filtersPass($this->app));
     }
 
     public function test_the_scheduler_runs_a_short_lived_queue_worker_every_minute(): void
@@ -77,7 +101,7 @@ class SchedulerQueueHealthTest extends TestCase
         ];
     }
 
-    #[\PHPUnit\Framework\Attributes\DataProvider('flagDefaults')]
+    #[DataProvider('flagDefaults')]
     public function test_the_flag_defaults_on_only_for_the_database_queue(string $connection, ?string $flag, bool $expected): void
     {
         $saved = [];
