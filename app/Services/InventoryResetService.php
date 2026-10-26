@@ -219,6 +219,12 @@ final class InventoryResetService
             }
         }
 
+        if (DB::table('product_locations as child')->where('child.organization_id', $org)->whereNotNull('child.warehouse_id')
+            ->whereNotExists(fn ($query) => $query->selectRaw('1')->from('warehouses as parent')
+                ->whereColumn('parent.id', 'child.warehouse_id')->whereColumn('parent.organization_id', 'child.organization_id'))->exists()) {
+            return true;
+        }
+
         return false;
     }
 
