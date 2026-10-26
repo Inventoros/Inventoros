@@ -96,6 +96,26 @@ final class InventoryResetService
                 DB::table($table)->where('organization_id', $org)->select('id')->lockForUpdate()
                     ->chunkById(500, static function (): void {});
             }
+            // Freeze the bounded write set before validating the snapshot.
+            // PostgreSQL allows a new product (and its units) to be inserted
+            // alongside these row locks. Such later writes must not be swept
+            // into the already approved reset on a subsequent query/page.
+            $targets = [];
+            foreach ([Product::class, ProductVariant::class] as $model) {
+                $variant = $model === ProductVariant::class;
+                $table = $variant ? 'variant_location_stocks' : 'product_location_stocks';
+                $column = $variant ? 'product_variant_id' : 'product_id';
+                $targets[$model] = $model::withTrashed()->forOrganization($org)->where(function ($query) use ($table, $column, $model, $org): void {
+                    $query->where('stock', '<>', 0)->orWhereExists(function ($bins) use ($table, $column, $model, $org): void {
+                        $bins->selectRaw('1')->from($table)->where('organization_id', $org)
+                            ->whereColumn($column, (new $model)->getTable().'.id')->where('quantity', '<>', 0);
+                    });
+                })->limit($this->limit() + 1)->pluck('id')->all();
+            }
+            $serialIds = ProductSerial::forOrganization($org)->where('status', ProductSerial::STATUS_AVAILABLE)
+                ->limit($this->limit() + 1)->pluck('id')->all();
+            $batchIds = ProductBatch::forOrganization($org)->where('quantity', '<>', 0)
+                ->limit($this->limit() + 1)->pluck('id')->all();
             $preview = $this->preview($actor);
             if ($run !== null) {
                 $preview['blockers']['pending'] = false;
@@ -104,24 +124,15 @@ final class InventoryResetService
             $operationId = $run?->public_id ?? (string) Str::uuid();
 
             foreach ([Product::class, ProductVariant::class] as $model) {
-                $variant = $model === ProductVariant::class;
-                $table = $variant ? 'variant_location_stocks' : 'product_location_stocks';
-                $column = $variant ? 'product_variant_id' : 'product_id';
-                $targets = $model::withTrashed()->forOrganization($org)->where(function ($query) use ($table, $column, $model, $org): void {
-                    $query->where('stock', '<>', 0)->orWhereExists(function ($bins) use ($table, $column, $model, $org): void {
-                        $bins->selectRaw('1')->from($table)->where('organization_id', $org)
-                            ->whereColumn($column, (new $model)->getTable().'.id')->where('quantity', '<>', 0);
-                    });
-                });
-                foreach ($targets->lazyById(200) as $target) {
+                foreach ($model::withTrashed()->forOrganization($org)->whereKey($targets[$model])->lazyById(200) as $target) {
                     $this->zero($target, $actor, $reason, $run);
                 }
             }
-            foreach (ProductSerial::forOrganization($org)->where('status', ProductSerial::STATUS_AVAILABLE)->lazyById(200) as $serial) {
+            foreach (ProductSerial::forOrganization($org)->whereKey($serialIds)->lazyById(200) as $serial) {
                 $serial->update(['status' => ProductSerial::STATUS_WRITTEN_OFF]);
                 $this->log($actor, $serial, $reason, ['status' => ProductSerial::STATUS_AVAILABLE], ['status' => ProductSerial::STATUS_WRITTEN_OFF], $operationId);
             }
-            foreach (ProductBatch::forOrganization($org)->where('quantity', '<>', 0)->lazyById(200) as $batch) {
+            foreach (ProductBatch::forOrganization($org)->whereKey($batchIds)->lazyById(200) as $batch) {
                 $before = (int) $batch->quantity;
                 $batch->update(['quantity' => 0]);
                 $this->log($actor, $batch, $reason, ['quantity' => $before], ['quantity' => 0], $operationId);

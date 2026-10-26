@@ -115,6 +115,24 @@ final class InventoryResetQueueTest extends TestCase
         $this->assertDatabaseCount('stock_adjustments', 1);
     }
 
+    public function test_new_stock_after_the_worker_snapshot_is_not_swept_into_the_approved_reset(): void
+    {
+        $run = $this->enqueue();
+        $later = null;
+        $inserted = false;
+        DB::listen(function ($query) use (&$later, &$inserted): void {
+            if (! $inserted && str_contains($query->sql, 'inventory_reset_runs') && str_contains(strtolower($query->sql), 'exists')) {
+                $inserted = true;
+                $later = $this->makeProduct('Later import', 'AFTER-SNAPSHOT', null, 7);
+            }
+        });
+        $this->assertSame('completed', $this->process($run)->status);
+        $this->assertNotNull($later);
+        $this->assertSame(7, $later->fresh()->stock);
+        $this->assertSame(0, $this->productA->fresh()->stock);
+        $this->assertDatabaseMissing('stock_adjustments', ['product_id' => $later->id, 'reason' => 'Administrator stock reset']);
+    }
+
     public function test_revoking_admin_access_before_processing_prevents_the_reset(): void
     {
         $run = $this->enqueue();

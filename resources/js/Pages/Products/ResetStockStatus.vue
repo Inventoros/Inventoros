@@ -31,6 +31,7 @@ onBeforeUnmount(() => clearInterval(timer));
             <p role="status" class="font-semibold text-text-primary">{{ t(`stockReset.${run.status}`) }}</p>
             <p class="text-sm text-text-secondary">{{ t(run.status === 'completed' ? 'stockReset.completedHint' : run.status === 'failed' ? 'stockReset.failedHint' : 'stockReset.queuedHint') }}</p>
             <p v-if="run.error_code && run.error_code !== 'stockReset.errors.failed'" role="alert" class="text-sm text-status-danger">{{ t(run.error_code) }}</p>
+            <p class="text-sm text-text-tertiary">{{ t('stockReset.countsHint') }}</p>
             <dl class="grid grid-cols-2 gap-3 text-sm">
                 <template v-for="[label, count] in rows" :key="label">
                     <dt class="text-text-secondary">{{ t(`stockReset.${label}`) }}</dt><dd class="text-right font-semibold tabular-nums">{{ count }}</dd>
