@@ -78,7 +78,7 @@ final class TrackedStockReconciliationService
                 if ($product === null) {
                     return 0;
                 }
-                $row = $this->state($product);
+                $row = $this->state($product, lockTracking: true);
                 if ($row['difference'] === 0) {
                     return 0;
                 }
@@ -103,15 +103,28 @@ final class TrackedStockReconciliationService
         return $fixed;
     }
 
-    private function state(Product $product): array
+    private function state(Product $product, bool $lockTracking = false): array
     {
         $type = $product->tracking_type instanceof TrackingType
             ? $product->tracking_type : TrackingType::from((string) $product->tracking_type);
         $query = ($type === TrackingType::BATCH ? ProductBatch::query() : ProductSerial::query())
             ->where('organization_id', $product->organization_id)->where('product_id', $product->id);
-        $trackedTotal = $type === TrackingType::BATCH
-            ? (int) $query->sum('quantity')
-            : $query->where('status', ProductSerial::STATUS_AVAILABLE)->count();
+        if ($lockTracking) {
+            // Locking reads also see current rows if a caller already opened
+            // a repeatable-read transaction before discovering candidates.
+            // Fetch bounded pages; SQL aggregate queries cannot use FOR UPDATE
+            // on every supported database.
+            $columns = $type === TrackingType::BATCH ? ['id', 'quantity'] : ['id', 'status'];
+            $trackedTotal = 0;
+            foreach ($query->select($columns)->lockForUpdate()->lazyById(500) as $record) {
+                $trackedTotal += $type === TrackingType::BATCH
+                    ? (int) $record->quantity : (int) ($record->status === ProductSerial::STATUS_AVAILABLE);
+            }
+        } else {
+            $trackedTotal = $type === TrackingType::BATCH
+                ? (int) $query->sum('quantity')
+                : $query->where('status', ProductSerial::STATUS_AVAILABLE)->count();
+        }
         $recorded = (int) $product->stock;
 
         return [
