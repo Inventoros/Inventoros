@@ -23,7 +23,8 @@ trait ActsAsAssembly
      */
     public function components(): HasMany
     {
-        return $this->hasMany(ProductComponent::class, 'parent_product_id');
+        return $this->hasMany(ProductComponent::class, 'parent_product_id')
+            ->orderBy('product_components.sort_order')->orderBy('product_components.id');
     }
 
     /**

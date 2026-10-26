@@ -1,4 +1,41 @@
 {
+  "stockReset": {
+    "title": "Azzera scorte",
+    "hint": "Azzera le scorte dell’intera organizzazione, inclusi i prodotti inattivi ed eliminati. Prodotti, ordini e cronologia vengono conservati. I seriali disponibili vengono scaricati e i lotti azzerati.",
+    "products": "Prodotti con scorte",
+    "variants": "Varianti con scorte",
+    "locations": "Saldi per ubicazione",
+    "serials": "Seriali disponibili",
+    "batches": "Saldi dei lotti",
+    "blocked": "Completa o annulla trasferimenti, inventari e produzione e rilascia le prenotazioni prima di azzerare le scorte.",
+    "reason": "Motivo",
+    "password": "Password attuale",
+    "confirm": "Digita {phrase} per confermare",
+    "writtenOff": "Scaricato",
+    "refresh": "Aggiorna anteprima",
+    "pending": "In coda",
+    "running": "Azzeramento in corso",
+    "completed": "Giacenze azzerate",
+    "failed": "Azzeramento non riuscito",
+    "viewRun": "Visualizza operazione corrente",
+    "runId": "Riferimento",
+    "queuedHint": "L’azzeramento delle scorte è in coda. Questa pagina si aggiorna automaticamente.",
+    "countsHint": "Questi sono i record interessati dall’anteprima approvata.",
+    "completedHint": "Le giacenze sono state azzerate. Catalogo e storico delle transazioni sono conservati.",
+    "failedHint": "L’azzeramento non è stato completato. Controlla una nuova anteprima prima di riprovare.",
+    "limitHint": "Il limite configurato è di {limit} record di giacenza interessati. L’amministratore del server può adattarlo per manutenzioni più ampie.",
+    "integrityHint": "Alcuni record di giacenza hanno un’organizzazione incoerente. Correggili prima dell’azzeramento.",
+    "reservedSerials": "Numeri di serie riservati",
+    "errors": {
+      "changed": "Le giacenze sono cambiate dopo questa anteprima. Controlla una nuova anteprima.",
+      "pending": "Un altro azzeramento è già in coda o in corso.",
+      "expired": "Questa anteprima è scaduta o è già stata usata. Controllane una nuova.",
+      "limit": "L’azzeramento supera il limite di record configurato.",
+      "blocked": "Completa o annulla trasferimenti, inventari e produzione e rilascia le prenotazioni prima di azzerare le scorte.",
+      "integrity": "Alcuni record di giacenza hanno un’organizzazione incoerente. Correggili prima dell’azzeramento.",
+      "failed": "L’azzeramento non è stato completato. Controlla una nuova anteprima prima di riprovare."
+    }
+  },
   "inventoryCleanup": {
     "perPage": "Prodotti per pagina",
     "selectionHint": "La selezione viene mantenuta quando cambi pagina."

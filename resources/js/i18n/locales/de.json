@@ -1,4 +1,41 @@
 {
+  "stockReset": {
+    "title": "Bestand auf null setzen",
+    "hint": "Setzt den Bestand der gesamten Organisation zurück, einschließlich inaktiver und gelöschter Produkte. Produkte, Aufträge und Historie bleiben erhalten. Verfügbare Seriennummern werden ausgebucht und Chargenbestände auf null gesetzt.",
+    "products": "Produkte mit Bestand",
+    "variants": "Varianten mit Bestand",
+    "locations": "Lagerplatzbestände",
+    "serials": "Verfügbare Seriennummern",
+    "batches": "Chargenbestände",
+    "blocked": "Vor dem Zurücksetzen Umlagerungen, Inventuren und Produktion abschließen oder abbrechen und Reservierungen freigeben.",
+    "reason": "Grund",
+    "password": "Aktuelles Passwort",
+    "confirm": "Zur Bestätigung {phrase} eingeben",
+    "writtenOff": "Ausgebucht",
+    "refresh": "Vorschau aktualisieren",
+    "pending": "Eingereiht",
+    "running": "Bestand wird zurückgesetzt",
+    "completed": "Bestand zurückgesetzt",
+    "failed": "Zurücksetzen fehlgeschlagen",
+    "viewRun": "Aktuellen Vorgang anzeigen",
+    "runId": "Vorgangsreferenz",
+    "queuedHint": "Das Zurücksetzen des Bestands ist vorgemerkt. Diese Seite wird automatisch aktualisiert.",
+    "countsHint": "Dies sind die betroffenen Datensätze aus Ihrer bestätigten Vorschau.",
+    "completedHint": "Der Bestand wurde auf null gesetzt. Katalog und Transaktionsverlauf bleiben erhalten.",
+    "failedHint": "Der Vorgang wurde nicht abgeschlossen. Prüfen Sie vor einem neuen Versuch eine aktuelle Vorschau.",
+    "limitHint": "Das konfigurierte Limit beträgt {limit} betroffene Bestandsdatensätze. Der Serveradministrator kann es für größere Wartungen anpassen.",
+    "integrityHint": "Bestandsdatensätze haben widersprüchliche Organisationszuordnungen. Korrigieren Sie diese vor dem Zurücksetzen.",
+    "reservedSerials": "Reservierte Seriennummern",
+    "errors": {
+      "changed": "Der Bestand hat sich seit der Vorschau geändert. Prüfen Sie eine neue Vorschau.",
+      "pending": "Ein weiterer Vorgang ist bereits eingereiht oder läuft.",
+      "expired": "Diese Vorschau ist abgelaufen oder wurde schon verwendet. Prüfen Sie eine neue Vorschau.",
+      "limit": "Der Vorgang überschreitet das konfigurierte Datensatzlimit.",
+      "blocked": "Vor dem Zurücksetzen Umlagerungen, Inventuren und Produktion abschließen oder abbrechen und Reservierungen freigeben.",
+      "integrity": "Bestandsdatensätze haben widersprüchliche Organisationszuordnungen. Korrigieren Sie diese vor dem Zurücksetzen.",
+      "failed": "Der Vorgang wurde nicht abgeschlossen. Prüfen Sie vor einem neuen Versuch eine aktuelle Vorschau."
+    }
+  },
   "inventoryCleanup": {
     "perPage": "Produkte pro Seite",
     "selectionHint": "Die Auswahl bleibt beim Seitenwechsel erhalten."

@@ -1,4 +1,41 @@
 {
+  "stockReset": {
+    "title": "Wyzeruj zapasy",
+    "hint": "Zeruje zapasy całej organizacji, także produktów nieaktywnych i usuniętych. Produkty, zamówienia i historia zostają zachowane. Dostępne numery seryjne są odpisywane, a partie zerowane.",
+    "products": "Produkty z zapasami",
+    "variants": "Warianty z zapasami",
+    "locations": "Salda lokalizacji",
+    "serials": "Dostępne numery seryjne",
+    "batches": "Salda partii",
+    "blocked": "Zakończ lub anuluj przesunięcia, inwentaryzacje i produkcję oraz zwolnij rezerwacje przed wyzerowaniem zapasów.",
+    "reason": "Powód",
+    "password": "Aktualne hasło",
+    "confirm": "Wpisz {phrase}, aby potwierdzić",
+    "writtenOff": "Odpisano",
+    "refresh": "Odśwież podgląd",
+    "pending": "W kolejce",
+    "running": "Zerowanie zapasów",
+    "completed": "Zapasy wyzerowane",
+    "failed": "Zerowanie nie powiodło się",
+    "viewRun": "Pokaż bieżącą operację",
+    "runId": "Identyfikator operacji",
+    "queuedHint": "Zerowanie zapasów oczekuje w kolejce. Ta strona aktualizuje się automatycznie.",
+    "countsHint": "To rekordy objęte zatwierdzonym podglądem.",
+    "completedHint": "Zapasy wyzerowano. Katalog i historia transakcji zostały zachowane.",
+    "failedHint": "Operacja nie została ukończona. Sprawdź nowy podgląd przed ponowieniem.",
+    "limitHint": "Limit wynosi {limit} zmienianych rekordów zapasów. Administrator serwera może go dostosować do większej konserwacji.",
+    "integrityHint": "Rekordy zapasów mają niespójne przypisanie organizacji. Popraw je przed zerowaniem.",
+    "reservedSerials": "Zarezerwowane numery seryjne",
+    "errors": {
+      "changed": "Zapasy zmieniły się od czasu podglądu. Sprawdź nowy podgląd.",
+      "pending": "Inna operacja już czeka w kolejce lub trwa.",
+      "expired": "Ten podgląd wygasł lub został użyty. Sprawdź nowy podgląd.",
+      "limit": "Operacja przekracza skonfigurowany limit rekordów.",
+      "blocked": "Zakończ lub anuluj przesunięcia, inwentaryzacje i produkcję oraz zwolnij rezerwacje przed wyzerowaniem zapasów.",
+      "integrity": "Rekordy zapasów mają niespójne przypisanie organizacji. Popraw je przed zerowaniem.",
+      "failed": "Operacja nie została ukończona. Sprawdź nowy podgląd przed ponowieniem."
+    }
+  },
   "inventoryCleanup": {
     "perPage": "Produkty na stronie",
     "selectionHint": "Wybór zostaje zachowany przy zmianie strony."

@@ -1,4 +1,41 @@
 {
+  "stockReset": {
+    "title": "Voorraad op nul zetten",
+    "hint": "Zet de voorraad van de hele organisatie op nul, inclusief inactieve en verwijderde producten. Producten, orders en geschiedenis blijven behouden. Beschikbare serienummers worden afgeboekt en partijen op nul gezet.",
+    "products": "Producten met voorraad",
+    "variants": "Varianten met voorraad",
+    "locations": "Locatiesaldi",
+    "serials": "Beschikbare serienummers",
+    "batches": "Partijsaldi",
+    "blocked": "Voltooi of annuleer overboekingen, tellingen en productie en geef reserveringen vrij voordat u de voorraad reset.",
+    "reason": "Reden",
+    "password": "Huidig wachtwoord",
+    "confirm": "Typ {phrase} om te bevestigen",
+    "writtenOff": "Afgeboekt",
+    "refresh": "Voorbeeld vernieuwen",
+    "pending": "In wachtrij",
+    "running": "Voorraad wordt gewist",
+    "completed": "Voorraad op nul gezet",
+    "failed": "Voorraadreset mislukt",
+    "viewRun": "Huidige reset bekijken",
+    "runId": "Resetreferentie",
+    "queuedHint": "Het op nul zetten van de voorraad staat in de wachtrij. Deze pagina wordt automatisch bijgewerkt.",
+    "countsHint": "Dit zijn de betrokken records uit uw goedgekeurde voorbeeld.",
+    "completedHint": "De voorraad is op nul gezet. Catalogus en transactiegeschiedenis blijven behouden.",
+    "failedHint": "De reset is niet voltooid. Controleer een nieuw voorbeeld voordat u het opnieuw probeert.",
+    "limitHint": "De ingestelde limiet is {limit} betrokken voorraadrecords. De serverbeheerder kan deze aanpassen voor groter onderhoud.",
+    "integrityHint": "Voorraadrecords hebben inconsistente organisatietoewijzingen. Corrigeer deze voor de reset.",
+    "reservedSerials": "Gereserveerde serienummers",
+    "errors": {
+      "changed": "De voorraad is gewijzigd sinds dit voorbeeld. Controleer een nieuw voorbeeld.",
+      "pending": "Er staat al een andere reset in de wachtrij of deze wordt uitgevoerd.",
+      "expired": "Dit voorbeeld is verlopen of al gebruikt. Controleer een nieuw voorbeeld.",
+      "limit": "Deze reset overschrijdt de ingestelde recordlimiet.",
+      "blocked": "Voltooi of annuleer overboekingen, tellingen en productie en geef reserveringen vrij voordat u de voorraad reset.",
+      "integrity": "Voorraadrecords hebben inconsistente organisatietoewijzingen. Corrigeer deze voor de reset.",
+      "failed": "De reset is niet voltooid. Controleer een nieuw voorbeeld voordat u het opnieuw probeert."
+    }
+  },
   "inventoryCleanup": {
     "perPage": "Producten per pagina",
     "selectionHint": "Selecties blijven behouden wanneer u van pagina wisselt."

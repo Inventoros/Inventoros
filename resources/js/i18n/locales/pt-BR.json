@@ -1,4 +1,41 @@
 {
+  "stockReset": {
+    "title": "Zerar estoque",
+    "hint": "Zera o estoque de toda a organização, incluindo produtos inativos e excluídos. Produtos, pedidos e histórico são mantidos. Seriais disponíveis recebem baixa e os saldos dos lotes ficam em zero.",
+    "products": "Produtos com estoque",
+    "variants": "Variantes com estoque",
+    "locations": "Saldos por localização",
+    "serials": "Seriais disponíveis",
+    "batches": "Saldos dos lotes",
+    "blocked": "Conclua ou cancele transferências, contagens e produção e libere as reservas antes de zerar o estoque.",
+    "reason": "Motivo",
+    "password": "Senha atual",
+    "confirm": "Digite {phrase} para confirmar",
+    "writtenOff": "Baixado",
+    "refresh": "Atualizar prévia",
+    "pending": "Na fila",
+    "running": "Zerando estoque",
+    "completed": "Estoque zerado",
+    "failed": "Falha ao zerar estoque",
+    "viewRun": "Ver operação atual",
+    "runId": "Referência",
+    "queuedHint": "A redefinição do estoque está na fila. Esta página é atualizada automaticamente.",
+    "countsHint": "Estes são os registros afetados da prévia que você aprovou.",
+    "completedHint": "O estoque foi zerado. O catálogo e o histórico de transações foram preservados.",
+    "failedHint": "A operação não foi concluída. Revise uma nova prévia antes de tentar novamente.",
+    "limitHint": "O limite configurado é de {limit} registros de estoque afetados. O administrador do servidor pode ajustá-lo para uma manutenção maior.",
+    "integrityHint": "Há registros de estoque com organização inconsistente. Corrija-os antes de zerar.",
+    "reservedSerials": "Números de série reservados",
+    "errors": {
+      "changed": "O estoque mudou após esta prévia. Revise uma nova prévia.",
+      "pending": "Outra operação já está na fila ou em execução.",
+      "expired": "Esta prévia expirou ou já foi usada. Revise uma nova prévia.",
+      "limit": "Esta operação excede o limite configurado de registros.",
+      "blocked": "Conclua ou cancele transferências, contagens e produção e libere as reservas antes de zerar o estoque.",
+      "integrity": "Há registros de estoque com organização inconsistente. Corrija-os antes de zerar.",
+      "failed": "A operação não foi concluída. Revise uma nova prévia antes de tentar novamente."
+    }
+  },
   "inventoryCleanup": {
     "perPage": "Produtos por página",
     "selectionHint": "A seleção é mantida ao mudar de página."

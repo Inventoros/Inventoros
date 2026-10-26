@@ -137,6 +137,9 @@ class SerialTrackingController extends Controller
             // A serial built into a product by a work order is part of that
             // work order's record; freeing it here would leave the unit
             // counted both inside the assembly and on the shelf.
+            if ($locked->status === ProductSerial::STATUS_WRITTEN_OFF) {
+                return response()->json(['message' => 'This serial was written off by an administrator stock reset.', 'error' => 'written_off'], 409);
+            }
             if ($locked->status === ProductSerial::STATUS_CONSUMED) {
                 return response()->json([
                     'message' => 'This serial was consumed by a work order and cannot change status.',

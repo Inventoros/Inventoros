@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Inventory\InventoryResetRun;
 use App\Support\SchedulerHealth;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
@@ -10,6 +11,12 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 Schedule::command('inventory:check-reorder-points')->dailyAt('06:00');
+
+// Dedicated, durable queue: atomically enqueued with its operation record,
+// independent of a site's ordinary Redis/SQS/synchronous queue configuration.
+Schedule::command('queue:work inventory-resets --queue=inventory-resets --stop-when-empty --max-time=50 --timeout=900 --tries=1')
+    ->everyMinute()->withoutOverlapping(30)->runInBackground()
+    ->when(fn (): bool => InventoryResetRun::whereIn('status', ['pending', 'running'])->exists());
 
 // Drain the database queue (mail, webhooks) on hosts with no queue worker.
 // Each run stops taking new jobs after 50 seconds, then finishes its current

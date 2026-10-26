@@ -694,6 +694,9 @@ final class WorkOrderTrackedProductionTest extends TestCase
         $lot = $this->batch($glue, 'G1', 5, '2030-01-01');
         $this->bom($this->assembly, $glue, 1);
         $this->assembly->update(['tracking_type' => 'batch']);
+        // PostgreSQL can move this tuple behind the later component on
+        // UPDATE. Equal BOM positions must still retain creation order.
+        $this->assembly->components()->orderBy('id')->firstOrFail()->update(['notes' => 'Updated earlier component']);
         $order = $this->startedOrder('web', 1);
 
         $this->get(route('work-orders.show', $order))

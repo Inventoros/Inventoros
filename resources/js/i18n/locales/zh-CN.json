@@ -1,4 +1,41 @@
 {
+  "stockReset": {
+    "title": "将库存重置为零",
+    "hint": "重置整个组织的库存，包括停用和已删除的商品。保留商品、订单及历史记录。可用序列号将核销，批次余额将归零。",
+    "products": "有库存的商品",
+    "variants": "有库存的变体",
+    "locations": "库位余额",
+    "serials": "可用序列号",
+    "batches": "批次余额",
+    "blocked": "重置前请完成或取消调拨、盘点和生产，并释放预留库存。",
+    "reason": "原因",
+    "password": "当前密码",
+    "confirm": "输入 {phrase} 以确认",
+    "writtenOff": "已核销",
+    "refresh": "刷新预览",
+    "pending": "已排队",
+    "running": "正在清零库存",
+    "completed": "库存清零完成",
+    "failed": "库存清零失败",
+    "viewRun": "查看当前操作",
+    "runId": "操作编号",
+    "queuedHint": "库存重置已排队。此页面会自动更新。",
+    "countsHint": "以下是您已批准的预览中受影响的记录。",
+    "completedHint": "库存已清零。产品目录和交易历史已保留。",
+    "failedHint": "操作未完成。请查看新的预览后重试。",
+    "limitHint": "当前上限为 {limit} 条受影响的库存记录。较大维护操作可由服务器管理员调整上限。",
+    "integrityHint": "库存记录的组织归属不一致。请先修正记录再清零。",
+    "reservedSerials": "已预留的序列号",
+    "errors": {
+      "changed": "预览后库存已发生变化。请查看新的预览。",
+      "pending": "已有其他清零操作在排队或运行。",
+      "expired": "此预览已过期或已使用。请查看新的预览。",
+      "limit": "此操作超出了配置的记录数量上限。",
+      "blocked": "重置前请完成或取消调拨、盘点和生产，并释放预留库存。",
+      "integrity": "库存记录的组织归属不一致。请先修正记录再清零。",
+      "failed": "操作未完成。请查看新的预览后重试。"
+    }
+  },
   "inventoryCleanup": {
     "perPage": "每页商品数",
     "selectionHint": "切换页面时保留所选商品。"

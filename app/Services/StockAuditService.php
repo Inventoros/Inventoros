@@ -115,6 +115,7 @@ final class StockAuditService
         $this->warehouseAccess->authorizeStockAudit($actor, $stockAudit);
 
         return DB::transaction(function () use ($stockAudit, $actor) {
+            InventoryWorkflowLock::acquire((int) $stockAudit->organization_id);
             $locked = StockAudit::whereKey($stockAudit->getKey())->lockForUpdate()->firstOrFail();
             $this->warehouseAccess->authorizeStockAudit($actor, $locked);
             $this->assertWarehouseScope($locked);
@@ -306,11 +307,11 @@ final class StockAuditService
 
         return $adjustmentsCreated;
     }
+
     private function assertWarehouseScope(StockAudit $audit): void
     {
         if ($audit->warehouse_id !== null && $audit->items()->whereDoesntHave('location', fn ($q) => $q->where('warehouse_id', $audit->warehouse_id))->exists()) {
             throw new InvalidStateException('An audited location has moved or been removed. Create a new audit for the current warehouse layout.', 'scope_changed');
         }
     }
-
 }

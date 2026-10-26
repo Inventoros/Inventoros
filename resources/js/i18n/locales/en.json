@@ -1,4 +1,41 @@
 {
+  "stockReset": {
+    "title": "Reset stock to zero",
+    "hint": "This resets stock across the entire organization, including inactive and deleted products. Products, orders and history are kept. Available serials are written off and batch balances become zero.",
+    "products": "Products with stock",
+    "variants": "Variants with stock",
+    "locations": "Location balances",
+    "serials": "Available serials",
+    "batches": "Batch balances",
+    "blocked": "Finish or cancel transfers, stock counts and production, and release reservations before resetting stock.",
+    "reason": "Reason",
+    "password": "Current password",
+    "confirm": "Type {phrase} to confirm",
+    "writtenOff": "Written off",
+    "refresh": "Refresh preview",
+    "pending": "Queued",
+    "running": "Resetting stock",
+    "completed": "Stock reset completed",
+    "failed": "Stock reset failed",
+    "viewRun": "View current reset",
+    "runId": "Reset reference",
+    "queuedHint": "Your stock reset is queued. This page updates automatically.",
+    "countsHint": "These are the affected records from your approved preview.",
+    "completedHint": "Stock was reset to zero. Catalogue records and transaction history were retained.",
+    "failedHint": "The reset did not complete. Review a fresh preview before trying again.",
+    "limitHint": "The configured limit is {limit} affected stock records. Ask the server administrator to adjust it for a larger maintenance operation.",
+    "integrityHint": "Stock records have inconsistent organization ownership. Correct those records before resetting.",
+    "reservedSerials": "Reserved serial numbers",
+    "errors": {
+      "changed": "Stock changed after this preview. Review a fresh preview before resetting.",
+      "pending": "Another reset is already queued or running.",
+      "expired": "This preview expired or was already used. Review a fresh preview.",
+      "limit": "This reset exceeds the configured record limit.",
+      "blocked": "Finish or cancel transfers, stock counts and production, and release reservations before resetting stock.",
+      "integrity": "Stock records have inconsistent organization ownership. Correct those records before resetting.",
+      "failed": "The reset did not complete. Review a fresh preview before trying again."
+    }
+  },
   "inventoryCleanup": {
     "perPage": "Products per page",
     "selectionHint": "Selections stay selected when you move between pages."
