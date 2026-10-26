@@ -11,6 +11,7 @@ use App\Models\Inventory\ProductVariant;
 use App\Models\Inventory\StockAdjustment;
 use App\Models\Inventory\VariantLocationStock;
 use App\Models\User;
+use App\Models\Warehouse;
 use App\Services\InventoryResetService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Artisan;
@@ -252,7 +253,10 @@ final class InventoryResetQueueTest extends TestCase
             'product_id' => $this->productA->id, 'sku' => 'INVALID-PARENT', 'stock' => 4, 'option_values' => []]);
         VariantLocationStock::updateOrCreate(['product_variant_id' => $variant->id, 'location_id' => $this->locationA->id],
             ['organization_id' => $this->organization->id, 'quantity' => 4]);
-        if ($column === 'location_id') {
+        if ($column === 'warehouse_id') {
+            $warehouse = Warehouse::factory()->create(['organization_id' => $foreignProduct->organization_id]);
+            DB::table('product_locations')->where('id', $this->locationA->id)->update(['warehouse_id' => $warehouse->id]);
+        } elseif ($column === 'location_id') {
             DB::table('product_locations')->where('id', $this->locationA->id)->update(['organization_id' => $foreignProduct->organization_id]);
         } elseif ($table === 'variant_location_stocks') {
             DB::table('product_variants')->where('id', $variant->id)->update(['organization_id' => $foreignProduct->organization_id]);
@@ -274,7 +278,7 @@ final class InventoryResetQueueTest extends TestCase
     public static function malformedOwnership(): array
     {
         return [['product_variants', 'product_id'], ['product_location_stocks', 'product_id'],
-            ['variant_location_stocks', 'product_variant_id'], ['products', 'location_id']];
+            ['variant_location_stocks', 'product_variant_id'], ['products', 'location_id'], ['product_locations', 'warehouse_id']];
     }
 
     public function test_record_budget_is_enforced_and_zero_only_products_do_not_seed_bins(): void
