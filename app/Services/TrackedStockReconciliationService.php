@@ -11,6 +11,7 @@ use App\Models\Inventory\ProductSerial;
 use App\Models\Inventory\StockAdjustment;
 use App\Models\User;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Surfaces (and optionally corrects) drift between a product's recorded
@@ -46,26 +47,7 @@ final class TrackedStockReconciliationService
             ->where('organization_id', $organizationId)
             ->whereIn('tracking_type', [TrackingType::BATCH->value, TrackingType::SERIAL->value])
             ->get()
-            ->map(function (Product $product): array {
-                $type = $product->tracking_type instanceof TrackingType
-                    ? $product->tracking_type
-                    : TrackingType::from((string) $product->tracking_type);
-
-                $trackedTotal = $type === TrackingType::BATCH
-                    ? (int) ProductBatch::query()->where('product_id', $product->id)->sum('quantity')
-                    : (int) ProductSerial::query()->where('product_id', $product->id)
-                        ->where('status', ProductSerial::STATUS_AVAILABLE)->count();
-
-                $recorded = (int) $product->stock;
-
-                return [
-                    'product' => $product,
-                    'tracking_type' => $type->value,
-                    'recorded_stock' => $recorded,
-                    'tracked_total' => $trackedTotal,
-                    'difference' => $trackedTotal - $recorded,
-                ];
-            })
+            ->map(fn (Product $product): array => $this->state($product))
             ->filter(fn (array $row): bool => $row['difference'] !== 0)
             ->values();
     }
@@ -82,24 +64,60 @@ final class TrackedStockReconciliationService
     {
         $fixed = 0;
 
-        foreach ($this->discrepancies($organizationId) as $row) {
-            StockAdjustment::adjust(
-                product: $row['product'],
-                quantity: $row['difference'],
-                type: 'recount',
-                reason: 'Tracked-stock reconciliation',
-                notes: sprintf(
-                    'Reconciled to %s records: recorded %d, tracked %d.',
-                    $row['tracking_type'],
-                    $row['recorded_stock'],
-                    $row['tracked_total'],
-                ),
-                actor: $actor,
-            );
+        $candidates = Product::query()->where('organization_id', $organizationId)
+            ->whereIn('tracking_type', [TrackingType::BATCH->value, TrackingType::SERIAL->value])
+            ->select('id')->lazyById(250);
 
-            $fixed++;
+        foreach ($candidates as $candidate) {
+            $fixed += DB::transaction(function () use ($candidate, $organizationId, $actor): int {
+                // Discovery is not evidence for a write: stock/tracking may
+                // have changed or the product may have been archived meanwhile.
+                $product = Product::query()->where('organization_id', $organizationId)
+                    ->whereIn('tracking_type', [TrackingType::BATCH->value, TrackingType::SERIAL->value])
+                    ->whereKey($candidate->id)->lockForUpdate()->first();
+                if ($product === null) {
+                    return 0;
+                }
+                $row = $this->state($product);
+                if ($row['difference'] === 0) {
+                    return 0;
+                }
+                StockAdjustment::adjust(
+                    product: $row['product'],
+                    quantity: $row['difference'],
+                    type: 'recount',
+                    reason: 'Tracked-stock reconciliation',
+                    notes: sprintf(
+                        'Reconciled to %s records: recorded %d, tracked %d.',
+                        $row['tracking_type'],
+                        $row['recorded_stock'],
+                        $row['tracked_total'],
+                    ),
+                    actor: $actor,
+                );
+
+                return 1;
+            }, 3);
         }
 
         return $fixed;
+    }
+
+    private function state(Product $product): array
+    {
+        $type = $product->tracking_type instanceof TrackingType
+            ? $product->tracking_type : TrackingType::from((string) $product->tracking_type);
+        $query = ($type === TrackingType::BATCH ? ProductBatch::query() : ProductSerial::query())
+            ->where('organization_id', $product->organization_id)->where('product_id', $product->id);
+        $trackedTotal = $type === TrackingType::BATCH
+            ? (int) $query->sum('quantity')
+            : $query->where('status', ProductSerial::STATUS_AVAILABLE)->count();
+        $recorded = (int) $product->stock;
+
+        return [
+            'product' => $product, 'tracking_type' => $type->value,
+            'recorded_stock' => $recorded, 'tracked_total' => $trackedTotal,
+            'difference' => $trackedTotal - $recorded,
+        ];
     }
 }
