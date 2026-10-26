@@ -41,8 +41,9 @@ class StockAuditController extends Controller
 
         return Inertia::render('StockAudits/CountHistory', [
             'audit' => $stockAudit->only(['id', 'audit_number', 'name']),
-            'item' => $item->load(['product' => fn ($query) => $query->withTrashed(),
-                'variant' => fn ($query) => $query->withTrashed(), 'location' => fn ($query) => $query->withTrashed()]),
+            'item' => $item->load(['product' => fn ($query) => $query->withTrashed()->where('organization_id', $stockAudit->organization_id),
+                'variant' => fn ($query) => $query->withTrashed()->where('organization_id', $stockAudit->organization_id),
+                'location' => fn ($query) => $query->withTrashed()->where('organization_id', $stockAudit->organization_id)]),
             'counts' => StockAuditCount::where('organization_id', $request->user()->organization_id)
                 ->where('stock_audit_id', $stockAudit->id)->where('stock_audit_item_id', $item->id)
                 ->orderByDesc('sequence')->paginate(20),

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Feature\Warehouses;
 
 use App\Exceptions\InvalidStateException;
+use App\Models\Inventory\Product;
 use App\Models\Inventory\StockAudit;
 use App\Models\Inventory\StockAuditCount;
 use App\Models\Inventory\StockAuditItem;
@@ -147,6 +148,18 @@ final class StockAuditCountHistoryTest extends TestCase
         $this->assertSame($revision, $this->item->fresh()->count_revision);
         $this->saveCount(2, 'New recount', $revision);
         $this->assertDatabaseHas('stock_audit_counts', ['sequence' => 1, 'counted_quantity' => 2, 'is_snapshot' => false]);
+    }
+
+    public function test_history_retains_archived_catalogue_names_and_filters_foreign_relations(): void
+    {
+        $this->saveCount(55);
+        $this->productA->delete();
+        $this->actingAs($this->admin)->get($this->historyUrl())->assertOk()->assertInertia(fn (Assert $page) => $page
+            ->where('item.product.name', 'Alpha Widget')->where('counts.data.0.counted_quantity', 55));
+        $foreign = Product::factory()->create();
+        $this->item->update(['product_id' => $foreign->id]);
+        $this->get($this->historyUrl())->assertOk()->assertInertia(fn (Assert $page) => $page
+            ->where('item.product', null)->where('counts.data.0.counted_quantity', 55));
     }
 
     public function test_saved_evidence_cannot_be_changed_or_deleted_through_the_model(): void
