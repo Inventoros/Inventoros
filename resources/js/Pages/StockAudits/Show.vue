@@ -212,13 +212,9 @@ const transmitDraft = async (item, draft) => {
         const current = error.response?.data?.item;
         if (error.response?.status === 409 && error.response?.data?.error === 'stale_count' && current?.id === item.id) {
             Object.assign(item, current);
-            // The first response may have been lost after its transaction
-            // committed. Matching evidence is already saved; never replay it.
-            if (current.counted_quantity === payload.counted_quantity && (current.notes || null) === payload.notes) {
-                forget(item.id, draft);
-                draftMessage.value = '';
-                return true;
-            }
+            // Identical quantities/notes do not prove that this submission
+            // was accepted: another person may have recounted the same value.
+            // Preserve the draft until the operator reviews the newer evidence.
             draftMessage.value = t('stockAudits.drafts.conflict');
         } else {
             draftMessage.value = error.response ? t('stockAudits.drafts.serverRejected') : t('stockAudits.drafts.savedLocally');
