@@ -155,7 +155,7 @@ class WorkOrder extends Model
      */
     public function items(): HasMany
     {
-        return $this->hasMany(WorkOrderItem::class);
+        return $this->hasMany(WorkOrderItem::class)->orderBy('work_order_items.id');
     }
 
     /**
