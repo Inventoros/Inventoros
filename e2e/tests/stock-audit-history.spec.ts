@@ -1,21 +1,36 @@
 import { test, expect } from '../fixtures';
 import { execFileSync } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
+import type { Page } from '@playwright/test';
 
-function seedAudit(): string {
-    const output = execFileSync('php', ['artisan', 'db:seed', '--class=E2EStockAuditHistorySeeder', '--force'], {
-        env: { ...process.env, E2E_AUDIT_HISTORY_ID: randomUUID() }, encoding: 'utf8', stdio: 'pipe',
-    });
+test.use({ storageState: { cookies: [], origins: [] } });
+
+async function openAudit(page: Page): Promise<string> {
+    const fixtureId = randomUUID();
+    let output: string;
+    try {
+        output = execFileSync('php', ['artisan', 'db:seed', '--class=E2EStockAuditHistorySeeder', '--force'], {
+            env: { ...process.env, E2E_AUDIT_HISTORY_ID: fixtureId }, encoding: 'utf8', stdio: 'pipe',
+        });
+    } catch (error) {
+        const failure = error as Error & { stdout?: string; stderr?: string };
+        throw new Error(`History fixture failed: ${failure.stdout || ''} ${failure.stderr || ''}`);
+    }
     const auditId = output.match(/AUDIT_ID=(\d+)/)?.[1];
     expect(auditId).toBeTruthy();
+    await page.goto('/login', { waitUntil: 'networkidle' });
+    await page.locator('#email').fill(`${fixtureId}@history.test`);
+    await page.locator('#password').fill('E2EHistoryPassword123!');
+    await page.getByRole('button', { name: 'Log in', exact: true }).click();
+    await expect(page).toHaveURL(/dashboard$/);
+    await page.goto(`/stock-audits/${auditId}`);
     return auditId!;
 }
 
 test('a recount retains the previous count and its notes in history', async ({ page }) => {
-    const auditId = seedAudit();
     const errors: string[] = [];
     page.on('pageerror', error => errors.push(error.message));
-    await page.goto(`/stock-audits/${auditId}`);
+    await openAudit(page);
     await page.getByRole('button', { name: 'Recount', exact: true }).click();
     await page.locator('input[id^="audit-count-input-"]').fill('4');
     await page.locator('tbody input[type="text"]').fill('Second pass');
@@ -30,8 +45,7 @@ test('a recount retains the previous count and its notes in history', async ({ p
 });
 
 test('a lost response preserves the draft until the newer count is reviewed', async ({ page }) => {
-    const auditId = seedAudit();
-    await page.goto(`/stock-audits/${auditId}`);
+    const auditId = await openAudit(page);
     await page.getByRole('button', { name: 'Recount', exact: true }).click();
     const input = page.locator('input[id^="audit-count-input-"]');
     const itemId = (await input.getAttribute('id'))!.replace('audit-count-input-', '');
