@@ -19,7 +19,23 @@ const heading = 'whitespace-nowrap px-5 py-3 text-left text-xs font-semibold upp
         </PageHeader>
         <p class="mt-4 text-sm text-text-secondary">{{ t('stockAudits.history.hint') }}</p>
         <Card :padded="false" class="mt-5 overflow-hidden">
-            <div class="overflow-x-auto">
+            <ul class="divide-y divide-border-subtle md:hidden">
+                <li v-for="count in counts.data" :key="count.id" class="space-y-3 p-4 text-sm">
+                    <div class="flex flex-wrap items-center justify-between gap-2">
+                        <span class="font-semibold text-text-primary">{{ count.is_snapshot ? t('stockAudits.history.snapshot') : `#${count.sequence}` }}</span>
+                        <span class="text-xs text-text-tertiary">{{ displayDateTime(count.counted_at) }}</span>
+                    </div>
+                    <p class="text-text-secondary">{{ count.actor_name || '-' }}</p>
+                    <dl class="grid grid-cols-2 gap-2">
+                        <dt class="text-text-secondary">{{ t('stockAudits.columns.countedQty') }}</dt><dd class="text-right font-semibold tabular-nums text-text-primary">{{ count.counted_quantity }}</dd>
+                        <dt class="text-text-secondary">{{ t('stockAudits.columns.systemQty') }}</dt><dd class="text-right tabular-nums text-text-secondary">{{ count.system_quantity }}</dd>
+                        <dt class="text-text-secondary">{{ t('stockAudits.columns.discrepancy') }}</dt><dd class="text-right tabular-nums text-text-secondary">{{ count.discrepancy }}</dd>
+                    </dl>
+                    <p class="whitespace-pre-wrap break-words text-text-secondary">{{ count.notes || '-' }}</p>
+                </li>
+                <li v-if="!counts.data.length" class="p-5 text-center text-sm text-text-tertiary">{{ t('stockAudits.history.empty') }}</li>
+            </ul>
+            <div class="hidden overflow-x-auto md:block">
                 <table class="w-full text-sm">
                     <thead class="border-b border-border-subtle bg-surface-overlay"><tr>
                         <th :class="heading">#</th><th :class="heading">{{ t('common.date') }}</th>
