@@ -10,6 +10,7 @@ use App\Models\Inventory\ProductLocation;
 use App\Models\Inventory\ProductLocationStock;
 use App\Models\Inventory\StockAdjustment;
 use App\Models\Inventory\StockAudit;
+use App\Models\Inventory\StockAuditCount;
 use App\Models\Inventory\StockAuditItem;
 use App\Models\User;
 use App\Models\Warehouse;
@@ -177,13 +178,21 @@ final class StockAuditService
                 throw new InvalidStateException('This count has changed. Review the latest count before saving yours.', 'stale_count');
             }
 
-            $lockedItem->update([
+            $lockedItem->forceFill([
+                'count_sequence' => (int) $lockedItem->count_sequence + 1,
                 'counted_quantity' => $countedQuantity,
                 'discrepancy' => $countedQuantity - $lockedItem->system_quantity,
                 'status' => 'counted',
                 'counted_by' => $actor->id,
                 'counted_at' => now(),
                 'notes' => $notes ?? $lockedItem->notes,
+            ])->save();
+            StockAuditCount::create([
+                'organization_id' => $locked->organization_id, 'stock_audit_id' => $locked->id,
+                'stock_audit_item_id' => $lockedItem->id, 'sequence' => $lockedItem->count_sequence,
+                'system_quantity' => $lockedItem->system_quantity, 'counted_quantity' => $lockedItem->counted_quantity,
+                'discrepancy' => $lockedItem->discrepancy, 'counted_by' => $actor->id, 'actor_name' => $actor->name,
+                'counted_at' => $lockedItem->counted_at, 'notes' => $lockedItem->notes, 'is_snapshot' => false,
             ]);
             $item->setRawAttributes($lockedItem->getAttributes(), true);
 
@@ -306,11 +315,11 @@ final class StockAuditService
 
         return $adjustmentsCreated;
     }
+
     private function assertWarehouseScope(StockAudit $audit): void
     {
         if ($audit->warehouse_id !== null && $audit->items()->whereDoesntHave('location', fn ($q) => $q->where('warehouse_id', $audit->warehouse_id))->exists()) {
             throw new InvalidStateException('An audited location has moved or been removed. Create a new audit for the current warehouse layout.', 'scope_changed');
         }
     }
-
 }

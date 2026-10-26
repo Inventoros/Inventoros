@@ -3226,6 +3226,13 @@
     }
   },
   "stockAudits": {
+    "history": {
+      "title": "Count history",
+      "hint": "Each saved count is retained. For counts saved before history was enabled, only the latest value is available.",
+      "snapshot": "Earlier saved count",
+      "view": "View count history",
+      "empty": "No saved counts yet."
+    },
     "completeConfirm": "Complete this audit? Stock adjustments will be created for any discrepancies.",
     "completeUncountedConfirm": "{uncounted} of {total} items have not been counted. Complete the audit anyway? Uncounted items keep their current stock; only counted items are adjusted.",
     "backToList": "Back to List",

@@ -633,6 +633,7 @@ const thClass = 'px-6 py-3 text-left text-xs font-medium uppercase tracking-wide
                                 <td class="px-6 py-4 text-sm text-text-primary">
                                     <div class="font-medium">{{ item.product?.name || '-' }}</div>
                                     <div class="text-xs text-text-tertiary">{{ item.variant?.title || '' }} {{ item.location?.name || '' }} | SKU: {{ item.variant?.sku || item.product?.sku || '-' }}</div>
+                                    <Link v-if="item.counted_quantity !== null" :href="route('stock-audits.items.counts', { stockAudit: audit.id, item: item.id })" class="mt-1 inline-block text-xs text-brand hover:underline">{{ t('stockAudits.history.view') }}</Link>
                                 </td>
                                 <td class="whitespace-nowrap px-6 py-4 text-sm text-text-secondary">
                                     {{ item.location?.name || '-' }}

@@ -12,12 +12,14 @@ use App\Http\Requests\StockAudit\UpdateStockAuditRequest;
 use App\Models\Inventory\Product;
 use App\Models\Inventory\ProductLocation;
 use App\Models\Inventory\StockAudit;
+use App\Models\Inventory\StockAuditCount;
 use App\Models\Inventory\StockAuditItem;
 use App\Services\StockAuditService;
 use App\Services\WarehouseAccessService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -30,6 +32,22 @@ use Inertia\Response;
 class StockAuditController extends Controller
 {
     public function __construct(private readonly WarehouseAccessService $warehouseAccess) {}
+
+    public function countHistory(Request $request, StockAudit $stockAudit, StockAuditItem $item): Response
+    {
+        abort_unless((int) $stockAudit->organization_id === (int) $request->user()->organization_id, 403);
+        $this->warehouseAccess->authorizeStockAudit($request->user(), $stockAudit);
+        abort_unless((int) $item->stock_audit_id === (int) $stockAudit->id, 404);
+
+        return Inertia::render('StockAudits/CountHistory', [
+            'audit' => $stockAudit->only(['id', 'audit_number', 'name']),
+            'item' => $item->load(['product' => fn ($query) => $query->withTrashed(),
+                'variant' => fn ($query) => $query->withTrashed(), 'location' => fn ($query) => $query->withTrashed()]),
+            'counts' => StockAuditCount::where('organization_id', $request->user()->organization_id)
+                ->where('stock_audit_id', $stockAudit->id)->where('stock_audit_item_id', $item->id)
+                ->orderByDesc('sequence')->paginate(20),
+        ]);
+    }
 
     /**
      * Display a listing of stock audits.
@@ -241,7 +259,7 @@ class StockAuditController extends Controller
         // location spans the whole organization.
         if ($stockAudit->warehouse_id !== null) {
             if (($validated['warehouse_location_id'] ?? null) != $stockAudit->warehouse_location_id) {
-                throw \Illuminate\Validation\ValidationException::withMessages(['warehouse_location_id' => 'Create a new audit to change its warehouse count scope.']);
+                throw ValidationException::withMessages(['warehouse_location_id' => 'Create a new audit to change its warehouse count scope.']);
             }
         } else {
             $this->warehouseAccess->authorizeLocation($request->user(), $validated['warehouse_location_id'] ?? null);

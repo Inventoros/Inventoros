@@ -18,6 +18,7 @@ use App\Http\Controllers\Inventory\QrCodeController;
 use App\Http\Controllers\Inventory\SKUController;
 use App\Http\Controllers\Inventory\StockAdjustmentController;
 use App\Http\Controllers\Inventory\StockAuditController;
+use App\Http\Controllers\Inventory\StockBalanceController;
 use App\Http\Controllers\Inventory\StockReservationController;
 use App\Http\Controllers\Inventory\StockTransferController;
 use App\Http\Controllers\Inventory\WorkOrderController;
@@ -29,8 +30,8 @@ use Illuminate\Support\Facades\Route;
  * every route here is already authenticated.
  */
 
-Route::get('/stock', [\App\Http\Controllers\Inventory\StockBalanceController::class, 'index'])->name('stock.index')->middleware('permission:view_products');
-Route::get('/stock/export', [\App\Http\Controllers\Inventory\StockBalanceController::class, 'export'])->name('stock.export')->middleware(['permission:view_products', 'permission:export_data']);
+Route::get('/stock', [StockBalanceController::class, 'index'])->name('stock.index')->middleware('permission:view_products');
+Route::get('/stock/export', [StockBalanceController::class, 'export'])->name('stock.export')->middleware(['permission:view_products', 'permission:export_data']);
 
 // Inventory Management - Permission based
 Route::get('/products', [ProductController::class, 'index'])->name('products.index')->middleware('permission:view_products');
@@ -163,6 +164,7 @@ Route::delete('/stock-audits/{stockAudit}', [StockAuditController::class, 'destr
 Route::post('/stock-audits/{stockAudit}/start', [StockAuditController::class, 'start'])->name('stock-audits.start')->middleware('permission:manage_stock_audits');
 Route::post('/stock-audits/{stockAudit}/complete', [StockAuditController::class, 'complete'])->name('stock-audits.complete')->middleware('permission:manage_stock_audits');
 Route::post('/stock-audits/{stockAudit}/items/{item}/count', [StockAuditController::class, 'updateCount'])->name('stock-audits.items.count')->middleware('permission:manage_stock_audits');
+Route::get('/stock-audits/{stockAudit}/items/{item}/counts', [StockAuditController::class, 'countHistory'])->name('stock-audits.items.counts')->middleware('permission:view_stock_audits');
 
 // Stock reservations (holds): anyone who can see products sees what is
 // promised; releasing a hold is a stock change.

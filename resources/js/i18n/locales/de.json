@@ -36,6 +36,13 @@
     "showing": "{from} bis {to} von {total}"
   },
   "stockAudits": {
+    "history": {
+      "title": "Zählverlauf",
+      "hint": "Jede gespeicherte Zählung bleibt erhalten. Für Zählungen vor Aktivierung des Verlaufs ist nur der letzte Wert verfügbar.",
+      "snapshot": "Letzte frühere Zählung",
+      "view": "Zählverlauf anzeigen",
+      "empty": "Noch keine gespeicherten Zählungen."
+    },
     "completeConfirm": "Diese Inventur abschließen? Für alle Abweichungen werden Bestandskorrekturen erstellt.",
     "completeUncountedConfirm": "{uncounted} von {total} Artikeln wurden nicht gezählt. Inventur trotzdem abschließen? Nicht gezählte Artikel behalten ihren aktuellen Bestand; nur gezählte Artikel werden korrigiert.",
     "backToList": "Zurück zur Liste",

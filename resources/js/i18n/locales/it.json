@@ -36,6 +36,13 @@
     "showing": "Da {from} a {to} di {total}"
   },
   "stockAudits": {
+    "history": {
+      "title": "Cronologia dei conteggi",
+      "hint": "Ogni conteggio salvato viene conservato. Per i conteggi precedenti all’attivazione della cronologia è disponibile solo l’ultimo valore.",
+      "snapshot": "Ultimo conteggio precedente",
+      "view": "Visualizza cronologia dei conteggi",
+      "empty": "Nessun conteggio salvato."
+    },
     "completeConfirm": "Completare questo inventario? Verranno create rettifiche di scorte per ogni discrepanza.",
     "completeUncountedConfirm": "{uncounted} articoli su {total} non sono stati contati. Completare comunque l'inventario? Gli articoli non contati mantengono le scorte attuali; vengono rettificati solo quelli contati.",
     "backToList": "Torna alla lista",

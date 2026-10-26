@@ -36,6 +36,13 @@
     "showing": "Mostrando {from} a {to} de {total}"
   },
   "stockAudits": {
+    "history": {
+      "title": "Histórico de contagens",
+      "hint": "Cada contagem salva é mantida. Para contagens anteriores à ativação do histórico, apenas o último valor está disponível.",
+      "snapshot": "Última contagem anterior",
+      "view": "Ver histórico de contagens",
+      "empty": "Nenhuma contagem salva ainda."
+    },
     "completeConfirm": "Concluir esta auditoria? Serão criados ajustes de estoque para cada divergência.",
     "completeUncountedConfirm": "{uncounted} de {total} itens não foram contados. Concluir a auditoria mesmo assim? Itens não contados mantêm o estoque atual; apenas os contados são ajustados.",
     "backToList": "Voltar à Lista",
