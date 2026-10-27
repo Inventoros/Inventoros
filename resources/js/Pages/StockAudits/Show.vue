@@ -212,13 +212,9 @@ const transmitDraft = async (item, draft) => {
         const current = error.response?.data?.item;
         if (error.response?.status === 409 && error.response?.data?.error === 'stale_count' && current?.id === item.id) {
             Object.assign(item, current);
-            // The first response may have been lost after its transaction
-            // committed. Matching evidence is already saved; never replay it.
-            if (current.counted_quantity === payload.counted_quantity && (current.notes || null) === payload.notes) {
-                forget(item.id, draft);
-                draftMessage.value = '';
-                return true;
-            }
+            // Identical quantities/notes do not prove that this submission
+            // was accepted: another person may have recounted the same value.
+            // Preserve the draft until the operator reviews the newer evidence.
             draftMessage.value = t('stockAudits.drafts.conflict');
         } else {
             draftMessage.value = error.response ? t('stockAudits.drafts.serverRejected') : t('stockAudits.drafts.savedLocally');
@@ -633,6 +629,7 @@ const thClass = 'px-6 py-3 text-left text-xs font-medium uppercase tracking-wide
                                 <td class="px-6 py-4 text-sm text-text-primary">
                                     <div class="font-medium">{{ item.product?.name || '-' }}</div>
                                     <div class="text-xs text-text-tertiary">{{ item.variant?.title || '' }} {{ item.location?.name || '' }} | SKU: {{ item.variant?.sku || item.product?.sku || '-' }}</div>
+                                    <Link v-if="item.counted_quantity !== null" :href="route('stock-audits.items.counts', { stockAudit: audit.id, item: item.id })" class="mt-1 inline-block text-xs text-brand hover:underline">{{ t('stockAudits.history.view') }}</Link>
                                 </td>
                                 <td class="whitespace-nowrap px-6 py-4 text-sm text-text-secondary">
                                     {{ item.location?.name || '-' }}

@@ -73,6 +73,13 @@
     "showing": "显示第 {from} 至 {to} 条，共 {total} 条"
   },
   "stockAudits": {
+    "history": {
+      "title": "盘点历史",
+      "hint": "每次保存的盘点都会保留。启用历史记录之前的盘点仅提供最后一次保存的值。",
+      "snapshot": "之前最后保存的盘点",
+      "view": "查看盘点历史",
+      "empty": "尚无已保存的盘点。"
+    },
     "completeConfirm": "完成此次盘点？将为每个差异创建库存调整。",
     "completeUncountedConfirm": "{total} 件商品中有 {uncounted} 件尚未盘点。仍要完成盘点吗？未盘点的商品保持当前库存，只调整已盘点的商品。",
     "backToList": "返回列表",

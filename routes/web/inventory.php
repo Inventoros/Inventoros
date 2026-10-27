@@ -169,6 +169,7 @@ Route::delete('/stock-audits/{stockAudit}', [StockAuditController::class, 'destr
 Route::post('/stock-audits/{stockAudit}/start', [StockAuditController::class, 'start'])->name('stock-audits.start')->middleware('permission:manage_stock_audits');
 Route::post('/stock-audits/{stockAudit}/complete', [StockAuditController::class, 'complete'])->name('stock-audits.complete')->middleware('permission:manage_stock_audits');
 Route::post('/stock-audits/{stockAudit}/items/{item}/count', [StockAuditController::class, 'updateCount'])->name('stock-audits.items.count')->middleware('permission:manage_stock_audits');
+Route::get('/stock-audits/{stockAudit}/items/{item}/counts', [StockAuditController::class, 'countHistory'])->name('stock-audits.items.counts')->middleware('permission:view_stock_audits');
 
 // Stock reservations (holds): anyone who can see products sees what is
 // promised; releasing a hold is a stock change.

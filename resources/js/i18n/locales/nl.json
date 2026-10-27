@@ -73,6 +73,13 @@
     "showing": "{from} tot {to} van {total}"
   },
   "stockAudits": {
+    "history": {
+      "title": "Telgeschiedenis",
+      "hint": "Elke opgeslagen telling blijft bewaard. Van tellingen van vóór de activering van de geschiedenis is alleen de laatste waarde beschikbaar.",
+      "snapshot": "Laatste eerdere telling",
+      "view": "Telgeschiedenis bekijken",
+      "empty": "Nog geen opgeslagen tellingen."
+    },
     "completeConfirm": "Deze telling afronden? Voor elke afwijking worden voorraadcorrecties aangemaakt.",
     "completeUncountedConfirm": "{uncounted} van {total} artikelen zijn niet geteld. De telling toch afronden? Niet-getelde artikelen houden hun huidige voorraad; alleen getelde artikelen worden gecorrigeerd.",
     "backToList": "Terug naar overzicht",

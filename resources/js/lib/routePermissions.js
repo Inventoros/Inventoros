@@ -290,6 +290,9 @@ export const ROUTE_PERMISSIONS = {
     "stock-audits.index": [
         "view_stock_audits"
     ],
+    "stock-audits.items.counts": [
+        "view_stock_audits"
+    ],
     "stock-audits.show": [
         "view_stock_audits"
     ],
