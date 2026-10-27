@@ -2790,6 +2790,7 @@ components:
         name: { type: string, maxLength: 255 }
         description: { type: string, maxLength: 1000 }
         audit_type: { type: string, enum: [full, cycle, spot] }
+        require_variance_approval: { type: boolean, default: false, description: "Require supervisor approval of variances and resolve recount requests before completion. Fixed once the audit starts." }
         warehouse_id: { type: integer, description: "Count each location bin in this warehouse; warehouse access is required" }
         warehouse_location_id: { type: integer, description: "Limit the audit to this location, within warehouse_id when provided" }
         notes: { type: string, maxLength: 2000 }
