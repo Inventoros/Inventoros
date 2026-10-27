@@ -1,4 +1,23 @@
 {
+  "auditReview": {
+    "required": "Wymagaj zatwierdzenia rozbieżności",
+    "hint": "Rozbieżności wymagają weryfikacji przed zakończeniem inwentaryzacji.",
+    "pending": "Oczekuje na weryfikację",
+    "approved": "Zatwierdzono",
+    "recount_requested": "Zażądano ponownego zliczenia",
+    "not_required": "Weryfikacja niepotrzebna",
+    "approve": "Zatwierdź zliczenie",
+    "requestRecount": "Zażądaj ponownego zliczenia",
+    "notes": "Uwagi do weryfikacji",
+    "remaining": "Wymagana weryfikacja lub ponowne zliczenie: {count}.",
+    "errors": {
+      "state": "Tego zliczenia nie można zweryfikować w obecnym stanie.",
+      "stale": "Zliczenie zmieniło się. Odśwież i sprawdź najnowszą wartość.",
+      "decided": "To zliczenie zostało już zweryfikowane.",
+      "self": "Inny przełożony musi zatwierdzić Twoje zliczenie.",
+      "failed": "Nie udało się zapisać weryfikacji. Odśwież i spróbuj ponownie."
+    }
+  },
   "stockReset": {
     "title": "Wyzeruj zapasy",
     "hint": "Zeruje zapasy całej organizacji, także produktów nieaktywnych i usuniętych. Produkty, zamówienia i historia zostają zachowane. Dostępne numery seryjne są odpisywane, a partie zerowane.",

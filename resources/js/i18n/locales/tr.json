@@ -1,4 +1,23 @@
 {
+  "auditReview": {
+    "required": "Farklar için onay iste",
+    "hint": "Denetim tamamlanmadan önce farklar incelenmelidir.",
+    "pending": "İnceleme bekliyor",
+    "approved": "Onaylandı",
+    "recount_requested": "Yeniden sayım istendi",
+    "not_required": "İnceleme gerekmiyor",
+    "approve": "Sayımı onayla",
+    "requestRecount": "Yeniden sayım iste",
+    "notes": "İnceleme notları",
+    "remaining": "İnceleme veya yeniden sayım gereken: {count}.",
+    "errors": {
+      "state": "Bu sayım mevcut durumunda incelenemez.",
+      "stale": "Sayım değişti. Yenileyip son değeri inceleyin.",
+      "decided": "Bu sayım zaten incelendi.",
+      "self": "Sayımınızı başka bir sorumlu onaylamalıdır.",
+      "failed": "İnceleme kaydedilemedi. Yenileyip tekrar deneyin."
+    }
+  },
   "stockReset": {
     "title": "Stokları sıfırla",
     "hint": "Etkin olmayan ve silinen ürünler dahil tüm kuruluşun stoklarını sıfırlar. Ürünler, siparişler ve geçmiş korunur. Kullanılabilir seri numaraları kayıttan düşülür ve parti bakiyeleri sıfırlanır.",

@@ -1,4 +1,23 @@
 {
+  "auditReview": {
+    "required": "Exiger l’approbation des écarts",
+    "hint": "Les écarts doivent être examinés avant de terminer cet inventaire.",
+    "pending": "En attente d’examen",
+    "approved": "Approuvé",
+    "recount_requested": "Nouveau comptage demandé",
+    "not_required": "Aucun examen nécessaire",
+    "approve": "Approuver le comptage",
+    "requestRecount": "Demander un nouveau comptage",
+    "notes": "Notes de révision",
+    "remaining": "Examens ou nouveaux comptages requis : {count}.",
+    "errors": {
+      "state": "Ce comptage ne peut pas être examiné dans son état actuel.",
+      "stale": "Le comptage a changé. Actualisez et examinez sa dernière valeur.",
+      "decided": "Ce comptage a déjà été examiné.",
+      "self": "Un autre responsable doit approuver votre comptage.",
+      "failed": "Impossible d’enregistrer l’examen. Actualisez et réessayez."
+    }
+  },
   "stockReset": {
     "title": "Remettre le stock à zéro",
     "hint": "Réinitialise le stock de toute l’organisation, y compris les produits inactifs et supprimés. Produits, commandes et historique sont conservés. Les numéros de série disponibles sont sortis du stock et les lots passent à zéro.",

@@ -24,6 +24,7 @@ const form = useForm({
     warehouse_location_id: '',
     notes: '',
     product_ids: [],
+    require_variance_approval: false,
 });
 
 const page = usePage();
@@ -206,6 +207,10 @@ const fieldCheckbox = 'rounded border-border-subtle bg-surface-canvas text-brand
                             {{ form.errors.notes }}
                         </p>
                     </div>
+                    <label class="flex items-start gap-3 text-sm text-text-secondary">
+                        <input v-model="form.require_variance_approval" type="checkbox" class="mt-1 rounded border-border-subtle text-brand ds-focus-ring" />
+                        <span>{{ t('auditReview.required') }}<span class="mt-1 block text-xs text-text-tertiary">{{ t('auditReview.hint') }}</span></span>
+                    </label>
                 </div>
             </Card>
 

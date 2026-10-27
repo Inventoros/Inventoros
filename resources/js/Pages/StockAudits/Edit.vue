@@ -21,6 +21,7 @@ const form = useForm({
     audit_type: props.audit.audit_type || 'cycle',
     warehouse_location_id: props.audit.warehouse_location_id || '',
     notes: props.audit.notes || '',
+    require_variance_approval: Boolean(props.audit.require_variance_approval),
 });
 
 const submit = () => {
@@ -140,6 +141,10 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                     </div>
                 </div>
 
+                <label class="mx-5 mb-5 flex items-start gap-3 text-sm text-text-secondary">
+                    <input v-model="form.require_variance_approval" type="checkbox" class="mt-1 rounded border-border-subtle text-brand ds-focus-ring" />
+                    <span>{{ t('auditReview.required') }}<span class="mt-1 block text-xs text-text-tertiary">{{ t('auditReview.hint') }}</span></span>
+                </label>
                 <!-- Actions -->
                 <div class="flex justify-end gap-3 border-t border-border-subtle p-5">
                     <Button variant="secondary" as="Link" :href="route('stock-audits.show', audit.id)">{{ t('common.cancel') }}</Button>

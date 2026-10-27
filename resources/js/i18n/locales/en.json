@@ -1,4 +1,23 @@
 {
+  "auditReview": {
+    "required": "Require variance approval",
+    "hint": "Variances need review before this audit can finish.",
+    "pending": "Awaiting review",
+    "approved": "Approved",
+    "recount_requested": "Recount requested",
+    "not_required": "No review needed",
+    "approve": "Approve count",
+    "requestRecount": "Request recount",
+    "notes": "Review notes",
+    "remaining": "Review or recount needed: {count}.",
+    "errors": {
+      "state": "This count cannot be reviewed in its current state.",
+      "stale": "Count changed. Refresh and review its latest value.",
+      "decided": "This count was already reviewed.",
+      "self": "Another supervisor must approve your count.",
+      "failed": "Review could not be saved. Refresh and try again."
+    }
+  },
   "stockReset": {
     "title": "Reset stock to zero",
     "hint": "This resets stock across the entire organization, including inactive and deleted products. Products, orders and history are kept. Available serials are written off and batch balances become zero.",

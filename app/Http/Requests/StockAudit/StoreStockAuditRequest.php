@@ -25,6 +25,7 @@ final class StoreStockAuditRequest extends FormRequest
             'warehouse_id' => ['nullable', 'integer', Rule::exists('warehouses', 'id')->where('organization_id', $this->user()->organization_id)->whereNull('deleted_at')],
             'warehouse_location_id' => 'nullable|exists:product_locations,id',
             'notes' => 'nullable|string|max:2000',
+            'require_variance_approval' => ['sometimes', 'boolean'],
             'product_ids' => 'nullable|array',
             'product_ids.*' => 'exists:products,id',
         ];

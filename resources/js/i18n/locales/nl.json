@@ -1,4 +1,23 @@
 {
+  "auditReview": {
+    "required": "Goedkeuring van verschillen vereisen",
+    "hint": "Verschillen moeten worden beoordeeld voordat deze telling kan worden afgerond.",
+    "pending": "Wacht op beoordeling",
+    "approved": "Goedgekeurd",
+    "recount_requested": "Hertelling gevraagd",
+    "not_required": "Geen beoordeling nodig",
+    "approve": "Telling goedkeuren",
+    "requestRecount": "Hertelling vragen",
+    "notes": "Beoordelingsnotities",
+    "remaining": "Beoordelingen of hertellingen nodig: {count}.",
+    "errors": {
+      "state": "Deze telling kan in de huidige staat niet worden beoordeeld.",
+      "stale": "De telling is gewijzigd. Vernieuw en beoordeel de nieuwste waarde.",
+      "decided": "Deze telling is al beoordeeld.",
+      "self": "Een andere supervisor moet uw telling goedkeuren.",
+      "failed": "De beoordeling kon niet worden opgeslagen. Vernieuw en probeer opnieuw."
+    }
+  },
   "stockReset": {
     "title": "Voorraad op nul zetten",
     "hint": "Zet de voorraad van de hele organisatie op nul, inclusief inactieve en verwijderde producten. Producten, orders en geschiedenis blijven behouden. Beschikbare serienummers worden afgeboekt en partijen op nul gezet.",

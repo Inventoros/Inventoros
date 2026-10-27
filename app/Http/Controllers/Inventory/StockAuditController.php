@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Inventory;
 use App\Exceptions\BusinessRuleException;
 use App\Exceptions\InvalidStateException;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StockAudit\ReviewStockAuditCountRequest;
 use App\Http\Requests\StockAudit\StoreStockAuditRequest;
 use App\Http\Requests\StockAudit\UpdateStockAuditRequest;
 use App\Models\Inventory\Product;
@@ -14,11 +15,15 @@ use App\Models\Inventory\ProductLocation;
 use App\Models\Inventory\StockAudit;
 use App\Models\Inventory\StockAuditCount;
 use App\Models\Inventory\StockAuditItem;
+use App\Models\Inventory\StockAuditReview;
+use App\Services\StockAuditReviewService;
 use App\Services\StockAuditService;
 use App\Services\WarehouseAccessService;
+use App\Support\ApprovalSettings;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -33,20 +38,39 @@ class StockAuditController extends Controller
 {
     public function __construct(private readonly WarehouseAccessService $warehouseAccess) {}
 
+    public function reviewCount(ReviewStockAuditCountRequest $request, StockAudit $stockAudit, StockAuditItem $item, StockAuditReviewService $reviews): JsonResponse
+    {
+        $data = $request->validated();
+        try {
+            $reviews->decide($stockAudit, $item, $request->user(), $data['decision'], $data['expected_revision'], $data['notes'] ?? null);
+        } catch (InvalidStateException $error) {
+            return response()->json(['message' => $error->getMessage(), 'error' => $error->errorCode],
+                in_array($error->errorCode, ['stale_count', 'review_already_decided'], true) ? 409 : 422);
+        }
+
+        return response()->json(['item' => $item->fresh(['product', 'countedByUser'])]);
+    }
+
     public function countHistory(Request $request, StockAudit $stockAudit, StockAuditItem $item): Response
     {
         abort_unless((int) $stockAudit->organization_id === (int) $request->user()->organization_id, 403);
         $this->warehouseAccess->authorizeStockAudit($request->user(), $stockAudit);
         abort_unless((int) $item->stock_audit_id === (int) $stockAudit->id, 404);
 
+        $counts = StockAuditCount::where('organization_id', $request->user()->organization_id)
+            ->where('stock_audit_id', $stockAudit->id)->where('stock_audit_item_id', $item->id)
+            ->orderByDesc('sequence')->paginate(20);
+
         return Inertia::render('StockAudits/CountHistory', [
             'audit' => $stockAudit->only(['id', 'audit_number', 'name']),
             'item' => $item->load(['product' => fn ($query) => $query->withTrashed()->where('organization_id', $stockAudit->organization_id),
                 'variant' => fn ($query) => $query->withTrashed()->where('organization_id', $stockAudit->organization_id),
                 'location' => fn ($query) => $query->withTrashed()->where('organization_id', $stockAudit->organization_id)]),
-            'counts' => StockAuditCount::where('organization_id', $request->user()->organization_id)
+            'counts' => $counts,
+            'reviews' => StockAuditReview::where('organization_id', $stockAudit->organization_id)
                 ->where('stock_audit_id', $stockAudit->id)->where('stock_audit_item_id', $item->id)
-                ->orderByDesc('sequence')->paginate(20),
+                ->whereIn('count_sequence', $counts->pluck('sequence'))
+                ->get()->mapWithKeys(fn ($review) => ['count-'.$review->count_sequence => $review]),
         ]);
     }
 
@@ -178,11 +202,14 @@ class StockAuditController extends Controller
             'pluginComponents' => plugin_slots('stock-audits.show', ['header', 'actions', 'footer']),
             'audit' => $stockAudit,
             'summary' => [
+                'review_required' => $stockAudit->require_variance_approval && $stockAudit->status === 'in_progress'
+                    ? $stockAudit->items->filter(fn ($line) => StockAuditReviewService::needsReview($line))->count() : 0,
                 'total_items' => $totalItems,
                 'counted_items' => $countedItems,
                 'discrepancies' => $discrepancies,
                 'progress' => $totalItems > 0 ? round(($countedItems / $totalItems) * 100) : 0,
             ],
+            'canSelfApprove' => $request->user()->isAdmin() && ApprovalSettings::forOrganization((int) $stockAudit->organization_id)->adminsCanSelfApprove,
         ]);
     }
 
@@ -266,13 +293,21 @@ class StockAuditController extends Controller
             $this->warehouseAccess->authorizeLocation($request->user(), $validated['warehouse_location_id'] ?? null);
         }
 
-        $stockAudit->update([
-            'name' => $validated['name'],
-            'description' => $validated['description'] ?? null,
-            'audit_type' => $validated['audit_type'],
-            'warehouse_location_id' => $validated['warehouse_location_id'] ?? null,
-            'notes' => $validated['notes'] ?? null,
-        ]);
+        DB::transaction(function () use ($stockAudit, $request, $validated): void {
+            $locked = StockAudit::whereKey($stockAudit->id)->where('organization_id', $request->user()->organization_id)->lockForUpdate()->firstOrFail();
+            if ($locked->status !== 'draft') {
+                throw ValidationException::withMessages(['audit' => 'Only draft audits can be edited.']);
+            }
+            $this->warehouseAccess->authorizeStockAudit($request->user(), $locked);
+            $locked->update([
+                'name' => $validated['name'],
+                'description' => $validated['description'] ?? null,
+                'audit_type' => $validated['audit_type'],
+                'warehouse_location_id' => $validated['warehouse_location_id'] ?? null,
+                'notes' => $validated['notes'] ?? null,
+                'require_variance_approval' => (bool) ($validated['require_variance_approval'] ?? $locked->require_variance_approval),
+            ]);
+        }, 3);
 
         return redirect()->route('stock-audits.show', $stockAudit)
             ->with('success', 'Stock audit updated successfully.');

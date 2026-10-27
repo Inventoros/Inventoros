@@ -5,8 +5,9 @@ import PageHeader from '@/Components/ui/PageHeader.vue';
 import Card from '@/Components/ui/Card.vue';
 import Button from '@/Components/ui/Button.vue';
 import Badge from '@/Components/ui/Badge.vue';
+import Modal from '@/Components/Modal.vue';
 import StatTile from '@/Components/ui/StatTile.vue';
-import { Head, Link, router } from '@inertiajs/vue3';
+import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import axios from 'axios';
 import { ref, computed, nextTick, defineAsyncComponent, watch, onMounted, onBeforeUnmount } from 'vue';
 import { useI18n } from 'vue-i18n';
@@ -38,9 +39,44 @@ const props = defineProps({
     pluginComponents: Object,
     audit: Object,
     summary: Object,
+    canSelfApprove: Boolean,
 });
 
 const processing = ref(false);
+const page = usePage();
+const reviewItem = ref(null);
+const reviewDecision = ref('approved');
+const reviewRevision = ref('');
+const reviewNotes = ref('');
+const reviewError = ref('');
+const reviewing = ref(false);
+const canReview = computed(() => props.audit.require_variance_approval && props.audit.status === 'in_progress' && hasPermission('approve_stock_adjustments'));
+const reviewRemaining = computed(() => props.summary.review_required || 0);
+const mayApprove = (item) => item.counted_by !== page.props.auth?.user?.id || props.canSelfApprove;
+const openReview = (item, decision) => {
+    reviewItem.value = item;
+    reviewRevision.value = item.count_revision;
+    reviewDecision.value = decision;
+    reviewNotes.value = '';
+    reviewError.value = '';
+};
+const saveReview = async () => {
+    reviewing.value = true;
+    try {
+        await axios.post(route('stock-audits.items.review', { stockAudit: props.audit.id, item: reviewItem.value.id }), {
+            decision: reviewDecision.value, expected_revision: reviewRevision.value, notes: reviewNotes.value || null,
+        }, { headers: { Accept: 'application/json', 'X-Inventoros-Organization': String(props.audit.organization_id) } });
+        reviewItem.value = null;
+        await refreshCounts();
+    } catch (error) {
+        const codes = { stale_count: 'stale', review_already_decided: 'decided', self_approval: 'self', invalid_review_state: 'state' };
+        reviewError.value = error.response?.data?.error && codes[error.response.data.error]
+            ? t(`auditReview.errors.${codes[error.response.data.error]}`)
+            : Object.values(error.response?.data?.errors || {}).flat()[0] || t('auditReview.errors.failed');
+    } finally {
+        reviewing.value = false;
+    }
+};
 const editingItemId = ref(null);
 const countValue = ref(0);
 const countNotes = ref('');
@@ -108,10 +144,10 @@ const typeLabels = computed(() => ({
 
 const formatDate = (dateStr) => displayDateTime(dateStr);
 
-const canStart = computed(() => props.audit.status === 'draft');
-const canComplete = computed(() => props.audit.status === 'in_progress');
-const canEdit = computed(() => props.audit.status === 'draft');
-const canDelete = computed(() => props.audit.status === 'draft');
+const canStart = computed(() => props.audit.status === 'draft' && hasPermission('manage_stock_audits'));
+const canComplete = computed(() => props.audit.status === 'in_progress' && hasPermission('manage_stock_audits'));
+const canEdit = computed(() => props.audit.status === 'draft' && hasPermission('manage_stock_audits'));
+const canDelete = computed(() => props.audit.status === 'draft' && hasPermission('manage_stock_audits'));
 const canCount = computed(() => props.audit.status === 'in_progress' && hasPermission('manage_stock_audits'));
 
 const startAudit = () => {
@@ -648,6 +684,14 @@ const thClass = 'px-6 py-3 text-left text-xs font-medium uppercase tracking-wide
                                     <Badge :variant="itemStatusVariant(auditItemStatus(item.status, audit.status))" size="sm">
                                         {{ getItemStatusLabel(auditItemStatus(item.status, audit.status)) }}
                                     </Badge>
+                                    <div v-if="audit.require_variance_approval && item.counted_quantity !== null" class="mt-2 space-y-1 text-xs">
+                                        <p>{{ t(`auditReview.${item.review_status || 'not_required'}`) }}</p>
+                                        <p v-if="item.reviewer_name" class="text-text-tertiary">{{ item.reviewer_name }}</p>
+                                        <template v-if="canReview && !['approved', 'recount_requested'].includes(item.review_status)">
+                                            <button type="button" class="block text-brand hover:underline disabled:opacity-50" :disabled="!mayApprove(item)" :title="!mayApprove(item) ? t('auditReview.errors.self') : ''" @click="openReview(item, 'approved')">{{ t('auditReview.approve') }}</button>
+                                            <button type="button" class="block text-brand hover:underline" @click="openReview(item, 'recount_requested')">{{ t('auditReview.requestRecount') }}</button>
+                                        </template>
+                                    </div>
                                 </td>
                                 <td class="whitespace-nowrap px-6 py-4 text-sm text-text-secondary">
                                     {{ item.counted_by_user?.name || '-' }}
@@ -767,7 +811,7 @@ const thClass = 'px-6 py-3 text-left text-xs font-medium uppercase tracking-wide
                     <Button
                         v-if="canComplete"
                         :loading="processing"
-                        :disabled="processing || savingCount || syncingDrafts || pendingScans > 0 || draftCount > 0 || !online"
+                        :disabled="processing || savingCount || syncingDrafts || pendingScans > 0 || draftCount > 0 || !online || reviewRemaining > 0"
                         @click="completeAudit"
                     >
                         <CheckCircle2 :size="16" />
@@ -780,6 +824,7 @@ const thClass = 'px-6 py-3 text-left text-xs font-medium uppercase tracking-wide
                 <p v-if="canComplete" class="mt-3 text-xs text-text-tertiary">
                     {{ t('stockAudits.show.completeHint') }}
                 </p>
+                <p v-if="reviewRemaining > 0" role="status" class="mt-3 text-sm text-status-warning">{{ t('auditReview.remaining', { count: reviewRemaining }) }}</p>
             </div>
         </Card>
 
@@ -811,5 +856,16 @@ const thClass = 'px-6 py-3 text-left text-xs font-medium uppercase tracking-wide
 
         <!-- Plugin Slot: Footer -->
         <PluginSlot slot="footer" :components="pluginComponents?.footer" />
+        <Modal :show="Boolean(reviewItem)" max-width="lg" :closeable="!reviewing" @close="reviewItem = null">
+            <form class="space-y-4 p-6" @submit.prevent="saveReview">
+                <h2 class="text-lg font-semibold text-text-primary">{{ t(reviewDecision === 'approved' ? 'auditReview.approve' : 'auditReview.requestRecount') }}</h2>
+                <p class="text-sm text-text-secondary">{{ reviewItem?.product?.name }}: {{ reviewItem?.counted_quantity }}</p>
+                <label class="block text-sm text-text-secondary">{{ t('auditReview.notes') }}
+                    <textarea v-model="reviewNotes" rows="3" maxlength="500" :minlength="reviewDecision === 'recount_requested' ? 3 : undefined" :required="reviewDecision === 'recount_requested'" class="mt-2 block w-full rounded-md border border-border-subtle bg-surface-canvas p-2 text-text-primary ds-focus-ring" />
+                </label>
+                <p v-if="reviewError" role="alert" class="text-sm text-status-danger">{{ reviewError }}</p>
+                <div class="flex justify-end gap-3"><Button variant="secondary" :disabled="reviewing" @click="reviewItem = null">{{ t('common.cancel') }}</Button><Button type="submit" :loading="reviewing" :disabled="reviewing">{{ t('common.save') }}</Button></div>
+            </form>
+        </Modal>
     </AppLayout>
 </template>
