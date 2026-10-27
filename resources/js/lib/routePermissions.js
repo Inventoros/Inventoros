@@ -7,6 +7,8 @@
 // the routes; regenerate the object from `php artisan route:list --json`.
 
 export const ROUTE_PERMISSIONS = {
+    "variant-replenishment.index": ["view_products"],
+    "variant-replenishment.options": ["view_products", "edit_products"],
     "products.images.show": ["view_products|edit_products"],
     "reports.batch-expiry": ["view_reports", "view_products"],
     "products.stock-reset.preview": ["manage_stock"],

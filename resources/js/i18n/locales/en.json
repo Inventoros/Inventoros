@@ -4016,5 +4016,30 @@
       "today": "Due today",
       "upcoming": "Upcoming"
     }
+  },
+  "variantReplenishment": {
+    "title": "Variant replenishment",
+    "description": "Set warehouse stock targets and create draft purchase orders for individual variants.",
+    "add": "Add replenishment rule",
+    "variant": "Variant",
+    "point": "Reorder point",
+    "target": "Target stock",
+    "multiple": "Order multiple (optional)",
+    "minimum": "Minimum order quantity",
+    "on_hand": "On hand",
+    "incoming": "Incoming",
+    "position": "Stock position",
+    "suggested_quantity": "Suggested order",
+    "receiveAt": "Receive at {warehouse} / {location}",
+    "automatic": "Create drafts automatically each day",
+    "manual": "Manual drafts only",
+    "unavailable": "Review this rule: its variant, supplier, currency or receiving destination is unavailable.",
+    "draft": "Create draft PO",
+    "confirmDelete": "Delete this replenishment rule? Existing purchase orders will be kept.",
+    "searchVariant": "Search variants",
+    "searchLocation": "Search locations",
+    "searchSupplier": "Search suppliers",
+    "loadOptions": "Search options",
+    "optionsError": "Could not load options. Please try again."
   }
 }

@@ -30,6 +30,7 @@ use App\Http\Controllers\Api\WorkOrderController;
 use App\Http\Controllers\Inventory\ProductImageController;
 use App\Http\Controllers\Inventory\StockAuditItemsController;
 use App\Http\Controllers\Inventory\StockBalanceController;
+use App\Http\Controllers\Inventory\VariantReplenishmentController;
 use App\Services\ApprovalService;
 use Illuminate\Support\Facades\Route;
 
@@ -86,6 +87,15 @@ Route::prefix('v1')->as('api.')->middleware('throttle:api')->group(function () {
         Route::get('/user', [AuthController::class, 'user']);
         Route::post('/tokens', [AuthController::class, 'createToken']);
         Route::delete('/tokens/{tokenId}', [AuthController::class, 'revokeToken']);
+
+        Route::prefix('variant-replenishment')->name('variant-replenishment.')->group(function () {
+            Route::get('/', [VariantReplenishmentController::class, 'index'])->name('index')->middleware('api.permission:view_products');
+            Route::get('/options', [VariantReplenishmentController::class, 'options'])->name('options')->middleware('api.permission:view_products|edit_products,all');
+            Route::post('/', [VariantReplenishmentController::class, 'store'])->name('store')->middleware('api.permission:view_products|edit_products,all');
+            Route::put('/{policy}', [VariantReplenishmentController::class, 'update'])->name('update')->middleware('api.permission:view_products|edit_products,all');
+            Route::delete('/{policy}', [VariantReplenishmentController::class, 'destroy'])->name('destroy')->middleware('api.permission:view_products|edit_products,all');
+            Route::post('/{policy}/draft', [VariantReplenishmentController::class, 'draft'])->name('draft')->middleware('api.permission:view_products|create_purchase_orders,all');
+        });
 
         // Products
         Route::get('products/{product}/images/{index}', ProductImageController::class)

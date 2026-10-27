@@ -157,8 +157,8 @@ final class PurchaseOrderService
      */
     public function receive(PurchaseOrder $purchaseOrder, User $actor, array $items): int
     {
-        // Goods land in each product's primary location; a restricted user
-        // can only book them into their own warehouses.
+        // Goods land in the line's designated location, falling back to the
+        // product's primary location for legacy/manual lines.
         $this->warehouseAccess->authorizeReceiving($actor, $purchaseOrder, $items);
 
         if (! $purchaseOrder->canReceiveItems()) {

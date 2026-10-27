@@ -4016,5 +4016,30 @@
       "today": "Verloopt vandaag",
       "upcoming": "Binnenkort"
     }
+  },
+  "variantReplenishment": {
+    "title": "Varianten aanvullen",
+    "description": "Stel voorraadniveaus per magazijn in en maak conceptinkooporders per variant.",
+    "add": "Aanvulregel toevoegen",
+    "variant": "Variant",
+    "point": "Bestelpunt",
+    "target": "Doelvoorraad",
+    "multiple": "Bestelveelvoud (optioneel)",
+    "minimum": "Minimale bestelhoeveelheid",
+    "on_hand": "Aanwezig",
+    "incoming": "Onderweg",
+    "position": "Voorraadpositie",
+    "suggested_quantity": "Bestelvoorstel",
+    "receiveAt": "Ontvangen bij {warehouse} / {location}",
+    "automatic": "Dagelijks automatisch concepten maken",
+    "manual": "Alleen handmatige concepten",
+    "unavailable": "Controleer de variant, leverancier, valuta of ontvangstlocatie van deze regel.",
+    "draft": "Conceptinkooporder maken",
+    "confirmDelete": "Deze regel verwijderen? Bestaande orders blijven behouden.",
+    "searchVariant": "Varianten zoeken",
+    "searchLocation": "Locaties zoeken",
+    "searchSupplier": "Leveranciers zoeken",
+    "loadOptions": "Opties zoeken",
+    "optionsError": "Opties laden mislukt. Probeer opnieuw."
   }
 }

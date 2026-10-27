@@ -23,6 +23,7 @@ use App\Http\Controllers\Inventory\StockAuditItemsController;
 use App\Http\Controllers\Inventory\StockBalanceController;
 use App\Http\Controllers\Inventory\StockReservationController;
 use App\Http\Controllers\Inventory\StockTransferController;
+use App\Http\Controllers\Inventory\VariantReplenishmentController;
 use App\Http\Controllers\Inventory\WorkOrderController;
 use App\Http\Controllers\WarehouseController;
 use Illuminate\Support\Facades\Route;
@@ -185,3 +186,13 @@ Route::get('/stock-adjustments', [StockAdjustmentController::class, 'index'])->n
 Route::get('/stock-adjustments/create', [StockAdjustmentController::class, 'create'])->name('stock-adjustments.create')->middleware('permission:manage_stock');
 Route::post('/stock-adjustments', [StockAdjustmentController::class, 'store'])->name('stock-adjustments.store')->middleware('permission:manage_stock');
 Route::get('/stock-adjustments/{stockAdjustment}', [StockAdjustmentController::class, 'show'])->name('stock-adjustments.show')->middleware('permission:manage_stock');
+
+// Explicit variant demand and receiving destination per warehouse.
+Route::prefix('variant-replenishment')->name('variant-replenishment.')->group(function () {
+    Route::get('/', [VariantReplenishmentController::class, 'index'])->name('index')->middleware('permission:view_products');
+    Route::get('/options', [VariantReplenishmentController::class, 'options'])->name('options')->middleware(['permission:view_products', 'permission:edit_products']);
+    Route::post('/', [VariantReplenishmentController::class, 'store'])->name('store')->middleware(['permission:view_products', 'permission:edit_products']);
+    Route::put('/{policy}', [VariantReplenishmentController::class, 'update'])->name('update')->middleware(['permission:view_products', 'permission:edit_products']);
+    Route::delete('/{policy}', [VariantReplenishmentController::class, 'destroy'])->name('destroy')->middleware(['permission:view_products', 'permission:edit_products']);
+    Route::post('/{policy}/draft', [VariantReplenishmentController::class, 'draft'])->name('draft')->middleware(['permission:view_products', 'permission:create_purchase_orders']);
+});

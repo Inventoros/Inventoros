@@ -4016,5 +4016,30 @@
       "today": "Läuft heute ab",
       "upcoming": "Bevorstehend"
     }
+  },
+  "variantReplenishment": {
+    "title": "Variantennachschub",
+    "description": "Legen Sie Lagerziele fest und erstellen Sie Bestellentwürfe für einzelne Varianten.",
+    "add": "Nachschubregel hinzufügen",
+    "variant": "Variante",
+    "point": "Meldebestand",
+    "target": "Zielbestand",
+    "multiple": "Bestellvielfaches (optional)",
+    "minimum": "Mindestbestellmenge",
+    "on_hand": "Vorhanden",
+    "incoming": "Im Zulauf",
+    "position": "Bestandsposition",
+    "suggested_quantity": "Bestellvorschlag",
+    "receiveAt": "Empfang bei {warehouse} / {location}",
+    "automatic": "Täglich automatisch Entwürfe erstellen",
+    "manual": "Nur manuelle Entwürfe",
+    "unavailable": "Prüfen Sie Variante, Lieferant, Währung und Empfangsort dieser Regel.",
+    "draft": "Bestellentwurf erstellen",
+    "confirmDelete": "Diese Regel löschen? Bestehende Bestellungen bleiben erhalten.",
+    "searchVariant": "Varianten suchen",
+    "searchLocation": "Lagerplätze suchen",
+    "searchSupplier": "Lieferanten suchen",
+    "loadOptions": "Optionen suchen",
+    "optionsError": "Optionen konnten nicht geladen werden. Erneut versuchen."
   }
 }

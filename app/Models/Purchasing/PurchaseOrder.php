@@ -321,10 +321,10 @@ class PurchaseOrder extends Model
      *                                                          generated number and returns the persisted order, creating its
      *                                                          items and totals inside the same transaction.
      */
-    public static function createWithNumber(int $organizationId, Closure $make): self
+    public static function createWithNumber(int $organizationId, Closure $make, int $transactionAttempts = 1): self
     {
         return SequenceNumberRetry::create(
-            fn () => DB::transaction(fn () => $make(self::generatePONumber($organizationId)))
+            fn () => DB::transaction(fn () => $make(self::generatePONumber($organizationId)), $transactionAttempts)
         );
     }
 

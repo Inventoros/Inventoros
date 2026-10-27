@@ -4016,5 +4016,30 @@
       "today": "Caduca hoy",
       "upcoming": "Próximo"
     }
+  },
+  "variantReplenishment": {
+    "title": "Reposición de variantes",
+    "description": "Define objetivos por almacén y crea borradores de pedidos para cada variante.",
+    "add": "Añadir regla de reposición",
+    "variant": "Variante",
+    "point": "Punto de pedido",
+    "target": "Stock objetivo",
+    "multiple": "Múltiplo de pedido (opcional)",
+    "minimum": "Cantidad mínima",
+    "on_hand": "Disponible",
+    "incoming": "Entrante",
+    "position": "Posición de stock",
+    "suggested_quantity": "Pedido sugerido",
+    "receiveAt": "Recibir en {warehouse} / {location}",
+    "automatic": "Crear borradores automáticamente cada día",
+    "manual": "Solo borradores manuales",
+    "unavailable": "Revisa la variante, proveedor, moneda o destino de recepción de esta regla.",
+    "draft": "Crear borrador de pedido",
+    "confirmDelete": "¿Eliminar esta regla? Se conservarán los pedidos existentes.",
+    "searchVariant": "Buscar variantes",
+    "searchLocation": "Buscar ubicaciones",
+    "searchSupplier": "Buscar proveedores",
+    "loadOptions": "Buscar opciones",
+    "optionsError": "No se pudieron cargar las opciones. Inténtalo de nuevo."
   }
 }

@@ -135,7 +135,7 @@ class PurchaseOrderController extends Controller
             abort(403, 'Unauthorized action.');
         }
 
-        $purchaseOrder->load(['supplier', 'creator', 'items.product', 'items.variant', 'approver', 'approvalRequester']);
+        $purchaseOrder->load(['supplier', 'creator', 'items.product', 'items.variant', 'items.receivingLocation.warehouse', 'approver', 'approvalRequester']);
 
         return Inertia::render('PurchaseOrders/Show', [
             'purchaseOrder' => $purchaseOrder,
@@ -159,7 +159,6 @@ class PurchaseOrderController extends Controller
      *
      * @param  Request  $request  The incoming HTTP request
      * @param  PurchaseOrder  $purchaseOrder  The purchase order to edit
-     * @return Response|RedirectResponse
      */
     public function edit(Request $request, PurchaseOrder $purchaseOrder): Response|RedirectResponse
     {
@@ -267,7 +266,6 @@ class PurchaseOrderController extends Controller
      *
      * @param  Request  $request  The incoming HTTP request
      * @param  PurchaseOrder  $purchaseOrder  The purchase order to receive items for
-     * @return Response|RedirectResponse
      */
     public function receive(Request $request, PurchaseOrder $purchaseOrder): Response|RedirectResponse
     {

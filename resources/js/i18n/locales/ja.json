@@ -4016,5 +4016,30 @@
       "today": "本日期限",
       "upcoming": "期限前"
     }
+  },
+  "variantReplenishment": {
+    "title": "バリエーション補充",
+    "description": "倉庫ごとの目標在庫を設定し、バリエーション別の発注下書きを作成します。",
+    "add": "補充ルールを追加",
+    "variant": "バリエーション",
+    "point": "発注点",
+    "target": "目標在庫",
+    "multiple": "発注単位（任意）",
+    "minimum": "最小発注数量",
+    "on_hand": "現在庫",
+    "incoming": "入荷予定",
+    "position": "在庫ポジション",
+    "suggested_quantity": "推奨発注数",
+    "receiveAt": "入荷先：{warehouse} / {location}",
+    "automatic": "毎日自動で下書きを作成",
+    "manual": "手動の下書きのみ",
+    "unavailable": "バリエーション、仕入先、通貨、入荷先を確認してください。",
+    "draft": "発注下書きを作成",
+    "confirmDelete": "このルールを削除しますか？既存の発注は保持されます。",
+    "searchVariant": "バリエーションを検索",
+    "searchLocation": "保管場所を検索",
+    "searchSupplier": "仕入先を検索",
+    "loadOptions": "候補を検索",
+    "optionsError": "候補を読み込めませんでした。もう一度お試しください。"
   }
 }

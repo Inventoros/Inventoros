@@ -4016,5 +4016,30 @@
       "today": "今天到期",
       "upcoming": "即将到期"
     }
+  },
+  "variantReplenishment": {
+    "title": "变体补货",
+    "description": "设置各仓库的目标库存，并为每个变体创建采购订单草稿。",
+    "add": "添加补货规则",
+    "variant": "变体",
+    "point": "补货点",
+    "target": "目标库存",
+    "multiple": "订购倍数（可选）",
+    "minimum": "最小订购量",
+    "on_hand": "现有库存",
+    "incoming": "在途库存",
+    "position": "库存位置",
+    "suggested_quantity": "建议订购量",
+    "receiveAt": "收货至 {warehouse} / {location}",
+    "automatic": "每天自动创建草稿",
+    "manual": "仅手动创建草稿",
+    "unavailable": "请检查此规则的变体、供应商、币种或收货位置。",
+    "draft": "创建采购草稿",
+    "confirmDelete": "删除此规则？现有采购订单将保留。",
+    "searchVariant": "搜索变体",
+    "searchLocation": "搜索位置",
+    "searchSupplier": "搜索供应商",
+    "loadOptions": "搜索选项",
+    "optionsError": "无法加载选项，请重试。"
   }
 }

@@ -2172,6 +2172,82 @@ paths:
         '404': { $ref: '#/components/responses/NotFound' }
         '500': { description: Failed to execute report query }
 
+  /variant-replenishment:
+    get:
+      tags: [Products]
+      summary: List variant replenishment rules and warehouse forecasts
+      description: Requires view_products. Restricted users see assigned warehouses only. Paginates 20 rules; quantities are warehouse on-hand plus outstanding draft/sent/partial inbound units.
+      parameters:
+        - { name: search, in: query, schema: { type: string, maxLength: 200 } }
+        - { name: page, in: query, schema: { type: integer, minimum: 1 } }
+      responses:
+        '200': { description: "Laravel length-aware paginator with data, current_page, last_page, total, prev_page_url and next_page_url. Each rule includes forecast on_hand, incoming, position and suggested_quantity." }
+        '403': { description: "Permission or token ability denied" }
+    post:
+      tags: [Products]
+      summary: Save or restore a variant and warehouse replenishment rule
+      description: Requires view_products and edit_products. Enabling auto_reorder additionally requires create_purchase_orders in both role and token. One rule per variant/warehouse; automatic ordering is opt-in and creates drafts only.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/VariantReplenishmentInput' }
+      responses:
+        '201': { description: "Saved rule under data" }
+        '403': { description: "Permission, token ability or warehouse access denied" }
+        '404': { description: "Variant, supplier, warehouse or location not available in the active organization" }
+        '422': { description: "Invalid settings or supplier currency changed" }
+  /variant-replenishment/options:
+    get:
+      tags: [Products]
+      summary: Search replenishment form options
+      description: Requires view_products and edit_products. Returns at most 20 active variants, 20 suppliers, 25 locations and the accessible warehouse list. Locations require warehouse_id.
+      parameters:
+        - { name: variant_search, in: query, schema: { type: string, maxLength: 100 } }
+        - { name: supplier_search, in: query, schema: { type: string, maxLength: 100 } }
+        - { name: location_search, in: query, schema: { type: string, maxLength: 100 } }
+        - { name: warehouse_id, in: query, schema: { type: integer } }
+      responses:
+        '200': { description: "Object containing variants, suppliers, locations and warehouses arrays" }
+        '403': { description: "Permission, token ability or warehouse access denied" }
+  /variant-replenishment/{policy}:
+    parameters:
+      - { name: policy, in: path, required: true, schema: { type: integer } }
+    put:
+      tags: [Products]
+      summary: Update a replenishment rule
+      description: Same permissions and body as creation. Variant and warehouse identity cannot be changed. Saving records the responsible user for future automatic runs.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/VariantReplenishmentInput' }
+      responses:
+        '200': { description: "Saved rule under data" }
+        '403': { description: "Permission, token ability or warehouse access denied" }
+        '404': { description: "Rule or referenced resource not available" }
+        '422': { description: "Invalid settings or supplier currency changed" }
+    delete:
+      tags: [Products]
+      summary: Disable and soft-delete a replenishment rule
+      description: Requires view_products and edit_products. Existing purchase orders and their receiving destinations are preserved.
+      responses:
+        '200': { description: "Object with deleted true" }
+        '403': { description: "Permission, token ability or warehouse access denied" }
+        '404': { description: "Rule not found in the active organization" }
+  /variant-replenishment/{policy}/draft:
+    parameters:
+      - { name: policy, in: path, required: true, schema: { type: integer } }
+    post:
+      tags: [Products]
+      summary: Create a draft PO for current variant and warehouse demand
+      description: Requires view_products and create_purchase_orders plus warehouse access. Rechecks demand under locks; counts existing inbound, uses explicit supplier currency and cost, and records the receiving location. Does not send, approve or receive the order.
+      responses:
+        '200': { description: "Object with created boolean and data containing PO id, po_number, status, currency and total, or null when no replenishment is due" }
+        '403': { description: "Permission, token ability or warehouse access denied" }
+        '404': { description: "Rule or referenced resource not available" }
+        '422': { description: "Supplier currency or receiving destination needs review, or quantity or total exceeds supported limits" }
+
 components:
   securitySchemes:
     bearerAuth:
@@ -2246,6 +2322,22 @@ components:
               message: { type: string }
 
   schemas:
+    VariantReplenishmentInput:
+      type: object
+      required: [product_variant_id, warehouse_id, location_id, supplier_id, reorder_point, target_stock, minimum_order_quantity, unit_cost, currency]
+      properties:
+        product_variant_id: { type: integer, description: Active variant of a non-kit variant product in the organization }
+        warehouse_id: { type: integer }
+        location_id: { type: integer, description: Active receiving location inside the warehouse }
+        supplier_id: { type: integer }
+        reorder_point: { type: integer, minimum: 0, maximum: 2147483647 }
+        target_stock: { type: integer, minimum: 1, maximum: 2147483647, description: Must exceed reorder_point }
+        reorder_quantity: { type: integer, nullable: true, minimum: 1, maximum: 2147483647, description: Optional order pack multiple; rounds target demand up }
+        minimum_order_quantity: { type: integer, minimum: 1, maximum: 2147483647 }
+        unit_cost: { type: string, description: Nonnegative supplier-currency unit cost with at most two decimal places }
+        currency: { type: string, pattern: '^[A-Z]{3}$', description: Must match current supplier currency or organization fallback }
+        supplier_sku: { type: string, nullable: true, maxLength: 255 }
+        auto_reorder: { type: boolean, default: false }
     MessageResponse:
       type: object
       properties:

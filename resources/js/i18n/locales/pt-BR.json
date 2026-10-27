@@ -4016,5 +4016,30 @@
       "today": "Vence hoje",
       "upcoming": "A vencer"
     }
+  },
+  "variantReplenishment": {
+    "title": "Reposição de variantes",
+    "description": "Defina metas por armazém e crie rascunhos de pedidos para cada variante.",
+    "add": "Adicionar regra",
+    "variant": "Variante",
+    "point": "Ponto de reposição",
+    "target": "Estoque alvo",
+    "multiple": "Múltiplo do pedido (opcional)",
+    "minimum": "Quantidade mínima",
+    "on_hand": "Em estoque",
+    "incoming": "A receber",
+    "position": "Posição do estoque",
+    "suggested_quantity": "Pedido sugerido",
+    "receiveAt": "Receber em {warehouse} / {location}",
+    "automatic": "Criar rascunhos automaticamente a cada dia",
+    "manual": "Apenas rascunhos manuais",
+    "unavailable": "Revise a variante, fornecedor, moeda ou local de recebimento desta regra.",
+    "draft": "Criar rascunho de pedido",
+    "confirmDelete": "Excluir esta regra? Os pedidos existentes serão mantidos.",
+    "searchVariant": "Buscar variantes",
+    "searchLocation": "Buscar locais",
+    "searchSupplier": "Buscar fornecedores",
+    "loadOptions": "Buscar opções",
+    "optionsError": "Não foi possível carregar as opções. Tente novamente."
   }
 }

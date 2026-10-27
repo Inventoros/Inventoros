@@ -4016,5 +4016,30 @@
       "today": "Expire aujourd’hui",
       "upcoming": "À venir"
     }
+  },
+  "variantReplenishment": {
+    "title": "Réapprovisionnement des variantes",
+    "description": "Définissez les stocks cibles par entrepôt et créez des brouillons de commandes fournisseurs par variante.",
+    "add": "Ajouter une règle",
+    "variant": "Variante",
+    "point": "Seuil de commande",
+    "target": "Stock cible",
+    "multiple": "Multiple de commande (facultatif)",
+    "minimum": "Quantité minimale",
+    "on_hand": "En stock",
+    "incoming": "À recevoir",
+    "position": "Position de stock",
+    "suggested_quantity": "Commande suggérée",
+    "receiveAt": "Réception à {warehouse} / {location}",
+    "automatic": "Créer automatiquement des brouillons chaque jour",
+    "manual": "Brouillons manuels uniquement",
+    "unavailable": "Vérifiez la variante, le fournisseur, la devise ou le lieu de réception de cette règle.",
+    "draft": "Créer un brouillon",
+    "confirmDelete": "Supprimer cette règle ? Les commandes existantes seront conservées.",
+    "searchVariant": "Rechercher des variantes",
+    "searchLocation": "Rechercher des emplacements",
+    "searchSupplier": "Rechercher des fournisseurs",
+    "loadOptions": "Rechercher les options",
+    "optionsError": "Impossible de charger les options. Réessayez."
   }
 }

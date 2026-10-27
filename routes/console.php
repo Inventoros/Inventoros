@@ -11,6 +11,7 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 Schedule::command('inventory:check-reorder-points')->dailyAt('06:00');
+Schedule::command('inventory:replenish-variants')->dailyAt('06:10')->withoutOverlapping(30);
 
 // Dedicated, durable queue: atomically enqueued with its operation record,
 // independent of a site's ordinary Redis/SQS/synchronous queue configuration.

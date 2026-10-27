@@ -251,6 +251,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                                     <Link v-else-if="item.product" :href="route('products.show', item.product.id)" class="text-brand hover:underline">{{ item.product_name }}</Link>
                                     <span v-else>{{ item.product_name }}</span>
                                 </p>
+                                <p v-if="item.receiving_location" class="text-xs text-text-secondary">{{ t('variantReplenishment.receiveAt', { location: item.receiving_location.name, warehouse: item.receiving_location.warehouse?.name }) }}</p>
                                 <p v-if="item.variant" class="text-xs text-text-secondary">{{ t('orders.create.variant') }}: {{ item.variant.title }}</p>
                                 <p class="text-xs text-text-tertiary">SKU: {{ item.sku || '-' }}</p>
                                 <p v-if="item.supplier_sku" class="text-xs text-text-tertiary">{{ t('purchaseOrders.show.supplierSkuLine', { sku: item.supplier_sku }) }}</p>
@@ -320,6 +321,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                                         </td>
                                         <td class="whitespace-nowrap px-4 py-3 text-sm text-text-tertiary">
                                             {{ item.sku || '-' }}
+                                            <span v-if="item.receiving_location" class="block text-xs text-text-secondary">{{ t('variantReplenishment.receiveAt', { location: item.receiving_location.name, warehouse: item.receiving_location.warehouse?.name }) }}</span>
                                             <span v-if="item.supplier_sku" class="block text-xs text-text-tertiary">
                                                 {{ t('purchaseOrders.show.supplierSkuLine', { sku: item.supplier_sku }) }}
                                             </span>
