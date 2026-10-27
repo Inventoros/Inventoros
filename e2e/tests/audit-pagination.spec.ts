@@ -47,10 +47,10 @@ test('off-page scans and drafts use the whole audit without catalogue reloads', 
     await expect(page).toHaveURL(/page=2/);
     const refreshed = page.waitForResponse(response => response.url().includes(`/items/${firstId}`) && response.request().method() === 'GET');
     const synced = page.waitForResponse(response => response.url().endsWith(`/items/${firstId}/count`) && response.request().method() === 'POST');
-    await page.getByRole('button', { name: /sync/i }).click();
+    await page.getByRole('button', { name: 'Send saved counts', exact: true }).click();
     expect((await refreshed).ok()).toBe(true);
     expect((await (await synced).json()).item.counted_quantity).toBe(7);
-    await expect(page.getByRole('button', { name: /sync/i })).toHaveCount(0);
+    await expect(page.getByRole('button', { name: 'Send saved counts', exact: true })).toHaveCount(0);
 
     const confirmation = page.waitForEvent('dialog');
     const click = page.getByRole('button', { name: 'Complete Audit', exact: true }).click();
