@@ -1797,17 +1797,43 @@ paths:
         '409': { description: "Count evidence changed (`stale_count`); fetch the audit and review before retrying with the current revision" }
         '422': { description: "Audit not in progress (`invalid_status`) or item belongs to another audit (`item_mismatch`)" }
 
+  /stock-audits/{stockAudit}/items/{item}/review:
+    parameters:
+      - { name: stockAudit, in: path, required: true, schema: { type: integer } }
+      - { name: item, in: path, required: true, schema: { type: integer } }
+    post:
+      tags: [Stock Audits]
+      summary: Approve a saved count or request a fresh recount
+      description: "Requires both `view_stock_audits` and `approve_stock_adjustments`, including both abilities on scoped tokens. The audit must require variance approval and be in progress. Approval never books stock. Recount requests retain evidence and invalidate older drafts. Administrator self-approval follows the organization setting."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [decision, expected_revision]
+              properties:
+                decision: { type: string, enum: [approved, recount_requested] }
+                expected_revision: { type: string, pattern: '^[a-f0-9]{64}$' }
+                notes: { type: string, nullable: true, maxLength: 500, description: "Required for recounts, with at least 3 characters" }
+      responses:
+        '200': { description: "Decision saved; data contains the latest audit item and review status" }
+        '403': { description: "Reviewer or token lacks a required permission, or warehouse access is denied" }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { description: "Count changed (`stale_count`) or already reviewed (`review_already_decided`)" }
+        '422': { description: "Invalid review state, self-approval disallowed, or invalid notes" }
+
   /stock-audits/{stockAudit}/complete:
     parameters:
       - { name: stockAudit, in: path, required: true, schema: { type: integer } }
     post:
       tags: [Stock Audits]
       summary: Complete an audit, booking a recount adjustment per discrepancy
-      description: "Requires `manage_stock_audits`. The response includes `adjustments_created`."
+      description: "Requires `manage_stock_audits`. The response includes `adjustments_created`. Audits with `require_variance_approval` cannot complete with unreviewed variances or outstanding recount requests, including when uncounted lines are allowed."
       responses:
         '200': { description: Completed }
         '404': { $ref: '#/components/responses/NotFound' }
-        '422': { description: "Not in progress (`invalid_status`)" }
+        '422': { description: "Not in progress (`invalid_status`), uncounted lines not confirmed (`uncounted_items`), or outstanding reviews (`unreviewed_variances`)" }
 
   /webhooks:
     get:
