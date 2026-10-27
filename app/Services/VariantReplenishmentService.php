@@ -196,10 +196,13 @@ final class VariantReplenishmentService
     {
         $incoming = [];
         $productId = ProductVariant::where('organization_id', $policy->organization_id)->whereKey($policy->product_variant_id)->value('product_id');
+        // MySQL's outer locking read does not make an EXISTS subquery a
+        // current read. Lock the matching lines there as well, otherwise an
+        // older caller snapshot can hide a newly committed inbound order.
         $orders = PurchaseOrder::where('organization_id', $policy->organization_id)
             ->whereIn('status', [PurchaseOrder::STATUS_DRAFT, PurchaseOrder::STATUS_SENT, PurchaseOrder::STATUS_PARTIAL])
             ->where(fn ($q) => $q->whereNull('approval_status')->orWhere('approval_status', '<>', 'rejected'))
-            ->whereHas('items', fn ($q) => $q->where('product_variant_id', $policy->product_variant_id))
+            ->whereHas('items', fn ($q) => $q->where('product_variant_id', $policy->product_variant_id)->sharedLock())
             ->select('id')->sharedLock()->lazyById(100);
         foreach ($orders as $order) {
             foreach (PurchaseOrderItem::where('purchase_order_id', $order->id)->where('product_variant_id', $policy->product_variant_id)->where('product_id', $productId)

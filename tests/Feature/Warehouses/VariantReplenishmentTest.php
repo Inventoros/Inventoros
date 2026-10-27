@@ -188,4 +188,66 @@ final class VariantReplenishmentTest extends TestCase
         $this->withToken($token)->postJson('/api/v1/variant-replenishment', $this->data())->assertForbidden();
         $this->withToken($token)->postJson('/api/v1/variant-replenishment/'.$policy->id.'/draft')->assertForbidden();
     }
+
+    public function test_order_multiples_round_up_to_target_and_do_not_leave_another_draft_due(): void
+    {
+        $policy = $this->policy(['reorder_quantity' => 6]);
+        $this->assertSame(12, $this->service->createDraft($this->admin, $policy)->items()->sole()->quantity_ordered);
+        $this->assertNull($this->service->createDraft($this->admin, $policy));
+    }
+
+    public function test_manual_inbound_without_destination_uses_parent_location_warehouse(): void
+    {
+        $b = $this->policy();
+        $po = $this->service->createDraft($this->admin, $b);
+        $po->items()->sole()->update(['receiving_location_id' => null]);
+        $a = $this->policy(['warehouse_id' => $this->warehouseA->id, 'location_id' => $this->locationA->id,
+            'reorder_point' => 80, 'target_stock' => 100]);
+        $forecasts = $this->service->forecasts(collect([$a, $b]));
+        $this->assertSame(8, $forecasts[$a->id]['incoming']);
+        $this->assertSame(0, $forecasts[$b->id]['incoming']);
+        $this->assertSame(52, $this->service->createDraft($this->admin, $a)->items()->sole()->quantity_ordered);
+        $this->assertSame(8, $this->service->createDraft($this->admin, $b)->items()->sole()->quantity_ordered);
+    }
+
+    public function test_po_edit_preserves_the_selected_receiving_destination_and_policy_link(): void
+    {
+        $policy = $this->policy();
+        $po = $this->service->createDraft($this->admin, $policy);
+        $line = $po->items()->sole();
+        app(PurchaseOrderService::class)->update($po, $this->organization->id, ['items' => [[
+            'id' => $line->id, 'product_id' => $this->productA->id, 'product_variant_id' => $this->variant->id,
+            'quantity' => 9, 'unit_cost' => '3.00',
+        ]]]);
+        $this->assertSame($this->locationB->id, $line->fresh()->receiving_location_id);
+        $this->assertSame($policy->id, $line->fresh()->replenishment_policy_id);
+    }
+
+    public function test_unavailable_destination_rolls_back_receiving_quantity_and_stock(): void
+    {
+        $po = $this->service->createDraft($this->admin, $this->policy());
+        $line = $po->items()->sole();
+        $po->update(['status' => 'sent']);
+        $this->locationB->delete();
+        $this->postJson(route('purchase-orders.receive', $po), ['items' => [['id' => $line->id, 'quantity_to_receive' => 3]]])->assertRedirect()->assertSessionHas('error');
+        $this->assertSame(0, $line->fresh()->quantity_received);
+        $this->assertSame(42, $this->variant->fresh()->stock);
+    }
+
+    public function test_large_money_total_is_rejected_without_partial_order(): void
+    {
+        $policy = $this->policy(['unit_cost' => '9999999999.99']);
+        $this->postJson(route('variant-replenishment.draft', $policy))->assertUnprocessable()->assertJsonValidationErrors('unit_cost');
+        $this->assertDatabaseCount('purchase_orders', 0);
+        $this->assertDatabaseCount('purchase_order_items', 0);
+    }
+
+    public function test_edit_scoped_token_cannot_enable_future_automatic_purchases(): void
+    {
+        $token = $this->admin->createToken('product editor', ['view_products', 'edit_products'])->plainTextToken;
+        $this->app['auth']->forgetGuards();
+        $this->withToken($token)->postJson('/api/v1/variant-replenishment', $this->data(['auto_reorder' => true]))->assertForbidden();
+        $this->assertDatabaseCount('variant_replenishment_policies', 0);
+        $this->withToken($token)->postJson('/api/v1/variant-replenishment', $this->data())->assertCreated();
+    }
 }

@@ -179,7 +179,7 @@ class PurchaseOrderController extends Controller
             ->where('is_active', true)
             ->get(['id', 'name', 'currency', 'payment_terms']);
 
-        $purchaseOrder->load('items.variant');
+        $purchaseOrder->load(['items.variant', 'items.receivingLocation.warehouse']);
 
         $products = $this->formProducts(
             $organizationId,
@@ -280,7 +280,7 @@ class PurchaseOrderController extends Controller
                 ->with('error', 'This purchase order cannot receive items.');
         }
 
-        $purchaseOrder->load(['supplier', 'items.product', 'items.variant']);
+        $purchaseOrder->load(['supplier', 'items.product', 'items.variant', 'items.receivingLocation.warehouse']);
 
         return Inertia::render('PurchaseOrders/Receive', [
             'purchaseOrder' => $purchaseOrder,

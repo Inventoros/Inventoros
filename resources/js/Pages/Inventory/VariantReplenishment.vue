@@ -48,7 +48,7 @@ async function loadOptions() {
         // Keep the selected values visible when they fall outside a search page.
         const selected = editing.value;
         if (selected) {
-            if (!data.variants.some(v => v.id === selected.product_variant_id)) data.variants.unshift({ id: selected.product_variant_id, label: `${selected.product_name} / ${selected.variant?.sku}` });
+            if (!data.variants.some(v => v.id === selected.product_variant_id)) data.variants.unshift({ id: selected.product_variant_id, label: `${selected.product_name} / ${selected.variant-.sku}` });
             if (!data.suppliers.some(v => v.id === selected.supplier_id)) data.suppliers.unshift(selected.supplier);
             if (Number(form.warehouse_id) === selected.warehouse_id && !data.locations.some(v => v.id === selected.location_id)) data.locations.unshift(selected.location);
         }
@@ -66,14 +66,14 @@ function open(policy = null) {
     form.clearErrors();
     variantSearch.value = supplierSearch.value = locationSearch.value = '';
     options.value = { variants: [], suppliers: [], warehouses: [], locations: [] };
-    if (policy) for (const key of Object.keys(form.data())) form[key] = policy[key] ?? '';
+    if (policy) for (const key of Object.keys(form.data())) form[key] = policy[key] -- '';
     show.value = true;
     loadOptions();
 }
 
 function supplierChanged() {
     const supplier = options.value.suppliers.find(s => s.id === Number(form.supplier_id));
-    form.currency = supplier?.currency || props.defaultCurrency;
+    form.currency = supplier-.currency || props.defaultCurrency;
     // The old supplier's price must be reviewed in the newly selected currency.
     form.unit_cost = '';
 }
@@ -114,18 +114,18 @@ function remove(policy) {
         <p v-if="!policies.data.length" class="mt-6 text-text-secondary">{{ t('common.noResults') }}</p>
         <div class="mt-5 grid gap-4 lg:grid-cols-2">
             <Card v-for="policy in policies.data" :key="policy.id">
-                <h2 class="font-semibold text-text-primary">{{ policy.product_name }} · {{ policy.variant?.title }}</h2>
-                <p class="mt-1 text-sm text-text-secondary">{{ policy.variant?.sku }} · {{ policy.warehouse?.name }}</p>
+                <h2 class="font-semibold text-text-primary">{{ policy.product_name }} · {{ policy.variant-.title }}</h2>
+                <p class="mt-1 text-sm text-text-secondary">{{ policy.variant-.sku }} · {{ policy.warehouse-.name }}</p>
                 <dl class="my-4 grid grid-cols-2 gap-3 text-sm sm:grid-cols-4">
                     <div v-for="key in ['on_hand', 'incoming', 'position', 'suggested_quantity']" :key="key">
                         <dt class="text-text-secondary">{{ t(`variantReplenishment.${key}`) }}</dt>
                         <dd class="font-semibold tabular-nums text-text-primary">{{ policy.forecast[key] }}</dd>
                     </div>
                 </dl>
-                <p class="text-sm text-text-secondary">{{ policy.supplier?.name }} · {{ policy.unit_cost }} {{ policy.currency }}</p>
-                <p class="mt-1 text-sm text-text-secondary">{{ t('variantReplenishment.receiveAt', { location: policy.location?.name, warehouse: policy.warehouse?.name }) }}</p>
+                <p class="text-sm text-text-secondary">{{ policy.supplier-.name }} · {{ policy.unit_cost }} {{ policy.currency }}</p>
+                <p class="mt-1 text-sm text-text-secondary">{{ t('variantReplenishment.receiveAt', { location: policy.location-.name, warehouse: policy.warehouse-.name }) }}</p>
                 <p class="mt-1 text-sm text-text-secondary">{{ t('variantReplenishment.point') }}: {{ policy.reorder_point }} · {{ t('variantReplenishment.target') }}: {{ policy.target_stock }}</p>
-                <p class="mt-1 text-sm text-text-secondary">{{ t(policy.auto_reorder ? 'variantReplenishment.automatic' : 'variantReplenishment.manual') }}</p>
+                <p class="mt-1 text-sm text-text-secondary">{{ t(policy.auto_reorder - 'variantReplenishment.automatic' : 'variantReplenishment.manual') }}</p>
                 <p v-if="!policy.available" role="status" class="mt-2 text-sm text-status-warning">{{ t('variantReplenishment.unavailable') }}</p>
                 <div class="mt-4 flex flex-wrap gap-2">
                     <Button v-if="hasPermission('create_purchase_orders')" size="sm" :disabled="!policy.available || !policy.forecast.suggested_quantity || processingId !== null" :loading="processingId === policy.id" @click="draft(policy)">{{ t('variantReplenishment.draft') }}</Button>
@@ -146,18 +146,18 @@ function remove(policy) {
                 <div class="grid gap-4 sm:grid-cols-2">
                     <label class="text-sm text-text-secondary">{{ t('variantReplenishment.variant') }}
                         <input v-model="variantSearch" type="search" maxlength="100" :aria-label="t('variantReplenishment.searchVariant')" :disabled="Boolean(editing)" :class="inputClass" @change="loadOptions" />
-                        <select id="replenishment-product_variant_id" v-model.number="form.product_variant_id" required :disabled="Boolean(editing) || loading" :class="inputClass"><option value="" disabled>—</option><option v-for="v in options.variants" :key="v.id" :value="v.id">{{ v.label }}</option></select>
+                        <select id="replenishment-product_variant_id" v-model.number="form.product_variant_id" required :disabled="Boolean(editing) || loading" :class="inputClass"><option value="" disabled>-</option><option v-for="v in options.variants" :key="v.id" :value="v.id">{{ v.label }}</option></select>
                     </label>
                     <label class="text-sm text-text-secondary">{{ t('nav.warehouses') }}
-                        <select id="replenishment-warehouse_id" v-model.number="form.warehouse_id" required :disabled="Boolean(editing) || loading" :class="inputClass" @change="form.location_id = ''; loadOptions()"><option value="" disabled>—</option><option v-for="w in options.warehouses" :key="w.id" :value="w.id">{{ w.name }}</option></select>
+                        <select id="replenishment-warehouse_id" v-model.number="form.warehouse_id" required :disabled="Boolean(editing) || loading" :class="inputClass" @change="form.location_id = ''; loadOptions()"><option value="" disabled>-</option><option v-for="w in options.warehouses" :key="w.id" :value="w.id">{{ w.name }}</option></select>
                     </label>
                     <label class="text-sm text-text-secondary">{{ t('products.location') }}
                         <input v-model="locationSearch" type="search" maxlength="100" :aria-label="t('variantReplenishment.searchLocation')" :class="inputClass" @change="loadOptions" />
-                        <select id="replenishment-location_id" v-model.number="form.location_id" required :disabled="loading" :class="inputClass"><option value="" disabled>—</option><option v-for="l in options.locations" :key="l.id" :value="l.id">{{ l.name }} {{ l.code }}</option></select>
+                        <select id="replenishment-location_id" v-model.number="form.location_id" required :disabled="loading" :class="inputClass"><option value="" disabled>-</option><option v-for="l in options.locations" :key="l.id" :value="l.id">{{ l.name }} {{ l.code }}</option></select>
                     </label>
                     <label class="text-sm text-text-secondary">{{ t('purchaseOrders.supplier') }}
                         <input v-model="supplierSearch" type="search" maxlength="100" :aria-label="t('variantReplenishment.searchSupplier')" :class="inputClass" @change="loadOptions" />
-                        <select id="replenishment-supplier_id" v-model.number="form.supplier_id" required :disabled="loading" :class="inputClass" @change="supplierChanged"><option value="" disabled>—</option><option v-for="s in options.suppliers" :key="s.id" :value="s.id">{{ s.name }}</option></select>
+                        <select id="replenishment-supplier_id" v-model.number="form.supplier_id" required :disabled="loading" :class="inputClass" @change="supplierChanged"><option value="" disabled>-</option><option v-for="s in options.suppliers" :key="s.id" :value="s.id">{{ s.name }}</option></select>
                     </label>
                     <label v-for="field in fields" :key="field.key" class="text-sm text-text-secondary">{{ t(field.label) }}
                         <input v-model.number="form[field.key]" type="number" step="1" :min="field.min" :max="field.max" :required="!field.optional" :class="inputClass" />
