@@ -6,7 +6,16 @@ Full release notes, with the pull request behind each change, are on [GitHub Rel
 
 ## [Unreleased]
 
+## [2.1.0] - Pending release
+
 ### Added
+
+- Optional supervisor review of stock-audit variances, revision-bound approvals, recount requests and immutable review evidence. A new count invalidates the previous decision; completing an audit checks all outstanding reviews.
+- Paginated large-audit counting with whole-audit barcode lookup, progress totals and off-page offline draft synchronization. Completion streams lines in bounded batches while retaining the transaction, review gates and stock ledger.
+- Explicit variant replenishment targets per warehouse, with supplier-currency costs, minimum quantities and pack multiples. Manual or opt-in daily planning creates draft POs, counts existing inbound stock and retains the selected receiving destination.
+- Immutable accepted-count and recount history, including original quantities, notes, actors and count sequences; mobile history shows count quantities and variances directly.
+- An administrator stock-reset preview with password, reason and typed confirmation, a dedicated durable queue and result page. The worker rechecks authorization and the approved stock snapshot before an atomic, audited write-off; catalog and transaction history are retained.
+- Configurable country tax billing profiles and retained invoice PDFs, including an India domestic GST profile and variant size-matrix grouping. Tax configuration and invoice issuing have separate organization permissions.
 
 - External file storage for uploads, including S3-compatible services, with configuration examples and an installation-admin connection check that verifies writing, reading and deleting a temporary private object. Existing files retain their original storage disks.
 
@@ -205,6 +214,7 @@ Before upgrading: take a database backup you have checked, run `php artisan opti
 
 Releases 1.0.0 to 1.0.8 are described on [GitHub Releases](https://github.com/Inventoros/Inventoros/releases?q=v1.0).
 
-[Unreleased]: https://github.com/Inventoros/Inventoros/compare/v2.0.0...HEAD
+[Unreleased]: https://github.com/Inventoros/Inventoros/compare/v2.1.0...HEAD
+[2.1.0]: https://github.com/Inventoros/Inventoros/compare/v2.0.0...v2.1.0
 [2.0.0]: https://github.com/Inventoros/Inventoros/compare/v1.0.8...v2.0.0
 [1.0.x]: https://github.com/Inventoros/Inventoros/releases?q=v1.0

@@ -8,6 +8,8 @@ on:
     # Build and check the package whenever the packaging changes, so a
     # broken package is caught before a tag is pushed.
     paths:
+      - 'VERSION'
+      - 'docs/releases/**'
       - 'deploy/cpanel/**'
       - '.github/workflows/cpanel-release.yml'
       - 'app/Services/Update/**'
@@ -79,8 +81,10 @@ jobs:
       - name: Build frontend assets
         run: npm run build
 
-      - name: Rebuild the hello-world plugin UI bundle
-        run: npm run build:plugin:hello-world
+      - name: Rebuild bundled plugin UI assets
+        run: |
+          npm run build:plugin:hello-world
+          npm run build:plugin:tax-billing
 
       - name: Determine version
         id: version
@@ -97,6 +101,12 @@ jobs:
             echo "version=dev-$(date +%Y%m%d%H%M%S)" >> $GITHUB_OUTPUT
             echo "tag_name=dev" >> $GITHUB_OUTPUT
           fi
+
+      - name: Check the planned source version has release notes
+        run: |
+          source_version="$(tr -d '\r\n' < VERSION)"
+          [[ "$source_version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]
+          test -s "docs/releases/$source_version.md"
 
       - name: Check release version and notes
         if: (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')) || (github.event_name == 'workflow_dispatch' && github.event.inputs.version != 'dev')
@@ -123,6 +133,15 @@ jobs:
           unzip -l "inventoros-cpanel-${{ steps.version.outputs.version }}.zip" | tail -n 3
           unzip -p "inventoros-cpanel-${{ steps.version.outputs.version }}.zip" release.json
           php deploy/cpanel/build-release.php --verify="inventoros-cpanel-${{ steps.version.outputs.version }}.zip" --version="${{ steps.version.outputs.version }}"
+
+      - name: Verify bundled plugin assets in the release package
+        env:
+          RELEASE_ZIP: inventoros-cpanel-${{ steps.version.outputs.version }}.zip
+        run: |
+          for plugin in hello-world tax-billing; do
+            test "$(unzip -p "$RELEASE_ZIP" "inventoros/plugins/$plugin/dist/plugin.js" | wc -c)" -gt 0
+            test "$(unzip -p "$RELEASE_ZIP" "inventoros/plugins/$plugin/dist/plugin.css" | wc -c)" -gt 0
+          done
 
       - name: Package the hello-world example plugin
         run: |

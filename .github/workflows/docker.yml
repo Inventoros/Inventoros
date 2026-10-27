@@ -7,7 +7,6 @@ name: Docker image
 
 on:
   pull_request:
-    branches: [main, master]
     paths-ignore:
       - 'docs/**'
       - '**/*.md'
@@ -89,6 +88,8 @@ jobs:
           curl -fsS -o /dev/null -w '%{http_code}\n' http://127.0.0.1:8080/up
           test "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8080/install)" = "200"
           docker exec inventoros-smoke whoami | grep -qx app
+
+          docker exec inventoros-smoke sh -c 'test -s /app/plugins/hello-world/dist/plugin.js && test -s /app/plugins/hello-world/dist/plugin.css && test -s /app/plugins/tax-billing/dist/plugin.js && test -s /app/plugins/tax-billing/dist/plugin.css'
 
           # The unprivileged web process can install plugins, and a fresh
           # worker/container sees the same files after the web container is gone.
