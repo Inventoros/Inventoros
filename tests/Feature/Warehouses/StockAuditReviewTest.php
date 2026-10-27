@@ -225,4 +225,20 @@ final class StockAuditReviewTest extends TestCase
         $this->assertSame('pending', $this->item->fresh()->review_status);
         $this->assertDatabaseCount('stock_audit_reviews', 0);
     }
+
+    public function test_review_requirement_is_selected_on_draft_audits_and_cannot_change_after_start(): void
+    {
+        $this->actingAs($this->admin)->post(route('stock-audits.store'), [
+            'name' => 'Optional review', 'audit_type' => 'spot', 'warehouse_location_id' => $this->locationA->id,
+            'require_variance_approval' => true, 'product_ids' => [$this->productA->id],
+        ])->assertRedirect()->assertSessionHasNoErrors();
+        $draft = StockAudit::latest('id')->firstOrFail();
+        $this->assertTrue($draft->require_variance_approval);
+        $data = ['name' => $draft->name, 'audit_type' => 'spot', 'warehouse_location_id' => $this->locationA->id];
+        $this->put(route('stock-audits.update', $draft), $data)->assertRedirect()->assertSessionHasNoErrors();
+        $this->assertTrue($draft->fresh()->require_variance_approval);
+        app(StockAuditService::class)->start($draft, $this->admin);
+        $this->put(route('stock-audits.update', $draft), $data + ['require_variance_approval' => false])->assertRedirect();
+        $this->assertTrue($draft->fresh()->require_variance_approval);
+    }
 }
