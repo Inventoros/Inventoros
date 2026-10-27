@@ -942,6 +942,9 @@ paths:
       - { name: stockAudit, in: path, required: true, schema: { type: integer } }
     get:
       tags: [Stock Audits]
+      description: "Includes the legacy full item collection by default. Set include_items=0 for metadata and whole-audit summary only, then page lines through /items. Create/start/complete responses also support include_items=0."
+      parameters:
+        - { name: include_items, in: query, schema: { type: boolean, default: true } }
       summary: Show a stock audit
       responses:
         '200': { description: Stock audit }
@@ -1759,6 +1762,54 @@ paths:
         '200': { description: Cancelled }
         '404': { $ref: '#/components/responses/NotFound' }
         '422': { description: "Already completed or cancelled (`invalid_status`)" }
+
+  /stock-audits/{stockAudit}/items:
+    parameters:
+      - { name: stockAudit, in: path, required: true, schema: { type: integer } }
+    get:
+      tags: [Stock Audits]
+      summary: Page audit lines without loading the whole audit catalogue
+      description: "Requires `view_stock_audits` or `manage_stock_audits`, with warehouse access. Returns standard paginator fields including data, total, current_page and last_page, plus whole-audit summary totals. Product and variant payloads contain count labels only."
+      parameters:
+        - { name: per_page, in: query, schema: { type: integer, enum: [25, 50, 100], default: 25 } }
+        - $ref: '#/components/parameters/Page'
+        - { name: search, in: query, schema: { type: string, maxLength: 200 } }
+        - { name: item_status, in: query, schema: { type: string, enum: [all, pending, counted, variance, review], default: all } }
+      responses:
+        '200': { description: "Paginated audit lines and unfiltered summary" }
+        '403': { description: "Permission or warehouse access denied" }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /stock-audits/{stockAudit}/items/{item}:
+    parameters:
+      - { name: stockAudit, in: path, required: true, schema: { type: integer } }
+      - { name: item, in: path, required: true, schema: { type: integer } }
+    get:
+      tags: [Stock Audits]
+      summary: Read one audit line by ID, including an off-page draft
+      description: "Requires audit view or management permission and warehouse access. The item must belong to this audit. Returns data and whole-audit summary."
+      responses:
+        '200': { description: "Current line evidence and count revision" }
+        '403': { description: "Permission or warehouse access denied" }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /stock-audits/{stockAudit}/lookup:
+    parameters:
+      - { name: stockAudit, in: path, required: true, schema: { type: integer } }
+    get:
+      tags: [Stock Audits]
+      summary: Match a scanned code against the entire audit
+      description: "Matches product/variant SKU or barcode, this installation's product QR links, and locations present in the audit. Returns at most two matching lines. Ambiguous matches never choose a line automatically. The page field locates an unambiguous line in the unfiltered audit at the requested page size."
+      parameters:
+        - { name: code, in: query, required: true, schema: { type: string, maxLength: 2048 } }
+        - { name: location_id, in: query, schema: { type: integer } }
+        - { name: per_page, in: query, schema: { type: integer, enum: [25, 50, 100], default: 25 } }
+      responses:
+        '200': { description: "found, ambiguous, data (up to two lines), page; location for a matching location QR" }
+        '403': { description: "Permission or warehouse access denied" }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { $ref: '#/components/responses/ValidationError' }
 
   /stock-audits/{stockAudit}/start:
     parameters:

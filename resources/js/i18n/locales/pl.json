@@ -1,4 +1,15 @@
 {
+  "auditPaging": {
+    "perPage": "Wiersze na stronę",
+    "search": "Szukaj produktu, SKU lub kodu kreskowego",
+    "all": "Wszystkie wiersze",
+    "pending": "Niezliczone",
+    "counted": "Zliczone",
+    "variance": "Z rozbieżnościami",
+    "review": "Wymaga weryfikacji",
+    "results": "{from}-{to} z {total}",
+    "ambiguous": "Pasuje więcej niż jeden wiersz. Wybierz lokalizację lub wpisz ilość w odpowiednim wierszu."
+  },
   "auditReview": {
     "required": "Wymagaj zatwierdzenia rozbieżności",
     "hint": "Rozbieżności wymagają weryfikacji przed zakończeniem inwentaryzacji.",

@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Inventory;
 use App\Exceptions\BusinessRuleException;
 use App\Exceptions\InvalidStateException;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StockAudit\ListStockAuditItemsRequest;
 use App\Http\Requests\StockAudit\ReviewStockAuditCountRequest;
 use App\Http\Requests\StockAudit\StoreStockAuditRequest;
 use App\Http\Requests\StockAudit\UpdateStockAuditRequest;
@@ -16,6 +17,7 @@ use App\Models\Inventory\StockAudit;
 use App\Models\Inventory\StockAuditCount;
 use App\Models\Inventory\StockAuditItem;
 use App\Models\Inventory\StockAuditReview;
+use App\Services\StockAuditReadService;
 use App\Services\StockAuditReviewService;
 use App\Services\StockAuditService;
 use App\Services\WarehouseAccessService;
@@ -174,41 +176,22 @@ class StockAuditController extends Controller
      * @param  Request  $request  The incoming HTTP request
      * @param  StockAudit  $stockAudit  The stock audit to display
      */
-    public function show(Request $request, StockAudit $stockAudit): Response
+    public function show(ListStockAuditItemsRequest $request, StockAudit $stockAudit, StockAuditReadService $read): Response
     {
-        if ($stockAudit->organization_id !== $request->user()->organization_id) {
-            abort(403, 'Unauthorized action.');
-        }
-
+        abort_unless((int) $stockAudit->organization_id === (int) $request->user()->organization_id, 403);
         $this->warehouseAccess->authorizeStockAudit($request->user(), $stockAudit);
-
-        $stockAudit->load([
-            'warehouseLocation', 'warehouse',
-            'creator',
-            'items.product', 'items.variant',
-            'items.variant',
-            'items.location',
-            'items.countedByUser',
-        ]);
-
-        // Calculate summary stats
-        $totalItems = $stockAudit->items->count();
-        $countedItems = $stockAudit->items->where('status', '!=', 'pending')->count();
-        $discrepancies = $stockAudit->items->where('counted_quantity', '!=', null)
-            ->filter(fn ($item) => $item->counted_quantity !== $item->system_quantity)
-            ->count();
+        $stockAudit->load(['warehouseLocation', 'warehouse', 'creator']);
+        $items = $read->paginate($stockAudit, $request->validated());
+        $audit = $stockAudit->toArray();
+        $audit['items'] = $items->getCollection()->map(fn ($item) => $read->present($item))->all();
 
         return Inertia::render('StockAudits/Show', [
             'pluginComponents' => plugin_slots('stock-audits.show', ['header', 'actions', 'footer']),
-            'audit' => $stockAudit,
-            'summary' => [
-                'review_required' => $stockAudit->require_variance_approval && $stockAudit->status === 'in_progress'
-                    ? $stockAudit->items->filter(fn ($line) => StockAuditReviewService::needsReview($line))->count() : 0,
-                'total_items' => $totalItems,
-                'counted_items' => $countedItems,
-                'discrepancies' => $discrepancies,
-                'progress' => $totalItems > 0 ? round(($countedItems / $totalItems) * 100) : 0,
-            ],
+            'audit' => $audit, 'summary' => $read->summary($stockAudit), 'itemFilters' => $read->filters($request->validated()),
+            'itemPagination' => ['current_page' => $items->currentPage(), 'last_page' => $items->lastPage(), 'total' => $items->total(),
+                'per_page' => $items->perPage(), 'from' => $items->firstItem(), 'to' => $items->lastItem(),
+                'next_page_url' => $items->nextPageUrl(), 'prev_page_url' => $items->previousPageUrl()],
+            'scanLocations' => $read->locations($stockAudit),
             'canSelfApprove' => $request->user()->isAdmin() && ApprovalSettings::forOrganization((int) $stockAudit->organization_id)->adminsCanSelfApprove,
         ]);
     }
@@ -428,7 +411,8 @@ class StockAuditController extends Controller
                 return response()->json([
                     'message' => $e->getMessage(),
                     'error' => 'stale_count',
-                    'item' => $item->fresh(['product', 'countedByUser']),
+                    'item' => app(StockAuditReadService::class)->present($item->fresh()),
+                    'summary' => app(StockAuditReadService::class)->summary($stockAudit),
                 ], 409);
             }
 
@@ -437,7 +421,8 @@ class StockAuditController extends Controller
 
         return response()->json([
             'message' => 'Count updated successfully',
-            'item' => $item->fresh(['product', 'countedByUser']),
+            'item' => app(StockAuditReadService::class)->present($item->fresh()),
+            'summary' => app(StockAuditReadService::class)->summary($stockAudit),
         ]);
     }
 }

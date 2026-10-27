@@ -1,4 +1,15 @@
 {
+  "auditPaging": {
+    "perPage": "Righe per pagina",
+    "search": "Cerca prodotto, SKU o codice a barre",
+    "all": "Tutte le righe",
+    "pending": "Non contate",
+    "counted": "Contate",
+    "variance": "Con differenze",
+    "review": "Da verificare",
+    "results": "{from}-{to} di {total}",
+    "ambiguous": "Corrispondono più righe. Seleziona un’ubicazione o inserisci il conteggio nella riga corretta."
+  },
   "auditReview": {
     "required": "Richiedi approvazione delle differenze",
     "hint": "Le differenze devono essere verificate prima di completare l’inventario.",

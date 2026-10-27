@@ -1,4 +1,15 @@
 {
+  "auditPaging": {
+    "perPage": "Zeilen pro Seite",
+    "search": "Produkt, SKU oder Barcode suchen",
+    "all": "Alle Zeilen",
+    "pending": "Ungezählt",
+    "counted": "Gezählt",
+    "variance": "Mit Abweichungen",
+    "review": "Prüfung erforderlich",
+    "results": "{from}-{to} von {total}",
+    "ambiguous": "Mehrere Inventurzeilen passen. Wählen Sie einen Lagerplatz oder geben Sie die Menge in der passenden Zeile ein."
+  },
   "auditReview": {
     "required": "Freigabe von Abweichungen verlangen",
     "hint": "Abweichungen müssen vor Abschluss der Inventur geprüft werden.",

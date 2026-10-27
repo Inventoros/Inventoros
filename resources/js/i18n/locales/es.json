@@ -1,4 +1,15 @@
 {
+  "auditPaging": {
+    "perPage": "Líneas por página",
+    "search": "Buscar producto, SKU o código de barras",
+    "all": "Todas las líneas",
+    "pending": "Sin contar",
+    "counted": "Contadas",
+    "variance": "Con diferencias",
+    "review": "Requiere revisión",
+    "results": "{from}-{to} de {total}",
+    "ambiguous": "Coincide más de una línea. Seleccione una ubicación o introduzca el recuento en la línea correspondiente."
+  },
   "auditReview": {
     "required": "Exigir aprobación de diferencias",
     "hint": "Las diferencias deben revisarse antes de finalizar la auditoría.",

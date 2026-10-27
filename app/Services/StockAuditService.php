@@ -246,16 +246,22 @@ final class StockAuditService
             }
 
             $this->assertWarehouseScope($locked);
-            $locked->load(['items.product', 'items.variant']);
-            if ($locked->require_variance_approval && $locked->items->contains(fn ($line) => StockAuditReviewService::needsReview($line))) {
-                throw new InvalidStateException('Review all variances and finish requested recounts before completing the audit.', 'unreviewed_variances');
+            if ($locked->require_variance_approval) {
+                foreach ($locked->items()->lazyById(200) as $line) {
+                    if (StockAuditReviewService::needsReview($line)) {
+                        throw new InvalidStateException('Review all variances and finish requested recounts before completing the audit.', 'unreviewed_variances');
+                    }
+                }
             }
-            Product::where('organization_id', $locked->organization_id)->whereIn('id', $locked->items->pluck('product_id')->unique())->orderBy('id')->lockForUpdate()->get();
+            DB::table('products')->where('organization_id', $locked->organization_id)
+                ->whereIn('id', $locked->items()->select('product_id'))->select('id')->orderBy('id')->lockForUpdate()
+                ->chunkById(500, static function (): void {});
 
-            $uncounted = $locked->items->whereNull('counted_quantity')->count();
+            $uncounted = $locked->items()->whereNull('counted_quantity')->count();
+            $total = $locked->items()->count();
             if ($uncounted > 0 && ! $allowUncounted) {
                 throw new InvalidStateException(
-                    "{$uncounted} of {$locked->items->count()} item(s) have not been counted. Count them, or confirm completing without them (uncounted items are left unchanged).",
+                    "{$uncounted} of {$total} item(s) have not been counted. Count them, or confirm completing without them (uncounted items are left unchanged).",
                     'uncounted_items',
                 );
             }
@@ -274,9 +280,16 @@ final class StockAuditService
                 );
             }
 
-            foreach ($locked->items as $item) {
+            foreach ($locked->items()->with(['product', 'variant'])->lazyById(200) as $item) {
+                if ($locked->require_variance_approval && StockAuditReviewService::needsReview($item)) {
+                    throw new InvalidStateException('Review all variances and finish requested recounts before completing the audit.', 'unreviewed_variances');
+                }
                 // Skip items that haven't been counted
                 if ($item->counted_quantity === null) {
+                    if (! $allowUncounted) {
+                        throw new InvalidStateException('An audit line has not been counted.', 'uncounted_items');
+                    }
+
                     continue;
                 }
 

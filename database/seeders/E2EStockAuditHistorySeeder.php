@@ -36,6 +36,12 @@ final class E2EStockAuditHistorySeeder extends Seeder
                 'require_variance_approval' => filter_var(env('E2E_AUDIT_REVIEW', false), FILTER_VALIDATE_BOOL)]);
             $item = $audit->items()->create(['product_id' => $product->id, 'system_quantity' => $product->stock, 'status' => 'pending']);
             app(StockAuditService::class)->recordCount($audit, $item, $actor, 3, 'First pass');
+            $lines = max(1, min(250, (int) env('E2E_AUDIT_LINES', 1)));
+            for ($line = 1; $line < $lines; $line++) {
+                $extra = Product::create(['organization_id' => $organization->id, 'sku' => 'AUDIT-'.$id.'-'.$line,
+                    'name' => 'Paged fixture '.$line, 'stock' => 5, 'price' => 10, 'currency' => 'USD', 'min_stock' => 0, 'is_active' => true]);
+                $audit->items()->create(['product_id' => $extra->id, 'system_quantity' => 5, 'status' => 'pending']);
+            }
 
             return $audit;
         }, 3);
