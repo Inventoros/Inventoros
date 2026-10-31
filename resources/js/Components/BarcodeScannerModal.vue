@@ -5,6 +5,7 @@ import axios from 'axios';
 
 import { useI18n } from 'vue-i18n';
 const props = defineProps({
+    raw: { type: Boolean, default: false },
     show: {
         type: Boolean,
         default: false,
@@ -13,7 +14,7 @@ const props = defineProps({
 
 
 const { t } = useI18n();
-const emit = defineEmits(['close', 'product-found', 'location-found', 'error']);
+const emit = defineEmits(['close', 'product-found', 'location-found', 'code-scanned', 'error']);
 
 const manualCode = ref('');
 const isLoading = ref(false);
@@ -41,6 +42,10 @@ watch(() => props.show, (newVal) => {
 
 const lookupBarcode = async (code) => {
     if (!code || isLoading.value) return;
+    if (props.raw) {
+        emit('code-scanned', code);
+        return;
+    }
 
     isLoading.value = true;
     errorMessage.value = '';

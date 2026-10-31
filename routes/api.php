@@ -28,6 +28,7 @@ use App\Http\Controllers\Api\WarehouseController;
 use App\Http\Controllers\Api\WebhookController;
 use App\Http\Controllers\Api\WorkOrderController;
 use App\Http\Controllers\Inventory\ProductImageController;
+use App\Http\Controllers\Inventory\StockAuditItemsController;
 use App\Http\Controllers\Inventory\StockBalanceController;
 use App\Services\ApprovalService;
 use Illuminate\Support\Facades\Route;
@@ -191,6 +192,12 @@ Route::prefix('v1')->as('api.')->middleware('throttle:api')->group(function () {
         Route::get('stock-balances', [StockBalanceController::class, 'api'])->middleware('api.permission:view_products');
 
         // Stock Audits
+        Route::get('stock-audits/{stockAudit}/items', [StockAuditItemsController::class, 'index'])
+            ->middleware('api.permission:view_stock_audits|manage_stock_audits');
+        Route::get('stock-audits/{stockAudit}/items/{item}', [StockAuditItemsController::class, 'show'])
+            ->middleware('api.permission:view_stock_audits|manage_stock_audits');
+        Route::get('stock-audits/{stockAudit}/lookup', [StockAuditItemsController::class, 'lookup'])
+            ->middleware('api.permission:view_stock_audits|manage_stock_audits');
         Route::apiResource('stock-audits', ApiStockAuditController::class)
             ->only(['index', 'show'])
             ->middleware('api.permission:view_stock_audits|manage_stock_audits');

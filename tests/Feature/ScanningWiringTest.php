@@ -7,7 +7,7 @@ use Tests\TestCase;
 /**
  * Pins the barcode scanning wiring on the count, transfer and order pages.
  *
- * There is no JS test runner, so these read the page source: each page must
+ * These source checks complement the JS and browser tests: each page must
  * mount the camera scanner modal and listen for keyboard-wedge scanners, and
  * every scanning string it uses must exist in the English locale.
  */
@@ -31,7 +31,14 @@ class ScanningWiringTest extends TestCase
             $source = $this->source($page);
 
             $this->assertStringContainsString("import('@/Components/BarcodeScannerModal.vue')", $source, "{$page} does not load the scanner modal.");
-            $this->assertMatchesRegularExpression('/<BarcodeScannerModal\b[^>]*@product-found=/s', $source, "{$page} does not handle a scanned product.");
+            if ($page === 'Pages/StockAudits/Show.vue') {
+                // Audit scans resolve against the whole audit on the server,
+                // including lines outside the current page.
+                $this->assertMatchesRegularExpression('/<BarcodeScannerModal\b[^>]*\braw\b[^>]*@code-scanned=/s', $source);
+                $this->assertStringContainsString("route('stock-audits.lookup'", $source);
+            } else {
+                $this->assertMatchesRegularExpression('/<BarcodeScannerModal\b[^>]*@product-found=/s', $source, "{$page} does not handle a scanned product.");
+            }
             $this->assertStringContainsString("from '@/composables/useBarcodeWedge'", $source, "{$page} does not import the wedge composable.");
             $this->assertMatchesRegularExpression('/useBarcodeWedge\(/', $source, "{$page} does not listen for keyboard-wedge scans.");
         }

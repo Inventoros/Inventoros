@@ -19,6 +19,7 @@ use App\Http\Controllers\Inventory\QrCodeController;
 use App\Http\Controllers\Inventory\SKUController;
 use App\Http\Controllers\Inventory\StockAdjustmentController;
 use App\Http\Controllers\Inventory\StockAuditController;
+use App\Http\Controllers\Inventory\StockAuditItemsController;
 use App\Http\Controllers\Inventory\StockBalanceController;
 use App\Http\Controllers\Inventory\StockReservationController;
 use App\Http\Controllers\Inventory\StockTransferController;
@@ -170,6 +171,8 @@ Route::post('/stock-audits/{stockAudit}/start', [StockAuditController::class, 's
 Route::post('/stock-audits/{stockAudit}/complete', [StockAuditController::class, 'complete'])->name('stock-audits.complete')->middleware('permission:manage_stock_audits');
 Route::post('/stock-audits/{stockAudit}/items/{item}/count', [StockAuditController::class, 'updateCount'])->name('stock-audits.items.count')->middleware('permission:manage_stock_audits');
 Route::get('/stock-audits/{stockAudit}/items/{item}/counts', [StockAuditController::class, 'countHistory'])->name('stock-audits.items.counts')->middleware('permission:view_stock_audits');
+Route::get('/stock-audits/{stockAudit}/lookup', [StockAuditItemsController::class, 'lookup'])->name('stock-audits.lookup')->middleware('permission:view_stock_audits');
+Route::get('/stock-audits/{stockAudit}/items/{item}', [StockAuditItemsController::class, 'show'])->name('stock-audits.items.show')->middleware('permission:view_stock_audits');
 Route::post('/stock-audits/{stockAudit}/items/{item}/review', [StockAuditController::class, 'reviewCount'])->name('stock-audits.items.review')->middleware(['permission:view_stock_audits', 'permission:approve_stock_adjustments']);
 
 // Stock reservations (holds): anyone who can see products sees what is

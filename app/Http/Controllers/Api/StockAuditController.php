@@ -15,6 +15,7 @@ use App\Http\Resources\StockAuditItemResource;
 use App\Http\Resources\StockAuditResource;
 use App\Models\Inventory\StockAudit;
 use App\Models\Inventory\StockAuditItem;
+use App\Services\StockAuditReadService;
 use App\Services\StockAuditReviewService;
 use App\Services\StockAuditService;
 use App\Services\WarehouseAccessService;
@@ -96,17 +97,22 @@ class StockAuditController extends Controller
 
         app(WarehouseAccessService::class)->authorizeStockAudit($request->user(), $stockAudit);
 
-        $stockAudit->load([
-            'warehouseLocation', 'warehouse',
-            'creator',
-            'items.product', 'items.variant',
-            'items.variant',
-            'items.location',
-            'items.countedByUser',
-        ]);
+        $request->validate(['include_items' => ['sometimes', 'in:0,1,true,false']]);
+        $stockAudit->load(['warehouseLocation', 'warehouse', 'creator']);
+        if ($request->boolean('include_items', true)) {
+            $stockAudit->load([
+                'warehouseLocation', 'warehouse',
+                'creator',
+                'items.product', 'items.variant',
+                'items.variant',
+                'items.location',
+                'items.countedByUser',
+            ]);
+        }
 
         return response()->json([
             'data' => new StockAuditResource($stockAudit),
+            'summary' => app(StockAuditReadService::class)->summary($stockAudit),
         ]);
     }
 
@@ -122,7 +128,7 @@ class StockAuditController extends Controller
 
         return response()->json([
             'message' => 'Stock audit created successfully',
-            'data' => new StockAuditResource($this->loaded($audit)),
+            'data' => new StockAuditResource($this->loaded($audit, $request->boolean('include_items', true))),
         ], 201);
     }
 
@@ -141,7 +147,7 @@ class StockAuditController extends Controller
 
         return response()->json([
             'message' => 'Stock audit started',
-            'data' => new StockAuditResource($this->loaded($stockAudit->fresh())),
+            'data' => new StockAuditResource($this->loaded($stockAudit->fresh(), $request->boolean('include_items', true))),
         ]);
     }
 
@@ -190,12 +196,14 @@ class StockAuditController extends Controller
         return response()->json([
             'message' => 'Stock audit completed',
             'adjustments_created' => $adjustmentsCreated,
-            'data' => new StockAuditResource($this->loaded($stockAudit->fresh())),
+            'data' => new StockAuditResource($this->loaded($stockAudit->fresh(), $request->boolean('include_items', true))),
         ]);
     }
 
-    private function loaded(StockAudit $audit): StockAudit
+    private function loaded(StockAudit $audit, bool $includeItems = true): StockAudit
     {
-        return $audit->load(['warehouseLocation', 'warehouse', 'creator', 'items.product', 'items.variant', 'items.location', 'items.countedByUser']);
+        $audit->load(['warehouseLocation', 'warehouse', 'creator']);
+
+        return $includeItems ? $audit->load(['items.product', 'items.variant', 'items.location', 'items.countedByUser']) : $audit;
     }
 }

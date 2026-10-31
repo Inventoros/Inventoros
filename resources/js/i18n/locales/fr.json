@@ -1,4 +1,15 @@
 {
+  "auditPaging": {
+    "perPage": "Lignes par page",
+    "search": "Rechercher un produit, une référence ou un code-barres",
+    "all": "Toutes les lignes",
+    "pending": "Non comptées",
+    "counted": "Comptées",
+    "variance": "Avec écarts",
+    "review": "À examiner",
+    "results": "{from}-{to} sur {total}",
+    "ambiguous": "Plusieurs lignes correspondent. Sélectionnez un emplacement ou saisissez le comptage sur la ligne correspondante."
+  },
   "auditReview": {
     "required": "Exiger l’approbation des écarts",
     "hint": "Les écarts doivent être examinés avant de terminer cet inventaire.",

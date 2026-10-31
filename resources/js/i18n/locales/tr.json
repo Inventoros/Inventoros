@@ -1,4 +1,15 @@
 {
+  "auditPaging": {
+    "perPage": "Sayfa başına satır",
+    "search": "Ürün, SKU veya barkod ara",
+    "all": "Tüm satırlar",
+    "pending": "Sayılmadı",
+    "counted": "Sayıldı",
+    "variance": "Fark içerenler",
+    "review": "İnceleme gerekiyor",
+    "results": "{from}-{to} / {total}",
+    "ambiguous": "Birden fazla satır eşleşiyor. Bir konum seçin veya ilgili satıra sayımı girin."
+  },
   "auditReview": {
     "required": "Farklar için onay iste",
     "hint": "Denetim tamamlanmadan önce farklar incelenmelidir.",

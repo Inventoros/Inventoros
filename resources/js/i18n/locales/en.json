@@ -1,4 +1,15 @@
 {
+  "auditPaging": {
+    "perPage": "Lines per page",
+    "search": "Search product, SKU or barcode",
+    "all": "All lines",
+    "pending": "Uncounted",
+    "counted": "Counted",
+    "variance": "With variances",
+    "review": "Needs review",
+    "results": "{from}-{to} of {total}",
+    "ambiguous": "More than one audit line matches. Select a location or enter the count on the matching line."
+  },
   "auditReview": {
     "required": "Require variance approval",
     "hint": "Variances need review before this audit can finish.",

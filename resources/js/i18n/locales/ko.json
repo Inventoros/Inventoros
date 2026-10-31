@@ -1,4 +1,15 @@
 {
+  "auditPaging": {
+    "perPage": "페이지당 행 수",
+    "search": "상품, SKU 또는 바코드 검색",
+    "all": "모든 행",
+    "pending": "미집계",
+    "counted": "집계됨",
+    "variance": "차이 있음",
+    "review": "검토 필요",
+    "results": "전체 {total}개 중 {from}-{to}",
+    "ambiguous": "여러 실사 행이 일치합니다. 위치를 선택하거나 해당 행에 집계를 입력하세요."
+  },
   "auditReview": {
     "required": "차이 승인 필수",
     "hint": "실사를 완료하기 전에 차이를 검토해야 합니다.",

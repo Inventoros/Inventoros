@@ -1,4 +1,15 @@
 {
+  "auditPaging": {
+    "perPage": "每页行数",
+    "search": "搜索商品、SKU 或条码",
+    "all": "所有行",
+    "pending": "未盘点",
+    "counted": "已盘点",
+    "variance": "存在差异",
+    "review": "需要审核",
+    "results": "共 {total} 行，第 {from}-{to} 行",
+    "ambiguous": "匹配到多个盘点行。请选择库位或在对应行输入数量。"
+  },
   "auditReview": {
     "required": "要求审批差异",
     "hint": "完成盘点前必须审核差异。",

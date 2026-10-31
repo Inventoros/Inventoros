@@ -293,6 +293,12 @@ export const ROUTE_PERMISSIONS = {
     "stock-audits.items.counts": [
         "view_stock_audits"
     ],
+    "stock-audits.items.show": [
+        "view_stock_audits"
+    ],
+    "stock-audits.lookup": [
+        "view_stock_audits"
+    ],
     "stock-audits.show": [
         "view_stock_audits"
     ],

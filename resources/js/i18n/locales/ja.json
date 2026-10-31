@@ -1,4 +1,15 @@
 {
+  "auditPaging": {
+    "perPage": "ページあたりの行数",
+    "search": "商品・SKU・バーコードで検索",
+    "all": "すべての行",
+    "pending": "未カウント",
+    "counted": "カウント済み",
+    "variance": "差異あり",
+    "review": "確認が必要",
+    "results": "{total} 件中 {from}-{to}",
+    "ambiguous": "複数の棚卸行が一致します。保管場所を選択するか、該当する行に数量を入力してください。"
+  },
   "auditReview": {
     "required": "差異の承認を必須にする",
     "hint": "棚卸を完了する前に差異の確認が必要です。",

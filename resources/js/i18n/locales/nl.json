@@ -1,4 +1,15 @@
 {
+  "auditPaging": {
+    "perPage": "Regels per pagina",
+    "search": "Zoek product, SKU of barcode",
+    "all": "Alle regels",
+    "pending": "Ongeteld",
+    "counted": "Geteld",
+    "variance": "Met verschillen",
+    "review": "Beoordeling nodig",
+    "results": "{from}-{to} van {total}",
+    "ambiguous": "Meerdere regels komen overeen. Selecteer een locatie of voer de telling in op de juiste regel."
+  },
   "auditReview": {
     "required": "Goedkeuring van verschillen vereisen",
     "hint": "Verschillen moeten worden beoordeeld voordat deze telling kan worden afgerond.",

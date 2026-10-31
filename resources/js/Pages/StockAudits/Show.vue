@@ -12,7 +12,7 @@ import axios from 'axios';
 import { ref, computed, nextTick, defineAsyncComponent, watch, onMounted, onBeforeUnmount } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { displayDateTime } from '@/lib/dates';
-import { useBarcodeWedge, useBarcodeLookup } from '@/composables/useBarcodeWedge';
+import { useBarcodeWedge } from '@/composables/useBarcodeWedge';
 import {
     Pencil,
     ArrowLeft,
@@ -40,9 +40,24 @@ const props = defineProps({
     audit: Object,
     summary: Object,
     canSelfApprove: Boolean,
+    itemPagination: Object,
+    itemFilters: Object,
+    scanLocations: Array,
 });
 
 const processing = ref(false);
+const lineSearch = ref(props.itemFilters?.search || '');
+const lineStatus = ref(props.itemFilters?.item_status || 'all');
+const linePageSize = ref(props.itemFilters?.per_page || 25);
+watch(() => props.itemFilters, (filters) => {
+    lineSearch.value = filters?.search || '';
+    lineStatus.value = filters?.item_status || 'all';
+    linePageSize.value = filters?.per_page || 25;
+});
+const filterLines = () => {
+    cancelCounting();
+    router.get(route('stock-audits.show', props.audit.id), { search: lineSearch.value, item_status: lineStatus.value, per_page: linePageSize.value }, { preserveState: true, preserveScroll: true });
+};
 const page = usePage();
 const reviewItem = ref(null);
 const reviewDecision = ref('approved');
@@ -160,11 +175,11 @@ const startAudit = () => {
 
 // Lines nobody counted: completing with any left needs an explicit
 // confirmation, which the server also requires (allow_uncounted).
-const uncountedCount = computed(() => (props.audit.items || []).filter((item) => item.counted_quantity === null || item.counted_quantity === undefined).length);
+const uncountedCount = computed(() => props.summary.total_items - props.summary.counted_items);
 
 const completeAudit = () => {
     if (draftCount.value > 0 || savingCount.value || syncingDrafts.value || pendingScans.value > 0 || !online.value) return;
-    const total = (props.audit.items || []).length;
+    const total = props.summary.total_items;
     const uncounted = uncountedCount.value;
     const message = uncounted > 0
         ? t('stockAudits.completeUncountedConfirm', { uncounted, total })
@@ -211,7 +226,7 @@ watch([countValue, countNotes], () => {
 
 const refreshCounts = () => {
     if (!mounted) return Promise.resolve();
-    return new Promise((resolve) => router.reload({ only: ['audit', 'summary'], onFinish: resolve }));
+    return new Promise((resolve) => router.reload({ only: ['audit', 'summary', 'itemPagination', 'itemFilters'], onFinish: resolve }));
 };
 
 const transmitDraft = async (item, draft) => {
@@ -237,9 +252,12 @@ const transmitDraft = async (item, draft) => {
         // A followed login redirect or a proxy's HTML error is not an
         // acknowledgement. Retain the draft unless this exact line is saved.
         const saved = response.data?.item;
-        if (saved?.id !== item.id || !saved.count_revision) throw new Error('Unconfirmed count');
+        if (saved?.id !== item.id || saved.stock_audit_id !== props.audit.id || !saved.count_revision) throw new Error('Unconfirmed count');
         if (requestScope !== scopeKey.value) return false;
         Object.assign(item, saved);
+        const visible = props.audit.items?.find(line => line.id === item.id);
+        if (visible && visible !== item) Object.assign(visible, saved);
+        if (response.data.summary) Object.assign(props.summary, response.data.summary);
         forget(item.id, draft);
         draftMessage.value = '';
         return true;
@@ -248,6 +266,7 @@ const transmitDraft = async (item, draft) => {
         const current = error.response?.data?.item;
         if (error.response?.status === 409 && error.response?.data?.error === 'stale_count' && current?.id === item.id) {
             Object.assign(item, current);
+            if (error.response.data.summary) Object.assign(props.summary, error.response.data.summary);
             // Identical quantities/notes do not prove that this submission
             // was accepted: another person may have recounted the same value.
             // Preserve the draft until the operator reviews the newer evidence.
@@ -281,8 +300,21 @@ const sendDrafts = async () => {
     try {
         for (const draft of Object.values(drafts.value)) {
             if (!mounted || sendingScope !== scopeKey.value) break;
-            const item = props.audit.items?.find((item) => item.id === draft.itemId);
-            if (!item || !await transmitDraft(item, draft)) break;
+            let item = props.audit.items?.find((item) => item.id === draft.itemId);
+            if (!item) {
+                try {
+                    const response = await axios.get(route('stock-audits.items.show', { stockAudit: props.audit.id, item: draft.itemId }), {
+                        headers: { 'X-Inventoros-Organization': String(props.audit.organization_id) },
+                    });
+                    if (sendingScope !== scopeKey.value) break;
+                    item = response.data.data;
+                    if (item?.id !== draft.itemId || item.stock_audit_id !== props.audit.id) throw new Error('Unconfirmed audit line');
+                } catch {
+                    draftMessage.value = t('stockAudits.drafts.serverRejected');
+                    break;
+                }
+            }
+            if (!await transmitDraft(item, draft)) break;
             if (editingItemId.value === item.id) cancelCounting();
         }
     } finally {
@@ -318,27 +350,16 @@ const reviewLatestCount = (item) => {
 // in "enter count" mode the scan opens that line's count input instead.
 const showScanner = ref(false);
 const scanLocationId = ref('');
-const scanLocations = computed(() => [...new Map((props.audit.items || []).filter(item => item.location).map(item => [item.location.id, item.location])).values()]);
+const scanLocations = computed(() => props.scanLocations || []);
 const scanMode = ref('increment'); // 'increment' | 'enter'
 const scanMessage = ref('');
 const scanMessageTone = ref('info');
 const highlightedItemId = ref(null);
-const { lookup } = useBarcodeLookup();
+
 
 const setScanMessage = (message, tone = 'info') => {
     scanMessage.value = message;
     scanMessageTone.value = tone;
-};
-
-// An ambiguous scan must not count the first matching bin or variant.
-const matchingAuditLines = (product, variant) => (props.audit.items || []).filter(item =>
-    item.product_id === product.id
-    && (!variant || item.product_variant_id === variant.id)
-    && (!scanLocationId.value || item.location_id === Number(scanLocationId.value))
-);
-const findAuditLine = (product, variant) => {
-    const matches = matchingAuditLines(product, variant);
-    return matches.length === 1 ? matches[0] : null;
 };
 
 const focusLine = async (item) => {
@@ -363,46 +384,65 @@ const incrementLine = async (item) => {
     if (!remember(item, next, existing?.notes ?? (item.notes || ''))) return;
     if (await transmitDraft(item, drafts.value[item.id])) {
         setScanMessage(t('scanning.countedOne', { name: item.product?.name || '', count: next }), 'success');
-        await refreshCounts();
     }
 };
 
-const onScannedProduct = async (product, variant = null) => {
-    showScanner.value = false;
-    if (!canCount.value) return;
-    const matches = matchingAuditLines(product, variant);
-    if (matches.length > 1) {
-        await focusLine(matches[0]);
-        setScanMessage(t('scanning.enterCountFor', { name: product.name }), 'warning');
-        return;
+const enterScannedLine = async (item, targetPage, requestScope) => {
+    let visible = props.audit.items?.find(line => line.id === item.id);
+    if (!visible) {
+        lineSearch.value = '';
+        lineStatus.value = 'all';
+        await new Promise(resolve => router.get(route('stock-audits.show', props.audit.id), {
+            per_page: linePageSize.value, page: targetPage,
+        }, { preserveState: true, preserveScroll: true, only: ['audit', 'summary', 'itemPagination', 'itemFilters'], onFinish: resolve }));
+        if (!mounted || requestScope !== scopeKey.value) return;
+        visible = props.audit.items?.find(line => line.id === item.id);
     }
-    const item = findAuditLine(product, variant);
-    if (!item) {
-        setScanMessage(t('scanning.notInAudit', { name: variant?.title ? `${product.name} (${variant.title})` : product.name }), 'warning');
-        return;
-    }
-    await focusLine(item);
-    if (scanMode.value === 'enter') {
-        startCounting(item);
-        await nextTick();
-        document.getElementById(`audit-count-input-${item.id}`)?.focus();
-        setScanMessage(t('scanning.enterCountFor', { name: item.product?.name || '' }));
-        return;
-    }
-    await incrementLine(item);
+    if (!visible) return;
+    Object.assign(visible, item);
+    await focusLine(visible);
+    startCounting(visible);
+    await nextTick();
+    document.getElementById(`audit-count-input-${item.id}`)?.focus();
 };
 
 const processScannedCode = async (code) => {
+    const requestScope = scopeKey.value;
     try {
-        const found = await lookup(code);
-        if (!found) {
+        const response = await axios.get(route('stock-audits.lookup', props.audit.id), {
+            params: { code, location_id: scanLocationId.value || null, per_page: linePageSize.value },
+            headers: { 'X-Inventoros-Organization': String(props.audit.organization_id) },
+        });
+        if (!mounted || requestScope !== scopeKey.value) return;
+        const found = response.data;
+        if (!found.found) {
             setScanMessage(t('scanning.notFound', { code }), 'danger');
             return;
         }
-        await onScannedProduct(found.product, found.variant);
-    } catch (error) {
-        setScanMessage(t('scanning.lookupFailed'), 'danger');
+        if (found.location) {
+            scanLocationId.value = String(found.location.id);
+            setScanMessage(found.location.name, 'success');
+            return;
+        }
+        if (found.ambiguous) {
+            setScanMessage(t('auditPaging.ambiguous'), 'warning');
+            return;
+        }
+        const item = found.data?.[0];
+        if (!item) return;
+        if (scanMode.value === 'enter') await enterScannedLine(item, found.page, requestScope);
+        else {
+            await incrementLine(item);
+            await focusLine(item);
+        }
+    } catch {
+        if (requestScope === scopeKey.value) setScanMessage(t('scanning.lookupFailed'), 'danger');
     }
+};
+
+const onRawScan = (code) => {
+    showScanner.value = false;
+    return onScannedCode(code);
 };
 
 // A scanner can send the next code before lookup, save and page refresh finish.
@@ -410,10 +450,11 @@ const processScannedCode = async (code) => {
 // codes that arrived while a previous count was being acknowledged.
 let scanQueue = Promise.resolve();
 const onScannedCode = (code) => {
+    const scanScope = scopeKey.value;
     pendingScans.value += 1;
     scanQueue = scanQueue.then(async () => {
         try {
-            if (mounted && canCount.value) await processScannedCode(code);
+            if (mounted && canCount.value && scanScope === scopeKey.value) await processScannedCode(code);
         } finally {
             pendingScans.value -= 1;
         }
@@ -644,6 +685,14 @@ const thClass = 'px-6 py-3 text-left text-xs font-medium uppercase tracking-wide
                     </p>
                 </div>
             </div>
+            <form class="mt-4 grid gap-3 px-5 sm:grid-cols-3" @submit.prevent="filterLines">
+                <input v-model="lineSearch" type="search" :aria-label="t('auditPaging.search')" :placeholder="t('auditPaging.search')" maxlength="200" class="h-10 rounded-md border border-border-subtle bg-surface-canvas px-3 text-sm text-text-primary ds-focus-ring" :disabled="savingCount || syncingDrafts || pendingScans > 0" />
+                <select v-model="lineStatus" :aria-label="t('common.status')" class="h-10 rounded-md border border-border-subtle bg-surface-canvas px-3 text-sm text-text-primary ds-focus-ring" :disabled="savingCount || syncingDrafts || pendingScans > 0" @change="filterLines">
+                    <option v-for="status in ['all', 'pending', 'counted', 'variance', 'review']" :key="status" :value="status">{{ t(`auditPaging.${status}`) }}</option>
+                </select>
+                <label for="audit-lines-per-page" class="flex items-center gap-2 text-sm text-text-secondary">{{ t('auditPaging.perPage') }}<select id="audit-lines-per-page" v-model="linePageSize" class="h-10 rounded-md border border-border-subtle bg-surface-canvas px-3 text-text-primary ds-focus-ring" :disabled="savingCount || syncingDrafts || pendingScans > 0" @change="filterLines"><option :value="25">25</option><option :value="50">50</option><option :value="100">100</option></select></label>
+                <button type="submit" class="sr-only">{{ t('common.search') }}</button>
+            </form>
             <div class="mt-4 w-full overflow-x-auto">
                 <table class="min-w-full">
                     <thead>
@@ -794,6 +843,12 @@ const thClass = 'px-6 py-3 text-left text-xs font-medium uppercase tracking-wide
             </div>
         </Card>
 
+        <nav v-if="itemPagination" :aria-label="t('stockAudits.show.auditItems')" class="mt-4 flex flex-wrap items-center justify-between gap-3 text-sm">
+            <Link v-if="itemPagination.prev_page_url" :href="itemPagination.prev_page_url" preserve-state preserve-scroll class="text-brand hover:underline" @click="cancelCounting">{{ t('common.previous') }}</Link><span v-else />
+            <span class="tabular-nums text-text-secondary">{{ t('auditPaging.results', { from: itemPagination.from || 0, to: itemPagination.to || 0, total: itemPagination.total }) }}</span>
+            <Link v-if="itemPagination.next_page_url" :href="itemPagination.next_page_url" preserve-state preserve-scroll class="text-brand hover:underline" @click="cancelCounting">{{ t('common.next') }}</Link><span v-else />
+        </nav>
+
         <!-- Actions -->
         <Card v-if="canStart || canComplete" :padded="false" class="mt-4">
             <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">{{ t('common.actions') }}</h3></div>
@@ -850,8 +905,9 @@ const thClass = 'px-6 py-3 text-left text-xs font-medium uppercase tracking-wide
         <!-- Barcode Scanner Modal -->
         <BarcodeScannerModal
             :show="showScanner"
+            raw
             @close="showScanner = false"
-            @product-found="onScannedProduct"
+            @code-scanned="onRawScan"
         />
 
         <!-- Plugin Slot: Footer -->
