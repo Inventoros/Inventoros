@@ -1,4 +1,23 @@
 {
+  "auditReview": {
+    "required": "Exigir aprobación de diferencias",
+    "hint": "Las diferencias deben revisarse antes de finalizar la auditoría.",
+    "pending": "Pendiente de revisión",
+    "approved": "Aprobado",
+    "recount_requested": "Nuevo recuento solicitado",
+    "not_required": "No requiere revisión",
+    "approve": "Aprobar recuento",
+    "requestRecount": "Solicitar nuevo recuento",
+    "notes": "Notas de revisión",
+    "remaining": "Revisiones o nuevos recuentos necesarios: {count}.",
+    "errors": {
+      "state": "Este recuento no se puede revisar en su estado actual.",
+      "stale": "El recuento cambió. Actualice y revise su último valor.",
+      "decided": "Este recuento ya se revisó.",
+      "self": "Otro supervisor debe aprobar su recuento.",
+      "failed": "No se pudo guardar la revisión. Actualice e inténtelo de nuevo."
+    }
+  },
   "stockReset": {
     "title": "Restablecer existencias a cero",
     "hint": "Restablece las existencias de toda la organización, incluidos productos inactivos y eliminados. Se conservan productos, pedidos e historial. Se dan de baja los números de serie disponibles y los lotes quedan a cero.",

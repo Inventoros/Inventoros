@@ -8,10 +8,12 @@ use App\Models\Auth\Organization;
 use App\Models\User;
 use App\Models\Warehouse;
 use App\Traits\LogsActivity;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Carbon;
 
 /**
  * Represents a stock audit / cycle count record.
@@ -25,17 +27,17 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property string $audit_type
  * @property int|null $warehouse_id
  * @property int|null $warehouse_location_id
- * @property \Illuminate\Support\Carbon|null $started_at
- * @property \Illuminate\Support\Carbon|null $completed_at
+ * @property Carbon|null $started_at
+ * @property Carbon|null $completed_at
  * @property string|null $notes
  * @property int $created_by
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
- * @property \Illuminate\Support\Carbon|null $deleted_at
- * @property-read \App\Models\Auth\Organization $organization
- * @property-read \App\Models\Inventory\ProductLocation|null $warehouseLocation
- * @property-read \App\Models\User $creator
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Inventory\StockAuditItem[] $items
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @property Carbon|null $deleted_at
+ * @property-read Organization $organization
+ * @property-read ProductLocation|null $warehouseLocation
+ * @property-read User $creator
+ * @property-read Collection|StockAuditItem[] $items
  */
 class StockAudit extends Model
 {
@@ -56,6 +58,7 @@ class StockAudit extends Model
         'notes',
         'created_by',
         'assigned_to',
+        'require_variance_approval',
     ];
 
     protected function casts(): array
@@ -65,6 +68,7 @@ class StockAudit extends Model
             'warehouse_location_id' => 'integer',
             'started_at' => 'datetime',
             'completed_at' => 'datetime',
+            'require_variance_approval' => 'boolean',
         ];
     }
 

@@ -10,10 +10,12 @@ use App\Http\Controllers\Api\Concerns\HandlesApiResponses;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\StockAudit\RecordStockAuditCountRequest;
 use App\Http\Requests\Api\StockAudit\StoreStockAuditRequest;
+use App\Http\Requests\StockAudit\ReviewStockAuditCountRequest;
 use App\Http\Resources\StockAuditItemResource;
 use App\Http\Resources\StockAuditResource;
 use App\Models\Inventory\StockAudit;
 use App\Models\Inventory\StockAuditItem;
+use App\Services\StockAuditReviewService;
 use App\Services\StockAuditService;
 use App\Services\WarehouseAccessService;
 use Dedoc\Scramble\Attributes\QueryParameter;
@@ -27,6 +29,20 @@ use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 class StockAuditController extends Controller
 {
     use HandlesApiResponses;
+
+    public function reviewCount(ReviewStockAuditCountRequest $request, StockAudit $stockAudit, StockAuditItem $item, StockAuditReviewService $reviews): JsonResponse
+    {
+        $this->ensureOwned($request, $stockAudit, 'Stock audit');
+        $data = $request->validated();
+        try {
+            $reviews->decide($stockAudit, $item, $request->user(), $data['decision'], $data['expected_revision'], $data['notes'] ?? null);
+        } catch (InvalidStateException $error) {
+            return response()->json(['message' => $error->getMessage(), 'error' => $error->errorCode],
+                in_array($error->errorCode, ['stale_count', 'review_already_decided'], true) ? 409 : 422);
+        }
+
+        return response()->json(['data' => new StockAuditItemResource($item->fresh(['product', 'countedByUser']))]);
+    }
 
     /**
      * List stock audits.
@@ -66,9 +82,8 @@ class StockAuditController extends Controller
     /**
      * Display the specified stock audit.
      *
-     * @param Request $request The incoming HTTP request
-     * @param StockAudit $stockAudit The stock audit to display
-     * @return JsonResponse
+     * @param  Request  $request  The incoming HTTP request
+     * @param  StockAudit  $stockAudit  The stock audit to display
      */
     public function show(Request $request, StockAudit $stockAudit): JsonResponse
     {

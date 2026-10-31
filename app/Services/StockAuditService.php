@@ -76,6 +76,7 @@ final class StockAuditService
                 'warehouse_location_id' => $data['warehouse_location_id'] ?? null,
                 'notes' => $data['notes'] ?? null,
                 'created_by' => $actor->id,
+                'require_variance_approval' => (bool) ($data['require_variance_approval'] ?? false),
             ]);
 
             // Get products to include in the audit
@@ -181,6 +182,8 @@ final class StockAuditService
 
             $lockedItem->forceFill([
                 'count_sequence' => (int) $lockedItem->count_sequence + 1,
+                'review_status' => $locked->require_variance_approval && $countedQuantity !== $lockedItem->system_quantity ? 'pending' : 'not_required',
+                'review_revision' => null, 'reviewed_by' => null, 'reviewer_name' => null, 'reviewed_at' => null, 'review_notes' => null,
                 'counted_quantity' => $countedQuantity,
                 'discrepancy' => $countedQuantity - $lockedItem->system_quantity,
                 'status' => 'counted',
@@ -244,6 +247,9 @@ final class StockAuditService
 
             $this->assertWarehouseScope($locked);
             $locked->load(['items.product', 'items.variant']);
+            if ($locked->require_variance_approval && $locked->items->contains(fn ($line) => StockAuditReviewService::needsReview($line))) {
+                throw new InvalidStateException('Review all variances and finish requested recounts before completing the audit.', 'unreviewed_variances');
+            }
             Product::where('organization_id', $locked->organization_id)->whereIn('id', $locked->items->pluck('product_id')->unique())->orderBy('id')->lockForUpdate()->get();
 
             $uncounted = $locked->items->whereNull('counted_quantity')->count();

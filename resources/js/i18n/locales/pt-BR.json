@@ -1,4 +1,23 @@
 {
+  "auditReview": {
+    "required": "Exigir aprovação das divergências",
+    "hint": "As divergências precisam de revisão antes da conclusão do inventário.",
+    "pending": "Aguardando revisão",
+    "approved": "Aprovado",
+    "recount_requested": "Nova contagem solicitada",
+    "not_required": "Sem revisão necessária",
+    "approve": "Aprovar contagem",
+    "requestRecount": "Solicitar nova contagem",
+    "notes": "Notas da revisão",
+    "remaining": "Revisões ou novas contagens necessárias: {count}.",
+    "errors": {
+      "state": "Esta contagem não pode ser revisada no estado atual.",
+      "stale": "A contagem mudou. Atualize e revise o valor mais recente.",
+      "decided": "Esta contagem já foi revisada.",
+      "self": "Outro supervisor deve aprovar sua contagem.",
+      "failed": "Não foi possível salvar a revisão. Atualize e tente novamente."
+    }
+  },
   "stockReset": {
     "title": "Zerar estoque",
     "hint": "Zera o estoque de toda a organização, incluindo produtos inativos e excluídos. Produtos, pedidos e histórico são mantidos. Seriais disponíveis recebem baixa e os saldos dos lotes ficam em zero.",

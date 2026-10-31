@@ -1,4 +1,23 @@
 {
+  "auditReview": {
+    "required": "要求审批差异",
+    "hint": "完成盘点前必须审核差异。",
+    "pending": "等待审核",
+    "approved": "已批准",
+    "recount_requested": "已要求重新盘点",
+    "not_required": "无需审核",
+    "approve": "批准盘点",
+    "requestRecount": "要求重新盘点",
+    "notes": "审核备注",
+    "remaining": "需要审核或重新盘点：{count}。",
+    "errors": {
+      "state": "当前状态无法审核此盘点。",
+      "stale": "盘点已更改。请刷新后审核最新值。",
+      "decided": "此盘点已审核。",
+      "self": "您的盘点必须由另一位主管批准。",
+      "failed": "无法保存审核。请刷新后重试。"
+    }
+  },
   "stockReset": {
     "title": "将库存重置为零",
     "hint": "重置整个组织的库存，包括停用和已删除的商品。保留商品、订单及历史记录。可用序列号将核销，批次余额将归零。",

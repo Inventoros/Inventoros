@@ -24,6 +24,7 @@ final class UpdateStockAuditRequest extends FormRequest
             'audit_type' => 'required|in:full,cycle,spot',
             'warehouse_location_id' => 'nullable|exists:product_locations,id',
             'notes' => 'nullable|string|max:2000',
+            'require_variance_approval' => ['sometimes', 'boolean'],
         ];
     }
 }

@@ -1,4 +1,23 @@
 {
+  "auditReview": {
+    "required": "Richiedi approvazione delle differenze",
+    "hint": "Le differenze devono essere verificate prima di completare l’inventario.",
+    "pending": "In attesa di verifica",
+    "approved": "Approvato",
+    "recount_requested": "Nuovo conteggio richiesto",
+    "not_required": "Nessuna verifica necessaria",
+    "approve": "Approva conteggio",
+    "requestRecount": "Richiedi nuovo conteggio",
+    "notes": "Note di verifica",
+    "remaining": "Verifiche o nuovi conteggi necessari: {count}.",
+    "errors": {
+      "state": "Questo conteggio non può essere verificato nello stato attuale.",
+      "stale": "Il conteggio è cambiato. Aggiorna e verifica l’ultimo valore.",
+      "decided": "Questo conteggio è già stato verificato.",
+      "self": "Un altro supervisore deve approvare il tuo conteggio.",
+      "failed": "Impossibile salvare la verifica. Aggiorna e riprova."
+    }
+  },
   "stockReset": {
     "title": "Azzera scorte",
     "hint": "Azzera le scorte dell’intera organizzazione, inclusi i prodotti inattivi ed eliminati. Prodotti, ordini e cronologia vengono conservati. I seriali disponibili vengono scaricati e i lotti azzerati.",

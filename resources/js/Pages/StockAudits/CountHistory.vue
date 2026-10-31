@@ -5,8 +5,9 @@ import AppLayout from '@/Layouts/AppLayout.vue';
 import PageHeader from '@/Components/ui/PageHeader.vue';
 import Card from '@/Components/ui/Card.vue';
 import { displayDateTime } from '@/lib/dates';
+import StockAuditReviewEvidence from '@/Components/StockAuditReviewEvidence.vue';
 
-defineProps({ audit: Object, item: Object, counts: Object });
+defineProps({ audit: Object, item: Object, counts: Object, reviews: Object });
 const { t } = useI18n();
 const heading = 'whitespace-nowrap px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-text-tertiary';
 </script>
@@ -32,6 +33,7 @@ const heading = 'whitespace-nowrap px-5 py-3 text-left text-xs font-semibold upp
                         <dt class="text-text-secondary">{{ t('stockAudits.columns.discrepancy') }}</dt><dd class="text-right tabular-nums text-text-secondary">{{ count.discrepancy }}</dd>
                     </dl>
                     <p class="whitespace-pre-wrap break-words text-text-secondary">{{ count.notes || '-' }}</p>
+                    <StockAuditReviewEvidence :review="reviews?.[`count-${count.sequence}`]" />
                 </li>
                 <li v-if="!counts.data.length" class="p-5 text-center text-sm text-text-tertiary">{{ t('stockAudits.history.empty') }}</li>
             </ul>
@@ -52,7 +54,7 @@ const heading = 'whitespace-nowrap px-5 py-3 text-left text-xs font-semibold upp
                         <td class="px-5 py-4 tabular-nums text-text-secondary">{{ count.system_quantity }}</td>
                         <td class="px-5 py-4 tabular-nums text-text-primary">{{ count.counted_quantity }}</td>
                         <td class="px-5 py-4 tabular-nums text-text-secondary">{{ count.discrepancy }}</td>
-                        <td class="min-w-48 max-w-md whitespace-pre-wrap break-words px-5 py-4 text-text-secondary">{{ count.notes || '-' }}</td>
+                        <td class="min-w-48 max-w-md whitespace-pre-wrap break-words px-5 py-4 text-text-secondary">{{ count.notes || '-' }}<StockAuditReviewEvidence :review="reviews?.[`count-${count.sequence}`]" /></td>
                     </tr>
                     <tr v-if="!counts.data.length"><td colspan="7" class="px-5 py-10 text-center text-text-tertiary">{{ t('stockAudits.history.empty') }}</td></tr></tbody>
                 </table>

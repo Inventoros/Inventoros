@@ -1,4 +1,23 @@
 {
+  "auditReview": {
+    "required": "Freigabe von Abweichungen verlangen",
+    "hint": "Abweichungen müssen vor Abschluss der Inventur geprüft werden.",
+    "pending": "Prüfung ausstehend",
+    "approved": "Freigegeben",
+    "recount_requested": "Nachzählung angefordert",
+    "not_required": "Keine Prüfung erforderlich",
+    "approve": "Zählung freigeben",
+    "requestRecount": "Nachzählung anfordern",
+    "notes": "Prüfnotizen",
+    "remaining": "Prüfung oder Nachzählung erforderlich: {count}.",
+    "errors": {
+      "state": "Diese Zählung kann im aktuellen Zustand nicht geprüft werden.",
+      "stale": "Die Zählung wurde geändert. Aktualisieren und prüfen Sie den neuesten Wert.",
+      "decided": "Diese Zählung wurde bereits geprüft.",
+      "self": "Eine andere Aufsichtsperson muss Ihre Zählung freigeben.",
+      "failed": "Die Prüfung konnte nicht gespeichert werden. Aktualisieren und erneut versuchen."
+    }
+  },
   "stockReset": {
     "title": "Bestand auf null setzen",
     "hint": "Setzt den Bestand der gesamten Organisation zurück, einschließlich inaktiver und gelöschter Produkte. Produkte, Aufträge und Historie bleiben erhalten. Verfügbare Seriennummern werden ausgebucht und Chargenbestände auf null gesetzt.",

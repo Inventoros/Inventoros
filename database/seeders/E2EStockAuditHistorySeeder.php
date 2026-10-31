@@ -32,7 +32,8 @@ final class E2EStockAuditHistorySeeder extends Seeder
                 'name' => 'History fixture product', 'stock' => 5, 'price' => 10, 'currency' => 'USD',
                 'min_stock' => 0, 'is_active' => true]);
             $audit = StockAudit::create(['organization_id' => $actor->organization_id, 'audit_number' => 'E2E-HISTORY-'.$id,
-                'name' => 'Count history browser fixture', 'audit_type' => 'spot', 'status' => 'in_progress', 'created_by' => $actor->id]);
+                'name' => 'Count history browser fixture', 'audit_type' => 'spot', 'status' => 'in_progress', 'created_by' => $actor->id,
+                'require_variance_approval' => filter_var(env('E2E_AUDIT_REVIEW', false), FILTER_VALIDATE_BOOL)]);
             $item = $audit->items()->create(['product_id' => $product->id, 'system_quantity' => $product->stock, 'status' => 'pending']);
             app(StockAuditService::class)->recordCount($audit, $item, $actor, 3, 'First pass');
 

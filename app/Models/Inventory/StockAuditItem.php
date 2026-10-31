@@ -58,6 +58,8 @@ class StockAuditItem extends Model
             'discrepancy' => 'integer',
             'counted_at' => 'datetime',
             'count_sequence' => 'integer',
+            'recount_generation' => 'integer',
+            'reviewed_at' => 'datetime',
         ];
     }
 
@@ -77,6 +79,9 @@ class StockAuditItem extends Model
         // distinguish even identical recounts within the same second.
         if ($this->count_sequence > 0) {
             $evidence[] = $this->count_sequence;
+        }
+        if ($this->recount_generation > 0) {
+            $evidence[] = ['recount_generation' => $this->recount_generation];
         }
 
         return hash('sha256', json_encode($evidence, JSON_THROW_ON_ERROR));
