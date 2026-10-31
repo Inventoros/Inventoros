@@ -135,7 +135,7 @@ class PurchaseOrderController extends Controller
             abort(403, 'Unauthorized action.');
         }
 
-        $purchaseOrder->load(['supplier', 'creator', 'items.product', 'items.variant', 'approver', 'approvalRequester']);
+        $purchaseOrder->load(['supplier', 'creator', 'items.product', 'items.variant', 'items.receivingLocation.warehouse', 'approver', 'approvalRequester']);
 
         return Inertia::render('PurchaseOrders/Show', [
             'purchaseOrder' => $purchaseOrder,
@@ -159,7 +159,6 @@ class PurchaseOrderController extends Controller
      *
      * @param  Request  $request  The incoming HTTP request
      * @param  PurchaseOrder  $purchaseOrder  The purchase order to edit
-     * @return Response|RedirectResponse
      */
     public function edit(Request $request, PurchaseOrder $purchaseOrder): Response|RedirectResponse
     {
@@ -180,7 +179,7 @@ class PurchaseOrderController extends Controller
             ->where('is_active', true)
             ->get(['id', 'name', 'currency', 'payment_terms']);
 
-        $purchaseOrder->load('items.variant');
+        $purchaseOrder->load(['items.variant', 'items.receivingLocation.warehouse']);
 
         $products = $this->formProducts(
             $organizationId,
@@ -267,7 +266,6 @@ class PurchaseOrderController extends Controller
      *
      * @param  Request  $request  The incoming HTTP request
      * @param  PurchaseOrder  $purchaseOrder  The purchase order to receive items for
-     * @return Response|RedirectResponse
      */
     public function receive(Request $request, PurchaseOrder $purchaseOrder): Response|RedirectResponse
     {
@@ -282,7 +280,7 @@ class PurchaseOrderController extends Controller
                 ->with('error', 'This purchase order cannot receive items.');
         }
 
-        $purchaseOrder->load(['supplier', 'items.product', 'items.variant']);
+        $purchaseOrder->load(['supplier', 'items.product', 'items.variant', 'items.receivingLocation.warehouse']);
 
         return Inertia::render('PurchaseOrders/Receive', [
             'purchaseOrder' => $purchaseOrder,

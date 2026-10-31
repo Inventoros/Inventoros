@@ -40,6 +40,7 @@ const form = useForm({
         product_variant_id: item.product_variant_id ?? null,
         product_name: item.product_name,
         sku: item.sku,
+        receiving_location: item.receiving_location,
         quantity: item.quantity_ordered,
         unit_cost: item.unit_cost,
         supplier_sku: item.supplier_sku || '',
@@ -319,6 +320,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                         <div class="grid grid-cols-1 gap-3 md:grid-cols-12">
                             <div class="md:col-span-4">
                                 <p class="text-sm font-medium text-text-primary">{{ item.product_name }}</p>
+                                <p v-if="item.receiving_location" class="text-xs text-text-secondary">{{ t('variantReplenishment.receiveAt', { location: item.receiving_location.name, warehouse: item.receiving_location.warehouse?.name }) }}</p>
                                 <p class="text-xs text-text-tertiary">SKU: {{ item.sku || '-' }}</p>
                                 <p class="text-xs text-text-tertiary">{{ t('purchaseOrders.create.supplierSku') }}: {{ item.supplier_sku || '-' }}</p>
                                 <template v-if="productFor(item.product_id)?.has_variants">

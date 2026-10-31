@@ -30,6 +30,7 @@ const form = useForm({
         variant_title: item.variant?.title ?? null,
         product_name: item.product_name,
         sku: item.sku,
+        receiving_location: item.receiving_location,
         quantity_ordered: item.quantity_ordered,
         quantity_received: item.quantity_received,
         remaining: item.quantity_ordered - item.quantity_received,
@@ -199,6 +200,7 @@ const thClassCenter = 'px-4 py-2.5 text-center text-xs font-medium tracking-tigh
                                 >
                                     <td class="min-w-[12rem] px-4 py-3 text-sm text-text-primary">
                                         {{ item.product_name }}
+                                        <span v-if="item.receiving_location" class="block text-xs text-text-secondary">{{ t('variantReplenishment.receiveAt', { location: item.receiving_location.name, warehouse: item.receiving_location.warehouse?.name }) }}</span>
                                         <span v-if="item.variant_title" class="block text-xs text-text-secondary">{{ t('orders.create.variant') }}: {{ item.variant_title }}</span>
                                     </td>
                                     <td class="whitespace-nowrap px-4 py-3 text-sm text-text-tertiary">

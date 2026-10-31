@@ -70,6 +70,7 @@ jobs:
             e2e/tests/stock-audit-history.spec.ts \
             e2e/tests/audit-review.spec.ts \
             e2e/tests/audit-pagination.spec.ts \
+            e2e/tests/variant-replenishment.spec.ts \
             --project=setup --project=chromium
         env:
           CI: true

@@ -4016,5 +4016,30 @@
       "today": "Bugün doluyor",
       "upcoming": "Yaklaşıyor"
     }
+  },
+  "variantReplenishment": {
+    "title": "Varyant ikmali",
+    "description": "Depo stok hedeflerini belirleyin ve varyantlar için taslak satın alma siparişleri oluşturun.",
+    "add": "İkmal kuralı ekle",
+    "variant": "Varyant",
+    "point": "Yeniden sipariş noktası",
+    "target": "Hedef stok",
+    "multiple": "Sipariş katı (isteğe bağlı)",
+    "minimum": "Asgari sipariş miktarı",
+    "on_hand": "Mevcut",
+    "incoming": "Gelen",
+    "position": "Stok pozisyonu",
+    "suggested_quantity": "Önerilen sipariş",
+    "receiveAt": "Teslim alma: {warehouse} / {location}",
+    "automatic": "Her gün otomatik taslak oluştur",
+    "manual": "Yalnızca elle taslak oluştur",
+    "unavailable": "Bu kuralın varyantını, tedarikçisini, para birimini veya teslim alma yerini inceleyin.",
+    "draft": "Taslak sipariş oluştur",
+    "confirmDelete": "Bu kural silinsin mi? Mevcut siparişler korunacaktır.",
+    "searchVariant": "Varyant ara",
+    "searchLocation": "Konum ara",
+    "searchSupplier": "Tedarikçi ara",
+    "loadOptions": "Seçenekleri ara",
+    "optionsError": "Seçenekler yüklenemedi. Yeniden deneyin."
   }
 }

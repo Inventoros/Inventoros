@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace App\Models\Purchasing;
 
+use App\Exceptions\InvalidStateException;
 use App\Models\Inventory\Product;
+use App\Models\Inventory\ProductLocation;
 use App\Models\Inventory\ProductVariant;
 use App\Models\Inventory\StockAdjustment;
 use App\Models\Inventory\SupplierPriceHistory;
 use App\Models\Scopes\OrganizationScope;
+use App\Models\Warehouse;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
@@ -74,6 +77,8 @@ class PurchaseOrderItem extends Model
         'total',
         'notes',
         'metadata',
+        'replenishment_policy_id',
+        'receiving_location_id',
     ];
 
     protected $casts = [
@@ -116,6 +121,27 @@ class PurchaseOrderItem extends Model
     public function variant(): BelongsTo
     {
         return $this->belongsTo(ProductVariant::class, 'product_variant_id');
+    }
+
+    public function receivingLocation(): BelongsTo
+    {
+        return $this->belongsTo(ProductLocation::class, 'receiving_location_id')->withTrashed();
+    }
+
+    public function receivingLocationId(): ?int
+    {
+        if ($this->receiving_location_id === null) {
+            return $this->product?->location_id;
+        }
+        $org = (int) $this->purchaseOrder->organization_id;
+        $location = ProductLocation::withoutGlobalScope(OrganizationScope::class)->where('organization_id', $org)
+            ->active()->find($this->receiving_location_id);
+        if ($location === null || ($location->warehouse_id !== null && ! Warehouse::withoutGlobalScope(OrganizationScope::class)
+            ->where('organization_id', $org)->where('is_active', true)->whereKey($location->warehouse_id)->exists())) {
+            throw new InvalidStateException('The designated receiving location is no longer available. Review the purchase order before receiving it.', 'invalid_receiving_location');
+        }
+
+        return (int) $location->id;
     }
 
     /**
@@ -193,6 +219,8 @@ class PurchaseOrderItem extends Model
             return null;
         }
 
+        $receivingLocationId = $this->receivingLocationId();
+
         // Update received quantity
         $this->quantity_received += $quantityToReceive;
         $this->save();
@@ -209,6 +237,7 @@ class PurchaseOrderItem extends Model
                 reason: "PO {$purchaseOrder->po_number} received",
                 notes: $this->notes,
                 reference: $purchaseOrder,
+                locationId: $receivingLocationId,
             );
 
             $this->recordSupplierCost($purchaseOrder);
@@ -230,7 +259,7 @@ class PurchaseOrderItem extends Model
             // Book the received goods into the product's location so the
             // per-location breakdown rises with the total instead of drifting
             // into "unassigned". Null location -> total only (adjust() skips it).
-            locationId: $this->product->location_id,
+            locationId: $receivingLocationId,
         );
 
         $this->recordSupplierCost($purchaseOrder);

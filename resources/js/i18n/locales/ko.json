@@ -4016,5 +4016,30 @@
       "today": "오늘 만료",
       "upcoming": "예정"
     }
+  },
+  "variantReplenishment": {
+    "title": "변형 상품 보충",
+    "description": "창고별 목표 재고를 설정하고 변형 상품별 구매 주문 초안을 만드세요.",
+    "add": "보충 규칙 추가",
+    "variant": "변형 상품",
+    "point": "재주문 시점",
+    "target": "목표 재고",
+    "multiple": "주문 배수 (선택)",
+    "minimum": "최소 주문 수량",
+    "on_hand": "보유 재고",
+    "incoming": "입고 예정",
+    "position": "재고 포지션",
+    "suggested_quantity": "권장 주문",
+    "receiveAt": "입고 위치: {warehouse} / {location}",
+    "automatic": "매일 자동으로 초안 생성",
+    "manual": "수동 초안만",
+    "unavailable": "이 규칙의 변형 상품, 공급업체, 통화 또는 입고 위치를 확인하세요.",
+    "draft": "주문 초안 생성",
+    "confirmDelete": "이 규칙을 삭제할까요? 기존 주문은 유지됩니다.",
+    "searchVariant": "변형 상품 검색",
+    "searchLocation": "위치 검색",
+    "searchSupplier": "공급업체 검색",
+    "loadOptions": "선택 항목 검색",
+    "optionsError": "항목을 불러오지 못했습니다. 다시 시도하세요."
   }
 }

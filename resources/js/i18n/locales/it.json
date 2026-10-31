@@ -4016,5 +4016,30 @@
       "today": "Scade oggi",
       "upcoming": "In scadenza"
     }
+  },
+  "variantReplenishment": {
+    "title": "Riassortimento varianti",
+    "description": "Imposta gli obiettivi per magazzino e crea bozze di ordini per le singole varianti.",
+    "add": "Aggiungi regola",
+    "variant": "Variante",
+    "point": "Punto di riordino",
+    "target": "Scorta obiettivo",
+    "multiple": "Multiplo ordine (facoltativo)",
+    "minimum": "Quantità minima",
+    "on_hand": "Disponibile",
+    "incoming": "In arrivo",
+    "position": "Posizione scorte",
+    "suggested_quantity": "Ordine suggerito",
+    "receiveAt": "Ricevi in {warehouse} / {location}",
+    "automatic": "Crea bozze automaticamente ogni giorno",
+    "manual": "Solo bozze manuali",
+    "unavailable": "Verifica variante, fornitore, valuta o destinazione di ricezione della regola.",
+    "draft": "Crea bozza ordine",
+    "confirmDelete": "Eliminare la regola? Gli ordini esistenti saranno conservati.",
+    "searchVariant": "Cerca varianti",
+    "searchLocation": "Cerca ubicazioni",
+    "searchSupplier": "Cerca fornitori",
+    "loadOptions": "Cerca opzioni",
+    "optionsError": "Impossibile caricare le opzioni. Riprova."
   }
 }

@@ -201,7 +201,7 @@ final class WarehouseAccessService
             ->get();
 
         foreach ($lines as $line) {
-            $this->authorizeLocation($user, $line->product?->location_id);
+            $this->authorizeLocation($user, $line->receivingLocationId());
         }
     }
 

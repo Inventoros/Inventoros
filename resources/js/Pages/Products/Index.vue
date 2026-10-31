@@ -230,6 +230,7 @@ const thClass =
 
         <PageHeader :title="t('products.title')" :description="t('products.subtitle')">
             <template #actions>
+                <Button v-if="canVisit('variant-replenishment.index')" variant="secondary" size="sm" as="Link" :href="route('variant-replenishment.index')">{{ t('variantReplenishment.title') }}</Button>
                 <Button v-if="canResetStock" variant="secondary" size="sm" as="Link" :href="route('products.stock-reset.preview')">{{ t('stockReset.title') }}</Button>
                 <Button v-if="canVisit('products.create')" variant="default" size="sm" as="Link" :href="route('products.create')">
                     <Plus :size="14" />

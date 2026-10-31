@@ -4016,5 +4016,30 @@
       "today": "Wygasa dzisiaj",
       "upcoming": "Nadchodzący termin"
     }
+  },
+  "variantReplenishment": {
+    "title": "Uzupełnianie wariantów",
+    "description": "Ustaw docelowe zapasy w magazynach i twórz projekty zamówień dla wariantów.",
+    "add": "Dodaj regułę",
+    "variant": "Wariant",
+    "point": "Próg zamówienia",
+    "target": "Zapas docelowy",
+    "multiple": "Wielokrotność zamówienia (opcjonalnie)",
+    "minimum": "Minimalna ilość",
+    "on_hand": "Na stanie",
+    "incoming": "W drodze",
+    "position": "Pozycja zapasów",
+    "suggested_quantity": "Sugerowane zamówienie",
+    "receiveAt": "Odbiór w {warehouse} / {location}",
+    "automatic": "Automatycznie twórz projekty codziennie",
+    "manual": "Tylko projekty ręczne",
+    "unavailable": "Sprawdź wariant, dostawcę, walutę lub miejsce odbioru tej reguły.",
+    "draft": "Utwórz projekt zamówienia",
+    "confirmDelete": "Usunąć regułę? Istniejące zamówienia zostaną zachowane.",
+    "searchVariant": "Szukaj wariantów",
+    "searchLocation": "Szukaj lokalizacji",
+    "searchSupplier": "Szukaj dostawców",
+    "loadOptions": "Szukaj opcji",
+    "optionsError": "Nie można wczytać opcji. Spróbuj ponownie."
   }
 }
