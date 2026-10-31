@@ -43,6 +43,7 @@ Full release notes, with the pull request behind each change, are on [GitHub Rel
 
 ### Fixed
 
+- Update follow-redirects to 1.16.2 to address [GHSA-mrwp-f3q8-3g9p](https://github.com/advisories/GHSA-mrwp-f3q8-3g9p) in sensitive-header handling across redirects.
 - Update Symfony Mime to 8.1.10 to address [CVE-2026-45070](https://symfony.com/cve-2026-45070), which affects MIME header parameter-name validation.
 - Restored the Log Out button in the authenticated sidebar, including the mobile navigation drawer and accounts with restricted permissions.
 - Customer, supplier and purchase order forms default to the saved organization currency. Currency selectors also include all supported currencies and preserve existing record currencies; customer and supplier creation through the API and imports use the organization default when no currency is supplied.
