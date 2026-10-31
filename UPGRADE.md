@@ -1,5 +1,36 @@
 # Upgrade Guide
 
+## Upgrading from v2.0.0 to v2.1.0
+
+The 2.1.0 release is being prepared. Use the final tagged artifact after it is
+published. Review the [release notes](docs/releases/2.1.0.md) and
+[deployment checklist](docs/releases/2.1.0-checklist.md) before updating.
+
+1. Test the upgrade against a restored database and copied files in staging.
+   Back up the database, `.env`, uploads and installed plugins; pause external
+   stock integrations and drain active inventory work before maintenance.
+2. Replace application files and compiled assets using the chosen release
+   package or pinned container image. Preserve `.env`, uploads and installed
+   plugins, and keep the same `APP_KEY` so stored credentials remain readable.
+3. Clear old caches, preview migrations with `php artisan migrate --pretend
+   --force`, then run `php artisan migrate --force` and rebuild application
+   caches. Source deployments should install from the lockfiles with
+   `composer install --no-dev --optimize-autoloader` and `npm ci`, then build
+   frontend and installed plugin assets according to their deployment process.
+4. Restart long-lived queue workers and ensure `php artisan schedule:run` runs
+   every minute. The scheduler drains the dedicated inventory-reset queue;
+   installations using a separate reset worker need its documented timeout and
+   shutdown grace period. See [administrator stock reset](docs/ADMIN_STOCK_RESET.md).
+5. Run the staging smoke checks in the checklist before reopening inventory
+   writes and resuming integrations. Existing audits keep variance approval
+   disabled; automatic variant replenishment is also disabled until configured.
+
+New migrations add inventory, audit evidence and replenishment structures.
+Keep the pre-upgrade database and file backup together. If rollback is needed,
+restore that pair and the previous application artifact while writers and
+workers remain stopped; do not use blanket migration rollback as a substitute
+for restoring inventory data.
+
 ## Upgrading from v1.0.x to v2.0.0
 
 v2.0.0 is a major release: MCP tool names, the plugin asset path, access to `/docs/api` and the license all change. Read this whole section before you start. The full list of changes is in [CHANGELOG.md](CHANGELOG.md).

@@ -58,7 +58,9 @@ COPY vite.config.js jsconfig.json ./
 COPY resources ./resources
 COPY plugins ./plugins
 COPY public ./public
-RUN npm run build
+RUN npm run build \
+    && npm run build:plugin:hello-world \
+    && npm run build:plugin:tax-billing
 
 ############################################
 # Composer dependencies (production only)
@@ -119,6 +121,8 @@ COPY --chmod=755 docker/healthcheck.sh /usr/local/bin/inventoros-healthcheck
 COPY --chown=app:app . /app
 COPY --from=vendor --chown=app:app /app/vendor /app/vendor
 COPY --from=assets --chown=app:app /app/public/build /app/public/build
+COPY --from=assets --chown=app:app /app/plugins/hello-world/dist /app/plugins/hello-world/dist
+COPY --from=assets --chown=app:app /app/plugins/tax-billing/dist /app/plugins/tax-billing/dist
 
 RUN set -eux; \
     rm -rf tests e2e screenshots docs node_modules docker-compose*.yml playwright.config.ts; \
