@@ -16,6 +16,7 @@ test('warehouse balances sort with column-named controls and preserve filters', 
     await expect(table.getByRole('columnheader').filter({ has: page.getByRole('button', { name: 'Available', exact: true }) })).toHaveAttribute('aria-sort', 'ascending');
     await table.getByRole('button', { name: 'Available', exact: true }).click();
     await expect(page).toHaveURL(/sort_dir=desc/);
+    await page.locator('.table-filters > summary').click();
     await expect(page.getByRole('checkbox', { name: 'Include zero balances' })).toBeChecked();
 });
 

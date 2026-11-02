@@ -5,10 +5,8 @@ namespace Tests\Feature;
 use Tests\TestCase;
 
 /**
- * Two small layout defects that no PHP test can reach, pinned at the source.
- *
- * There is no JS test runner in this project, and both of these are the kind
- * of thing that silently regresses on the next edit to the file.
+ * Source-level layout contracts, complemented by the Vue template audit
+ * and browser tests for scrolling, full-table views and mobile controls.
  */
 class MobileLayoutMarkupTest extends TestCase
 {
@@ -75,7 +73,7 @@ class MobileLayoutMarkupTest extends TestCase
         $page = $this->source('Pages/PurchaseOrders/Show.vue');
 
         $this->assertMatchesRegularExpression('/<ul class="[^"]*sm:hidden[^"]*"[^>]*>\s*<li\s+v-for="item in purchaseOrder\.items"/', $page);
-        $this->assertMatchesRegularExpression('/<div class="(?=[^"]*hidden)(?=[^"]*sm:block)(?=[^"]*overflow-x-auto)[^"]*">\s*<table/', $page);
+        $this->assertMatchesRegularExpression('/<TableViewport\b[^>]*class="(?=[^"]*hidden)(?=[^"]*sm:block)(?=[^"]*overflow-x-auto)[^"]*"[^>]*>\s*<table/', $page);
     }
 
     /**
@@ -124,10 +122,10 @@ class MobileLayoutMarkupTest extends TestCase
     {
         $header = $this->source('Components/ui/PageHeader.vue');
 
-        $this->assertStringContainsString('<header class="flex flex-wrap', $header);
+        $this->assertMatchesRegularExpression('/<header\b[^>]*class="(?=[^"]*\bflex\b)(?=[^"]*\bflex-wrap\b)[^"]*"/s', $header);
         $this->assertStringContainsString('flex-[1_1_16rem]', $header);
-        $this->assertMatchesRegularExpression('/v-if="\$slots\.actions" class="[^"]*\bflex-wrap\b/', $header);
-        $this->assertDoesNotMatchRegularExpression('/v-if="\$slots\.actions" class="[^"]*\bshrink-0\b/', $header);
+        $this->assertMatchesRegularExpression('/v-if="\$slots\.actions"[^>]*class="[^"]*\bflex-wrap\b/s', $header);
+        $this->assertDoesNotMatchRegularExpression('/v-if="\$slots\.actions"[^>]*class="[^"]*\bshrink-0\b/s', $header);
     }
 
     /**
