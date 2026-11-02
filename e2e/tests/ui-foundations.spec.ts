@@ -112,3 +112,12 @@ test('switching language updates table headings without navigating away', async 
     await page.locator('[role="option"][lang="en"]').click();
     await expect(page.getByRole('columnheader', { name: 'Customer', exact: true })).toBeVisible();
 });
+
+test('numeric product headings and cells align to the end of their columns', async ({ page }) => {
+    await page.goto('/products');
+    for (const name of ['Stock', 'Price']) {
+        await expect(page.getByRole('columnheader', { name, exact: true })).toHaveCSS('text-align', 'end');
+    }
+    await expect(page.locator('tbody tr').first().locator('td').nth(5)).toHaveCSS('text-align', 'end');
+    await expect(page.locator('tbody tr').first().locator('td').nth(6)).toHaveCSS('text-align', 'end');
+});

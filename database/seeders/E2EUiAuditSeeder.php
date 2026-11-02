@@ -80,7 +80,9 @@ final class E2EUiAuditSeeder extends Seeder
             $routes[] = ['name' => $route['name'], 'url' => '/'.$uri, 'pages' => $route['pages']];
         }
         // Invokable controllers and conditional pages need explicit coverage.
-        $routes[] = ['name' => 'reports.batch-expiry', 'url' => '/reports/batch-expiry', 'pages' => ['Reports/BatchExpiry']];
+        if (! in_array('reports.batch-expiry', array_column($routes, 'name'), true)) {
+            $routes[] = ['name' => 'reports.batch-expiry', 'url' => '/reports/batch-expiry', 'pages' => ['Reports/BatchExpiry']];
+        }
         $routes[] = ['name' => 'returns.create.with-order', 'url' => '/returns/create?order_id='.$layout['order'], 'pages' => ['Returns/Create']];
         file_put_contents(base_path('e2e/.auth/ui-audit.json'), json_encode(['routes' => $routes, 'excluded' => $excluded, 'layout' => $layout, 'states' => ['unverified' => $unverified->email, 'mfa' => $mfa->email, 'password' => $password, 'invitation' => $invitation]], JSON_PRETTY_PRINT));
     }

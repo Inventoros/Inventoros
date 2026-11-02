@@ -969,7 +969,8 @@
       "name": "returns.create",
       "uri": "returns/create",
       "pages": [
-        "Returns/Create"
+        "Returns/Create",
+        "Returns/SelectOrder"
       ],
       "middleware": [
         "web",
@@ -1499,17 +1500,48 @@
         "Illuminate\\Auth\\Middleware\\Authenticate",
         "App\\Http\\Middleware\\CheckPermission:manage_stock"
       ]
+    },
+    {
+      "name": "verification.notice",
+      "uri": "verify-email",
+      "pages": [
+        "Auth/VerifyEmail"
+      ],
+      "middleware": [
+        "web",
+        "Illuminate\\Auth\\Middleware\\Authenticate"
+      ]
+    },
+    {
+      "name": "portal.dashboard",
+      "uri": "portal/{organization}",
+      "pages": [
+        "Portal/Dashboard"
+      ],
+      "middleware": [
+        "portal",
+        "App\\Http\\Middleware\\Portal\\AuthenticatePortalContact"
+      ]
+    },
+    {
+      "name": "reports.batch-expiry",
+      "uri": "reports/batch-expiry",
+      "pages": [
+        "Reports/BatchExpiry"
+      ],
+      "middleware": [
+        "web",
+        "Illuminate\\Auth\\Middleware\\Authenticate",
+        "App\\Http\\Middleware\\CheckPermission:view_reports",
+        "App\\Http\\Middleware\\CheckPermission:view_products"
+      ]
     }
   ],
   "unmapped_templates": [
-    "Auth/VerifyEmail",
     "Errors/403",
-    "Portal/Dashboard",
     "Profile/Partials/DeleteUserForm",
     "Profile/Partials/UpdatePasswordForm",
     "Profile/Partials/UpdateProfileInformationForm",
-    "Reports/BatchExpiry",
-    "Returns/SelectOrder",
     "Settings/Partials/EmailConfiguration",
     "Settings/Partials/NotificationPreferences"
   ],
@@ -1686,5 +1718,27 @@
     "resources/js/Pages/Settings/ApiTokens/Index.vue",
     "resources/js/Pages/Settings/Webhooks/Index.vue",
     "resources/js/Pages/Settings/Webhooks/Show.vue"
-  ]
+  ],
+  "conditional_error_templates": [
+    "Errors/403"
+  ],
+  "embedded_partials": [
+    "Profile/Partials/DeleteUserForm",
+    "Profile/Partials/UpdatePasswordForm",
+    "Profile/Partials/UpdateProfileInformationForm",
+    "Settings/Partials/EmailConfiguration",
+    "Settings/Partials/NotificationPreferences"
+  ],
+  "bundled_plugin_templates": [
+    "plugins/hello-world/ui/src/HelloWorldBanner.vue",
+    "plugins/hello-world/ui/src/HelloWorldPage.vue",
+    "plugins/hello-world/ui/src/HelloWorldTab.vue",
+    "plugins/hello-world/ui/src/HelloWorldWidget.vue",
+    "plugins/tax-billing/ui/src/CustomerFields.vue",
+    "plugins/tax-billing/ui/src/CustomerTaxDetails.vue",
+    "plugins/tax-billing/ui/src/Invoice.vue",
+    "plugins/tax-billing/ui/src/InvoiceLink.vue",
+    "plugins/tax-billing/ui/src/Settings.vue"
+  ],
+  "discovery_note": "Initial source inventory; invokable controllers and conditional return selection normalized during verification. Partials are embedded, and Errors/403 is an exception response. Plugin pages depend on installed plugin state."
 }

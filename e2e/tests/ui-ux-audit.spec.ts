@@ -7,6 +7,8 @@ import { execFileSync } from 'node:child_process';
 // Opt-in evidence sweep, separate from the fast functional regression suite.
 // Violations are recorded rather than hidden by exclusions or disabled rules.
 test.skip(!process.env.UI_UX_AUDIT, 'Run with the disposable UI audit workflow');
+// Keep evidence sweeps bounded: a failed route is recorded once, then fixed.
+test.describe.configure({ retries: 0 });
 const out = path.join(process.cwd(), 'audit-artifacts');
 const widths = [320, 375, 430, 768, 1024, 1440, 1920];
 const locales = ['en', 'es', 'fr', 'de', 'pt-BR', 'it', 'ja', 'ko', 'zh-CN', 'ar', 'ru', 'nl', 'tr', 'pl'];
