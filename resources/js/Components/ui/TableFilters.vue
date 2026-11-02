@@ -15,11 +15,16 @@ const expanded = ref(false);
 const panel = ref(null);
 const activeCount = computed(
     () =>
-        Object.entries(page.props.filters || {}).filter(
-            ([key, value]) =>
-                !['per_page', 'page', 'sort_by', 'sort_dir'].includes(key) &&
-                ![null, undefined, '', 'all', false, 0, '0'].includes(value),
-        ).length,
+        Object.entries(page.props.filters || {}).filter(([key, value]) => {
+            if (['per_page', 'page', 'sort_by', 'sort_dir'].includes(key)
+                || [null, undefined, '', 'all'].includes(value)) return false;
+            // Inertia serializes these switches as both booleans and strings.
+            // A search for the literal word "false" is still a real filter.
+            if (['out_of_stock', 'include_zero', 'low_stock'].includes(key)) {
+                return [true, 1, '1', 'true'].includes(value);
+            }
+            return true;
+        }).length,
 );
 const close = () => {
     expanded.value = false;

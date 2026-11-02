@@ -18,6 +18,7 @@ test('warehouse balances sort with column-named controls and preserve filters', 
     await expect(page).toHaveURL(/sort_dir=desc/);
     await page.locator('.table-filters > summary').click();
     await expect(page.getByRole('checkbox', { name: 'Include zero balances' })).toBeChecked();
+    await expect(page.locator('.table-filter-count')).toHaveText('1');
 });
 
 test('warehouse stock CSV exports the selected search', async ({ page }) => {
