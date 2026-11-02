@@ -22,6 +22,8 @@ const requestClose = () => { if (props.closeable) emit('close'); };
 watch(() => props.show, async (show) => {
     if (show) {
         previousFocus = document.activeElement;
+        const disclosure = previousFocus?.closest('.page-header-actions')?.querySelector('.page-header-action-toggle');
+        if (disclosure?.getClientRects().length) previousFocus = disclosure;
         await nextTick();
         if (!props.show || !surface.value) return;
         const heading = surface.value.querySelector('h1, h2, h3, h4');
@@ -39,7 +41,9 @@ watch(() => props.show, async (show) => {
     } else {
         surface.value?.close();
         release();
-        if (previousFocus?.isConnected) previousFocus.focus({ preventScroll: true });
+        await nextTick();
+        if (previousFocus?.isConnected && previousFocus.getClientRects().length)
+            previousFocus.focus({ preventScroll: true });
     }
 }, { immediate: true, flush: 'post' });
 
