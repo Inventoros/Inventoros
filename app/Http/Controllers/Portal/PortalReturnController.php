@@ -141,7 +141,7 @@ class PortalReturnController extends PortalController
     {
         return redirect()
             ->route('portal.orders.show', ['order' => $order->id])
-            ->with('error', 'Returns can be requested once an order has been delivered.');
+            ->with('error', __('Returns can be requested once an order has been delivered.'));
     }
 
     private function recordRequest(Request $request, ReturnOrder $returnOrder, Order $order): void

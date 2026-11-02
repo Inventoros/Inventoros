@@ -147,7 +147,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                             </label>
                             <div class="relative">
                                 <select
-                                    v-model="form.product_id"
+                                    v-model="form.product_id" :aria-label="t('common.product')"
                                     required
                                     :class="[fieldInput, 'pe-12', { 'border-status-danger': form.errors.product_id }]"
                                 >

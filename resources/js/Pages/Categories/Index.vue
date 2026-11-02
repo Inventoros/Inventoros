@@ -9,7 +9,7 @@ import Card from '@/Components/ui/Card.vue';
 import Button from '@/Components/ui/Button.vue';
 import Badge from '@/Components/ui/Badge.vue';
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import { nextTick, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { Plus, Search, Pencil, Trash2, Tag, X } from '@lucide/vue';
 
@@ -57,8 +57,13 @@ const openEditModal = (category) => {
     showEditModal.value = true;
 };
 
+const focusInvalidField = () => nextTick(() => {
+    document.querySelector('dialog[open] [aria-invalid="true"]')?.focus();
+});
+
 const createCategory = () => {
     categoryForm.post(route('categories.store'), {
+        onError: focusInvalidField,
         onSuccess: () => {
             showCreateModal.value = false;
             Object.assign(categoryForm, { name: '', description: '' });
@@ -68,6 +73,7 @@ const createCategory = () => {
 
 const updateCategory = () => {
     categoryForm.put(route('categories.update', editingCategory.value.id), {
+        onError: focusInvalidField,
         onSuccess: () => {
             showEditModal.value = false;
             editingCategory.value = null;
@@ -233,7 +239,7 @@ const inputClass =
                     </div>
 
                     <form @submit.prevent="createCategory" class="space-y-4">
-                        <div v-if="Object.keys(categoryForm.errors).length" role="alert" class="rounded-md border border-status-danger/25 bg-status-danger-soft p-3 text-sm text-status-danger">
+                        <div v-if="Object.keys(categoryForm.errors).length" :id="fieldIdPrefix + '-errors'" role="alert" class="rounded-md border border-status-danger/25 bg-status-danger-soft p-3 text-sm text-status-danger">
                             <p v-for="(error, field) in categoryForm.errors" :key="field">{{ error }}</p>
                         </div>
                         <div>
@@ -241,7 +247,7 @@ const inputClass =
                                 {{ t('categories.categoryName') }} <span class="text-status-danger">*</span>
                             </label>
                             <input :id="fieldIdPrefix + '-1'"
-                                v-model="categoryForm.name"
+                                v-model="categoryForm.name" :aria-invalid="!!categoryForm.errors.name" :aria-describedby="categoryForm.errors.name ? fieldIdPrefix + '-errors' : undefined"
                                 type="text"
                                 :class="inputClass"
                                 :placeholder="t('categories.namePlaceholder')"
@@ -254,7 +260,7 @@ const inputClass =
                                 {{ t('common.description') }}
                             </label>
                             <textarea :id="fieldIdPrefix + '-2'"
-                                v-model="categoryForm.description"
+                                v-model="categoryForm.description" :aria-invalid="!!categoryForm.errors.description" :aria-describedby="categoryForm.errors.description ? fieldIdPrefix + '-errors' : undefined"
                                 rows="3"
                                 class="w-full rounded-md border border-border-subtle bg-surface-canvas px-3 py-2 text-sm text-text-primary placeholder:text-text-tertiary ds-focus-ring"
                                 :placeholder="t('categories.descPlaceholder')"
@@ -290,7 +296,7 @@ const inputClass =
                     </div>
 
                     <form @submit.prevent="updateCategory" class="space-y-4">
-                        <div v-if="Object.keys(categoryForm.errors).length" role="alert" class="rounded-md border border-status-danger/25 bg-status-danger-soft p-3 text-sm text-status-danger">
+                        <div v-if="Object.keys(categoryForm.errors).length" :id="fieldIdPrefix + '-errors'" role="alert" class="rounded-md border border-status-danger/25 bg-status-danger-soft p-3 text-sm text-status-danger">
                             <p v-for="(error, field) in categoryForm.errors" :key="field">{{ error }}</p>
                         </div>
                         <div>
@@ -298,7 +304,7 @@ const inputClass =
                                 {{ t('categories.categoryName') }} <span class="text-status-danger">*</span>
                             </label>
                             <input :id="fieldIdPrefix + '-3'"
-                                v-model="categoryForm.name"
+                                v-model="categoryForm.name" :aria-invalid="!!categoryForm.errors.name" :aria-describedby="categoryForm.errors.name ? fieldIdPrefix + '-errors' : undefined"
                                 type="text"
                                 :class="inputClass"
                                 required
@@ -310,7 +316,7 @@ const inputClass =
                                 {{ t('common.description') }}
                             </label>
                             <textarea :id="fieldIdPrefix + '-4'"
-                                v-model="categoryForm.description"
+                                v-model="categoryForm.description" :aria-invalid="!!categoryForm.errors.description" :aria-describedby="categoryForm.errors.description ? fieldIdPrefix + '-errors' : undefined"
                                 rows="3"
                                 class="w-full rounded-md border border-border-subtle bg-surface-canvas px-3 py-2 text-sm text-text-primary placeholder:text-text-tertiary ds-focus-ring"
                             ></textarea>

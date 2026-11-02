@@ -43,7 +43,26 @@ test('a rejected category save preserves input and announces the error', async (
     await page.getByRole('button', { name: 'Create Category', exact: true }).click();
     await expect(page.getByRole('alert')).toContainText('255');
     await expect(name).toHaveValue(overlongName);
+    await expect(name).toBeFocused();
     await expect(page.getByRole('button', { name: 'Create Category', exact: true })).toBeEnabled();
+});
+
+test('notification polling does not accumulate across Inertia navigation', async ({ page }) => {
+    await page.clock.install();
+    await page.goto('/dashboard', { waitUntil: 'networkidle' });
+    let polls = 0;
+    page.on('request', request => {
+        if (new URL(request.url()).pathname === '/notifications/unread-count') polls++;
+    });
+    for (const name of ['Inventory', 'Orders', 'Customers']) {
+        await page.locator('aside').getByRole('link', { name, exact: true }).click();
+        await page.waitForLoadState('networkidle');
+    }
+    polls = 0;
+    const nextPoll = page.waitForResponse(response => new URL(response.url()).pathname === '/notifications/unread-count');
+    await page.clock.fastForward(30_001);
+    await nextPoll;
+    expect(polls).toBe(1);
 });
 
 test('language picker supports arrows, Escape, focus restoration and Arabic direction', async ({ page }) => {

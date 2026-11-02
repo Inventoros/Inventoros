@@ -167,7 +167,7 @@ class StockAuditController extends Controller
         $audit = $audits->create($request->user()->organization_id, $request->user(), $request->validated());
 
         return redirect()->route('stock-audits.show', $audit)
-            ->with('success', 'Stock audit created successfully with '.$audit->items()->count().' items.');
+            ->with('success', __('Stock audit created successfully. Items: :count.', ['count' => $audit->items()->count()]));
     }
 
     /**
@@ -213,7 +213,7 @@ class StockAuditController extends Controller
 
         if ($stockAudit->status !== 'draft') {
             return redirect()->route('stock-audits.show', $stockAudit)
-                ->with('error', 'Only draft audits can be edited.');
+                ->with('error', __('Only draft audits can be edited.'));
         }
 
         $organizationId = $request->user()->organization_id;
@@ -252,7 +252,7 @@ class StockAuditController extends Controller
 
         if ($stockAudit->status !== 'draft') {
             return redirect()->route('stock-audits.show', $stockAudit)
-                ->with('error', 'Only draft audits can be edited.');
+                ->with('error', __('Only draft audits can be edited.'));
         }
 
         $validated = $request->validated();
@@ -313,7 +313,7 @@ class StockAuditController extends Controller
 
         if ($stockAudit->status !== 'draft') {
             return redirect()->route('stock-audits.show', $stockAudit)
-                ->with('error', 'Only draft audits can be deleted.');
+                ->with('error', __('Only draft audits can be deleted.'));
         }
 
         $stockAudit->delete();
@@ -343,7 +343,7 @@ class StockAuditController extends Controller
         }
 
         return redirect()->route('stock-audits.show', $stockAudit)
-            ->with('success', 'Stock audit started. System quantities have been recorded.');
+            ->with('success', __('Stock audit started. System quantities have been recorded.'));
     }
 
     /**

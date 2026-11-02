@@ -78,7 +78,7 @@ const columns = [
     { key: 'supplier', label: t('purchaseOrders.supplier') },
     { key: 'order_date', label: t('purchaseOrders.orderDate') },
     { key: 'expected_date', label: t('purchaseOrders.expected') },
-    { key: 'quantity', label: t('common.quantity'), align: 'right' },
+    { key: 'quantity', label: t('common.items'), align: 'right' },
     { key: 'total', label: t('common.total'), align: 'right' },
     { key: 'status', label: t('common.status') },
     { key: 'actions', label: t('common.actions'), align: 'right' },

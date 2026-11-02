@@ -71,7 +71,7 @@ class PortalInvitationController extends Controller
 
         return redirect()
             ->route('portal.dashboard', ['organization' => PortalContext::organization($request)->slug])
-            ->with('success', 'Welcome! Your password is set.');
+            ->with('success', __('Welcome! Your password is set.'));
     }
 
     private function resolve(Request $request, string $contactId): CustomerContact

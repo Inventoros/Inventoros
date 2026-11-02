@@ -1,4 +1,5 @@
 <script setup>
+import Pagination from '@/Components/ui/Pagination.vue';
 import TableViewport from '@/Components/ui/TableViewport.vue';
 import { Head, Link } from '@inertiajs/vue3';
 import { useI18n } from 'vue-i18n';
@@ -59,12 +60,9 @@ const heading = 'whitespace-nowrap px-5 py-3 text-start text-xs font-semibold up
                     </tr>
                     <tr v-if="!counts.data.length"><td colspan="7" class="px-5 py-10 text-center text-text-tertiary">{{ t('stockAudits.history.empty') }}</td></tr></tbody>
                 </table>
+        <template #footer><Pagination :paginator="counts" compact /></template>
         </TableViewport>
-<nav v-if="counts.last_page > 1" :aria-label="t('stockAudits.history.title')" class="flex justify-between border-t border-border-subtle p-4 text-sm">
-                <Link v-if="counts.prev_page_url" :href="counts.prev_page_url" class="text-brand hover:underline">{{ t('common.previous') }}</Link><span v-else />
-                <span class="tabular-nums text-text-secondary">{{ counts.current_page }} / {{ counts.last_page }}</span>
-                <Link v-if="counts.next_page_url" :href="counts.next_page_url" class="text-brand hover:underline">{{ t('common.next') }}</Link><span v-else />
-            </nav>
+<Pagination :paginator="counts" compact class="md:hidden" />
 
         </Card>
     </AppLayout>

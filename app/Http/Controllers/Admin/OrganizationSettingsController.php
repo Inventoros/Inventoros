@@ -133,7 +133,7 @@ class OrganizationSettingsController extends Controller
         $settings[ApprovalSettings::KEY] = $approvals->toArray();
         $organization->update(['settings' => $settings]);
 
-        return redirect()->back()->with('success', 'Approval settings saved.');
+        return redirect()->back()->with('success', __('Approval settings saved.'));
     }
 
     /**

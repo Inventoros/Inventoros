@@ -92,7 +92,7 @@ class PortalPasswordResetController extends Controller
 
         return redirect()
             ->route('portal.login', ['organization' => $organization->slug])
-            ->with('status', 'Your password has been reset. You can sign in now.');
+            ->with('status', __('Your password has been reset. You can sign in now.'));
     }
 
     private function broker(): PasswordBroker

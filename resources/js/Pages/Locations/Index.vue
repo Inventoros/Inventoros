@@ -9,7 +9,7 @@ import Card from '@/Components/ui/Card.vue';
 import Button from '@/Components/ui/Button.vue';
 import Badge from '@/Components/ui/Badge.vue';
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import { nextTick, ref } from 'vue';
 import { Plus, Search, Pencil, Trash2, MapPin, X, QrCode } from '@lucide/vue';
 
 import { useI18n } from 'vue-i18n';
@@ -72,8 +72,13 @@ const openEditModal = (location) => {
     showEditModal.value = true;
 };
 
+const focusInvalidField = () => nextTick(() => {
+    document.querySelector('dialog[open] [aria-invalid="true"]')?.focus();
+});
+
 const createLocation = () => {
     locationForm.post(route('locations.store'), {
+        onError: focusInvalidField,
         onSuccess: () => {
             showCreateModal.value = false;
             Object.assign(locationForm, blankLocation());
@@ -83,6 +88,7 @@ const createLocation = () => {
 
 const updateLocation = () => {
     locationForm.put(route('locations.update', editingLocation.value.id), {
+        onError: focusInvalidField,
         onSuccess: () => {
             showEditModal.value = false;
             editingLocation.value = null;
@@ -275,7 +281,7 @@ const labelClass = 'mb-1 block text-xs font-medium text-text-secondary';
                     </div>
 
                     <form @submit.prevent="createLocation" class="space-y-4">
-                        <div v-if="Object.keys(locationForm.errors).length" role="alert" class="rounded-md border border-status-danger/25 bg-status-danger-soft p-3 text-sm text-status-danger">
+                        <div v-if="Object.keys(locationForm.errors).length" :id="fieldIdPrefix + '-errors'" role="alert" class="rounded-md border border-status-danger/25 bg-status-danger-soft p-3 text-sm text-status-danger">
                             <p v-for="(error, field) in locationForm.errors" :key="field">{{ error }}</p>
                         </div>
                         <div>
@@ -283,7 +289,7 @@ const labelClass = 'mb-1 block text-xs font-medium text-text-secondary';
                                 {{ t('locations.locationName') }} <span class="text-status-danger">*</span>
                             </label>
                             <input :id="fieldIdPrefix + '-1'"
-                                v-model="locationForm.name"
+                                v-model="locationForm.name" :aria-invalid="!!locationForm.errors.name" :aria-describedby="locationForm.errors.name ? fieldIdPrefix + '-errors' : undefined"
                                 type="text"
                                 :class="inputClass"
                                 :placeholder="t('locations.namePlaceholder')"
@@ -296,7 +302,7 @@ const labelClass = 'mb-1 block text-xs font-medium text-text-secondary';
                                 {{ t('locations.locationCode') }} <span class="text-status-danger">*</span>
                             </label>
                             <input :id="fieldIdPrefix + '-2'"
-                                v-model="locationForm.code"
+                                v-model="locationForm.code" :aria-invalid="!!locationForm.errors.code" :aria-describedby="locationForm.errors.code ? fieldIdPrefix + '-errors' : undefined"
                                 type="text"
                                 :class="inputClass"
                                 :placeholder="t('locations.codePlaceholder')"
@@ -309,7 +315,7 @@ const labelClass = 'mb-1 block text-xs font-medium text-text-secondary';
                                 {{ t('common.description') }}
                             </label>
                             <textarea :id="fieldIdPrefix + '-3'"
-                                v-model="locationForm.description"
+                                v-model="locationForm.description" :aria-invalid="!!locationForm.errors.description" :aria-describedby="locationForm.errors.description ? fieldIdPrefix + '-errors' : undefined"
                                 rows="3"
                                 class="w-full rounded-md border border-border-subtle bg-surface-canvas px-3 py-2 text-sm text-text-primary placeholder:text-text-tertiary ds-focus-ring"
                                 :placeholder="t('locations.descPlaceholder')"
@@ -318,7 +324,7 @@ const labelClass = 'mb-1 block text-xs font-medium text-text-secondary';
 
                         <div>
                             <label :for="`location-warehouse-${formMode}`" :class="labelClass">{{ t('locations.warehouse') }}</label>
-                            <select :id="`location-warehouse-${formMode}`" v-model="locationForm.warehouse_id" :class="inputClass">
+                            <select :id="`location-warehouse-${formMode}`" v-model="locationForm.warehouse_id" :aria-invalid="!!locationForm.errors.warehouse_id" :aria-describedby="locationForm.errors.warehouse_id ? fieldIdPrefix + '-errors' : undefined" :class="inputClass">
                                 <option :value="null">{{ t('locations.noWarehouse') }}</option>
                                 <option v-for="warehouse in warehouses" :key="warehouse.id" :value="warehouse.id">
                                     {{ warehouse.name }}{{ warehouse.code ? ` (${warehouse.code})` : '' }}
@@ -366,7 +372,7 @@ const labelClass = 'mb-1 block text-xs font-medium text-text-secondary';
                     </div>
 
                     <form @submit.prevent="updateLocation" class="space-y-4">
-                        <div v-if="Object.keys(locationForm.errors).length" role="alert" class="rounded-md border border-status-danger/25 bg-status-danger-soft p-3 text-sm text-status-danger">
+                        <div v-if="Object.keys(locationForm.errors).length" :id="fieldIdPrefix + '-errors'" role="alert" class="rounded-md border border-status-danger/25 bg-status-danger-soft p-3 text-sm text-status-danger">
                             <p v-for="(error, field) in locationForm.errors" :key="field">{{ error }}</p>
                         </div>
                         <div>
@@ -374,7 +380,7 @@ const labelClass = 'mb-1 block text-xs font-medium text-text-secondary';
                                 {{ t('locations.locationName') }} <span class="text-status-danger">*</span>
                             </label>
                             <input :id="fieldIdPrefix + '-4'"
-                                v-model="locationForm.name"
+                                v-model="locationForm.name" :aria-invalid="!!locationForm.errors.name" :aria-describedby="locationForm.errors.name ? fieldIdPrefix + '-errors' : undefined"
                                 type="text"
                                 :class="inputClass"
                                 required
@@ -386,7 +392,7 @@ const labelClass = 'mb-1 block text-xs font-medium text-text-secondary';
                                 {{ t('locations.locationCode') }} <span class="text-status-danger">*</span>
                             </label>
                             <input :id="fieldIdPrefix + '-5'"
-                                v-model="locationForm.code"
+                                v-model="locationForm.code" :aria-invalid="!!locationForm.errors.code" :aria-describedby="locationForm.errors.code ? fieldIdPrefix + '-errors' : undefined"
                                 type="text"
                                 :class="inputClass"
                                 required
@@ -398,7 +404,7 @@ const labelClass = 'mb-1 block text-xs font-medium text-text-secondary';
                                 {{ t('common.description') }}
                             </label>
                             <textarea :id="fieldIdPrefix + '-6'"
-                                v-model="locationForm.description"
+                                v-model="locationForm.description" :aria-invalid="!!locationForm.errors.description" :aria-describedby="locationForm.errors.description ? fieldIdPrefix + '-errors' : undefined"
                                 rows="3"
                                 class="w-full rounded-md border border-border-subtle bg-surface-canvas px-3 py-2 text-sm text-text-primary placeholder:text-text-tertiary ds-focus-ring"
                             ></textarea>
@@ -406,7 +412,7 @@ const labelClass = 'mb-1 block text-xs font-medium text-text-secondary';
 
                         <div>
                             <label :for="`location-warehouse-${formMode}`" :class="labelClass">{{ t('locations.warehouse') }}</label>
-                            <select :id="`location-warehouse-${formMode}`" v-model="locationForm.warehouse_id" :class="inputClass">
+                            <select :id="`location-warehouse-${formMode}`" v-model="locationForm.warehouse_id" :aria-invalid="!!locationForm.errors.warehouse_id" :aria-describedby="locationForm.errors.warehouse_id ? fieldIdPrefix + '-errors' : undefined" :class="inputClass">
                                 <option :value="null">{{ t('locations.noWarehouse') }}</option>
                                 <option v-for="warehouse in warehouses" :key="warehouse.id" :value="warehouse.id">
                                     {{ warehouse.name }}{{ warehouse.code ? ` (${warehouse.code})` : '' }}

@@ -13,8 +13,10 @@ jobs:
     env:
       APP_URL: http://127.0.0.1:8000
       UI_UX_AUDIT: '1'
+      UI_UX_AUDIT_STRICT: '1'
       CI: true
       MAIL_MAILER: log
+      REGISTRATION_ENABLED: true
     steps:
       - uses: actions/checkout@v4
       - uses: shivammathur/setup-php@v2

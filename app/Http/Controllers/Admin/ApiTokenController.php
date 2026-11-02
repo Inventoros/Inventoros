@@ -64,7 +64,7 @@ class ApiTokenController extends Controller
         $token = $request->user()->createToken($validated['name'], array_values($validated['abilities']));
 
         return redirect()->route('settings.api-tokens.index')
-            ->with('success', 'API token created. Copy it now, it will not be shown again.')
+            ->with('success', __('API token created. Copy it now, it will not be shown again.'))
             ->with('newApiToken', $token->plainTextToken);
     }
 
@@ -77,7 +77,7 @@ class ApiTokenController extends Controller
         $token->delete();
 
         return redirect()->route('settings.api-tokens.index')
-            ->with('success', 'API token revoked.');
+            ->with('success', __('API token revoked.'));
     }
 
     /**

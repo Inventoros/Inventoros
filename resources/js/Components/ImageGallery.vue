@@ -76,12 +76,13 @@ onBeforeUnmount(() => window.removeEventListener('keydown', handleKeydown));
     <div v-if="images && images.length > 0" class="space-y-4">
         <!-- Main Image Display -->
         <div class="relative aspect-square bg-white dark:bg-surface-canvas rounded-lg border-2 border-gray-200 dark:border-border-subtle overflow-hidden">
+            <button type="button" class="block h-full w-full ds-focus-ring" :aria-label="`${t('common.view')} ${productName}`" @click="openLightbox(currentIndex)">
             <img
                 :src="currentImage"
                 :alt="productName"
                 class="w-full h-full object-contain cursor-pointer"
-                @click="openLightbox(currentIndex)"
             />
+            </button>
 
             <!-- Primary Badge -->
             <div v-if="currentIndex === 0" class="absolute top-4 start-4 px-3 py-1 bg-brand text-brand-foreground text-sm font-semibold rounded shadow-lg">
@@ -89,14 +90,14 @@ onBeforeUnmount(() => window.removeEventListener('keydown', handleKeydown));
             </div>
 
             <!-- Zoom Icon -->
-            <div class="absolute top-4 end-4 p-2 bg-black/50 text-white rounded-full cursor-pointer hover:bg-black/70 transition" @click="openLightbox(currentIndex)">
+            <div aria-hidden="true" class="pointer-events-none absolute top-4 end-4 p-2 bg-black/50 text-white rounded-full">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
                 </svg>
             </div>
 
             <!-- Navigation Arrows (for multiple images) -->
-            <button
+            <button type="button" :aria-label="t('common.previous')"
                 v-if="hasMultipleImages"
                 @click="previousImage"
                 class="absolute start-4 top-1/2 -translate-y-1/2 p-3 bg-black/50 text-white rounded-full hover:bg-black/70 transition"
@@ -106,7 +107,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', handleKeydown));
                 </svg>
             </button>
 
-            <button
+            <button type="button" :aria-label="t('common.next')"
                 v-if="hasMultipleImages"
                 @click="nextImage"
                 class="absolute end-4 top-1/2 -translate-y-1/2 p-3 bg-black/50 text-white rounded-full hover:bg-black/70 transition"
@@ -155,7 +156,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', handleKeydown));
             <svg class="w-24 h-24 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>
-            <p class="text-gray-500 dark:text-gray-400">{{ t('components.imageGallery.noImages') }}</p>
+            <p class="text-text-secondary">{{ t('components.imageGallery.noImages') }}</p>
         </div>
     </div>
 
@@ -167,7 +168,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', handleKeydown));
             @click="closeLightbox"
         >
             <!-- Close Button -->
-            <button
+            <button type="button" :aria-label="t('common.dismiss')"
                 @click="closeLightbox"
                 class="absolute top-4 end-4 p-3 text-white hover:bg-white/10 rounded-full transition z-10"
             >
@@ -182,7 +183,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', handleKeydown));
             </div>
 
             <!-- Previous Button -->
-            <button
+            <button type="button" :aria-label="t('common.previous')"
                 v-if="hasMultipleImages"
                 @click.stop="previousImage"
                 class="absolute start-4 p-4 text-white hover:bg-white/10 rounded-full transition z-10"
@@ -193,7 +194,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', handleKeydown));
             </button>
 
             <!-- Next Button -->
-            <button
+            <button type="button" :aria-label="t('common.next')"
                 v-if="hasMultipleImages"
                 @click.stop="nextImage"
                 class="absolute end-4 p-4 text-white hover:bg-white/10 rounded-full transition z-10"

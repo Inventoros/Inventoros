@@ -96,7 +96,7 @@ class StockReservationController extends Controller
     public function release(Request $request, StockReservation $reservation, StockReservationService $reservations): RedirectResponse
     {
         if (! $reservation->isActive()) {
-            return back()->with('error', 'This reservation is no longer active.');
+            return back()->with('error', __('This reservation is no longer active.'));
         }
 
         $released = $reservations->releaseHold($reservation);
@@ -115,7 +115,7 @@ class StockReservationController extends Controller
             ]);
         }
 
-        return back()->with('success', 'Reservation released.');
+        return back()->with('success', __('Reservation released.'));
     }
 
     /**

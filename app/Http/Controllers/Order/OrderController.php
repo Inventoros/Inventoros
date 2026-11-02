@@ -217,7 +217,7 @@ class OrderController extends Controller
 
             return redirect()->back()
                 ->withInput()
-                ->with('error', 'Could not save the order due to a database error. Please try again, or contact support if the problem persists.');
+                ->with('error', __('Could not save the order due to a database error. Please try again, or contact support if the problem persists.'));
         } catch (BusinessRuleException $e) {
             // Business-rule exceptions thrown inside the transaction
             // (insufficient stock, unknown product, etc.) carry safe
@@ -448,7 +448,7 @@ class OrderController extends Controller
 
         // Check if order is pending approval
         if (! $order->isPendingApproval()) {
-            return redirect()->back()->with('error', 'Order has already been processed.');
+            return redirect()->back()->with('error', __('Order has already been processed.'));
         }
 
         $validated = $request->validate([
@@ -461,7 +461,7 @@ class OrderController extends Controller
             return redirect()->back()->with('error', $e->getMessage());
         }
 
-        return redirect()->back()->with('success', 'Order approved successfully.');
+        return redirect()->back()->with('success', __('Order approved successfully.'));
     }
 
     /**
@@ -480,7 +480,7 @@ class OrderController extends Controller
 
         // Check if order is pending approval
         if (! $order->isPendingApproval()) {
-            return redirect()->back()->with('error', 'Order has already been processed.');
+            return redirect()->back()->with('error', __('Order has already been processed.'));
         }
 
         $validated = $request->validate([
@@ -493,7 +493,7 @@ class OrderController extends Controller
             return redirect()->back()->with('error', $e->getMessage());
         }
 
-        return redirect()->back()->with('success', 'Order rejected.');
+        return redirect()->back()->with('success', __('Order rejected.'));
     }
 
     /**

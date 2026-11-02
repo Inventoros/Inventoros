@@ -8,7 +8,7 @@ process.env.TZ = 'America/Los_Angeles';
 
 import { test, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
-import { applyFormatSettings, formatLocale, defaultCurrency, orgDateFormat } from '../../resources/js/lib/formatSettings.js';
+import { applyFormatSettings, applyRegionalProp, formatLocale, defaultCurrency, orgDateFormat } from '../../resources/js/lib/formatSettings.js';
 import { formatMoney, formatCompactMoney, formatNumber } from '../../resources/js/lib/money.js';
 import { formatPhpDate, displayCalendarDate, displayDate, displayDateTime } from '../../resources/js/lib/dates.js';
 
@@ -16,7 +16,7 @@ import { formatPhpDate, displayCalendarDate, displayDate, displayDateTime } from
 // no-break space before the symbol; normalise both for readable assertions.
 const plain = (s) => s.replace(/[  ]/g, ' ');
 
-beforeEach(() => applyFormatSettings({ locale: 'en', currency: 'USD', dateFormat: null }));
+beforeEach(() => applyFormatSettings({ locale: 'en', currency: 'USD', dateFormat: null, timeFormat: null }));
 
 test('settings are read from the shared regional prop and the UI locale', () => {
     applyFormatSettings({ locale: 'de', currency: 'eur', dateFormat: 'd.m.Y' });
@@ -119,12 +119,26 @@ test('without an organization date format, days are locale-aware', () => {
     assert.equal(displayCalendarDate('2026-08-17'), '2026/08/17');
 });
 
-test('timestamps with a time are locale-aware in the viewer\'s timezone', () => {
-    applyFormatSettings({ locale: 'en', dateFormat: 'd.m.Y' });
+test('timestamps with a time are locale-aware in the viewer\'s timezone by default', () => {
+    applyFormatSettings({ locale: 'en', dateFormat: null });
     assert.equal(plain(displayDateTime('2026-08-17T17:30:00Z')), 'Aug 17, 2026, 10:30 AM');
     applyFormatSettings({ locale: 'de' });
     assert.equal(displayDateTime('2026-08-17T17:30:00Z'), '17.08.2026, 10:30');
     applyFormatSettings({ locale: 'fr' });
     assert.equal(plain(displayDateTime('2026-08-17T17:30:00Z')), '17 août 2026, 10:30');
     assert.equal(displayDateTime(null), '-');
+});
+
+test('timestamps honor saved date and 12/24-hour time preferences without shifting calendar fields', () => {
+    applyRegionalProp({ currency: 'USD', date_format: 'Y-m-d', time_format: 'H:i' });
+    assert.equal(displayDateTime('2026-08-17T20:05:09Z'), '2026-08-17 13:05');
+    applyRegionalProp({ currency: 'USD', date_format: 'd.m.Y', time_format: 'h:i A' });
+    assert.equal(displayDateTime('2026-08-17T20:05:09Z'), '17.08.2026 01:05 PM');
+    assert.equal(displayCalendarDate('2026-08-17T00:00:00Z'), '17.08.2026');
+});
+
+test('12-hour time uses the active locale for day periods', () => {
+    applyFormatSettings({ locale: 'ar', dateFormat: 'Y-m-d', timeFormat: 'h:i A' });
+    assert.match(displayDateTime('2026-08-17T20:05:09Z'), /13:05|01:05/);
+    assert.doesNotMatch(displayDateTime('2026-08-17T20:05:09Z'), /AM|PM/);
 });

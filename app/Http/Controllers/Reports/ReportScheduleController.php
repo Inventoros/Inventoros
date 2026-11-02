@@ -42,7 +42,7 @@ class ReportScheduleController extends Controller
         $schedule->next_run_at = $schedule->computeNextRunAt(now());
         $schedule->save();
 
-        return back()->with('success', 'Report schedule created.');
+        return back()->with('success', __('Report schedule created.'));
     }
 
     public function update(Request $request, SavedReport $savedReport, ReportSchedule $schedule): RedirectResponse
@@ -60,7 +60,7 @@ class ReportScheduleController extends Controller
         $schedule->next_run_at = $schedule->computeNextRunAt(now());
         $schedule->save();
 
-        return back()->with('success', 'Report schedule updated.');
+        return back()->with('success', __('Report schedule updated.'));
     }
 
     public function destroy(Request $request, SavedReport $savedReport, ReportSchedule $schedule): RedirectResponse
@@ -70,7 +70,7 @@ class ReportScheduleController extends Controller
 
         $schedule->delete();
 
-        return back()->with('success', 'Report schedule deleted.');
+        return back()->with('success', __('Report schedule deleted.'));
     }
 
     private function authorizeOwner(Request $request, SavedReport $savedReport): void

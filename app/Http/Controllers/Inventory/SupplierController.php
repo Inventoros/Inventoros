@@ -228,7 +228,7 @@ class SupplierController extends Controller
             }
 
             return redirect()->route('suppliers.index')
-                ->with('error', 'Cannot delete supplier with associated products.');
+                ->with('error', __('Cannot delete supplier with associated products.'));
         }
 
         // Block deletion while the supplier still has open (non-terminal) POs.

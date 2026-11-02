@@ -170,7 +170,7 @@ class PurchaseOrderController extends Controller
         // Only allow editing draft POs
         if (! $purchaseOrder->canBeEdited()) {
             return redirect()->route('purchase-orders.show', $purchaseOrder)
-                ->with('error', 'This purchase order cannot be edited.');
+                ->with('error', __('This purchase order cannot be edited.'));
         }
 
         $organizationId = $request->user()->organization_id;
@@ -228,7 +228,7 @@ class PurchaseOrderController extends Controller
             ]);
         } catch (InvalidStateException) {
             return redirect()->route('purchase-orders.show', $purchaseOrder)
-                ->with('error', 'This purchase order cannot be edited.');
+                ->with('error', __('This purchase order cannot be edited.'));
         }
 
         return redirect()->route('purchase-orders.show', $purchaseOrder)
@@ -252,7 +252,7 @@ class PurchaseOrderController extends Controller
         // Only allow deleting draft POs
         if ($purchaseOrder->status !== PurchaseOrder::STATUS_DRAFT) {
             return redirect()->route('purchase-orders.index')
-                ->with('error', 'Only draft purchase orders can be deleted.');
+                ->with('error', __('Only draft purchase orders can be deleted.'));
         }
 
         $purchaseOrder->delete();
@@ -277,7 +277,7 @@ class PurchaseOrderController extends Controller
         // Only allow receiving for sent/partial POs
         if (! $purchaseOrder->canReceiveItems()) {
             return redirect()->route('purchase-orders.show', $purchaseOrder)
-                ->with('error', 'This purchase order cannot receive items.');
+                ->with('error', __('This purchase order cannot receive items.'));
         }
 
         $purchaseOrder->load(['supplier', 'items.product', 'items.variant', 'items.receivingLocation.warehouse']);
@@ -314,11 +314,11 @@ class PurchaseOrderController extends Controller
 
         if ($receivedCount > 0) {
             return redirect()->route('purchase-orders.show', $purchaseOrder)
-                ->with('success', 'Items received successfully.');
+                ->with('success', __('Items received successfully.'));
         }
 
         return redirect()->route('purchase-orders.receive', $purchaseOrder)
-            ->with('error', 'No items were received.');
+            ->with('error', __('No items were received.'));
     }
 
     /**
@@ -373,7 +373,7 @@ class PurchaseOrderController extends Controller
         }
 
         return redirect()->route('purchase-orders.show', $purchaseOrder)
-            ->with('success', 'Purchase order submitted for approval.');
+            ->with('success', __('Purchase order submitted for approval.'));
     }
 
     /**
@@ -392,13 +392,13 @@ class PurchaseOrderController extends Controller
 
         if (! $purchaseOrder->canBeCancelled()) {
             return redirect()->route('purchase-orders.show', $purchaseOrder)
-                ->with('error', 'This purchase order cannot be cancelled.');
+                ->with('error', __('This purchase order cannot be cancelled.'));
         }
 
         $purchaseOrder->cancel();
 
         return redirect()->route('purchase-orders.show', $purchaseOrder)
-            ->with('success', 'Purchase order cancelled.');
+            ->with('success', __('Purchase order cancelled.'));
     }
 
     /**

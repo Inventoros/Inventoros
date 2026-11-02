@@ -61,7 +61,7 @@ class PluginController extends Controller
     {
         if (! $this->pluginService->uploadsEnabled()) {
             return redirect()->route('plugins.index')
-                ->with('error', 'Plugin uploads are disabled on this instance. Set INVENTOROS_ALLOW_PLUGIN_UPLOADS=true in your environment to enable. Note: this grants any admin user remote code execution on this server — see SECURITY.md.');
+                ->with('error', __('Plugin uploads are disabled on this instance. Set INVENTOROS_ALLOW_PLUGIN_UPLOADS=true in your environment to enable. Note: this grants any admin user remote code execution on this server — see SECURITY.md.'));
         }
 
         $request->validate([
@@ -73,7 +73,7 @@ class PluginController extends Controller
             $result = $this->pluginService->uploadPlugin($request->file('plugin'), $request->input('signature'));
 
             return redirect()->route('plugins.index')
-                ->with('success', 'Plugin uploaded successfully. You can now activate it.');
+                ->with('success', __('Plugin uploaded successfully. You can now activate it.'));
         } catch (\Exception $e) {
             Log::error('Plugin upload failed', [
                 'error' => $e->getMessage(),
@@ -81,7 +81,7 @@ class PluginController extends Controller
             ]);
 
             return redirect()->back()
-                ->with('error', 'Failed to upload plugin: '.$e->getMessage());
+                ->with('error', __('Failed to upload plugin: ').$e->getMessage());
         }
     }
 
@@ -129,7 +129,7 @@ class PluginController extends Controller
             ]);
 
             return redirect()->back()
-                ->with('error', 'Failed to deactivate plugin: '.$e->getMessage());
+                ->with('error', __('Failed to deactivate plugin: ').$e->getMessage());
         }
     }
 
@@ -154,7 +154,7 @@ class PluginController extends Controller
             ]);
 
             return redirect()->back()
-                ->with('error', 'Failed to delete plugin: '.$e->getMessage());
+                ->with('error', __('Failed to delete plugin: ').$e->getMessage());
         }
     }
 }

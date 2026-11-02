@@ -142,9 +142,9 @@ const fieldHelp = 'mt-1 text-xs text-text-tertiary';
                     </div>
 
                     <div class="border-t border-border-subtle pt-5">
-                        <label :class="fieldLabel">{{ t('shipping.settings.webhookUrl') }}</label>
+                        <label for="easypost-webhook-url" :class="fieldLabel">{{ t('shipping.settings.webhookUrl') }}</label>
                         <div class="flex flex-col gap-2 sm:flex-row">
-                            <input :value="webhookUrl" readonly :class="[fieldInput, 'font-mono text-xs']" />
+                            <input id="easypost-webhook-url" :value="webhookUrl" readonly :class="[fieldInput, 'font-mono text-xs']" />
                             <div class="flex gap-2">
                                 <Button variant="secondary" size="sm" type="button" @click="copyWebhookUrl">
                                     <Copy :size="14" />

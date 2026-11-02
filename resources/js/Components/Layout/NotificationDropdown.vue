@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, onBeforeUnmount } from 'vue';
 import { Link, router } from '@inertiajs/vue3';
 import axios from 'axios';
 
@@ -10,6 +10,8 @@ const unreadCount = ref(0);
 const notificationsOpen = ref(false);
 const notifications = ref([]);
 const loadingNotifications = ref(false);
+const trigger = ref(null);
+let unreadInterval;
 
 const fetchUnreadCount = async () => {
     try {
@@ -69,6 +71,7 @@ const markAllAsRead = async () => {
 
 const closeDropdown = () => {
     notificationsOpen.value = false;
+    trigger.value?.focus();
 };
 
 const getTypeIcon = (type) => {
@@ -108,16 +111,20 @@ const formatDate = (date) => {
 
 onMounted(() => {
     fetchUnreadCount();
-    const interval = setInterval(fetchUnreadCount, 30000);
-    return () => clearInterval(interval);
+    unreadInterval = setInterval(fetchUnreadCount, 30000);
 });
+onBeforeUnmount(() => clearInterval(unreadInterval));
 
 defineExpose({ closeDropdown });
 </script>
 
 <template>
-    <div class="sm:relative">
+    <div class="sm:relative" @keydown.esc.stop.prevent="closeDropdown">
         <button
+            ref="trigger"
+            type="button"
+            :aria-label="`${t('nav.notifications')}: ${unreadCount}`"
+            :aria-expanded="notificationsOpen"
             @click="toggleNotifications"
             class="relative p-2 text-gray-500 hover:text-brand dark:text-slate-400 dark:hover:text-brand hover:bg-gray-100 dark:hover:bg-surface-raised rounded-lg transition"
             :title="t('nav.notifications')"
@@ -127,7 +134,7 @@ defineExpose({ closeDropdown });
             </svg>
             <span
                 v-if="unreadCount > 0"
-                class="absolute -top-0.5 -right-0.5 flex items-center justify-center w-5 h-5 text-[10px] font-bold text-white bg-red-500 rounded-full ring-2 ring-white dark:ring-surface-canvas"
+                class="absolute -top-0.5 -end-0.5 flex items-center justify-center w-5 h-5 text-[10px] font-bold text-white bg-action-danger rounded-full ring-2 ring-white dark:ring-surface-canvas"
             >
                 {{ unreadCount > 9 ? '9+' : unreadCount }}
             </span>

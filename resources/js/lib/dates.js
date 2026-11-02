@@ -15,7 +15,7 @@
  * those as local time. Use toInstant()/formatInstantDate() for them.
  */
 
-import { formatLocale, orgDateFormat } from './formatSettings.js';
+import { formatLocale, orgDateFormat, orgTimeFormat } from './formatSettings.js';
 
 const DATE_PREFIX = /^(\d{4})-(\d{2})-(\d{2})/;
 const DATE_ONLY = /^\d{4}-\d{2}-\d{2}$/;
@@ -178,7 +178,8 @@ const pad2 = (n) => String(n).padStart(2, '0');
 
 /**
  * Format a Date with a PHP date() pattern. Supports the day, weekday, month
- * and year tokens (d D j l N w m M n F Y y); a backslash escapes a character
+ * and year tokens (d D j l N w m M n F Y y), plus time (H G h g i s A a).
+ * A backslash escapes a character
  * and anything else is copied as is.
  *
  * @param {Date} date
@@ -187,6 +188,8 @@ const pad2 = (n) => String(n).padStart(2, '0');
  */
 export function formatPhpDate(date, pattern, locale = formatLocale()) {
     const name = (options) => date.toLocaleDateString(locale, options);
+    const period = () => new Intl.DateTimeFormat(locale, { hour: 'numeric', hour12: true })
+        .formatToParts(date).find(part => part.type === 'dayPeriod')?.value || '';
     let out = '';
 
     for (let i = 0; i < pattern.length; i++) {
@@ -208,6 +211,14 @@ export function formatPhpDate(date, pattern, locale = formatLocale()) {
             case 'F': out += name({ month: 'long' }); break;
             case 'Y': out += String(date.getFullYear()); break;
             case 'y': out += pad2(date.getFullYear() % 100); break;
+            case 'H': out += pad2(date.getHours()); break;
+            case 'G': out += String(date.getHours()); break;
+            case 'h': out += pad2(date.getHours() % 12 || 12); break;
+            case 'g': out += String(date.getHours() % 12 || 12); break;
+            case 'i': out += pad2(date.getMinutes()); break;
+            case 's': out += pad2(date.getSeconds()); break;
+            case 'A': out += period().toLocaleUpperCase(locale); break;
+            case 'a': out += period().toLocaleLowerCase(locale); break;
             default: out += ch;
         }
     }
@@ -250,6 +261,11 @@ export function displayDate(value) {
  */
 export function displayDateTime(value) {
     const date = toInstant(value);
-
-    return date ? date.toLocaleString(formatLocale(), { dateStyle: 'medium', timeStyle: 'short' }) : '-';
+    if (!date) return '-';
+    if (!orgDateFormat() && !orgTimeFormat())
+        return date.toLocaleString(formatLocale(), { dateStyle: 'medium', timeStyle: 'short' });
+    const time = orgTimeFormat()
+        ? formatPhpDate(date, orgTimeFormat())
+        : date.toLocaleTimeString(formatLocale(), { timeStyle: 'short' });
+    return `${displayDay(date)} ${time}`;
 }

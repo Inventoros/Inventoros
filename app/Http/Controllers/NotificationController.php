@@ -119,7 +119,7 @@ class NotificationController extends Controller
             ->unread()
             ->update(['read_at' => now()]);
 
-        return redirect()->back()->with('success', 'All notifications marked as read');
+        return redirect()->back()->with('success', __('All notifications marked as read'));
     }
 
     /**
@@ -144,7 +144,7 @@ class NotificationController extends Controller
 
         $notification->delete();
 
-        return redirect()->back()->with('success', 'Notification deleted');
+        return redirect()->back()->with('success', __('Notification deleted'));
     }
 
     /**
@@ -162,6 +162,6 @@ class NotificationController extends Controller
             ->read()
             ->delete();
 
-        return redirect()->back()->with('success', 'Read notifications cleared');
+        return redirect()->back()->with('success', __('Read notifications cleared'));
     }
 }

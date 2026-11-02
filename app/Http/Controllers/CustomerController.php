@@ -199,7 +199,7 @@ class CustomerController extends Controller
             }
 
             return redirect()->route('customers.index')
-                ->with('error', 'Cannot delete customer with associated orders.');
+                ->with('error', __('Cannot delete customer with associated orders.'));
         }
 
         $customer->delete();

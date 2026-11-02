@@ -24,7 +24,7 @@ class CustomerContactController extends Controller
         $this->authorizeCustomer($request, $customer);
 
         if (! $customer->organization->portal_enabled) {
-            return back()->with('error', 'Turn on the customer portal in organization settings before inviting contacts.');
+            return back()->with('error', __('Turn on the customer portal in organization settings before inviting contacts.'));
         }
 
         $request->merge(['email' => mb_strtolower(trim((string) $request->input('email')))]);
@@ -52,7 +52,7 @@ class CustomerContactController extends Controller
         $this->authorizeContact($request, $customer, $contact);
 
         if (! $customer->organization->portal_enabled) {
-            return back()->with('error', 'Turn on the customer portal in organization settings before inviting contacts.');
+            return back()->with('error', __('Turn on the customer portal in organization settings before inviting contacts.'));
         }
 
         if ($contact->status() === CustomerContact::STATUS_ACTIVE) {

@@ -6,6 +6,20 @@ use Tests\TestCase;
 
 class ServerFlashTranslationTest extends TestCase
 {
+    public function test_controller_flash_literals_are_localized_except_protocol_status_codes(): void
+    {
+        $files = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator(app_path('Http/Controllers')));
+        $untranslated = [];
+        foreach ($files as $file) {
+            if (! $file->isFile() || $file->getExtension() !== 'php') continue;
+            preg_match_all("/->with\\(\\s*'(?:success|error|warning|status)'\\s*,\\s*'([^']+)'/", file_get_contents($file->getPathname()), $matches);
+            foreach ($matches[1] as $text) {
+                if ($text !== 'verification-link-sent') $untranslated[] = $file->getFilename().': '.$text;
+            }
+        }
+        $this->assertSame([], $untranslated);
+    }
+
     public function test_localized_server_messages_keep_keys_and_placeholders(): void
     {
         $source = json_decode(file_get_contents(lang_path('en.json')), true, flags: JSON_THROW_ON_ERROR);

@@ -185,11 +185,11 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                             :key="item.order_item_id"
                             class="rounded-lg border border-border-subtle bg-surface-canvas p-4"
                         >
-                            <div class="flex items-start gap-4">
+                            <div class="flex flex-wrap items-start gap-4 sm:flex-nowrap">
                                 <!-- Checkbox -->
                                 <div class="pt-1">
                                     <input
-                                        type="checkbox"
+                                        type="checkbox" :aria-label="item.product_name"
                                         v-model="item.selected"
                                         @change="toggleItem(item)"
                                         :disabled="maxReturnable(item) <= 0"
@@ -198,7 +198,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                 </div>
 
                                 <!-- Product Info -->
-                                <div class="flex-1 min-w-0">
+                                <div class="flex-1 min-w-0 break-words">
                                     <p class="font-medium text-text-primary">{{ item.product_name }}<span v-if="item.variant_title" class="text-text-secondary"> ({{ item.variant_title }})</span></p>
                                     <p class="text-sm text-text-tertiary">SKU: {{ item.sku }}</p>
                                     <p class="text-xs text-text-tertiary mt-1">
@@ -211,7 +211,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                 </div>
 
                                 <!-- Return Options (shown when selected) -->
-                                <div v-if="item.selected" class="flex items-center gap-4">
+                                <div v-if="item.selected" class="flex w-full flex-wrap items-center gap-4 sm:w-auto">
                                     <!-- Quantity -->
                                     <div class="w-20">
                                         <label :for="fieldIdPrefix + '-repeat-1-' + index" :class="fieldLabel">{{ t('returns.columns.qty') }}</label>
@@ -242,7 +242,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                     <div class="text-center">
                                         <label :for="fieldIdPrefix + '-repeat-3-' + index" :class="fieldLabel">{{ t('returns.columns.restock') }}</label>
                                         <input :id="fieldIdPrefix + '-repeat-3-' + index"
-                                            type="checkbox"
+                                            type="checkbox" :aria-label="item.product_name"
                                             v-model="item.restock"
                                             class="rounded border-border-subtle text-brand ds-focus-ring"
                                         />

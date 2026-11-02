@@ -199,7 +199,7 @@ class StockAdjustmentController extends Controller
 
         if ($result instanceof StockAdjustmentRequest) {
             return redirect()->route('stock-adjustments.index')
-                ->with('success', 'This adjustment needs approval. It was sent to an approver and stock will change once it is approved.');
+                ->with('success', __('This adjustment needs approval. It was sent to an approver and stock will change once it is approved.'));
         }
 
         return redirect()->route('stock-adjustments.index')

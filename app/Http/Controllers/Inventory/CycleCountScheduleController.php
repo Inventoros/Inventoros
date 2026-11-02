@@ -86,7 +86,7 @@ class CycleCountScheduleController extends Controller
             'created_by' => $request->user()->id,
         ]);
 
-        return redirect()->route('cycle-counts.index')->with('success', 'Cycle count schedule created.');
+        return redirect()->route('cycle-counts.index')->with('success', __('Cycle count schedule created.'));
     }
 
     public function edit(Request $request, CycleCountSchedule $cycleCount): Response
@@ -123,14 +123,14 @@ class CycleCountScheduleController extends Controller
                 : ($cycleCount->next_run_at ?? now()),
         ]);
 
-        return redirect()->route('cycle-counts.index')->with('success', 'Cycle count schedule updated.');
+        return redirect()->route('cycle-counts.index')->with('success', __('Cycle count schedule updated.'));
     }
 
     public function destroy(CycleCountSchedule $cycleCount): RedirectResponse
     {
         $cycleCount->delete();
 
-        return redirect()->route('cycle-counts.index')->with('success', 'Cycle count schedule deleted.');
+        return redirect()->route('cycle-counts.index')->with('success', __('Cycle count schedule deleted.'));
     }
 
     /**
@@ -141,7 +141,7 @@ class CycleCountScheduleController extends Controller
         $audit = $cycleCounts->run($cycleCount, advance: false);
 
         if (! $audit) {
-            return redirect()->back()->with('error', 'No audit was created: the last one from this schedule is still open, or nothing is in scope.');
+            return redirect()->back()->with('error', __('No audit was created: the last one from this schedule is still open, or nothing is in scope.'));
         }
 
         return redirect()->route('stock-audits.show', $audit)

@@ -142,7 +142,7 @@ class ShipmentController extends Controller
             return redirect()->back()->with('error', $e->getMessage());
         }
 
-        return redirect()->back()->with('success', 'Shipment marked shipped.');
+        return redirect()->back()->with('success', __('Shipment marked shipped.'));
     }
 
     /**

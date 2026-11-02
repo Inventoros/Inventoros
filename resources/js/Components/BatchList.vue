@@ -115,7 +115,7 @@ const isExpired = (batch) => {
                     <input :id="fieldIdPrefix + '-1'"
                         v-model="form.batch_number"
                         type="text"
-                        placeholder="e.g. BATCH-20260312-0001"
+                        placeholder="BATCH-20260312-0001"
                         class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-border-subtle rounded-md bg-white dark:bg-surface-raised text-gray-900 dark:text-gray-100 focus:ring-brand focus:border-brand"
                     />
                 </div>

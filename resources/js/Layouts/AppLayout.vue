@@ -271,7 +271,7 @@ const isActive = (item) => item.active.some((pattern) => route().current(pattern
             :inert="isMobile && !mobileOpen"
             :class="[
                 'fixed md:fixed inset-y-0 start-0 z-50 w-60 flex flex-col',
-                'bg-surface-base border-r border-border-subtle',
+                'bg-surface-base border-e border-border-subtle',
                 'transform transition-transform duration-200',
                 mobileOpen ? 'translate-x-0' : '-translate-x-full rtl:translate-x-full md:translate-x-0 rtl:md:translate-x-0',
                 'pt-12 md:pt-0',

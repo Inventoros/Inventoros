@@ -133,7 +133,7 @@ class TwoFactorController extends Controller
         $request->session()->forget('two_factor_recovery_codes');
 
         return redirect()->route('settings.account.index')
-            ->with('success', 'Two-factor authentication has been enabled.');
+            ->with('success', __('Two-factor authentication has been enabled.'));
     }
 
     /**
@@ -161,7 +161,7 @@ class TwoFactorController extends Controller
         app(SecurityEventLogger::class)->record(SecurityEvent::TWO_FACTOR_DISABLED, $request->user(), $request->user());
 
         return redirect()->route('settings.account.index')
-            ->with('success', 'Two-factor authentication has been disabled.');
+            ->with('success', __('Two-factor authentication has been disabled.'));
     }
 
     /**

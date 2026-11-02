@@ -224,7 +224,7 @@ class ImportExportController extends Controller
             ]);
 
             return redirect()->route('import-export.index')
-                ->with('error', 'Import failed: '.$e->getMessage());
+                ->with('error', __('Import failed: ').$e->getMessage());
         }
     }
 
@@ -285,7 +285,7 @@ class ImportExportController extends Controller
             ]);
 
             return redirect()->route('import-export.index')
-                ->with('error', 'Import failed: '.$e->getMessage());
+                ->with('error', __('Import failed: ').$e->getMessage());
         }
     }
 
@@ -378,7 +378,7 @@ class ImportExportController extends Controller
             ]);
 
             return redirect()->route('import-export.index')
-                ->with('error', 'Import failed: '.$e->getMessage());
+                ->with('error', __('Import failed: ').$e->getMessage());
         }
     }
 

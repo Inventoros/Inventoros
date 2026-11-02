@@ -77,7 +77,7 @@ class WarehouseController extends Controller
             (bool) $validated['restrict_to_assigned'],
         );
 
-        return redirect()->back()->with('success', 'Warehouse access policy updated.');
+        return redirect()->back()->with('success', __('Warehouse access policy updated.'));
     }
 
     /**

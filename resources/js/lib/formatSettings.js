@@ -11,27 +11,29 @@ const state = {
     locale: 'en',
     currency: 'USD',
     dateFormat: null,
+    timeFormat: null,
 };
 
 /**
  * Update the settings. Keys that are absent keep their current value.
  *
- * @param {{ locale?: string, currency?: string|null, dateFormat?: string|null }} settings
+ * @param {{ locale?: string, currency?: string|null, dateFormat?: string|null, timeFormat?: string|null }} settings
  */
 export function applyFormatSettings(settings = {}) {
     if ('locale' in settings) state.locale = settings.locale || 'en';
     if ('currency' in settings) state.currency = String(settings.currency || 'USD').toUpperCase();
     if ('dateFormat' in settings) state.dateFormat = settings.dateFormat || null;
+    if ('timeFormat' in settings) state.timeFormat = settings.timeFormat || null;
 }
 
 /**
  * Apply the shared `regional` prop ({ currency, date_format, time_format }).
  *
- * @param {{ currency?: string, date_format?: string|null }|null|undefined} regional
+ * @param {{ currency?: string, date_format?: string|null, time_format?: string|null }|null|undefined} regional
  */
 export function applyRegionalProp(regional) {
     if (!regional) return;
-    applyFormatSettings({ currency: regional.currency, dateFormat: regional.date_format });
+    applyFormatSettings({ currency: regional.currency, dateFormat: regional.date_format, timeFormat: regional.time_format });
 }
 
 /** The active UI locale (English, the fallback locale, until the app sets it). */
@@ -42,3 +44,4 @@ export const defaultCurrency = () => state.currency;
 
 /** The organization's PHP-style date format (e.g. "Y-m-d"), or null. */
 export const orgDateFormat = () => state.dateFormat;
+export const orgTimeFormat = () => state.timeFormat;

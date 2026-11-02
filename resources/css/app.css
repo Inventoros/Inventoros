@@ -448,7 +448,7 @@
     input::placeholder,
     textarea::placeholder {
         opacity: 1;
-        color: var(--color-gray-400);
+        color: hsl(var(--text-tertiary));
     }
 
     button:not(:disabled),

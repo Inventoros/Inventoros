@@ -120,7 +120,7 @@ class PluginMarketplaceController extends Controller
         RefreshMarketplaceEntitlementsJob::dispatch((int) $request->user()->organization_id);
 
         return redirect()->route('plugins.marketplace')
-            ->with('success', 'Connected to your inventoros.com account.');
+            ->with('success', __('Connected to your inventoros.com account.'));
     }
 
     public function disconnect(Request $request): RedirectResponse
@@ -132,7 +132,7 @@ class PluginMarketplaceController extends Controller
         app(PluginLicenceService::class)->forget($request->user()->organization);
 
         return redirect()->route('plugins.marketplace')
-            ->with('success', 'Disconnected from inventoros.com.');
+            ->with('success', __('Disconnected from inventoros.com.'));
     }
 
     public function install(Request $request, string $slug): RedirectResponse

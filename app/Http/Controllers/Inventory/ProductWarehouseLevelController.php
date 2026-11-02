@@ -50,6 +50,6 @@ class ProductWarehouseLevelController extends Controller
             }
         });
 
-        return redirect()->back()->with('success', 'Warehouse stock levels saved.');
+        return redirect()->back()->with('success', __('Warehouse stock levels saved.'));
     }
 }

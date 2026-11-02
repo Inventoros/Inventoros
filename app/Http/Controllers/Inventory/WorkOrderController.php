@@ -249,7 +249,7 @@ class WorkOrderController extends Controller
 
         if ($workOrder->status !== 'in_progress') {
             return redirect()->route('work-orders.show', $workOrder)
-                ->with('error', 'Only in-progress work orders can be completed.');
+                ->with('error', __('Only in-progress work orders can be completed.'));
         }
 
         $validated = $request->validate(WorkOrderService::completionRules($workOrder->quantity));
@@ -280,7 +280,7 @@ class WorkOrderController extends Controller
 
         if (! in_array($workOrder->status, ['draft', 'pending', 'in_progress'])) {
             return redirect()->route('work-orders.show', $workOrder)
-                ->with('error', 'Only draft, pending, or in-progress work orders can be cancelled.');
+                ->with('error', __('Only draft, pending, or in-progress work orders can be cancelled.'));
         }
 
         try {
@@ -291,7 +291,7 @@ class WorkOrderController extends Controller
         }
 
         return redirect()->route('work-orders.show', $workOrder)
-            ->with('success', 'Work order has been cancelled.');
+            ->with('success', __('Work order has been cancelled.'));
     }
 
     /**

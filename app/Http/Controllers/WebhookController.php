@@ -145,7 +145,7 @@ class WebhookController extends Controller
 
         // Reveal the rotated secret exactly once so the receiver can be updated.
         return redirect()->route('webhooks.show', $webhook)
-            ->with('success', 'Secret regenerated')
+            ->with('success', __('Secret regenerated'))
             ->with('newWebhookSecret', $secret);
     }
 
@@ -167,7 +167,7 @@ class WebhookController extends Controller
             'timestamp' => now()->toIso8601String(),
         ], $webhook->organization_id);
 
-        return redirect()->route('webhooks.show', $webhook)->with('success', 'Test webhook dispatched');
+        return redirect()->route('webhooks.show', $webhook)->with('success', __('Test webhook dispatched'));
     }
 
     /**
@@ -189,6 +189,6 @@ class WebhookController extends Controller
 
         WebhookDeliveryJob::dispatch($delivery);
 
-        return redirect()->back()->with('success', 'Delivery retry queued');
+        return redirect()->back()->with('success', __('Delivery retry queued'));
     }
 }

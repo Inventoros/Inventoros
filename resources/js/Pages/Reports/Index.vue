@@ -172,7 +172,7 @@ const visibleReportCards = computed(() =>
 
         <!-- Saved custom reports -->
         <section v-if="savedReports.length > 0" class="mt-10">
-            <div class="mb-4 flex items-center justify-between">
+            <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
                 <h2 class="text-sm font-semibold text-text-primary">{{ t('reports.customReports.saved') }}</h2>
                 <Button variant="default" size="sm" as="Link" :href="route('reports.builder.create')">
                     <Plus :size="14" />

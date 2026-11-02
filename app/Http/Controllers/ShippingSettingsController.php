@@ -114,7 +114,7 @@ class ShippingSettingsController extends Controller
 
         $settings->save();
 
-        return redirect()->back()->with('success', 'Shipping settings saved.');
+        return redirect()->back()->with('success', __('Shipping settings saved.'));
     }
 
     /**
@@ -125,7 +125,7 @@ class ShippingSettingsController extends Controller
         $settings = ShippingSetting::forOrganization((int) $request->user()->organization_id);
         $settings->forceFill(['webhook_token' => ShippingSetting::newWebhookToken()])->save();
 
-        return redirect()->back()->with('success', 'Webhook URL regenerated. Update it in your EasyPost dashboard.');
+        return redirect()->back()->with('success', __('Webhook URL regenerated. Update it in your EasyPost dashboard.'));
     }
 
     /**

@@ -11,7 +11,9 @@ use App\Models\Inventory\ProductCategory;
 use App\Models\Inventory\ProductLocation;
 use App\Models\Inventory\Supplier;
 use App\Models\Order\Order;
+use App\Models\Order\OrderItem;
 use App\Models\Purchasing\PurchaseOrder;
+use App\Models\Purchasing\PurchaseOrderItem;
 use App\Models\System\SystemSetting;
 use App\Models\User;
 use Illuminate\Database\Seeder;
@@ -144,37 +146,55 @@ class ScreenshotSeeder extends Seeder
         // Create orders with varied statuses
         $orderStatuses = ['pending', 'processing', 'shipped', 'delivered', 'pending', 'processing', 'shipped', 'delivered'];
         foreach ($orderStatuses as $i => $status) {
-            $customer = $customers[array_rand($customers)];
-            $total = fake()->randomFloat(2, 100, 5000);
-            Order::updateOrCreate(
+            $customer = $customers[$i % count($customers)];
+            $product = $productModels[$i % count($productModels)];
+            $quantity = ($i % 3) + 1;
+            $total = bcmul((string) $product->price, (string) $quantity, 2);
+            $order = Order::updateOrCreate(
                 ['order_number' => 'ORD-' . (50001 + $i), 'organization_id' => $orgId],
                 [
                     'created_by' => $user->id,
+                    'customer_id' => $customer->id,
                     'customer_name' => $customer->name,
                     'customer_email' => $customer->email,
                     'status' => $status,
                     'subtotal' => $total,
+                    'tax' => 0,
+                    'shipping' => 0,
                     'total' => $total,
                     'currency' => 'USD',
+                    'order_date' => now()->subDays($i)->startOfDay(),
                 ]
+            );
+            OrderItem::updateOrCreate(
+                ['order_id' => $order->id, 'product_id' => $product->id],
+                ['product_name' => $product->name, 'sku' => $product->sku, 'quantity' => $quantity, 'unit_price' => $product->price, 'subtotal' => $total, 'tax' => 0, 'total' => $total],
             );
         }
 
         // Create purchase orders
         $poStatuses = ['draft', 'sent', 'received', 'draft', 'sent', 'received'];
         foreach ($poStatuses as $i => $status) {
-            $total = fake()->randomFloat(2, 200, 8000);
-            PurchaseOrder::updateOrCreate(
+            $product = $productModels[$i % count($productModels)];
+            $quantity = ($i + 1) * 10;
+            $total = bcmul((string) $product->purchase_price, (string) $quantity, 2);
+            $po = PurchaseOrder::updateOrCreate(
                 ['po_number' => 'PO-' . (60001 + $i), 'organization_id' => $orgId],
                 [
-                    'supplier_id' => $suppliers->random()->id,
+                    'supplier_id' => $suppliers[$i % $suppliers->count()]->id,
                     'created_by' => $user->id,
                     'status' => $status,
-                    'order_date' => now()->subDays(rand(1, 30)),
+                    'order_date' => now()->subDays(($i + 1) * 3),
                     'subtotal' => $total,
+                    'tax' => 0,
+                    'shipping' => 0,
                     'total' => $total,
                     'currency' => 'USD',
                 ]
+            );
+            PurchaseOrderItem::updateOrCreate(
+                ['purchase_order_id' => $po->id, 'product_id' => $product->id],
+                ['product_name' => $product->name, 'sku' => $product->sku, 'quantity_ordered' => $quantity, 'quantity_received' => $status === 'received' ? $quantity : 0, 'unit_cost' => $product->purchase_price, 'subtotal' => $total, 'tax' => 0, 'total' => $total],
             );
         }
 

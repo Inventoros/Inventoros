@@ -70,6 +70,7 @@ function dismiss(id) {
 }
 
 function push(type, text) {
+    if (type === 'status' && text === 'verification-link-sent') text = t('profile.info.verificationSent');
     const variant = VARIANTS[type];
     const id = ++nextId;
 
@@ -131,7 +132,7 @@ defineExpose({ messages });
                 <p class="min-w-0 flex-1 text-[13px] leading-snug">{{ message.text }}</p>
                 <button
                     type="button"
-                    class="-me-1 -mt-0.5 shrink-0 rounded p-0.5 opacity-60 transition-opacity hover:opacity-100 motion-reduce:transition-none"
+                    class="-me-1 -mt-0.5 inline-flex min-h-6 min-w-6 shrink-0 items-center justify-center rounded p-1 opacity-80 transition-opacity hover:opacity-100 motion-reduce:transition-none ds-focus-ring"
                     :aria-label="t('common.dismiss')"
                     @click="dismiss(message.id)"
                 >

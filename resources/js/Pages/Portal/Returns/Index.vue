@@ -1,7 +1,7 @@
 <script setup>
 import TableViewport from '@/Components/ui/TableViewport.vue';
 import PortalLayout from '@/Layouts/PortalLayout.vue';
-import PortalPagination from '@/Components/Portal/PortalPagination.vue';
+import PortalPagination from '@/Components/ui/Pagination.vue';
 import PortalStatusBadge from '@/Components/Portal/PortalStatusBadge.vue';
 import PageHeader from '@/Components/ui/PageHeader.vue';
 import { formatDate, formatMoney } from '@/lib/portal';
@@ -68,13 +68,14 @@ const thClass = 'px-4 py-2.5 text-start text-xs font-medium tracking-tight text-
                         </tr>
                     </tbody>
                 </table>
+            <template #footer><PortalPagination :paginator="returns" compact /></template>
             </TableViewport>
             <div v-else class="flex flex-col items-center gap-2 rounded-lg border border-border-subtle bg-surface-raised py-12 text-center">
                 <RotateCcw :size="22" class="text-text-tertiary" />
                 <p class="text-sm text-text-tertiary">{{ t('portal.returns.empty') }}</p>
             </div>
 
-            <PortalPagination :paginator="returns" />
+
         </div>
     </PortalLayout>
 </template>
