@@ -448,6 +448,22 @@
       "title": "Personnaliser le tableau de bord",
       "help": "Activez ou désactivez les widgets pour les afficher ou les masquer sur votre tableau de bord.",
       "savePreferences": "Enregistrer les préférences"
+    },
+    "design": {
+      "overview": "Vue d’ensemble de l’espace",
+      "replenishment": "Réapprovisionnement",
+      "reviewStock": "Vérifier le stock",
+      "minimum": "Minimum",
+      "stockLevel": "{stock} en stock ; minimum {minimum}",
+      "shortfall": "{count} sous le minimum",
+      "financialWatch": "Suivi financier",
+      "share": "Part",
+      "allOutstanding": "Total restant dû",
+      "monthToDate": "Mois en cours",
+      "atCost": "Au coût d’achat",
+      "reviewSystem": "Vérifier le système",
+      "saveError": "Impossible d’enregistrer les préférences. Réessayez.",
+      "shortfallHelp": "Le manque correspond à l’écart au stock minimum. Vérifiez le fournisseur et les paramètres de réapprovisionnement avant tout achat."
     }
   },
   "products": {

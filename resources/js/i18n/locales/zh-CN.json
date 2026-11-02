@@ -448,6 +448,22 @@
       "title": "自定义仪表盘",
       "help": "切换小组件以在仪表盘上显示或隐藏。",
       "savePreferences": "保存偏好设置"
+    },
+    "design": {
+      "overview": "工作区概览",
+      "replenishment": "库存补货",
+      "reviewStock": "检查库存",
+      "minimum": "最低库存",
+      "stockLevel": "现有库存 {stock}；最低库存 {minimum}",
+      "shortfall": "低于最低库存 {count}",
+      "financialWatch": "财务概况",
+      "share": "占比",
+      "allOutstanding": "全部未收款",
+      "monthToDate": "本月累计",
+      "atCost": "按成本",
+      "reviewSystem": "检查系统",
+      "saveError": "无法保存偏好设置。请重试。",
+      "shortfallHelp": "缺口是当前库存与最低库存的差额。采购前请检查供应商和补货设置。"
     }
   },
   "products": {

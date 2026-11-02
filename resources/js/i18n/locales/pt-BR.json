@@ -448,6 +448,22 @@
       "title": "Personalizar painel",
       "help": "Ative ou desative os widgets para mostrá-los ou ocultá-los no seu painel.",
       "savePreferences": "Salvar preferências"
+    },
+    "design": {
+      "overview": "Visão geral do espaço",
+      "replenishment": "Reposição",
+      "reviewStock": "Revisar estoque",
+      "minimum": "Mínimo",
+      "stockLevel": "{stock} disponíveis; mínimo {minimum}",
+      "shortfall": "{count} abaixo do mínimo",
+      "financialWatch": "Acompanhamento financeiro",
+      "share": "Participação",
+      "allOutstanding": "Total em aberto",
+      "monthToDate": "Mês atual",
+      "atCost": "A preço de custo",
+      "reviewSystem": "Revisar sistema",
+      "saveError": "Não foi possível salvar as preferências. Tente novamente.",
+      "shortfallHelp": "A falta é a diferença para o estoque mínimo. Confira o fornecedor e as configurações de reposição antes de comprar."
     }
   },
   "products": {

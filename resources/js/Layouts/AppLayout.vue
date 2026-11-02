@@ -1,6 +1,6 @@
 <script setup>
 /**
- * AppLayout — Linear-inspired authenticated layout.
+ * AppLayout: shared shell for the approved dashboard design.
  *
  * The single authenticated layout for the app. To use, `import AppLayout`
  * and wrap your page content in it; the default slot is the page body.
@@ -11,7 +11,8 @@
  *   - 240px fixed width — no collapse rail; mobile drawer instead
  *   - Section labels (UPPERCASE, tracking-wider) group related nav items
  *   - Workspace badge at top, user pill at bottom
- *   - Top strip is a thin 44px row, breadcrumb + actions
+ *   - Branded header, workspace card, quiet selected navigation
+ *   - Top strip keeps real organization, warehouse and account controls
  *   - Density: 8px nav rows, 13px font, hover = subtle surface change
  */
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
@@ -65,13 +66,24 @@ const page = usePage();
 const { hasPermission, hasAnyPermission } = usePermissions();
 
 const mobileOpen = ref(false);
+const isMobile = ref(false);
 const globalSearchRef = ref(null);
+let removeNavigationListener;
+let removeMediaListener;
 
 // Close mobile drawer on navigation
 onMounted(() => {
-    router.on('start', () => {
+    removeNavigationListener = router.on('start', () => {
         mobileOpen.value = false;
     });
+    const media = window.matchMedia('(max-width: 767px)');
+    const updateMobile = () => {
+        isMobile.value = media.matches;
+        if (!media.matches) mobileOpen.value = false;
+    };
+    updateMobile();
+    media.addEventListener('change', updateMobile);
+    removeMediaListener = () => media.removeEventListener('change', updateMobile);
 });
 
 /**
@@ -89,10 +101,14 @@ watch(mobileOpen, (open) => {
 
 onBeforeUnmount(() => {
     document.body.style.overflow = '';
+    window.removeEventListener('keydown', handleHotkey);
+    removeNavigationListener?.();
+    removeMediaListener?.();
 });
 
 // Cmd/Ctrl-K opens global search anywhere
 const handleHotkey = (e) => {
+    if (e.key === 'Escape') mobileOpen.value = false;
     if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault();
         globalSearchRef.value?.open();
@@ -231,6 +247,8 @@ const isActive = (item) => item.active.some((pattern) => route().current(pattern
             </Link>
             <button
                 @click="mobileOpen = !mobileOpen"
+                :aria-expanded="mobileOpen"
+                aria-controls="workspace-navigation"
                 class="p-1.5 rounded-md text-text-secondary hover:bg-surface-overlay ds-focus-ring"
                 :aria-label="t('nav.toggleNavigation')"
             >
@@ -249,6 +267,8 @@ const isActive = (item) => item.active.some((pattern) => route().current(pattern
 
         <!-- Sidebar -->
         <aside
+            id="workspace-navigation"
+            :inert="isMobile && !mobileOpen"
             :class="[
                 'fixed md:fixed inset-y-0 left-0 z-50 w-60 flex flex-col',
                 'bg-surface-base border-r border-border-subtle',
@@ -257,15 +277,20 @@ const isActive = (item) => item.active.some((pattern) => route().current(pattern
                 'pt-12 md:pt-0',
             ]"
         >
-            <!-- Workspace badge -->
-            <div class="px-3 h-14 flex items-center border-b border-border-subtle shrink-0">
+            <Link :href="route('dashboard')" class="flex h-16 shrink-0 items-center gap-2.5 px-5 text-xl font-semibold tracking-tighter ds-focus-ring">
+                <img src="/images/brand/inventoros_icon_transparent_512.png" alt="" class="h-8 w-8 object-contain" />
+                <span>Inventoros</span>
+            </Link>
+            <!-- Workspace card retains the organization's custom logo. -->
+            <div class="mx-3 mb-3 flex shrink-0 items-center rounded-lg border border-border-subtle bg-surface-raised">
                 <Link
                     :href="route('dashboard')"
-                    class="flex items-center gap-2.5 w-full px-2 py-1.5 rounded-md hover:bg-surface-overlay transition-colors ds-focus-ring"
+                    :title="workspaceName"
+                    class="flex items-center gap-2.5 w-full px-2.5 py-3 rounded-lg hover:bg-surface-overlay transition-colors ds-focus-ring"
                 >
                     <img v-if="workspaceLogo" :src="workspaceLogo" :alt="workspaceName" class="h-7 w-7 shrink-0 object-contain" />
                     <span v-else class="h-7 w-7 shrink-0 rounded-md bg-surface-overlay grid place-items-center text-sm font-semibold">{{ workspaceName.charAt(0).toUpperCase() }}</span>
-                    <span class="text-sm font-semibold tracking-tight truncate flex-1 text-left">
+                    <span class="text-xs font-semibold tracking-tight truncate flex-1 text-left">
                         {{ workspaceName }}
                     </span>
                     <PackageSearch :size="14" class="text-text-tertiary" />
@@ -273,11 +298,11 @@ const isActive = (item) => item.active.some((pattern) => route().current(pattern
             </div>
 
             <!-- Cmd-K search trigger -->
-            <div class="px-3 pt-3 shrink-0">
+            <div class="px-3 shrink-0">
                 <button
                     @click="globalSearchRef?.open()"
                     class="w-full flex items-center gap-2 h-8 px-2.5 rounded-md text-xs text-text-tertiary
-                           bg-surface-canvas border border-border-subtle hover:border-border-strong
+                           bg-surface-raised border border-border-subtle hover:border-border-strong
                            transition-colors ds-focus-ring"
                 >
                     <Search :size="13" />
@@ -290,7 +315,7 @@ const isActive = (item) => item.active.some((pattern) => route().current(pattern
 
             <!-- Nav -->
             <nav class="flex-1 mt-4 overflow-y-auto ds-scroll px-3 pb-4">
-                <div v-for="section in visibleSections" :key="section.id" class="mb-5">
+                <div v-for="section in visibleSections" :key="section.id" class="mb-4">
                     <p class="px-2 mb-1 text-[10px] font-medium uppercase tracking-wider text-text-tertiary">
                         {{ section.label }}
                     </p>
@@ -304,7 +329,7 @@ const isActive = (item) => item.active.some((pattern) => route().current(pattern
                                 'group flex items-center gap-2.5 h-8 px-2.5 rounded-md text-[13px] font-medium',
                                 'transition-colors ds-focus-ring',
                                 isActive(item)
-                                    ? 'bg-surface-overlay text-text-primary'
+                                    ? 'bg-brand-soft text-brand ring-1 ring-inset ring-brand/15'
                                     : 'text-text-secondary hover:bg-surface-overlay hover:text-text-primary',
                             ]"
                         >
@@ -355,9 +380,9 @@ const isActive = (item) => item.active.some((pattern) => route().current(pattern
         </aside>
 
         <!-- Main column -->
-        <div class="md:pl-60 pt-12 md:pt-0">
+        <div class="md:pl-60 pt-12 md:pt-0" :inert="isMobile && mobileOpen">
             <!-- Top strip — sticky, thin -->
-            <div class="sticky top-0 z-30 h-11 flex items-center justify-between gap-3 px-4 md:px-6 bg-surface-canvas/80 backdrop-blur-sm border-b border-border-subtle">
+            <div class="sticky top-0 z-30 h-14 flex items-center justify-between gap-3 px-4 md:px-8 bg-surface-raised border-b border-border-subtle">
                 <div class="app-breadcrumb flex-1 min-w-0">
                     <slot name="header">
                         <span class="text-xs text-text-tertiary">{{ workspaceName }}</span>
@@ -373,7 +398,7 @@ const isActive = (item) => item.active.some((pattern) => route().current(pattern
             </div>
 
             <!-- Page content -->
-            <main class="px-4 md:px-6 py-6 md:py-8">
+            <main class="px-4 py-6 md:px-8">
                 <slot />
             </main>
 

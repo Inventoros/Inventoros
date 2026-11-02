@@ -448,6 +448,22 @@
       "title": "대시보드 사용자 지정",
       "help": "위젯을 켜거나 꺼서 대시보드에 표시하거나 숨기세요.",
       "savePreferences": "환경설정 저장"
+    },
+    "design": {
+      "overview": "작업 공간 개요",
+      "replenishment": "재고 보충",
+      "reviewStock": "재고 검토",
+      "minimum": "최소",
+      "stockLevel": "보유 재고 {stock}, 최소 재고 {minimum}",
+      "shortfall": "최소 재고보다 {count} 부족",
+      "financialWatch": "재무 현황",
+      "share": "비율",
+      "allOutstanding": "전체 미수금",
+      "monthToDate": "이번 달 누계",
+      "atCost": "원가 기준",
+      "reviewSystem": "시스템 검토",
+      "saveError": "환경설정을 저장하지 못했습니다. 다시 시도하세요.",
+      "shortfallHelp": "부족 수량은 최소 재고와의 차이입니다. 구매 전에 공급업체와 재주문 설정을 확인하세요."
     }
   },
   "products": {

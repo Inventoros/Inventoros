@@ -448,6 +448,22 @@
       "title": "Dostosuj panel",
       "help": "Włączaj i wyłączaj widżety, aby pokazać je lub ukryć na panelu.",
       "savePreferences": "Zapisz preferencje"
+    },
+    "design": {
+      "overview": "Przegląd obszaru roboczego",
+      "replenishment": "Uzupełnianie",
+      "reviewStock": "Sprawdź zapas",
+      "minimum": "Minimum",
+      "stockLevel": "Dostępne: {stock}; minimum: {minimum}",
+      "shortfall": "{count} poniżej minimum",
+      "financialWatch": "Przegląd finansowy",
+      "share": "Udział",
+      "allOutstanding": "Wszystkie należności",
+      "monthToDate": "Bieżący miesiąc",
+      "atCost": "Według kosztu",
+      "reviewSystem": "Sprawdź system",
+      "saveError": "Nie udało się zapisać preferencji. Spróbuj ponownie.",
+      "shortfallHelp": "Niedobór to różnica względem minimalnego zapasu. Przed zakupem sprawdź dostawcę i ustawienia uzupełniania."
     }
   },
   "products": {

@@ -5,6 +5,8 @@ namespace Tests\Feature;
 use App\Models\ActivityLog;
 use App\Models\Auth\Organization;
 use App\Models\Inventory\Product;
+use App\Models\Inventory\ProductCategory;
+use App\Models\Inventory\ProductVariant;
 use App\Models\Order\Order;
 use App\Models\Role;
 use App\Models\System\SystemSetting;
@@ -69,7 +71,7 @@ class DashboardControllerTest extends TestCase
     {
         $ids = [];
         foreach (['R-1', 'R-2', 'R-3'] as $number) {
-            $ids[] = \App\Models\Order\Order::create([
+            $ids[] = Order::create([
                 'organization_id' => $this->organization->id, 'order_number' => $number, 'status' => 'pending',
                 'customer_name' => 'C', 'order_date' => now()->toDateString(), 'subtotal' => 1, 'total' => 1, 'currency' => 'USD',
             ])->id;
@@ -90,7 +92,7 @@ class DashboardControllerTest extends TestCase
      */
     public function test_recent_orders_follow_when_they_were_created_not_the_order_date(): void
     {
-        $make = fn (string $number, string $orderDate, string $createdAt) => tap(\App\Models\Order\Order::create([
+        $make = fn (string $number, string $orderDate, string $createdAt) => tap(Order::create([
             'organization_id' => $this->organization->id, 'order_number' => $number, 'status' => 'pending',
             'customer_name' => 'C', 'order_date' => $orderDate, 'subtotal' => 1, 'total' => 1, 'currency' => 'USD',
         ]), fn ($order) => $order->forceFill(['created_at' => $createdAt])->saveQuietly());
@@ -141,6 +143,49 @@ class DashboardControllerTest extends TestCase
         $response = $this->get(route('dashboard'));
 
         $response->assertRedirect(route('login'));
+    }
+
+    public function test_category_breakdown_reconciles_to_active_inventory_including_uncategorized_stock(): void
+    {
+        $category = ProductCategory::create([
+            'organization_id' => $this->organization->id, 'name' => 'Tools', 'slug' => 'tools',
+        ]);
+        $otherOrg = Organization::create(['name' => 'Other', 'email' => 'other-breakdown@test.com']);
+        $foreignCategory = ProductCategory::create([
+            'organization_id' => $otherOrg->id, 'name' => 'Private category', 'slug' => 'private',
+        ]);
+        $make = fn (string $sku, array $attributes = []) => Product::create($attributes + [
+            'organization_id' => $this->organization->id, 'sku' => $sku, 'name' => $sku,
+            'price' => 10, 'currency' => 'USD', 'stock' => 3, 'min_stock' => 0, 'is_active' => true,
+        ]);
+        $make('CATEGORIZED', ['category_id' => $category->id, 'price' => 100, 'stock' => 2]);
+        $make('UNCATEGORIZED');
+        $make('LEGACY-CATEGORY', ['category_id' => $foreignCategory->id, 'price' => 5, 'stock' => 2]);
+        $make('CAD', ['currency' => 'CAD', 'price' => 50, 'stock' => 4]);
+        $make('INACTIVE', ['category_id' => $category->id, 'is_active' => false, 'price' => 500]);
+        $make('DELETED', ['category_id' => $category->id, 'price' => 800])->delete();
+        $make('OTHER-ORG', ['organization_id' => $otherOrg->id, 'category_id' => $category->id, 'price' => 999]);
+
+        $this->actingAs($this->admin)->get(route('dashboard'))
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->where('stats.totalValue', 240)
+                ->where('stockByCategory', function ($rows) {
+                    $rows = collect($rows);
+                    $uncategorized = $rows->firstWhere('id', null);
+
+                    return $rows->count() === 2
+                        && (float) $rows->sum('value') === 240.0
+                        && $rows->sum('count') === 4
+                        && ! $rows->contains('name', 'Private category')
+                        && $uncategorized['name'] === null
+                        && (float) $uncategorized['value'] === 40.0
+                        && $uncategorized['values'] === [
+                            ['currency' => 'USD', 'amount' => 40],
+                            ['currency' => 'CAD', 'amount' => 200],
+                        ];
+                })
+            );
     }
 
     public function test_dashboard_stats_match_aggregate_truth(): void
@@ -222,7 +267,7 @@ class DashboardControllerTest extends TestCase
             'is_active' => true, 'has_variants' => true,
         ]);
         foreach (['S' => 4, 'M' => 7] as $size => $stock) {
-            \App\Models\Inventory\ProductVariant::create([
+            ProductVariant::create([
                 'product_id' => $product->id, 'organization_id' => $this->organization->id, 'sku' => "TEE-{$size}",
                 'option_values' => ['Size' => $size], 'stock' => $stock, 'min_stock' => 0, 'is_active' => true, 'position' => 0,
             ]);

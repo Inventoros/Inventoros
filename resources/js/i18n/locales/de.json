@@ -448,6 +448,22 @@
       "title": "Dashboard anpassen",
       "help": "Schalten Sie Widgets ein oder aus, um sie auf Ihrem Dashboard anzuzeigen oder auszublenden.",
       "savePreferences": "Einstellungen speichern"
+    },
+    "design": {
+      "overview": "Arbeitsbereich im Überblick",
+      "replenishment": "Nachschub",
+      "reviewStock": "Bestand prüfen",
+      "minimum": "Minimum",
+      "stockLevel": "{stock} verfügbar; Minimum {minimum}",
+      "shortfall": "{count} unter Mindestbestand",
+      "financialWatch": "Finanzübersicht",
+      "share": "Anteil",
+      "allOutstanding": "Gesamte Außenstände",
+      "monthToDate": "Laufender Monat",
+      "atCost": "Zum Einkaufspreis",
+      "reviewSystem": "System prüfen",
+      "saveError": "Einstellungen konnten nicht gespeichert werden. Erneut versuchen.",
+      "shortfallHelp": "Die Fehlmenge ist die Differenz zum Mindestbestand. Vor dem Einkauf Lieferant und Nachbestelleinstellungen prüfen."
     }
   },
   "products": {

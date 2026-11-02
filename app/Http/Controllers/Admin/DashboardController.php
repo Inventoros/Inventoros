@@ -197,18 +197,23 @@ class DashboardController extends Controller
 
         // Get stock value by category. This is reports.category-performance
         // in miniature, so it takes the same permission that page does.
-        $stockByCategory = ! $canViewReports ? collect() : ProductCategory::where('product_categories.organization_id', $user->organization_id)
-            ->leftJoin('products', function ($join) {
+        // Start from the same active products as the valuation tile. A left
+        // join keeps uncategorized stock in the breakdown, excludes deleted
+        // products through the model scope, and prevents another tenant's
+        // category name from entering the payload through a legacy bad link.
+        $stockByCategory = ! $canViewReports ? collect() : Product::where('products.organization_id', $orgId)
+            ->where('products.is_active', true)
+            ->leftJoin('product_categories', function ($join) use ($orgId) {
                 $join->on('products.category_id', '=', 'product_categories.id')
-                    ->where('products.is_active', true);
+                    ->where('product_categories.organization_id', $orgId);
             })
             ->selectRaw('product_categories.name, product_categories.id, products.currency, COALESCE(SUM('.Product::stockValueSql('price').'), 0) as value, COUNT(products.id) as count')
             ->groupBy('product_categories.id', 'product_categories.name', 'products.currency')
             ->get()
-            // One card per category. Its value is in the organization's
+            // One row per category. Its value is in the organization's
             // currency; `values` lists every currency's own total (the
             // organization's first) rather than adding them together.
-            ->groupBy('id')
+            ->groupBy(fn ($row) => $row->id ?? 'uncategorized')
             ->map(function ($rows) use ($currency) {
                 $values = CurrencyTotals::list($rows->pluck('value', 'currency'), $currency);
 
@@ -340,6 +345,7 @@ class DashboardController extends Controller
         }
 
         $data = [
+            'generatedAt' => now()->toIso8601String(),
             'stats' => $stats,
             // The organization's currency: what the headline money figures are in.
             'currency' => $currency,

@@ -1,5 +1,5 @@
 /*
- * Inventoros design tokens — Linear-inspired.
+ * Inventoros design tokens: quiet surfaces and readable light/dark colors.
  *
  * Two layers of CSS variables:
  *   1. Semantic tokens (--surface, --text, --border, --accent) used by every
@@ -12,36 +12,36 @@
 
 @layer base {
     :root {
-        /* Backgrounds — neutral, almost monochromatic */
-        --surface-canvas: 0 0% 100%;        /* page background */
-        --surface-base: 220 14% 99%;        /* sidebar, header */
-        --surface-raised: 220 14% 97%;      /* cards, popovers */
-        --surface-overlay: 220 14% 95%;     /* hover, active row */
-        --surface-sunken: 220 13% 91%;      /* inset wells */
+        /* Quiet page, white panels, and a light navigation surface. */
+        --surface-canvas: 220.00 23.08% 97.45%;        /* page background */
+        --surface-base: 210.00 33.33% 98.82%;        /* sidebar, header */
+        --surface-raised: 0.00 0.00% 100.00%;      /* white panels, popovers */
+        --surface-overlay: 216.00 21.74% 95.49%;     /* hover, active row */
+        --surface-sunken: 217.50 28.57% 94.51%;      /* inset wells */
 
         /* Borders — 1px subtle */
-        --border-subtle: 220 13% 91%;       /* default 1px line */
-        --border-strong: 220 10% 80%;       /* focused inputs, separators */
+        --border-subtle: 220.00 23.08% 92.35%;       /* default 1px line */
+        --border-strong: 217.50 23.53% 86.67%;       /* focused inputs, separators */
 
         /* Text — high contrast scale */
-        --text-primary: 222 47% 11%;        /* headings, body */
-        --text-secondary: 215 16% 47%;      /* secondary copy */
-        --text-tertiary: 220 9% 64%;        /* hint text */
+        --text-primary: 220.00 24.71% 16.67%;        /* headings, body */
+        --text-secondary: 217.78 15.08% 35.10%;      /* secondary copy */
+        --text-tertiary: 218.57 11.97% 45.88%;        /* readable hint text */
         --text-disabled: 220 9% 75%;
 
         /* Accent — brighter blue (matches the marketing site + app primary).
-           Light base is blue-600 (#2563eb, 5.16:1 on white) so text-brand meets
+           The blue accent is dark enough that text-brand meets
            WCAG AA for normal text; blue-500 was only 3.68:1. */
-        --accent: 221 83% 53%;              /* blue-600 #2563eb */
+        --accent: 221.59 69.29% 50.20%;
         --accent-hover: 226 71% 48%;        /* blue-700 #1d4ed8 */
         --accent-foreground: 0 0% 100%;
         --accent-soft: 214 95% 96%;         /* selected row, badge bg */
 
         /* Status — semantic, also muted */
-        --status-success: 142 71% 36%;
+        --status-success: 156.38 67.14% 27.45%;
         --status-success-soft: 142 76% 96%;
-        --status-warning: 38 92% 42%;
-        --status-warning-soft: 48 100% 96%;
+        --status-warning: 36.08 87.73% 31.96%;
+        --status-warning-soft: 39.13 100.00% 95.49%;
         --status-danger: 0 72% 45%;
         --status-danger-soft: 0 86% 97%;
         --status-info: 217 91% 50%;
@@ -58,29 +58,29 @@
     }
 
     .dark {
-        --surface-canvas: 222 24% 7%;       /* near-black, slight blue */
-        --surface-base: 222 22% 9%;
-        --surface-raised: 222 20% 12%;
-        --surface-overlay: 222 18% 16%;
-        --surface-sunken: 222 22% 6%;
+        --surface-canvas: 218.18 24.44% 8.82%;       /* near-black, slight blue */
+        --surface-base: 216.92 23.64% 10.78%;
+        --surface-raised: 218.57 21.88% 12.55%;
+        --surface-overlay: 216.00 22.73% 17.25%;
+        --surface-sunken: 216.00 23.81% 8.24%;
 
-        --border-subtle: 222 16% 18%;
-        --border-strong: 222 12% 28%;
+        --border-subtle: 218.18 20.37% 21.18%;
+        --border-strong: 218.00 19.74% 29.80%;
 
-        --text-primary: 220 14% 96%;
-        --text-secondary: 220 10% 70%;
-        --text-tertiary: 220 9% 55%;
+        --text-primary: 218.18 44.00% 95.10%;
+        --text-secondary: 218.18 22.92% 81.18%;
+        --text-tertiary: 217.50 18.82% 66.67%;
         --text-disabled: 220 9% 40%;
 
-        --accent: 213 94% 68%;
+        --accent: 221.58 100.00% 77.65%;
         --accent-hover: 213 94% 74%;
         --accent-foreground: 222 47% 11%;
         --accent-soft: 217 45% 18%;
 
-        --status-success: 142 64% 52%;
+        --status-success: 148.80 49.02% 70.00%;
         --status-success-soft: 142 30% 16%;
-        --status-warning: 38 92% 60%;
-        --status-warning-soft: 38 30% 16%;
+        --status-warning: 36.59 77.36% 68.82%;
+        --status-warning-soft: 35.45 28.95% 14.90%;
         --status-danger: 0 84% 65%;
         --status-danger-soft: 0 30% 18%;
         --status-info: 217 91% 65%;

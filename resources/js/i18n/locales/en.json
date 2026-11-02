@@ -319,6 +319,22 @@
       "title": "Customize dashboard",
       "help": "Toggle widgets to show or hide them on your dashboard.",
       "savePreferences": "Save preferences"
+    },
+    "design": {
+      "overview": "Workspace overview",
+      "replenishment": "Replenishment",
+      "reviewStock": "Review stock",
+      "minimum": "Minimum",
+      "stockLevel": "{stock} on hand; minimum {minimum}",
+      "shortfall": "{count} below minimum",
+      "financialWatch": "Financial watch",
+      "share": "Share",
+      "allOutstanding": "All outstanding",
+      "monthToDate": "Month to date",
+      "atCost": "At cost",
+      "reviewSystem": "Review system",
+      "saveError": "Preferences could not be saved. Try again.",
+      "shortfallHelp": "The shortfall is the gap to minimum stock. Check supplier and reorder settings before purchasing."
     }
   },
   "products": {

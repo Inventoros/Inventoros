@@ -448,6 +448,22 @@
       "title": "Personalizza dashboard",
       "help": "Attiva o disattiva i widget per mostrarli o nasconderli nella tua dashboard.",
       "savePreferences": "Salva preferenze"
+    },
+    "design": {
+      "overview": "Panoramica dello spazio",
+      "replenishment": "Rifornimento",
+      "reviewStock": "Controlla scorte",
+      "minimum": "Minimo",
+      "stockLevel": "{stock} disponibili; minimo {minimum}",
+      "shortfall": "{count} sotto il minimo",
+      "financialWatch": "Monitoraggio finanziario",
+      "share": "Quota",
+      "allOutstanding": "Totale da riscuotere",
+      "monthToDate": "Mese corrente",
+      "atCost": "Al costo",
+      "reviewSystem": "Controlla sistema",
+      "saveError": "Impossibile salvare le preferenze. Riprova.",
+      "shortfallHelp": "La carenza è la differenza rispetto alla scorta minima. Controlla il fornitore e le impostazioni di riordino prima di acquistare."
     }
   },
   "products": {

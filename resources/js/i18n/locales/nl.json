@@ -448,6 +448,22 @@
       "title": "Dashboard aanpassen",
       "help": "Schakel widgets in of uit om ze op uw dashboard te tonen of te verbergen.",
       "savePreferences": "Voorkeuren opslaan"
+    },
+    "design": {
+      "overview": "Werkruimteoverzicht",
+      "replenishment": "Aanvulling",
+      "reviewStock": "Voorraad controleren",
+      "minimum": "Minimum",
+      "stockLevel": "{stock} op voorraad; minimum {minimum}",
+      "shortfall": "{count} onder minimum",
+      "financialWatch": "Financieel overzicht",
+      "share": "Aandeel",
+      "allOutstanding": "Totaal openstaand",
+      "monthToDate": "Lopende maand",
+      "atCost": "Tegen kostprijs",
+      "reviewSystem": "Systeem controleren",
+      "saveError": "Voorkeuren konden niet worden opgeslagen. Probeer opnieuw.",
+      "shortfallHelp": "Het tekort is het verschil met de minimumvoorraad. Controleer de leverancier en bestelinstellingen voordat u inkoopt."
     }
   },
   "products": {

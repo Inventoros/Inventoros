@@ -448,6 +448,22 @@
       "title": "ダッシュボードをカスタマイズ",
       "help": "ウィジェットを切り替えて、ダッシュボードでの表示・非表示を設定します。",
       "savePreferences": "設定を保存"
+    },
+    "design": {
+      "overview": "ワークスペース概要",
+      "replenishment": "在庫補充",
+      "reviewStock": "在庫を確認",
+      "minimum": "最低在庫",
+      "stockLevel": "現在庫 {stock}、最低在庫 {minimum}",
+      "shortfall": "最低在庫まで {count} 不足",
+      "financialWatch": "財務状況",
+      "share": "構成比",
+      "allOutstanding": "未収金合計",
+      "monthToDate": "今月累計",
+      "atCost": "原価ベース",
+      "reviewSystem": "システムを確認",
+      "saveError": "設定を保存できませんでした。再度お試しください。",
+      "shortfallHelp": "不足数は最低在庫との差です。購入前に仕入先と発注設定を確認してください。"
     }
   },
   "products": {

@@ -448,6 +448,22 @@
       "title": "Gösterge panelini özelleştir",
       "help": "Gösterge panelinizde göstermek veya gizlemek için bileşenleri açıp kapatın.",
       "savePreferences": "Tercihleri kaydet"
+    },
+    "design": {
+      "overview": "Çalışma alanına genel bakış",
+      "replenishment": "Stok yenileme",
+      "reviewStock": "Stoku incele",
+      "minimum": "Minimum",
+      "stockLevel": "Mevcut: {stock}; minimum: {minimum}",
+      "shortfall": "Minimumun {count} altında",
+      "financialWatch": "Finansal izleme",
+      "share": "Pay",
+      "allOutstanding": "Tüm alacaklar",
+      "monthToDate": "İçinde bulunulan ay",
+      "atCost": "Maliyet üzerinden",
+      "reviewSystem": "Sistemi incele",
+      "saveError": "Tercihler kaydedilemedi. Tekrar deneyin.",
+      "shortfallHelp": "Eksik miktar, minimum stokla aradaki farktır. Satın almadan önce tedarikçiyi ve yeniden sipariş ayarlarını kontrol edin."
     }
   },
   "products": {

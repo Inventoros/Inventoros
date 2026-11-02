@@ -448,6 +448,22 @@
       "title": "Personalizar panel de control",
       "help": "Activa o desactiva widgets para mostrarlos u ocultarlos en tu panel de control.",
       "savePreferences": "Guardar preferencias"
+    },
+    "design": {
+      "overview": "Resumen del espacio",
+      "replenishment": "Reposición",
+      "reviewStock": "Revisar existencias",
+      "minimum": "Mínimo",
+      "stockLevel": "{stock} disponibles; mínimo {minimum}",
+      "shortfall": "{count} por debajo del mínimo",
+      "financialWatch": "Seguimiento financiero",
+      "share": "Proporción",
+      "allOutstanding": "Todo pendiente",
+      "monthToDate": "Mes en curso",
+      "atCost": "Al costo",
+      "reviewSystem": "Revisar sistema",
+      "saveError": "No se pudieron guardar las preferencias. Inténtelo de nuevo.",
+      "shortfallHelp": "El faltante es la diferencia respecto al stock mínimo. Revise el proveedor y la configuración de reposición antes de comprar."
     }
   },
   "products": {
