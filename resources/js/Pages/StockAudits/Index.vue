@@ -1,8 +1,9 @@
 <script setup>
 import PluginSlot from '@/Components/PluginSlot.vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
+import TableFilters from '@/Components/ui/TableFilters.vue';
+import TableViewport from '@/Components/ui/TableViewport.vue';
 import PageHeader from '@/Components/ui/PageHeader.vue';
-import Card from '@/Components/ui/Card.vue';
 import Button from '@/Components/ui/Button.vue';
 import Badge from '@/Components/ui/Badge.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
@@ -63,7 +64,7 @@ const thClass =
 <template>
     <Head :title="t('nav.stockAudits')" />
 
-    <AppLayout>
+    <AppLayout table-page>
         <template #header>
             <div class="flex items-center gap-2 text-xs">
                 <span class="text-text-tertiary">{{ t('nav.sections.workspace') }}</span>
@@ -89,7 +90,7 @@ const thClass =
         <PluginSlot slot="header" :components="pluginComponents?.header" />
 
         <!-- Filters -->
-        <Card class="mt-6">
+        <TableFilters class="mt-6">
             <form @submit.prevent="applyFilters" class="space-y-4">
                 <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                     <div class="sm:col-span-2">
@@ -128,10 +129,10 @@ const thClass =
                     <Button type="button" variant="secondary" size="sm" @click="clearFilters">{{ t('common.clearFilters') }}</Button>
                 </div>
             </form>
-        </Card>
+        </TableFilters>
 
         <!-- Audits table -->
-        <div class="mt-4 w-full overflow-x-auto rounded-lg border border-border-subtle bg-surface-raised">
+        <TableViewport class="mt-4 w-full overflow-x-auto rounded-lg border border-border-subtle bg-surface-raised">
             <table class="w-full text-sm">
                 <thead>
                     <tr class="border-b border-border-subtle">
@@ -197,10 +198,10 @@ const thClass =
                     </tr>
                 </tbody>
             </table>
-        </div>
+        </TableViewport>
 
         <!-- Pagination -->
-        <div v-if="audits.data && audits.data.length > 0 && audits.links && audits.links.length > 3" class="mt-4 flex flex-col items-center justify-between gap-3 sm:flex-row">
+        <div v-if="audits.data && audits.data.length > 0 && audits.links && audits.links.length > 3" class="mt-4 flex flex-col items-center justify-between gap-3 sm:flex-row table-pagination">
             <p class="text-xs text-text-tertiary">
                 {{ t('common.showing') }} <span class="font-medium text-text-secondary">{{ audits.from }}</span>
                 {{ t('common.to') }} <span class="font-medium text-text-secondary">{{ audits.to }}</span>

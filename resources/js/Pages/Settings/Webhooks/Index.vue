@@ -1,7 +1,7 @@
 <script setup>
 import AppLayout from '@/Layouts/AppLayout.vue';
+import TableViewport from '@/Components/ui/TableViewport.vue';
 import PageHeader from '@/Components/ui/PageHeader.vue';
-import Card from '@/Components/ui/Card.vue';
 import Button from '@/Components/ui/Button.vue';
 import Badge from '@/Components/ui/Badge.vue';
 import { Head, Link, useForm, router, usePage } from '@inertiajs/vue3';
@@ -174,7 +174,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
 <template>
     <Head :title="t('nav.webhooks')" />
 
-    <AppLayout>
+    <AppLayout table-page>
         <template #header>
             <div class="flex items-center gap-2 text-xs">
                 <Link :href="route('settings.account.index')" class="text-text-tertiary hover:text-text-primary">{{ t('nav.sections.workspace') }}</Link>
@@ -227,7 +227,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
         </div>
 
         <!-- Webhooks table -->
-        <div class="mt-4 w-full overflow-x-auto rounded-lg border border-border-subtle bg-surface-raised">
+        <TableViewport class="mt-4 w-full overflow-x-auto rounded-lg border border-border-subtle bg-surface-raised">
             <table class="w-full text-sm">
                 <thead>
                     <tr class="border-b border-border-subtle">
@@ -281,7 +281,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                     </tr>
                 </tbody>
             </table>
-        </div>
+        </TableViewport>
 
         <!-- Create Modal -->
         <Teleport to="body">

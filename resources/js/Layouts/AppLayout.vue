@@ -62,6 +62,7 @@ import LegalFooter from '@/Components/LegalFooter.vue';
 import { pluginLabel } from '@/plugins/pluginI18n';
 
 const { t, te } = useI18n();
+defineProps({ tablePage: { type: Boolean, default: false } });
 const page = usePage();
 const { hasPermission, hasAnyPermission } = usePermissions();
 
@@ -237,7 +238,7 @@ const isActive = (item) => item.active.some((pattern) => route().current(pattern
 </script>
 
 <template>
-    <div class="min-h-screen bg-surface-canvas text-text-primary">
+    <div class="min-h-screen bg-surface-canvas text-text-primary" :class="{ 'app-layout-table': tablePage }">
         <!-- Mobile top bar -->
         <div class="md:hidden fixed top-0 inset-x-0 z-40 h-12 flex items-center justify-between px-4 bg-surface-base border-b border-border-subtle">
             <Link :href="route('dashboard')" class="flex items-center gap-2">
@@ -380,9 +381,9 @@ const isActive = (item) => item.active.some((pattern) => route().current(pattern
         </aside>
 
         <!-- Main column -->
-        <div class="md:pl-60 pt-12 md:pt-0" :inert="isMobile && mobileOpen">
+        <div class="app-main-column md:pl-60 pt-12 md:pt-0" :inert="isMobile && mobileOpen">
             <!-- Top strip — sticky, thin -->
-            <div class="sticky top-0 z-30 h-14 flex items-center justify-between gap-3 px-4 md:px-8 bg-surface-raised border-b border-border-subtle">
+            <div class="app-topbar sticky top-0 z-30 h-14 flex items-center justify-between gap-3 px-4 md:px-8 bg-surface-raised border-b border-border-subtle">
                 <div class="app-breadcrumb flex-1 min-w-0">
                     <slot name="header">
                         <span class="text-xs text-text-tertiary">{{ workspaceName }}</span>
@@ -398,11 +399,11 @@ const isActive = (item) => item.active.some((pattern) => route().current(pattern
             </div>
 
             <!-- Page content -->
-            <main class="px-4 py-6 md:px-8">
+            <main class="px-4 py-6 md:px-8" :class="{ 'app-table-page': tablePage }">
                 <slot />
             </main>
 
-            <LegalFooter class="px-4 md:px-6 py-6 border-t border-border-subtle" />
+            <LegalFooter class="app-legal-footer px-4 md:px-6 py-6 border-t border-border-subtle" />
         </div>
 
         <GlobalSearch ref="globalSearchRef" />

@@ -1,5 +1,6 @@
 <script setup>
 import AppLayout from '@/Layouts/AppLayout.vue';
+import TableViewport from '@/Components/ui/TableViewport.vue';
 import PageHeader from '@/Components/ui/PageHeader.vue';
 import Badge from '@/Components/ui/Badge.vue';
 import Button from '@/Components/ui/Button.vue';
@@ -49,7 +50,7 @@ const thClass =
 <template>
     <Head :title="t('reportBuilder.title')" />
 
-    <AppLayout>
+    <AppLayout table-page>
         <template #header>
             <div class="flex items-center gap-2 text-xs">
                 <span class="text-text-tertiary">{{ t('nav.sections.workspace') }}</span>
@@ -86,7 +87,7 @@ const thClass =
         </div>
 
         <!-- Reports table -->
-        <div class="mt-4 w-full overflow-x-auto rounded-lg border border-border-subtle bg-surface-raised">
+        <TableViewport class="mt-4 w-full overflow-x-auto rounded-lg border border-border-subtle bg-surface-raised">
             <table class="w-full text-sm">
                 <thead>
                     <tr class="border-b border-border-subtle">
@@ -147,6 +148,6 @@ const thClass =
                     </tr>
                 </tbody>
             </table>
-        </div>
+        </TableViewport>
     </AppLayout>
 </template>

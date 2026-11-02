@@ -315,7 +315,8 @@
     "add": "添加",
     "export": "导出",
     "new": "新建",
-    "editWithName": "编辑：{name}"
+    "editWithName": "编辑：{name}",
+    "filters": "筛选"
   },
   "nav": {
     "dashboard": "仪表盘",

@@ -315,7 +315,8 @@
     "add": "Toevoegen",
     "export": "Exporteren",
     "new": "Nieuw",
-    "editWithName": "Bewerken: {name}"
+    "editWithName": "Bewerken: {name}",
+    "filters": "Filters"
   },
   "nav": {
     "dashboard": "Dashboard",

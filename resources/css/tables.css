@@ -1,0 +1,166 @@
+/* Full-height list pages: controls and pagination stay outside the scroll
+ * region. Form, dashboard and mixed report pages keep their normal flow. */
+.app-layout-table {
+    height: 100dvh;
+    min-height: 0;
+    overflow: hidden;
+}
+.app-layout-table .app-main-column {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
+}
+.app-layout-table .app-topbar,
+.app-layout-table .app-legal-footer {
+    flex-shrink: 0;
+}
+.app-layout-table .app-legal-footer {
+    padding-top: 8px;
+    padding-bottom: 8px;
+}
+.app-table-page {
+    display: flex;
+    flex: 1 1 0;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 0;
+    overflow: hidden;
+}
+.app-table-page > *,
+.table-frame > * {
+    flex-shrink: 0;
+}
+.app-table-page .table-frame {
+    display: flex;
+    flex: 1 1 0;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 0;
+}
+.table-viewport {
+    min-width: 0;
+    overflow: auto;
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable;
+}
+.app-table-page .table-viewport {
+    flex: 1 1 0;
+    min-height: 0;
+}
+.table-viewport > table > thead > tr > th {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: hsl(var(--surface-raised));
+    box-shadow: inset 0 -1px 0 hsl(var(--border-subtle));
+}
+.table-pagination {
+    flex-shrink: 0;
+    min-width: 0;
+    max-width: 100%;
+}
+.table-pagination nav {
+    flex-wrap: wrap;
+    justify-content: center;
+    max-width: 100%;
+}
+.table-filters {
+    position: relative;
+    z-index: 20;
+    border: 1px solid hsl(var(--border-subtle));
+    border-radius: 8px;
+    background: hsl(var(--surface-raised));
+    box-shadow: var(--ds-shadow-sm);
+}
+.table-filters > summary {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 10px 16px;
+    list-style: none;
+    cursor: pointer;
+    color: hsl(var(--text-secondary));
+    font-size: 12px;
+    font-weight: 500;
+}
+.table-filters > summary::-webkit-details-marker {
+    display: none;
+}
+.table-filters-chevron {
+    margin-left: auto;
+}
+.table-filters[open] .table-filters-chevron {
+    transform: rotate(180deg);
+}
+.table-filters[open] > summary {
+    border-bottom: 1px solid hsl(var(--border-subtle));
+}
+.table-filters-content {
+    min-width: 0;
+}
+.table-frame > .table-filters {
+    border-width: 0 0 1px;
+    border-radius: 0;
+    box-shadow: none;
+}
+.app-table-page > header {
+    padding-bottom: 16px;
+}
+.app-table-page > .mt-6,
+.app-table-page > .mt-5 {
+    margin-top: 16px;
+}
+@media (max-width: 767px), (max-height: 699px) {
+    .table-filters[open] > .table-filters-content {
+        position: absolute;
+        inset: 100% -1px auto;
+        z-index: 25;
+        max-height: min(60dvh, 24rem);
+        overflow: auto;
+        overscroll-behavior: contain;
+        background: hsl(var(--surface-raised));
+        border: 1px solid hsl(var(--border-strong));
+        border-radius: 0 0 8px 8px;
+        box-shadow: var(--ds-shadow-lg);
+    }
+}
+@media (max-width: 767px) {
+    .app-table-page {
+        padding-top: 16px;
+        padding-bottom: 16px;
+    }
+    .app-table-page > header > div:first-child {
+        flex-basis: auto;
+    }
+    .app-table-page > header > div:first-child > p {
+        display: none;
+    }
+    .app-table-page > .mt-6,
+    .app-table-page > .mt-5 {
+        margin-top: 12px;
+    }
+    .table-pagination {
+        gap: 8px;
+        margin-top: 12px;
+    }
+}
+@media print {
+    .table-viewport > table > thead > tr > th {
+        position: static;
+    }
+    .app-layout-table,
+    .app-layout-table .app-main-column {
+        display: block;
+        height: auto;
+        overflow: visible;
+    }
+    .app-table-page,
+    .app-table-page .table-frame,
+    .app-table-page .table-viewport {
+        display: block;
+        height: auto;
+        overflow: visible;
+    }
+}

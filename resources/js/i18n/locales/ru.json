@@ -315,7 +315,8 @@
     "add": "Добавить",
     "export": "Экспорт",
     "new": "Новый",
-    "editWithName": "Редактирование: {name}"
+    "editWithName": "Редактирование: {name}",
+    "filters": "Фильтры"
   },
   "nav": {
     "dashboard": "Панель управления",

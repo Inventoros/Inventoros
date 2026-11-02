@@ -1,8 +1,8 @@
 <script setup>
 import AppLayout from '@/Layouts/AppLayout.vue';
+import TableFilters from '@/Components/ui/TableFilters.vue';
 import PluginSlot from '@/Components/PluginSlot.vue';
 import PageHeader from '@/Components/ui/PageHeader.vue';
-import Card from '@/Components/ui/Card.vue';
 import Button from '@/Components/ui/Button.vue';
 import Badge from '@/Components/ui/Badge.vue';
 import DataTable from '@/Components/ui/DataTable.vue';
@@ -101,7 +101,7 @@ const selectClass =
 <template>
     <Head :title="t('orders.title')" />
 
-    <AppLayout>
+    <AppLayout table-page>
         <template #header>
             <div class="flex items-center gap-2 text-xs">
                 <span class="text-text-tertiary">{{ t('nav.sections.workspace') }}</span>
@@ -131,7 +131,7 @@ const selectClass =
         </PageHeader>
 
         <!-- Filters -->
-        <Card class="mt-6">
+        <TableFilters class="mt-6">
             <form @submit.prevent="searchOrders" class="space-y-4">
                 <div :class="['grid grid-cols-1 gap-4 sm:grid-cols-2', canViewPayments ? 'lg:grid-cols-3 xl:grid-cols-5' : 'lg:grid-cols-4']">
                     <div class="sm:col-span-2">
@@ -177,12 +177,12 @@ const selectClass =
                     <Button type="button" variant="secondary" size="sm" @click="clearFilters">{{ t('common.clearFilters') }}</Button>
                 </div>
             </form>
-        </Card>
+        </TableFilters>
 
         <PluginSlot slot="before-table" :components="pluginComponents?.beforeTable" />
 
         <!-- Orders table -->
-        <div class="mt-4">
+        <div class="mt-4 table-frame">
             <DataTable :columns="columns" :rows="orders.data" dense>
                 <template #cell-order_number="{ row }">
                     <Link :href="route('orders.show', row.id)" class="font-mono text-xs font-medium text-text-primary hover:text-brand">{{ row.order_number }}</Link>
@@ -232,7 +232,7 @@ const selectClass =
             </DataTable>
 
             <!-- Pagination -->
-            <div v-if="orders.data.length > 0" class="mt-4 flex flex-col items-center justify-between gap-3 sm:flex-row">
+            <div v-if="orders.data.length > 0" class="mt-4 flex flex-col items-center justify-between gap-3 sm:flex-row table-pagination">
                 <p class="text-xs text-text-tertiary">
                     {{ t('common.showing') }} <span class="font-medium text-text-secondary">{{ orders.from }}</span>
                     {{ t('common.to') }} <span class="font-medium text-text-secondary">{{ orders.to }}</span>

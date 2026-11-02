@@ -315,7 +315,8 @@
     "add": "إضافة",
     "export": "تصدير",
     "new": "جديد",
-    "editWithName": "تعديل: {name}"
+    "editWithName": "تعديل: {name}",
+    "filters": "المرشحات"
   },
   "nav": {
     "dashboard": "لوحة التحكم",

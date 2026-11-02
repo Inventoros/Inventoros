@@ -315,7 +315,8 @@
     "add": "追加",
     "export": "エクスポート",
     "new": "新規",
-    "editWithName": "編集: {name}"
+    "editWithName": "編集: {name}",
+    "filters": "フィルター"
   },
   "nav": {
     "dashboard": "ダッシュボード",

@@ -1,5 +1,7 @@
 <script setup>
 import AppLayout from '@/Layouts/AppLayout.vue';
+import TableViewport from '@/Components/ui/TableViewport.vue';
+import TableFilters from '@/Components/ui/TableFilters.vue';
 import PageHeader from '@/Components/ui/PageHeader.vue';
 import Card from '@/Components/ui/Card.vue';
 import Button from '@/Components/ui/Button.vue';
@@ -32,12 +34,13 @@ const field = 'h-9 rounded-md border border-border-subtle bg-surface-canvas px-3
 
 <template>
     <Head :title="t('warehouseStock.title')" />
-    <AppLayout>
+    <AppLayout table-page>
         <PageHeader :title="t('warehouseStock.title')">
             <template #actions><Button v-if="hasPermission('export_data')" as="a" :href="exportUrl" variant="secondary">{{ t('common.export') }} CSV</Button></template>
         </PageHeader>
-        <Card class="mt-5" :padded="false">
-            <form class="flex flex-wrap items-end gap-3 border-b border-border-subtle p-4" @submit.prevent="apply">
+        <Card class="mt-5 table-frame" :padded="false">
+            <TableFilters :padded="false">
+            <form class="flex flex-wrap items-end gap-3 p-4" @submit.prevent="apply">
                 <label class="min-w-48 flex-1 text-xs text-text-secondary">{{ t('common.search') }}<input v-model="form.search" :class="field + ' mt-1 w-full'" :placeholder="t('products.searchPlaceholder')" /></label>
                 <label class="text-xs text-text-secondary">{{ t('locations.warehouse') }}<select v-model="form.warehouse_id" :class="field + ' mt-1 block'">
                     <option value="">{{ t('warehouses.allWarehouses') }}</option>
@@ -47,7 +50,8 @@ const field = 'h-9 rounded-md border border-border-subtle bg-surface-canvas px-3
                 <label class="flex min-h-9 items-center gap-2 text-sm"><input v-model="form.include_zero" type="checkbox" />{{ t('warehouseStock.includeZero') }}</label>
                 <Button type="submit" :loading="form.processing">{{ t('common.search') }}</Button>
             </form>
-            <div class="overflow-x-auto">
+            </TableFilters>
+            <TableViewport class="overflow-x-auto">
                 <table class="w-full text-left text-sm">
                     <thead><tr class="border-b border-border-subtle bg-surface-sunken">
                         <th v-for="[key, label] in columns" :key="key" :aria-sort="form.sort_by === key ? form.sort_dir === 'asc' ? 'ascending' : 'descending' : 'none'" class="whitespace-nowrap px-4 py-3 text-xs font-medium text-text-secondary">
@@ -64,9 +68,9 @@ const field = 'h-9 rounded-md border border-border-subtle bg-surface-canvas px-3
                         <tr v-if="!balances.data.length"><td colspan="9" class="p-8 text-center text-text-secondary">{{ t('common.noResults') }}</td></tr>
                     </tbody>
                 </table>
-            </div>
+            </TableViewport>
         </Card>
-        <nav class="mt-4 flex flex-wrap gap-2" :aria-label="t('common.pagination')">
+        <nav class="mt-4 flex flex-wrap gap-2 table-pagination" :aria-label="t('common.pagination')">
             <template v-for="link in balances.links" :key="link.label">
                 <Link v-if="link.url" :href="link.url" class="rounded-md border border-border-subtle px-3 py-2 text-sm ds-focus-ring" :class="link.active ? 'bg-brand text-brand-foreground' : 'bg-surface-canvas'" v-html="link.label" />
                 <span v-else class="rounded-md border border-border-subtle px-3 py-2 text-sm text-text-tertiary" v-html="link.label" />

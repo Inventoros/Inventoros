@@ -1,7 +1,7 @@
 <script setup>
 import AppLayout from '@/Layouts/AppLayout.vue';
+import TableViewport from '@/Components/ui/TableViewport.vue';
 import PageHeader from '@/Components/ui/PageHeader.vue';
-import Card from '@/Components/ui/Card.vue';
 import Button from '@/Components/ui/Button.vue';
 import Badge from '@/Components/ui/Badge.vue';
 import { Head, Link } from '@inertiajs/vue3';
@@ -28,7 +28,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium text-text-secondary';
 <template>
     <Head :title="t('nav.users')" />
 
-    <AppLayout>
+    <AppLayout table-page>
         <template #header>
             <div class="flex items-center gap-2 text-xs">
                 <span class="text-text-tertiary">{{ t('nav.sections.workspace') }}</span>
@@ -47,7 +47,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium text-text-secondary';
         </PageHeader>
 
         <!-- Users table -->
-        <div class="mt-6 w-full overflow-x-auto rounded-lg border border-border-subtle bg-surface-raised">
+        <TableViewport class="mt-6 w-full overflow-x-auto rounded-lg border border-border-subtle bg-surface-raised">
             <table class="w-full text-sm">
                 <thead>
                     <tr class="border-b border-border-subtle">
@@ -94,10 +94,10 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium text-text-secondary';
                     </tr>
                 </tbody>
             </table>
-        </div>
+        </TableViewport>
 
         <!-- Pagination -->
-        <div v-if="users && users.links && users.links.length > 3" class="mt-4 flex flex-col items-center justify-between gap-3 sm:flex-row">
+        <div v-if="users && users.links && users.links.length > 3" class="mt-4 flex flex-col items-center justify-between gap-3 sm:flex-row table-pagination">
             <p v-if="users.total !== undefined" class="text-xs text-text-tertiary">
                 {{ t('common.showing') }} <span class="font-medium text-text-secondary">{{ users.from }}</span>
                 {{ t('common.to') }} <span class="font-medium text-text-secondary">{{ users.to }}</span>

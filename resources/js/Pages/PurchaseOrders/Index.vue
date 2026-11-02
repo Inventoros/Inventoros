@@ -1,8 +1,8 @@
 <script setup>
 import AppLayout from '@/Layouts/AppLayout.vue';
+import TableFilters from '@/Components/ui/TableFilters.vue';
 import PluginSlot from '@/Components/PluginSlot.vue';
 import PageHeader from '@/Components/ui/PageHeader.vue';
-import Card from '@/Components/ui/Card.vue';
 import Button from '@/Components/ui/Button.vue';
 import Badge from '@/Components/ui/Badge.vue';
 import DataTable from '@/Components/ui/DataTable.vue';
@@ -91,7 +91,7 @@ const selectClass =
 <template>
     <Head :title="t('purchaseOrders.title')" />
 
-    <AppLayout>
+    <AppLayout table-page>
         <template #header>
             <div class="flex items-center gap-2 text-xs">
                 <span class="text-text-tertiary">{{ t('nav.sections.workspace') }}</span>
@@ -112,7 +112,7 @@ const selectClass =
         </PageHeader>
 
         <!-- Filters -->
-        <Card class="mt-6">
+        <TableFilters class="mt-6">
             <form @submit.prevent="searchPOs" class="space-y-4">
                 <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                     <div>
@@ -155,12 +155,12 @@ const selectClass =
                     </div>
                 </div>
             </form>
-        </Card>
+        </TableFilters>
 
         <PluginSlot slot="before-table" :components="pluginComponents?.beforeTable" />
 
         <!-- Purchase orders table -->
-        <div class="mt-4">
+        <div class="mt-4 table-frame">
             <DataTable :columns="columns" :rows="purchaseOrders.data" dense>
                 <template #cell-po_number="{ row }">
                     <Link :href="route('purchase-orders.show', row.id)" class="font-mono text-xs font-medium text-text-primary hover:text-brand">{{ row.po_number }}</Link>
@@ -205,7 +205,7 @@ const selectClass =
             </DataTable>
 
             <!-- Pagination -->
-            <div v-if="purchaseOrders.data.length > 0" class="mt-4 flex flex-col items-center justify-between gap-3 sm:flex-row">
+            <div v-if="purchaseOrders.data.length > 0" class="mt-4 flex flex-col items-center justify-between gap-3 sm:flex-row table-pagination">
                 <p class="text-xs text-text-tertiary">
                     {{ t('common.showing') }} <span class="font-medium text-text-secondary">{{ purchaseOrders.from }}</span>
                     {{ t('common.to') }} <span class="font-medium text-text-secondary">{{ purchaseOrders.to }}</span>

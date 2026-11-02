@@ -1,5 +1,6 @@
 <script setup>
 import AppLayout from '@/Layouts/AppLayout.vue';
+import TableViewport from '@/Components/ui/TableViewport.vue';
 import PageHeader from '@/Components/ui/PageHeader.vue';
 import Button from '@/Components/ui/Button.vue';
 import Badge from '@/Components/ui/Badge.vue';
@@ -111,7 +112,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
 <template>
     <Head :title="t('settings.apiTokens.title')" />
 
-    <AppLayout>
+    <AppLayout table-page>
         <template #header>
             <div class="flex items-center gap-2 text-xs">
                 <Link :href="route('settings.index')" class="text-text-tertiary hover:text-text-primary">{{ t('settings.title') }}</Link>
@@ -120,7 +121,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
             </div>
         </template>
 
-        <div>
+        <div class="table-frame">
             <PageHeader :title="t('settings.apiTokens.title')" :description="t('settings.apiTokens.description')">
                 <template #actions>
                     <Button variant="default" size="sm" :disabled="!hasAbilities" @click="openCreateModal">
@@ -151,7 +152,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
             <p v-if="!hasAbilities" class="mt-6 text-sm text-text-secondary">{{ t('settings.apiTokens.noPermissions') }}</p>
 
             <!-- Tokens table -->
-            <div class="mt-6 w-full overflow-x-auto rounded-lg border border-border-subtle bg-surface-raised">
+            <TableViewport class="mt-6 w-full overflow-x-auto rounded-lg border border-border-subtle bg-surface-raised">
                 <table class="w-full text-sm">
                     <thead>
                         <tr class="border-b border-border-subtle">
@@ -198,7 +199,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                         </tr>
                     </tbody>
                 </table>
-            </div>
+            </TableViewport>
 
             <!-- Create modal -->
             <Teleport to="body">
