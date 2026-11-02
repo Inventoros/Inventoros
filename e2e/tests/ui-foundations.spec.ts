@@ -14,7 +14,7 @@ for (const [url, trigger] of [
         const dialog = page.locator('dialog[open]');
         await expect(dialog).toHaveCount(1);
         await expect(dialog).toHaveAccessibleName(/.+/);
-        expect(await dialog.evaluate(el => el.contains(document.activeElement))).toBe(true);
+        expect(await dialog.evaluate(el => el !== document.activeElement && el.contains(document.activeElement))).toBe(true);
         await page.keyboard.press('Shift+Tab');
         expect(await dialog.evaluate(el => el.contains(document.activeElement))).toBe(true);
         expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBeLessThanOrEqual(0);

@@ -32,6 +32,10 @@ watch(() => props.show, async (show) => {
         }
         releaseScroll = lockPageScroll();
         surface.value.showModal();
+        // Tall fixed panels can make Chromium initially focus the dialog
+        // itself. Start on a real control and keep reverse Tab inside it.
+        const initial = surface.value.querySelector('[autofocus]') || surface.value.querySelector('button:not(:disabled), input:not(:disabled), select:not(:disabled), textarea:not(:disabled), a[href]');
+        initial?.focus({ preventScroll: true });
     } else {
         surface.value?.close();
         release();

@@ -7,10 +7,10 @@ export function containTabFocus(event, container) {
     if (!first) {
         event.preventDefault();
         container.focus();
-    } else if (event.shiftKey && (document.activeElement === first || !container.contains(document.activeElement))) {
+    } else if (event.shiftKey && (document.activeElement === first || document.activeElement === container || !container.contains(document.activeElement))) {
         event.preventDefault();
         last.focus();
-    } else if (!event.shiftKey && (document.activeElement === last || !container.contains(document.activeElement))) {
+    } else if (!event.shiftKey && (document.activeElement === last || document.activeElement === container || !container.contains(document.activeElement))) {
         event.preventDefault();
         first.focus();
     }
