@@ -23,6 +23,7 @@ jobs:
       CI: true
       MAIL_MAILER: log
       REGISTRATION_ENABLED: true
+      UI_UX_AUDIT_SCOPE: ${{ inputs.scope }}
       UI_UX_AUDIT_GREP: ${{ inputs.scope == 'interactions' && 'authenticate|dialogs,|verification,|runtime plugin' || inputs.scope == 'desktop-and-states' && 'authenticate|1440px|dark theme|dialogs,|verification,|runtime plugin' || '.' }}
     steps:
       - uses: actions/checkout@v4
@@ -46,8 +47,12 @@ jobs:
           npx playwright install --with-deps chromium
       - name: Audit rendered routes
         run: |
-          php artisan serve --host=127.0.0.1 --port=8000 > /tmp/inventoros-server.log 2>&1 &
-          npx playwright test e2e/tests/ui-ux-audit.spec.ts --project=setup --project=chromium --grep "$UI_UX_AUDIT_GREP"
+          PHP_CLI_SERVER_WORKERS=4 php artisan serve --no-reload --host=127.0.0.1 --port=8000 > /tmp/inventoros-server.log 2>&1 &
+          if [ "$UI_UX_AUDIT_SCOPE" = full ]; then
+            npx playwright test --config=playwright.audit.config.ts
+          else
+            npx playwright test e2e/tests/ui-ux-audit.spec.ts --project=setup --project=chromium --grep "$UI_UX_AUDIT_GREP"
+          fi
       - name: Summarize rendered evidence
         if: always()
         run: node e2e/summarize-ui-audit.mjs >> "$GITHUB_STEP_SUMMARY"

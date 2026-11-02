@@ -14,7 +14,7 @@ const widths = [320, 375, 430, 768, 1024, 1440, 1920];
 const locales = ['en', 'es', 'fr', 'de', 'pt-BR', 'it', 'ja', 'ko', 'zh-CN', 'ar', 'ru', 'nl', 'tr', 'pl'];
 const manifest = () => JSON.parse(readFileSync('e2e/.auth/ui-audit.json', 'utf8'));
 
-async function inspect(page: Page, name: string, url: string, width: number, axe = false, navigate = true) {
+async function inspect(page: Page, name: string, url: string, width: number, axe = false, navigate = true, axeScope?: string) {
     const errors: string[] = [];
     const onError = (error: Error) => errors.push(error.message);
     page.on('pageerror', onError);
@@ -36,10 +36,12 @@ async function inspect(page: Page, name: string, url: string, width: number, axe
         theme: document.documentElement.classList.contains('dark') ? 'dark' : 'light',
         tables: [...document.querySelectorAll('.table-viewport')].filter(e => e.getClientRects().length).map(e => ({ height: e.clientHeight, width: e.clientWidth, scrollHeight: e.scrollHeight, scrollWidth: e.scrollWidth })),
     }));
-    const violations = axe ? (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa']).analyze()).violations.map(v => ({ id: v.id, impact: v.impact, description: v.description, nodes: v.nodes.map(n => ({ target: n.target, html: n.html, failureSummary: n.failureSummary })) })) : [];
+    const scanner = new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa']);
+    if (axeScope) scanner.include(axeScope);
+    const violations = axe ? (await scanner.analyze()).violations.map(v => ({ id: v.id, impact: v.impact, description: v.description, nodes: v.nodes.map(n => ({ target: n.target, html: n.html, failureSummary: n.failureSummary })) })) : [];
     const key = `${name}-${width}`.replace(/[^a-zA-Z0-9_-]/g, '-');
     if (width === 320 || width === 1440) await page.screenshot({ path: path.join(out, `${key}.png`), fullPage: true, animations: 'disabled', caret: 'hide' });
-    const result = { name, url, finalUrl: page.url(), status: response?.status() ?? 200, width, errors, axeChecked: axe, ...layout, violations };
+    const result = { name, url, finalUrl: page.url(), status: response?.status() ?? 200, width, errors, axeChecked: axe, axeScope: axeScope || 'document', ...layout, violations };
     writeFileSync(path.join(out, `${key}.json`), JSON.stringify(result, null, 2));
     page.off('pageerror', onError);
     if (process.env.UI_UX_AUDIT_STRICT) {
@@ -104,7 +106,11 @@ test('dialogs, table full view and navigation disclosures', async ({ page }) => 
         await inspect(page, 'language-disclosure', '/products', width, true, false);
         await page.keyboard.press('Escape');
         await page.getByRole('button', { name: 'All Warehouses', exact: true }).click();
-        await inspect(page, 'warehouse-disclosure', '/products', width, true, false);
+        // Base pages are scanned independently. While this menu is open, its
+        // click-away layer blocks background actions and Tab-out dismisses it.
+        // Scan the foreground menu; full-page target-size otherwise reports
+        // the intentionally covered page controls as small partial targets.
+        await inspect(page, 'warehouse-disclosure', '/products', width, true, false, '[role="menu"]');
         await page.keyboard.press('Escape');
         const navigation = page.getByRole('button', { name: 'Toggle navigation', exact: true });
         if (await navigation.isVisible()) {
