@@ -121,3 +121,29 @@ test('numeric product headings and cells align to the end of their columns', asy
     await expect(page.locator('tbody tr').first().locator('td').nth(5)).toHaveCSS('text-align', 'end');
     await expect(page.locator('tbody tr').first().locator('td').nth(6)).toHaveCSS('text-align', 'end');
 });
+
+test('mobile navigation contains keyboard focus and returns it after Escape', async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 812 });
+    await page.goto('/products');
+    const toggle = page.getByRole('button', { name: 'Toggle navigation' });
+    await toggle.click();
+    const nav = page.locator('#workspace-navigation');
+    await expect(nav.locator('a').first()).toBeFocused();
+    await page.keyboard.press('Shift+Tab');
+    await expect(page.getByTestId('logout')).toBeFocused();
+    await page.keyboard.press('Escape');
+    await expect(toggle).toBeFocused();
+    await expect(nav).toHaveAttribute('inert', '');
+});
+
+test('warehouse selection supports arrows and Escape without changing the filter', async ({ page }) => {
+    await page.goto('/products');
+    const toggle = page.getByRole('button', { name: 'All Warehouses', exact: true });
+    await toggle.press('ArrowDown');
+    await expect(page.getByRole('menuitemradio', { name: 'All Warehouses', exact: true })).toBeFocused();
+    await page.keyboard.press('End');
+    await expect(page.getByRole('menuitemradio').last()).toBeFocused();
+    await page.keyboard.press('Escape');
+    await expect(toggle).toBeFocused();
+    await expect(toggle).toHaveAttribute('aria-expanded', 'false');
+});

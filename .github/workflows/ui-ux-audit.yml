@@ -23,7 +23,7 @@ jobs:
       CI: true
       MAIL_MAILER: log
       REGISTRATION_ENABLED: true
-      UI_UX_AUDIT_GREP: ${{ inputs.scope == 'desktop-and-states' && 'authenticate|1440px|dark theme|dialogs,|verification,' || '.' }}
+      UI_UX_AUDIT_GREP: ${{ inputs.scope == 'desktop-and-states' && 'authenticate|1440px|dark theme|dialogs,|verification,|runtime plugin' || '.' }}
     steps:
       - uses: actions/checkout@v4
       - uses: shivammathur/setup-php@v2

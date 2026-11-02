@@ -95,10 +95,40 @@ test('dialogs, table full view and navigation disclosures', async ({ page }) => 
         await page.locator('button[aria-haspopup="listbox"]').click();
         await inspect(page, 'language-disclosure', '/products', width, true, false);
         await page.keyboard.press('Escape');
+        await page.getByRole('button', { name: 'All Warehouses', exact: true }).click();
+        await inspect(page, 'warehouse-disclosure', '/products', width, true, false);
+        await page.keyboard.press('Escape');
+        const navigation = page.getByRole('button', { name: 'Toggle navigation', exact: true });
+        if (await navigation.isVisible()) {
+            await navigation.click();
+            await inspect(page, 'navigation-drawer', '/products', width, true, false);
+            await page.keyboard.press('Escape');
+        }
         await page.keyboard.press('Control+k');
         await inspect(page, 'global-search-dialog', '/products', width, true, false);
         await page.keyboard.press('Escape');
     }
+});
+
+test('runtime plugin pages and embedded components', async ({ page }) => {
+    test.setTimeout(5 * 60_000);
+    const plugin = (action: string, slug: string) => execFileSync('php', ['artisan', `plugin:${action}`, slug]);
+    try {
+        plugin('activate', 'hello-world');
+        plugin('activate', 'tax-billing');
+        for (const width of widths) {
+            await page.setViewportSize({ width, height: width < 768 ? 812 : 1080 });
+            for (const [name, url] of [['hello-world', '/p/hello-world'], ['tax-settings', '/p/tax-billing/settings'], ['tax-invoice', `/p/tax-billing/orders/${manifest().layout.order}`]]) {
+                await inspect(page, `plugin-${name}`, url, width, width === 1440);
+            }
+        }
+        for (const width of [320, 1440]) {
+            await page.setViewportSize({ width, height: width < 768 ? 812 : 1080 });
+            for (const url of ['/dashboard', '/products/create', `/orders/${manifest().layout.order}`]) {
+                await inspect(page, `plugin-embedded-${url.slice(1).replaceAll('/', '-')}`, url, width, true);
+            }
+        }
+    } finally { plugin('deactivate', 'hello-world'); plugin('deactivate', 'tax-billing'); }
 });
 
 test('all supported languages across layout families', async ({ page }) => {

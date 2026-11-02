@@ -2,6 +2,7 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { router, usePage } from '@inertiajs/vue3';
 import { useI18n } from 'vue-i18n';
+import { disclosureKeydown } from '@/lib/disclosureKeyboard';
 
 const page = usePage();
 const { t } = useI18n();
@@ -18,6 +19,8 @@ const buttonLabel = computed(() => (activeWarehouse.value ? activeWarehouse.valu
 
 const isOpen = ref(false);
 const dropdownRef = ref(null);
+const triggerRef = ref(null);
+const onKeydown = (event) => disclosureKeydown(event, dropdownRef.value, isOpen, triggerRef.value);
 
 const toggleDropdown = () => {
     isOpen.value = !isOpen.value;
@@ -48,11 +51,15 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <div v-if="warehouses.length > 0" class="sm:relative" ref="dropdownRef">
+    <div v-if="warehouses.length > 0" class="sm:relative" ref="dropdownRef" @keydown="onKeydown" @focusout="event => { if (!dropdownRef.contains(event.relatedTarget)) isOpen = false; }">
         <!-- Below sm the menu anchors to the (sticky, positioned) top strip and
              spans it, so it cannot open off the left edge of a phone screen. -->
         <button
+            ref="triggerRef"
+            type="button"
             @click="toggleDropdown"
+            aria-haspopup="menu"
+            :aria-expanded="isOpen"
             :aria-label="buttonLabel"
             :title="buttonLabel"
             class="flex items-center gap-1 lg:gap-2 px-2 lg:px-3 py-2 text-sm text-gray-600 dark:text-gray-300 hover:text-brand hover:bg-gray-100 dark:hover:text-brand dark:hover:bg-surface-raised rounded-lg transition"
@@ -69,11 +76,16 @@ onUnmounted(() => {
         <!-- Dropdown -->
         <div
             v-show="isOpen"
+            role="menu"
+            :aria-label="buttonLabel"
             class="absolute inset-x-4 top-full mt-1 sm:inset-x-auto sm:end-0 sm:top-auto sm:mt-2 sm:w-64 bg-white dark:bg-surface-raised border border-gray-200 dark:border-border-subtle rounded-lg shadow-xl z-50 overflow-hidden"
         >
             <div class="py-1">
                 <!-- All Warehouses option -->
                 <button
+                    type="button"
+                    role="menuitemradio"
+                    :aria-checked="!activeWarehouseId"
                     @click="selectWarehouse(null)"
                     :class="[
                         'w-full flex items-center gap-3 px-4 py-2.5 text-sm transition',
@@ -97,6 +109,9 @@ onUnmounted(() => {
                 <button
                     v-for="warehouse in warehouses"
                     :key="warehouse.id"
+                    type="button"
+                    role="menuitemradio"
+                    :aria-checked="activeWarehouseId === warehouse.id"
                     @click="selectWarehouse(warehouse.id)"
                     :class="[
                         'w-full flex items-center gap-3 px-4 py-2.5 text-sm transition',

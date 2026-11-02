@@ -15,7 +15,8 @@
  *   - Top strip keeps real organization, warehouse and account controls
  *   - Density: 8px nav rows, 13px font, hover = subtle surface change
  */
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import { containTabFocus } from '@/lib/focus';
 import { Link, router, usePage } from '@inertiajs/vue3';
 import { useI18n } from 'vue-i18n';
 import {
@@ -70,6 +71,8 @@ const { hasPermission, hasAnyPermission } = usePermissions();
 const mobileOpen = ref(false);
 const isMobile = ref(false);
 const globalSearchRef = ref(null);
+const mobileTrigger = ref(null);
+const sidebarRef = ref(null);
 let removeNavigationListener;
 let removeMediaListener;
 let releaseDrawerScroll;
@@ -98,9 +101,12 @@ onMounted(() => {
  * the drawer being open, and restored on unmount so a page transition
  * mid-animation cannot strand the lock.
  */
-watch(mobileOpen, (open) => {
+watch(mobileOpen, async (open) => {
     releaseDrawerScroll?.();
     releaseDrawerScroll = open ? lockPageScroll() : undefined;
+    await nextTick();
+    if (open) sidebarRef.value?.querySelector('a[href], button')?.focus();
+    else if (isMobile.value && mobileTrigger.value?.isConnected) mobileTrigger.value.focus();
 });
 
 onBeforeUnmount(() => {
@@ -246,6 +252,7 @@ const isActive = (item) => item.active.some((pattern) => route().current(pattern
                 <span class="text-sm font-semibold tracking-tight">{{ workspaceName }}</span>
             </Link>
             <button
+                ref="mobileTrigger"
                 @click="mobileOpen = !mobileOpen"
                 :aria-expanded="mobileOpen"
                 aria-controls="workspace-navigation"
@@ -267,7 +274,9 @@ const isActive = (item) => item.active.some((pattern) => route().current(pattern
 
         <!-- Sidebar -->
         <aside
+            ref="sidebarRef"
             id="workspace-navigation"
+            @keydown="event => { if (isMobile && mobileOpen) containTabFocus(event, sidebarRef); }"
             :inert="isMobile && !mobileOpen"
             :class="[
                 'fixed md:fixed inset-y-0 start-0 z-50 w-60 flex flex-col',

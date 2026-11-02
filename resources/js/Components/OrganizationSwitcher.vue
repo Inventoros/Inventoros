@@ -10,11 +10,14 @@ import { computed, ref, onMounted, onUnmounted } from 'vue';
 import { router, usePage } from '@inertiajs/vue3';
 import { useI18n } from 'vue-i18n';
 import { Building2, Check, ChevronDown } from '@lucide/vue';
+import { disclosureKeydown } from '@/lib/disclosureKeyboard';
 
 const { t } = useI18n();
 const page = usePage();
 const isOpen = ref(false);
 const dropdownRef = ref(null);
+const triggerRef = ref(null);
+const onKeydown = (event) => disclosureKeydown(event, dropdownRef.value, isOpen, triggerRef.value);
 
 const organizations = computed(() => page.props.auth?.organizations || []);
 const active = computed(() => page.props.auth?.organization || null);
@@ -39,8 +42,9 @@ onUnmounted(() => document.removeEventListener('click', handleClickOutside));
 </script>
 
 <template>
-    <div v-if="organizations.length > 1" ref="dropdownRef" class="sm:relative" data-testid="organization-switcher">
+    <div v-if="organizations.length > 1" ref="dropdownRef" class="sm:relative" data-testid="organization-switcher" @keydown="onKeydown" @focusout="event => { if (!dropdownRef.contains(event.relatedTarget)) isOpen = false; }">
         <button
+            ref="triggerRef"
             type="button"
             @click="isOpen = !isOpen"
             class="flex items-center gap-1.5 h-8 px-2 rounded-md text-xs text-text-secondary hover:text-text-primary hover:bg-surface-overlay transition-colors ds-focus-ring"
