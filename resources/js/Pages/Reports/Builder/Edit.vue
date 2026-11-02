@@ -225,7 +225,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
             <Card :padded="false">
                 <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">{{ t('reportBuilder.sections.dataSource') }}</h3></div>
                 <div class="p-5">
-                    <select
+                    <select :aria-label="t('reportBuilder.sections.dataSource')"
                         v-model="form.data_source"
                         :class="[fieldInput, 'md:w-80']"
                     >
@@ -275,7 +275,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                             >
                                 <span class="w-6 text-xs text-text-tertiary">{{ index + 1 }}.</span>
                                 <Badge variant="neutral" size="sm" class="flex-1 justify-start">{{ columnLabel(colKey) }}</Badge>
-                                <button
+                                <button :aria-label="t('common.moveUp')"
                                     type="button"
                                     @click="moveColumn(index, -1)"
                                     :disabled="index === 0"
@@ -283,7 +283,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                 >
                                     <ChevronUp :size="14" />
                                 </button>
-                                <button
+                                <button :aria-label="t('common.moveDown')"
                                     type="button"
                                     @click="moveColumn(index, 1)"
                                     :disabled="index === form.columns.length - 1"
@@ -308,27 +308,27 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                             :key="index"
                             class="flex flex-wrap items-center gap-3 rounded-lg border border-border-subtle bg-surface-canvas p-3"
                         >
-                            <select
+                            <select :aria-label="t('reportBuilder.placeholders.filterField')"
                                 v-model="filter.field"
                                 :class="[fieldInput, 'min-w-[150px] flex-1']"
                             >
                                 <option value="" disabled>{{ t('reportBuilder.placeholders.filterField') }}</option>
                                 <option v-for="col in availableColumns" :key="col.key" :value="col.key">{{ col.label }}</option>
                             </select>
-                            <select
+                            <select :aria-label="t('reportBuilder.fields.operator')"
                                 v-model="filter.operator"
                                 :class="[fieldInput, 'w-40']"
                             >
                                 <option v-for="op in operators" :key="op.value" :value="op.value">{{ op.label }}</option>
                             </select>
-                            <input
+                            <input :aria-label="t('reportBuilder.placeholders.filterValue')"
                                 v-if="!noValueOperators.includes(filter.operator)"
                                 v-model="filter.value"
                                 :type="getColumnType(filter.field) === 'number' || getColumnType(filter.field) === 'currency' ? 'number' : getColumnType(filter.field) === 'date' ? 'date' : 'text'"
                                 :class="[fieldInput, 'min-w-[150px] flex-1']"
                                 :placeholder="t('reportBuilder.placeholders.filterValue')"
                             />
-                            <button
+                            <button :aria-label="t('common.delete')"
                                 type="button"
                                 @click="removeFilter(index)"
                                 class="rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-surface-sunken hover:text-status-danger"
@@ -349,14 +349,14 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                 <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">{{ t('reportBuilder.sections.sort') }}</h3></div>
                 <div class="p-5">
                     <div class="flex flex-wrap gap-3">
-                        <select
+                        <select :aria-label="t('reportBuilder.fields.sortField')"
                             v-model="form.sort.field"
                             :class="[fieldInput, 'min-w-[200px] flex-1']"
                         >
                             <option value="">{{ t('reportBuilder.placeholders.sortField') }}</option>
                             <option v-for="col in availableColumns" :key="col.key" :value="col.key">{{ col.label }}</option>
                         </select>
-                        <select
+                        <select :aria-label="t('reportBuilder.fields.sortDirection')"
                             v-model="form.sort.direction"
                             :class="[fieldInput, 'w-40']"
                         >

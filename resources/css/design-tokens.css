@@ -26,7 +26,7 @@
         /* Text — high contrast scale */
         --text-primary: 220.00 24.71% 16.67%;        /* headings, body */
         --text-secondary: 217.78 15.08% 35.10%;      /* secondary copy */
-        --text-tertiary: 218.57 11.97% 45.88%;        /* readable hint text */
+        --text-tertiary: 218.57 11.97% 42%;        /* readable on inset and tinted surfaces */
         --text-disabled: 220 9% 75%;
 
         /* Accent — brighter blue (matches the marketing site + app primary).

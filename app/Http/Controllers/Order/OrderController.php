@@ -197,7 +197,7 @@ class OrderController extends Controller
             $this->orderService->create($validated, $request->user());
 
             return redirect()->route('orders.index')
-                ->with('success', 'Order created successfully.');
+                ->with('success', __('Order created successfully.'));
         } catch (ValidationException $e) {
             // Discount problems found while pricing the order are field
             // errors; let Laravel send them back to the form.
@@ -396,7 +396,7 @@ class OrderController extends Controller
         }
 
         return redirect()->route('orders.index')
-            ->with('success', 'Order updated successfully.');
+            ->with('success', __('Order updated successfully.'));
     }
 
     /**
@@ -429,7 +429,7 @@ class OrderController extends Controller
         }
 
         return redirect()->route('orders.index')
-            ->with('success', 'Order deleted successfully.');
+            ->with('success', __('Order deleted successfully.'));
     }
 
     /**

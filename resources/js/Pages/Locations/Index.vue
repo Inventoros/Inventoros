@@ -8,7 +8,7 @@ import PageHeader from '@/Components/ui/PageHeader.vue';
 import Card from '@/Components/ui/Card.vue';
 import Button from '@/Components/ui/Button.vue';
 import Badge from '@/Components/ui/Badge.vue';
-import { Head, Link, router } from '@inertiajs/vue3';
+import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import { Plus, Search, Pencil, Trash2, MapPin, X, QrCode } from '@lucide/vue';
 
@@ -34,7 +34,7 @@ const blankLocation = () => ({
     warehouse_id: props.warehouses.length === 1 ? props.warehouses[0].id : null,
     capacity: null,
 });
-const locationForm = ref(blankLocation());
+const locationForm = useForm(blankLocation());
 const formMode = ref('create');
 
 const searchLocations = () => {
@@ -52,39 +52,41 @@ const clearFilters = () => {
 };
 
 const openCreateModal = () => {
-    locationForm.value = blankLocation();
+    locationForm.clearErrors();
+    Object.assign(locationForm, blankLocation());
     formMode.value = 'create';
     showCreateModal.value = true;
 };
 
 const openEditModal = (location) => {
+    locationForm.clearErrors();
     editingLocation.value = location;
-    locationForm.value = {
+    Object.assign(locationForm, {
         name: location.name,
         code: location.code,
         description: location.description || '',
         warehouse_id: location.warehouse_id ?? null,
         capacity: location.capacity ?? null,
-    };
+    });
     formMode.value = 'edit';
     showEditModal.value = true;
 };
 
 const createLocation = () => {
-    router.post(route('locations.store'), locationForm.value, {
+    locationForm.post(route('locations.store'), {
         onSuccess: () => {
             showCreateModal.value = false;
-            locationForm.value = blankLocation();
+            Object.assign(locationForm, blankLocation());
         },
     });
 };
 
 const updateLocation = () => {
-    router.put(route('locations.update', editingLocation.value.id), locationForm.value, {
+    locationForm.put(route('locations.update', editingLocation.value.id), {
         onSuccess: () => {
             showEditModal.value = false;
             editingLocation.value = null;
-            locationForm.value = blankLocation();
+            Object.assign(locationForm, blankLocation());
         },
     });
 };
@@ -144,7 +146,7 @@ const labelClass = 'mb-1 block text-xs font-medium text-text-secondary';
                     </div>
                 </div>
                 <div class="flex items-center gap-2">
-                    <Button type="submit" variant="default" size="sm">
+                    <Button :loading="locationForm.processing" type="submit" variant="default" size="sm">
                         <Search :size="14" />
                         {{ t('common.search') }}
                     </Button>
@@ -246,7 +248,7 @@ const labelClass = 'mb-1 block text-xs font-medium text-text-secondary';
                         ]"
                         v-html="link.label"
                     />
-                    <span v-else class="inline-flex h-8 min-w-8 cursor-not-allowed items-center justify-center rounded-md border border-border-subtle px-2.5 text-xs text-text-tertiary opacity-50" v-html="link.label" />
+                    <span role="link" aria-disabled="true" v-else class="inline-flex h-8 min-w-8 cursor-not-allowed items-center justify-center rounded-md border border-border-subtle px-2.5 text-xs text-text-tertiary" v-html="link.label" />
                 </template>
             </nav>
         </div>
@@ -273,6 +275,9 @@ const labelClass = 'mb-1 block text-xs font-medium text-text-secondary';
                     </div>
 
                     <form @submit.prevent="createLocation" class="space-y-4">
+                        <div v-if="Object.keys(locationForm.errors).length" role="alert" class="rounded-md border border-status-danger/25 bg-status-danger-soft p-3 text-sm text-status-danger">
+                            <p v-for="(error, field) in locationForm.errors" :key="field">{{ error }}</p>
+                        </div>
                         <div>
                             <label :for="fieldIdPrefix + '-1'" :class="labelClass">
                                 {{ t('locations.locationName') }} <span class="text-status-danger">*</span>
@@ -335,7 +340,7 @@ const labelClass = 'mb-1 block text-xs font-medium text-text-secondary';
 
                         <div class="mt-6 flex justify-end gap-2">
                             <Button type="button" variant="secondary" size="sm" @click="showCreateModal = false">{{ t('common.cancel') }}</Button>
-                            <Button type="submit" variant="default" size="sm">{{ t('locations.createLocation') }}</Button>
+                            <Button :loading="locationForm.processing" type="submit" variant="default" size="sm">{{ t('locations.createLocation') }}</Button>
                         </div>
                     </form>
                 </div>
@@ -361,6 +366,9 @@ const labelClass = 'mb-1 block text-xs font-medium text-text-secondary';
                     </div>
 
                     <form @submit.prevent="updateLocation" class="space-y-4">
+                        <div v-if="Object.keys(locationForm.errors).length" role="alert" class="rounded-md border border-status-danger/25 bg-status-danger-soft p-3 text-sm text-status-danger">
+                            <p v-for="(error, field) in locationForm.errors" :key="field">{{ error }}</p>
+                        </div>
                         <div>
                             <label :for="fieldIdPrefix + '-4'" :class="labelClass">
                                 {{ t('locations.locationName') }} <span class="text-status-danger">*</span>
@@ -420,7 +428,7 @@ const labelClass = 'mb-1 block text-xs font-medium text-text-secondary';
 
                         <div class="mt-6 flex justify-end gap-2">
                             <Button type="button" variant="secondary" size="sm" @click="showEditModal = false">{{ t('common.cancel') }}</Button>
-                            <Button type="submit" variant="default" size="sm">{{ t('locations.updateLocation') }}</Button>
+                            <Button :loading="locationForm.processing" type="submit" variant="default" size="sm">{{ t('locations.updateLocation') }}</Button>
                         </div>
                     </form>
                 </div>

@@ -406,11 +406,11 @@ const thClass = 'px-4 py-2.5 text-start text-xs font-medium tracking-tight text-
                                 <dt class="text-text-secondary">{{ t('common.shipping') }}</dt>
                                 <dd class="font-medium tabular-nums text-text-primary">{{ formatCurrency(purchaseOrder.shipping) }}</dd>
                             </div>
-                            <div class="border-t border-border-subtle pt-3">
-                                <div class="flex items-center justify-between">
+                            <div class="border-t border-border-subtle pt-3 flex items-center justify-between">
+
                                     <dt class="text-sm font-semibold text-text-primary">{{ t('common.total') }}</dt>
                                     <dd class="text-xl font-bold tabular-nums text-brand">{{ formatCurrency(purchaseOrder.total) }}</dd>
-                                </div>
+
                             </div>
                         </dl>
                     </div>

@@ -53,7 +53,7 @@ class OrganizationLogoController extends Controller
             Storage::disk($oldDisk)->delete($oldPath);
         }
 
-        return back()->with('success', 'Organization logo updated successfully.');
+        return back()->with('success', __('Organization logo updated successfully.'));
     }
 
     public function destroy(Request $request): RedirectResponse
@@ -67,6 +67,6 @@ class OrganizationLogoController extends Controller
             Storage::disk($oldDisk)->delete($oldPath);
         }
 
-        return back()->with('success', 'Organization logo removed successfully.');
+        return back()->with('success', __('Organization logo removed successfully.'));
     }
 }

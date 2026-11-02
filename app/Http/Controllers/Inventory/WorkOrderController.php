@@ -151,7 +151,7 @@ class WorkOrderController extends Controller
         }
 
         return redirect()->route('work-orders.show', $workOrder)
-            ->with('success', 'Work order created successfully.');
+            ->with('success', __('Work order created successfully.'));
     }
 
     /**
@@ -229,7 +229,7 @@ class WorkOrderController extends Controller
         }
 
         return redirect()->route('work-orders.show', $workOrder)
-            ->with('success', 'Work order started successfully.');
+            ->with('success', __('Work order started successfully.'));
     }
 
     /**

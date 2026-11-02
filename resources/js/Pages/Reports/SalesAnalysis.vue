@@ -192,8 +192,8 @@ const thClass =
                 <div class="px-5 pt-5">
                     <CardHeader :title="t('reports.salesAnalysis.salesByStatus')" />
                 </div>
-                <div class="p-5">
-                    <div class="flex items-end justify-around gap-3 h-40 border-b border-border-subtle pb-px">
+                <div class="p-5 overflow-x-auto ds-focus-ring" tabindex="0" role="region" :aria-label="t('reports.salesAnalysis.salesByStatus')">
+                    <div class="flex min-w-72 items-end justify-around gap-3 h-40 border-b border-border-subtle pb-px">
                         <div v-for="item in byStatus" :key="item.status" class="flex h-full flex-1 flex-col items-center justify-end gap-2">
                             <span class="text-xs font-medium tabular-nums text-text-secondary">{{ formatCurrency(item.revenue) }}</span>
                             <div
@@ -202,9 +202,9 @@ const thClass =
                             ></div>
                         </div>
                     </div>
-                    <div class="mt-3 flex items-start justify-around gap-3">
+                    <div class="mt-3 flex min-w-72 items-start justify-around gap-3">
                         <div v-for="item in byStatus" :key="item.status" class="flex flex-1 flex-col items-center gap-1 text-center">
-                            <Badge :variant="statusVariant(item.status)" size="sm" dot class="capitalize">{{ item.status }}</Badge>
+                            <Badge :variant="statusVariant(item.status)" size="sm" dot class="capitalize">{{ t(`orders.statuses.${item.status}`) }}</Badge>
                             <span class="text-xs text-text-tertiary">{{ item.count }} {{ t('nav.orders').toLowerCase() }}</span>
                             <span v-if="plusOthers(item.by_currency, 'revenue')" class="text-[11px] text-text-tertiary">{{ plusOthers(item.by_currency, 'revenue') }}</span>
                         </div>

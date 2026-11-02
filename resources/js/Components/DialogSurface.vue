@@ -1,6 +1,7 @@
 <script setup>
 import { nextTick, onBeforeUnmount, ref, useId, watch } from 'vue';
 import { lockPageScroll } from '@/lib/scrollLock';
+import { containTabFocus } from '@/lib/focus';
 
 // The visual panel stays with its caller. This surface supplies native focus
 // containment, an inert background, Escape and focus restoration consistently.
@@ -46,7 +47,7 @@ onBeforeUnmount(() => {
 
 <template>
     <Teleport to="body">
-        <dialog ref="surface" class="dialog-surface" :aria-label="label || undefined" @cancel.prevent="requestClose" @keydown.esc.stop.prevent="requestClose">
+        <dialog ref="surface" class="dialog-surface" :aria-label="label || undefined" @cancel.prevent="requestClose" @keydown="containTabFocus($event, surface)" @keydown.esc.stop.prevent="requestClose">
             <slot v-if="show" />
         </dialog>
     </Teleport>

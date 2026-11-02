@@ -25,6 +25,10 @@ The approved light/dark branding and full-height operational table workspace rem
 
 Baseline screenshots regenerated in [successful CI run](https://github.com/Inventoros/Inventoros/actions/runs/41474780161): 11 views in light and dark at 1920×1080, including full-window products and customers. These are baseline evidence, not a claim of full audit coverage.
 
+The [baseline application sweep](https://github.com/Inventoros/Inventoros/actions/runs/41477295273) completed 931 rendered checks and produced 386 screenshots. All seven requested widths were exercised, plus six layout families in all 14 languages at 320 and 1440 pixels. No HTTP errors or JavaScript exceptions occurred. Five narrow-screen overflows and nine categories of axe findings were recorded. The evidence run deliberately records findings without treating its green execution result as design approval.
+
+Coverage corrections identified during evidence review: guest contexts inherited staff authentication, and sent purchase-order/in-progress audit edit routes redirected to their detail pages. Explicitly empty guest storage and draft edit fixtures are now used; these screens remain unverified until the corrected sweep completes. Installer, invitation, expired/reset run, permission-denied and two-factor states require separate verification.
+
 ## Issues and fixes
 
 Pending rendered verification and implementation. Findings will be numbered with severity, evidence, affected files and verification status.

@@ -272,7 +272,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                     class="mt-1 rounded-lg bg-slate-900 p-4 font-mono text-xs text-slate-500"
                                 >
                                     ****************
-                                    <p class="mt-2 font-sans text-text-tertiary">
+                                    <p class="mt-2 font-sans text-slate-300">
                                         {{ t('settings.webhooks.show.secretHidden') }}
                                     </p>
                                 </dd>
@@ -428,9 +428,9 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                         ]"
                                         v-html="link.label"
                                     />
-                                    <span
+                                    <span role="link" aria-disabled="true"
                                         v-else
-                                        class="inline-flex cursor-not-allowed items-center rounded-md border border-border-subtle bg-surface-canvas px-3 py-1.5 text-sm font-medium text-text-tertiary opacity-50"
+                                        class="inline-flex cursor-not-allowed items-center rounded-md border border-border-subtle bg-surface-canvas px-3 py-1.5 text-sm font-medium text-text-tertiary"
                                         v-html="link.label"
                                     />
                                 </template>

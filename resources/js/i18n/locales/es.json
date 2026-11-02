@@ -317,7 +317,10 @@
     "new": "Nuevo",
     "editWithName": "Editar: {name}",
     "filters": "Filtros",
-    "expandTable": "Vista completa de la tabla"
+    "expandTable": "Vista completa de la tabla",
+    "selectAll": "Seleccionar todo",
+    "moveUp": "Mover arriba",
+    "moveDown": "Mover abajo"
   },
   "nav": {
     "dashboard": "Panel de control",
@@ -3115,7 +3118,10 @@
       "name": "Nombre del informe",
       "description": "Descripción",
       "chartType": "Tipo de gráfico",
-      "chartField": "Campo del gráfico"
+      "chartField": "Campo del gráfico",
+      "operator": "Operador",
+      "sortField": "Campo de ordenación",
+      "sortDirection": "Sentido de ordenación"
     },
     "placeholders": {
       "name": "Ingresa el nombre del informe...",

@@ -317,7 +317,10 @@
     "new": "Nowy",
     "editWithName": "Edycja: {name}",
     "filters": "Filtry",
-    "expandTable": "Pełny widok tabeli"
+    "expandTable": "Pełny widok tabeli",
+    "selectAll": "Zaznacz wszystkie",
+    "moveUp": "Przenieś w górę",
+    "moveDown": "Przenieś w dół"
   },
   "nav": {
     "dashboard": "Panel główny",
@@ -3115,7 +3118,10 @@
       "name": "Nazwa raportu",
       "description": "Opis",
       "chartType": "Typ wykresu",
-      "chartField": "Pole wykresu"
+      "chartField": "Pole wykresu",
+      "operator": "Operator",
+      "sortField": "Pole sortowania",
+      "sortDirection": "Kierunek sortowania"
     },
     "placeholders": {
       "name": "Wpisz nazwę raportu...",

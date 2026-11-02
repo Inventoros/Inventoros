@@ -137,7 +137,7 @@ class WarehouseController extends Controller
         }
 
         return redirect()->route('warehouses.show', $warehouse)
-            ->with('success', 'Warehouse created successfully.');
+            ->with('success', __('Warehouse created successfully.'));
     }
 
     /**
@@ -260,7 +260,7 @@ class WarehouseController extends Controller
         $warehouse->update($validated);
 
         return redirect()->route('warehouses.show', $warehouse)
-            ->with('success', 'Warehouse updated successfully.');
+            ->with('success', __('Warehouse updated successfully.'));
     }
 
     /**
@@ -285,7 +285,7 @@ class WarehouseController extends Controller
         }
 
         return redirect()->route('warehouses.index')
-            ->with('success', 'Warehouse deleted successfully.');
+            ->with('success', __('Warehouse deleted successfully.'));
     }
 
     /**
@@ -308,7 +308,7 @@ class WarehouseController extends Controller
         $warehouse->users()->sync($validated['user_ids']);
 
         return redirect()->back()
-            ->with('success', 'Warehouse user assignments updated successfully.');
+            ->with('success', __('Warehouse user assignments updated successfully.'));
     }
 
     /**
@@ -332,7 +332,7 @@ class WarehouseController extends Controller
         $warehouse->update(['is_default' => true]);
 
         return redirect()->back()
-            ->with('success', 'Default warehouse updated successfully.');
+            ->with('success', __('Default warehouse updated successfully.'));
     }
 
     /**

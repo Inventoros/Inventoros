@@ -140,16 +140,16 @@ const formatTime = (date) =>
 
                     <div>
                         <dt class="mb-1 text-xs text-text-tertiary">{{ t('stockAdjustments.show.adjustedBy') }}</dt>
-                        <dd class="text-sm text-text-primary">{{ adjustment.user?.name || t('common.system') }}</dd>
+                        <dd class="text-sm text-text-primary">{{ adjustment.user?.name || t('common.system') }}
                         <p v-if="adjustment.user?.email" class="mt-1 text-xs text-text-tertiary">
                             {{ adjustment.user.email }}
-                        </p>
+                        </p></dd>
                     </div>
 
                     <div>
                         <dt class="mb-1 text-xs text-text-tertiary">{{ t('stockAdjustments.show.dateTime') }}</dt>
-                        <dd class="text-sm text-text-primary">{{ formatDate(adjustment.created_at) }}</dd>
-                        <p class="mt-1 text-xs text-text-tertiary">{{ formatTime(adjustment.created_at) }}</p>
+                        <dd class="text-sm text-text-primary">{{ formatDate(adjustment.created_at) }}
+                        <p class="mt-1 text-xs text-text-tertiary">{{ formatTime(adjustment.created_at) }}</p></dd>
                     </div>
 
                     <div class="md:col-span-2">

@@ -206,7 +206,7 @@ class ProductController extends Controller
 
         // Hook: Modify redirect response
         $response = apply_filters('product_store_response',
-            redirect()->route('products.index')->with('success', 'Product created successfully.'),
+            redirect()->route('products.index')->with('success', __('Product created successfully.')),
             $product,
             $request
         );
@@ -406,7 +406,7 @@ class ProductController extends Controller
         do_action('product_after_update', $product, $request);
 
         return redirect()->route('products.index')
-            ->with('success', 'Product updated successfully.');
+            ->with('success', __('Product updated successfully.'));
     }
 
     /**
@@ -443,7 +443,7 @@ class ProductController extends Controller
         $newProduct->save();
 
         return redirect()->route('products.show', $newProduct)
-            ->with('success', 'Product duplicated successfully.');
+            ->with('success', __('Product duplicated successfully.'));
     }
 
     /**
@@ -470,7 +470,7 @@ class ProductController extends Controller
         do_action('product_after_delete', $product, $request);
 
         return redirect()->route('products.index')
-            ->with('success', 'Product deleted successfully.');
+            ->with('success', __('Product deleted successfully.'));
     }
 
     /**

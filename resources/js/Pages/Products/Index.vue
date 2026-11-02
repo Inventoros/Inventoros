@@ -301,7 +301,7 @@ const thClass =
                 <thead>
                     <tr class="border-b border-border-subtle">
                         <th class="w-10 px-4 py-2.5">
-                            <input type="checkbox" :checked="selectAll" @change="toggleSelectAll" class="rounded border-border-strong bg-surface-canvas text-brand focus:ring-brand" />
+                            <input :aria-label="t('common.selectAll')" type="checkbox" :checked="selectAll" @change="toggleSelectAll" class="rounded border-border-strong bg-surface-canvas text-brand focus:ring-brand" />
                         </th>
                         <th :class="thClass">{{ t('products.productCol') }}</th>
                         <th :class="thClass">{{ t('products.skuBarcode') }}</th>
@@ -324,10 +324,10 @@ const thClass =
                     </tr>
                     <tr v-for="product in products.data" :key="product.id" class="border-b border-border-subtle transition-colors last:border-b-0 hover:bg-surface-overlay">
                         <td class="px-4 py-3">
-                            <input type="checkbox" :checked="isSelected(product.id)" @change="toggleSelect(product.id)" class="rounded border-border-strong bg-surface-canvas text-brand focus:ring-brand" />
+                            <input type="checkbox" :aria-label="product.display_name ?? product.name" :checked="isSelected(product.id)" @change="toggleSelect(product.id)" class="rounded border-border-strong bg-surface-canvas text-brand focus:ring-brand" />
                         </td>
                         <td class="px-4 py-3">
-                            <Link :href="route('products.show', product.id)" class="font-medium text-text-primary hover:text-brand">{{ product.display_name ?? product.name }}</Link>
+                            <Link :href="route('products.show', product.id)" class="font-medium text-text-primary hover:text-brand"><bdi>{{ product.display_name ?? product.name }}</bdi></Link>
                             <p v-if="product.description" class="max-w-xs truncate text-xs text-text-tertiary">{{ product.description }}</p>
                         </td>
                         <td class="px-4 py-3">
@@ -379,7 +379,7 @@ const thClass =
                                     link.active ? 'border-brand bg-brand text-brand-foreground' : 'border-border-subtle bg-surface-canvas text-text-secondary hover:bg-surface-overlay',
                                 ]"
                                 v-html="link.label" />
-                            <span v-else class="inline-flex h-8 min-w-8 cursor-not-allowed items-center justify-center rounded-md border border-border-subtle px-2.5 text-xs text-text-tertiary opacity-50" v-html="link.label" />
+                            <span role="link" aria-disabled="true" v-else class="inline-flex h-8 min-w-8 cursor-not-allowed items-center justify-center rounded-md border border-border-subtle px-2.5 text-xs text-text-tertiary" v-html="link.label" />
                         </template>
                     </nav>
                 </div>
@@ -397,7 +397,7 @@ const thClass =
                 <div class="relative mx-4 w-full max-w-md rounded-xl border border-border-subtle bg-surface-raised p-6 shadow-lg">
                     <h3 class="mb-1 text-base font-semibold text-text-primary">{{ t('products.bulk.changeCategory') }}</h3>
                     <p class="mb-4 text-sm text-text-secondary">{{ t('products.bulk.updateCategoryFor', { count: selectedProducts.length }, selectedProducts.length) }}</p>
-                    <select v-model="bulkCategoryId" :class="[selectClass, 'mb-4']">
+                    <select :aria-label="t('products.category')" v-model="bulkCategoryId" :class="[selectClass, 'mb-4']">
                         <option value="">{{ t('products.bulk.selectCategory') }}</option>
                         <option v-for="cat in categories" :key="cat.id" :value="cat.id">{{ cat.name }}</option>
                     </select>

@@ -322,11 +322,11 @@ const thClass = 'px-4 py-2.5 text-xs font-medium tracking-tight text-text-second
                                 <dt class="text-text-secondary">{{ t('returns.show.processedBy') }}</dt>
                                 <dd class="font-medium text-text-primary">{{ returnOrder.processor.name }}</dd>
                             </div>
-                            <div class="border-t border-border-subtle pt-3">
-                                <div class="flex items-center justify-between">
+                            <div class="border-t border-border-subtle pt-3 flex items-center justify-between">
+
                                     <dt class="text-sm font-semibold text-text-primary">{{ t('returns.show.refundAmount') }}</dt>
                                     <dd class="text-xl font-bold tabular-nums text-brand">{{ formatMoney(returnOrder.refund_amount, returnOrder.order?.currency) }}</dd>
-                                </div>
+
                             </div>
                         </dl>
                     </div>

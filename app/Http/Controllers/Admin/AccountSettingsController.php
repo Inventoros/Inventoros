@@ -54,7 +54,7 @@ class AccountSettingsController extends Controller
 
         $user->update($validated);
 
-        return redirect()->back()->with('success', 'Profile updated successfully.');
+        return redirect()->back()->with('success', __('Profile updated successfully.'));
     }
 
     /**
@@ -81,7 +81,7 @@ class AccountSettingsController extends Controller
             'password' => Hash::make($validated['password']),
         ]);
 
-        return redirect()->back()->with('success', 'Password updated successfully.');
+        return redirect()->back()->with('success', __('Password updated successfully.'));
     }
 
     /**
@@ -111,7 +111,7 @@ class AccountSettingsController extends Controller
         $user->notification_preferences = array_merge($preferences, $validated);
         $user->save();
 
-        return redirect()->back()->with('success', 'Notification preferences updated successfully.');
+        return redirect()->back()->with('success', __('Notification preferences updated successfully.'));
     }
 
     /**
@@ -135,7 +135,7 @@ class AccountSettingsController extends Controller
         $user->notification_preferences = array_merge($preferences, ['preferences' => $validated]);
         $user->save();
 
-        return redirect()->back()->with('success', 'Preferences updated successfully.');
+        return redirect()->back()->with('success', __('Preferences updated successfully.'));
     }
 
     /**

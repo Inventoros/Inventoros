@@ -317,7 +317,10 @@
     "new": "新規",
     "editWithName": "編集: {name}",
     "filters": "フィルター",
-    "expandTable": "テーブルを全画面表示"
+    "expandTable": "テーブルを全画面表示",
+    "selectAll": "すべて選択",
+    "moveUp": "上に移動",
+    "moveDown": "下に移動"
   },
   "nav": {
     "dashboard": "ダッシュボード",
@@ -3115,7 +3118,10 @@
       "name": "レポート名",
       "description": "説明",
       "chartType": "グラフの種類",
-      "chartField": "グラフの項目"
+      "chartField": "グラフの項目",
+      "operator": "演算子",
+      "sortField": "並べ替えの項目",
+      "sortDirection": "並べ替えの順序"
     },
     "placeholders": {
       "name": "レポート名を入力...",

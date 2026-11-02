@@ -22,7 +22,10 @@
     justify-content: space-between;
     gap: 16px;
     margin-bottom: 22px;
+    flex-wrap: wrap;
 }
+.dashboard-heading > div:first-child { min-width: 0; }
+.dashboard-heading h1 { overflow-wrap: anywhere; }
 .dashboard-eyebrow {
     margin-bottom: 8px;
     font-size: 10px;
@@ -35,6 +38,8 @@
     display: flex;
     align-items: center;
     gap: 9px;
+    max-width: 100%;
+    flex-wrap: wrap;
 }
 .dashboard-date {
     margin-inline-end: 12px;

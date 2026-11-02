@@ -268,8 +268,8 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                         >
                             <!-- Product -->
                             <div class="min-w-0 flex-1 basis-full sm:basis-auto sm:min-w-[200px]">
-                                <label :class="fieldLabel">{{ t('common.product') }} <span class="text-status-danger">*</span></label>
-                                <select
+                                <label :for="fieldIdPrefix + '-repeat-1-' + index" :class="fieldLabel">{{ t('common.product') }} <span class="text-status-danger">*</span></label>
+                                <select :id="fieldIdPrefix + '-repeat-1-' + index"
                                     v-model="item.product_id"
                                     @change="item.product_variant_id = ''"
                                     required
@@ -286,8 +286,8 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                             </div>
 
                             <div v-if="getProduct(item.product_id)?.active_variants?.length" class="min-w-48 flex-1">
-                                <label :class="fieldLabel">{{ t('orders.create.variant') }}</label>
-                                <select v-model="item.product_variant_id" required :class="fieldInput">
+                                <label :for="fieldIdPrefix + '-repeat-2-' + index" :class="fieldLabel">{{ t('orders.create.variant') }}</label>
+                                <select :id="fieldIdPrefix + '-repeat-2-' + index" v-model="item.product_variant_id" required :class="fieldInput">
                                     <option value="">{{ t('orders.create.chooseVariant') }}</option>
                                     <option v-for="variant in getProduct(item.product_id).active_variants" :key="variant.id" :value="variant.id">{{ variant.sku || variant.title }} ({{ variant.stock }})</option>
                                 </select>
@@ -295,8 +295,8 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                             </div>
                             <!-- Quantity -->
                             <div class="w-32">
-                                <label :class="fieldLabel">{{ t('stockTransfers.create.qty') }} <span class="text-status-danger">*</span></label>
-                                <input
+                                <label :for="fieldIdPrefix + '-repeat-3-' + index" :class="fieldLabel">{{ t('stockTransfers.create.qty') }} <span class="text-status-danger">*</span></label>
+                                <input :id="fieldIdPrefix + '-repeat-3-' + index"
                                     v-model="item.quantity"
                                     type="number"
                                     min="1"
@@ -313,8 +313,8 @@ const fieldError = 'mt-1 text-xs text-status-danger';
 
                             <!-- Notes -->
                             <div class="min-w-0 flex-1 sm:min-w-[150px]">
-                                <label :class="fieldLabel">{{ t('common.notes') }}</label>
-                                <input
+                                <label :for="fieldIdPrefix + '-repeat-4-' + index" :class="fieldLabel">{{ t('common.notes') }}</label>
+                                <input :id="fieldIdPrefix + '-repeat-4-' + index"
                                     v-model="item.notes"
                                     type="text"
                                     :class="fieldInput"
@@ -324,7 +324,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
 
                             <!-- Remove button -->
                             <div class="pt-7">
-                                <button
+                                <button :aria-label="t('common.delete')"
                                     type="button"
                                     @click="removeItem(index)"
                                     :disabled="form.items.length <= 1"

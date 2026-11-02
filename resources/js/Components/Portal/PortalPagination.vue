@@ -25,9 +25,9 @@ defineProps({
                     ]"
                     v-html="link.label"
                 />
-                <span
+                <span role="link" aria-disabled="true"
                     v-else
-                    class="inline-flex h-8 min-w-8 cursor-not-allowed items-center justify-center rounded-md border border-border-subtle px-2.5 text-xs text-text-tertiary opacity-50"
+                    class="inline-flex h-8 min-w-8 cursor-not-allowed items-center justify-center rounded-md border border-border-subtle px-2.5 text-xs text-text-tertiary"
                     v-html="link.label"
                 />
             </template>

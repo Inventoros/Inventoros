@@ -317,7 +317,10 @@
     "new": "Nuovo",
     "editWithName": "Modifica: {name}",
     "filters": "Filtri",
-    "expandTable": "Vista tabella completa"
+    "expandTable": "Vista tabella completa",
+    "selectAll": "Seleziona tutto",
+    "moveUp": "Sposta in alto",
+    "moveDown": "Sposta in basso"
   },
   "nav": {
     "dashboard": "Dashboard",
@@ -3115,7 +3118,10 @@
       "name": "Nome del report",
       "description": "Descrizione",
       "chartType": "Tipo di grafico",
-      "chartField": "Campo del grafico"
+      "chartField": "Campo del grafico",
+      "operator": "Operatore",
+      "sortField": "Campo di ordinamento",
+      "sortDirection": "Direzione di ordinamento"
     },
     "placeholders": {
       "name": "Inserisci il nome del report...",

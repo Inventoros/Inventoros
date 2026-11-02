@@ -317,7 +317,10 @@
     "new": "新建",
     "editWithName": "编辑：{name}",
     "filters": "筛选",
-    "expandTable": "全屏表格"
+    "expandTable": "全屏表格",
+    "selectAll": "全选",
+    "moveUp": "上移",
+    "moveDown": "下移"
   },
   "nav": {
     "dashboard": "仪表盘",
@@ -3115,7 +3118,10 @@
       "name": "报表名称",
       "description": "描述",
       "chartType": "图表类型",
-      "chartField": "图表字段"
+      "chartField": "图表字段",
+      "operator": "运算符",
+      "sortField": "排序字段",
+      "sortDirection": "排序方向"
     },
     "placeholders": {
       "name": "输入报表名称...",

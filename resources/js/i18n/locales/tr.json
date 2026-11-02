@@ -317,7 +317,10 @@
     "new": "Yeni",
     "editWithName": "Düzenle: {name}",
     "filters": "Filtreler",
-    "expandTable": "Tam tablo görünümü"
+    "expandTable": "Tam tablo görünümü",
+    "selectAll": "Tümünü Seç",
+    "moveUp": "Yukarı taşı",
+    "moveDown": "Aşağı taşı"
   },
   "nav": {
     "dashboard": "Gösterge Paneli",
@@ -3115,7 +3118,10 @@
       "name": "Rapor Adı",
       "description": "Açıklama",
       "chartType": "Grafik Türü",
-      "chartField": "Grafik Alanı"
+      "chartField": "Grafik Alanı",
+      "operator": "İşleç",
+      "sortField": "Sıralama alanı",
+      "sortDirection": "Sıralama yönü"
     },
     "placeholders": {
       "name": "Rapor adını girin...",

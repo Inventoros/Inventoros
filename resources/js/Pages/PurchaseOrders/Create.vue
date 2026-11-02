@@ -1,4 +1,6 @@
 <script setup>
+import { useId as useFieldId } from 'vue';
+const fieldIdPrefix = useFieldId();
 import CurrencySelect from '@/Components/CurrencySelect.vue';
 import { useCurrency } from '@/composables/useCurrency';
 
@@ -325,18 +327,18 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                 <p v-if="form.errors[`items.${index}.product_variant_id`]" :class="fieldError">{{ form.errors[`items.${index}.product_variant_id`] }}</p>
                             </div>
                             <div class="w-20">
-                                <label class="mb-1 block text-[11px] text-text-tertiary">{{ t('common.quantity') }}</label>
-                                <input :value="item.quantity" @input="updateItemQuantity(index, parseInt($event.target.value))" type="number" min="1" :class="fieldInput" />
+                                <label :for="fieldIdPrefix + '-repeat-1-' + index" class="mb-1 block text-[11px] text-text-tertiary">{{ t('common.quantity') }}</label>
+                                <input :id="fieldIdPrefix + '-repeat-1-' + index" :value="item.quantity" @input="updateItemQuantity(index, parseInt($event.target.value))" type="number" min="1" :class="fieldInput" />
                             </div>
                             <div class="w-28">
-                                <label class="mb-1 block text-[11px] text-text-tertiary">{{ t('purchaseOrders.create.unitCost') }}</label>
-                                <input :value="item.unit_cost" @input="updateItemCost(index, $event.target.value)" type="number" step="0.01" min="0" :class="fieldInput" />
+                                <label :for="fieldIdPrefix + '-repeat-2-' + index" class="mb-1 block text-[11px] text-text-tertiary">{{ t('purchaseOrders.create.unitCost') }}</label>
+                                <input :id="fieldIdPrefix + '-repeat-2-' + index" :value="item.unit_cost" @input="updateItemCost(index, $event.target.value)" type="number" step="0.01" min="0" :class="fieldInput" />
                             </div>
                             <div class="w-28 text-end">
                                 <label class="mb-1 block text-[11px] text-text-tertiary">{{ t('common.subtotal') }}</label>
                                 <p class="font-semibold tabular-nums text-text-primary">{{ formatCurrency(item.quantity * item.unit_cost) }}</p>
                             </div>
-                            <button type="button" @click="removeItem(index)" class="mt-4 rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-surface-sunken hover:text-status-danger"><Trash2 :size="16" /></button>
+                            <button :aria-label="t('common.delete')" type="button" @click="removeItem(index)" class="mt-4 rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-surface-sunken hover:text-status-danger"><Trash2 :size="16" /></button>
                         </div>
                     </div>
 

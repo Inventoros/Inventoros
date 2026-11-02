@@ -317,7 +317,10 @@
     "new": "جديد",
     "editWithName": "تعديل: {name}",
     "filters": "المرشحات",
-    "expandTable": "عرض الجدول بالكامل"
+    "expandTable": "عرض الجدول بالكامل",
+    "selectAll": "تحديد الكل",
+    "moveUp": "نقل لأعلى",
+    "moveDown": "نقل لأسفل"
   },
   "nav": {
     "dashboard": "لوحة التحكم",
@@ -3115,7 +3118,10 @@
       "name": "اسم التقرير",
       "description": "الوصف",
       "chartType": "نوع الرسم البياني",
-      "chartField": "حقل الرسم البياني"
+      "chartField": "حقل الرسم البياني",
+      "operator": "عامل المقارنة",
+      "sortField": "حقل الترتيب",
+      "sortDirection": "اتجاه الترتيب"
     },
     "placeholders": {
       "name": "أدخل اسم التقرير...",

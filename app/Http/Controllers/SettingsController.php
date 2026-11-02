@@ -108,7 +108,7 @@ class SettingsController extends Controller
             $this->setSecret('email.sendgrid.api_key', $validated['sendgrid']['api_key'] ?? null);
         }
 
-        return back()->with('success', 'Email settings saved successfully');
+        return back()->with('success', __('Email settings saved successfully'));
     }
 
     /**

@@ -31,6 +31,7 @@ final class E2EUiAuditSeeder extends Seeder
         $product = Product::withoutGlobalScopes()->where('organization_id', $org)->firstOrFail();
         $locations = ProductLocation::withoutGlobalScopes()->where('organization_id', $org)->take(2)->get();
         $audit = StockAudit::create(['organization_id' => $org, 'audit_number' => 'AUDIT-UI-QA', 'name' => 'Quarterly count', 'status' => 'in_progress', 'audit_type' => 'spot', 'created_by' => $user->id]);
+        $draftAudit = StockAudit::create(['organization_id' => $org, 'audit_number' => 'AUDIT-UI-DRAFT', 'name' => 'Draft count', 'status' => 'draft', 'audit_type' => 'spot', 'created_by' => $user->id]);
         $item = $audit->items()->create(['product_id' => $product->id, 'system_quantity' => $product->stock, 'status' => 'pending']);
         app(StockAuditService::class)->recordCount($audit, $item, $user, 3, 'First count');
         $cycle = CycleCountSchedule::create(['organization_id' => $org, 'name' => 'Weekly warehouse cycle', 'frequency' => 'weekly', 'scope_type' => 'all', 'products_per_run' => 20, 'created_by' => $user->id]);
@@ -56,6 +57,11 @@ final class E2EUiAuditSeeder extends Seeder
                 continue;
             }
             $uri = preg_replace_callback('/\{([^}:]+)(?::[^}]+)?\}/', fn ($match) => $ids[$match[1]] ?? $match[0], $route['uri']);
+            if ($route['name'] === 'stock-audits.edit') $uri = 'stock-audits/'.$draftAudit->id.'/edit';
+            if ($route['name'] === 'purchase-orders.edit') {
+                $draftPo = \App\Models\Purchasing\PurchaseOrder::withoutGlobalScopes()->where('organization_id', $org)->where('status', 'draft')->firstOrFail();
+                $uri = 'purchase-orders/'.$draftPo->id.'/edit';
+            }
             if (str_contains($uri, '{')) {
                 $excluded[] = ['name' => $route['name'], 'reason' => 'Requires a state-specific fixture'];
                 continue;
@@ -64,6 +70,7 @@ final class E2EUiAuditSeeder extends Seeder
         }
         // Invokable controllers and conditional pages need explicit coverage.
         $routes[] = ['name' => 'reports.batch-expiry', 'url' => '/reports/batch-expiry', 'pages' => ['Reports/BatchExpiry']];
+        $routes[] = ['name' => 'returns.create.with-order', 'url' => '/returns/create?order_id='.$layout['order'], 'pages' => ['Returns/Create']];
         file_put_contents(base_path('e2e/.auth/ui-audit.json'), json_encode(['routes' => $routes, 'excluded' => $excluded, 'layout' => $layout], JSON_PRETTY_PRINT));
     }
 }

@@ -92,7 +92,7 @@ class UserController extends Controller
         $users->create($request->user(), $request->validated());
 
         return redirect()->route('users.index')
-            ->with('success', 'User created successfully.');
+            ->with('success', __('User created successfully.'));
     }
 
     /**
@@ -166,7 +166,7 @@ class UserController extends Controller
         $users->update($currentUser, $user, $request->validated());
 
         return redirect()->route('users.index')
-            ->with('success', 'User updated successfully.');
+            ->with('success', __('User updated successfully.'));
     }
 
     /**
@@ -211,6 +211,6 @@ class UserController extends Controller
         $user->delete();
 
         return redirect()->route('users.index')
-            ->with('success', 'User deleted successfully.');
+            ->with('success', __('User deleted successfully.'));
     }
 }

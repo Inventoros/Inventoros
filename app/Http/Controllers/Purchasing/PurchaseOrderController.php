@@ -119,7 +119,7 @@ class PurchaseOrderController extends Controller
         $purchaseOrder = $purchaseOrders->create($request->user()->organization_id, $request->user(), $request->validated());
 
         return redirect()->route('purchase-orders.show', $purchaseOrder)
-            ->with('success', 'Purchase order created successfully.');
+            ->with('success', __('Purchase order created successfully.'));
     }
 
     /**
@@ -232,7 +232,7 @@ class PurchaseOrderController extends Controller
         }
 
         return redirect()->route('purchase-orders.show', $purchaseOrder)
-            ->with('success', 'Purchase order updated successfully.');
+            ->with('success', __('Purchase order updated successfully.'));
     }
 
     /**
@@ -258,7 +258,7 @@ class PurchaseOrderController extends Controller
         $purchaseOrder->delete();
 
         return redirect()->route('purchase-orders.index')
-            ->with('success', 'Purchase order deleted successfully.');
+            ->with('success', __('Purchase order deleted successfully.'));
     }
 
     /**

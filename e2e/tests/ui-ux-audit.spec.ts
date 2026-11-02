@@ -75,7 +75,7 @@ test('all supported languages across layout families', async ({ page }) => {
 
 test('guest and portal routes', async ({ browser }) => {
     test.setTimeout(10 * 60_000);
-    const context = await browser.newContext({ viewport: { width: 1440, height: 1080 } });
+    const context = await browser.newContext({ storageState: { cookies: [], origins: [] }, viewport: { width: 1440, height: 1080 } });
     const page = await context.newPage();
     const fx = manifest().layout;
     const guest = ['/login', '/register', '/forgot-password', '/reset-password/audit-preview?email=audit%40example.test', `/portal/${fx.portal_slug}/login`, `/portal/${fx.portal_slug}/forgot-password`, `/portal/${fx.portal_slug}/reset-password/audit-preview?email=${encodeURIComponent(fx.portal_email)}`];

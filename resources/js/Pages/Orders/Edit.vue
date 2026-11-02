@@ -285,7 +285,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
 
                                         <!-- Remove button -->
                                         <div class="flex items-end md:col-span-1">
-                                            <button
+                                            <button :aria-label="t('common.delete')"
                                                 type="button"
                                                 @click="removeItem(index)"
                                                 class="rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-surface-sunken hover:text-status-danger"

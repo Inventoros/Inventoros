@@ -358,7 +358,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                             <label :class="fieldLabel">{{ t('products.form.additionalCurrencies') }}</label>
 
                             <div v-for="(currencyPrice, index) in additionalCurrencies" :key="index" class="grid grid-cols-3 gap-2">
-                                <select v-model="currencyPrice.currency" class="col-span-1" :class="fieldInput" disabled>
+                                <select :aria-label="t('common.currency')" v-model="currencyPrice.currency" class="col-span-1" :class="fieldInput" disabled>
                                     <option :value="currencyPrice.currency">{{ currencyPrice.currency }} ({{ getCurrencySymbol(currencyPrice.currency) }})</option>
                                 </select>
 
@@ -367,7 +367,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                         <div class="pointer-events-none absolute inset-y-0 start-0 flex items-center ps-3">
                                             <span class="text-sm text-text-tertiary">{{ getCurrencySymbol(currencyPrice.currency) }}</span>
                                         </div>
-                                        <input v-model="currencyPrice.price" type="number" step="0.01" min="0" :class="fieldInput + ' ps-8'" />
+                                        <input :aria-label="t('common.price')" v-model="currencyPrice.price" type="number" step="0.01" min="0" :class="fieldInput + ' ps-8'" />
                                     </div>
                                     <Button type="button" variant="danger" size="icon" @click="removeCurrency(index)">
                                         <X :size="16" />
@@ -376,7 +376,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                             </div>
 
                             <div v-if="showCurrencySelect" class="flex gap-2">
-                                <select v-model="selectedNewCurrency" class="flex-1" :class="fieldInput">
+                                <select :aria-label="t('common.currency')" v-model="selectedNewCurrency" class="flex-1" :class="fieldInput">
                                     <option value="">{{ t('products.form.selectCurrency') }}</option>
                                     <option v-for="curr in availableCurrencies" :key="curr.code" :value="curr.code">
                                         {{ curr.code }} ({{ curr.symbol }}) - {{ curr.name }}

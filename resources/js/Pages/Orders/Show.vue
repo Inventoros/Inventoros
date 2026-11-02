@@ -494,11 +494,11 @@ const formatOrderDate = (date, long = false) =>
                                     <dd class="font-medium tabular-nums text-text-primary">{{ money(order.shipping || 0) }}</dd>
                                 </div>
 
-                                <div class="border-t border-border-subtle pt-3">
-                                    <div class="flex items-center justify-between">
+                                <div class="border-t border-border-subtle pt-3 flex items-center justify-between">
+
                                         <dt class="text-sm font-semibold text-text-primary">{{ t('common.total') }}</dt>
                                         <dd class="text-xl font-bold tabular-nums text-brand">{{ money(order.total) }}</dd>
-                                    </div>
+
                                 </div>
 
                                 <template v-if="order.amount_paid !== undefined && order.payment_status !== 'untracked'">

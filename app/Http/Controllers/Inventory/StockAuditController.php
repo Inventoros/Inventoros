@@ -293,7 +293,7 @@ class StockAuditController extends Controller
         }, 3);
 
         return redirect()->route('stock-audits.show', $stockAudit)
-            ->with('success', 'Stock audit updated successfully.');
+            ->with('success', __('Stock audit updated successfully.'));
     }
 
     /**
@@ -319,7 +319,7 @@ class StockAuditController extends Controller
         $stockAudit->delete();
 
         return redirect()->route('stock-audits.index')
-            ->with('success', 'Stock audit deleted successfully.');
+            ->with('success', __('Stock audit deleted successfully.'));
     }
 
     /**

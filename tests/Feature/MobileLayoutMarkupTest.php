@@ -26,7 +26,7 @@ class MobileLayoutMarkupTest extends TestCase
         $layout = $this->source('Layouts/AppLayout.vue');
 
         $this->assertStringContainsString('watch(mobileOpen', $layout);
-        $this->assertStringContainsString("document.body.style.overflow = open ? 'hidden' : ''", $layout);
+        $this->assertStringContainsString('releaseDrawerScroll = open ? lockPageScroll() : undefined', $layout);
     }
 
     /**
@@ -39,7 +39,7 @@ class MobileLayoutMarkupTest extends TestCase
 
         $this->assertStringContainsString('onBeforeUnmount', $layout);
         $this->assertMatchesRegularExpression(
-            '/onBeforeUnmount\(\(\) => \{\s*document\.body\.style\.overflow = \'\';/',
+            '/onBeforeUnmount\(\(\) => \{\s*releaseDrawerScroll\?\.\(\);/',
             $layout,
         );
     }

@@ -317,7 +317,10 @@
     "new": "Nieuw",
     "editWithName": "Bewerken: {name}",
     "filters": "Filters",
-    "expandTable": "Volledige tabelweergave"
+    "expandTable": "Volledige tabelweergave",
+    "selectAll": "Alles selecteren",
+    "moveUp": "Omhoog verplaatsen",
+    "moveDown": "Omlaag verplaatsen"
   },
   "nav": {
     "dashboard": "Dashboard",
@@ -3115,7 +3118,10 @@
       "name": "Rapportnaam",
       "description": "Beschrijving",
       "chartType": "Grafiektype",
-      "chartField": "Grafiekveld"
+      "chartField": "Grafiekveld",
+      "operator": "Operator",
+      "sortField": "Sorteerveld",
+      "sortDirection": "Sorteerrichting"
     },
     "placeholders": {
       "name": "Voer een rapportnaam in...",

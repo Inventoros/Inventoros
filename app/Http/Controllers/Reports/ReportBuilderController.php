@@ -137,7 +137,7 @@ class ReportBuilderController extends Controller
 
         return redirect()
             ->route('reports.builder.show', $report)
-            ->with('success', 'Report created successfully.');
+            ->with('success', __('Report created successfully.'));
     }
 
     /**
@@ -329,7 +329,7 @@ class ReportBuilderController extends Controller
 
         return redirect()
             ->route('reports.builder.show', $savedReport)
-            ->with('success', 'Report updated successfully.');
+            ->with('success', __('Report updated successfully.'));
     }
 
     /**
@@ -350,7 +350,7 @@ class ReportBuilderController extends Controller
 
         return redirect()
             ->route('reports.builder.index')
-            ->with('success', 'Report deleted successfully.');
+            ->with('success', __('Report deleted successfully.'));
     }
 
     /**

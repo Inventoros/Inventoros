@@ -203,7 +203,7 @@ class StockAdjustmentController extends Controller
         }
 
         return redirect()->route('stock-adjustments.index')
-            ->with('success', 'Stock adjustment created successfully.');
+            ->with('success', __('Stock adjustment created successfully.'));
     }
 
     /**

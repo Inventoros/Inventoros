@@ -159,7 +159,7 @@ const thClass =
                     <tr v-for="wo in workOrders.data" :key="wo.id" class="border-b border-border-subtle transition-colors last:border-b-0 hover:bg-surface-overlay">
                         <td class="px-4 py-3">
                             <Link :href="route('work-orders.show', wo.id)" class="font-medium text-text-primary hover:text-brand">
-                                {{ wo.wo_number }}
+                                {{ wo.work_order_number }}
                             </Link>
                         </td>
                         <td class="px-4 py-3">
@@ -211,7 +211,7 @@ const thClass =
                                 v-html="link.label"
                                 preserve-scroll
                             />
-                            <span v-else class="inline-flex h-8 min-w-8 cursor-not-allowed items-center justify-center rounded-md border border-border-subtle px-2.5 text-xs text-text-tertiary opacity-50" v-html="link.label" />
+                            <span role="link" aria-disabled="true" v-else class="inline-flex h-8 min-w-8 cursor-not-allowed items-center justify-center rounded-md border border-border-subtle px-2.5 text-xs text-text-tertiary" v-html="link.label" />
                         </template>
                     </nav>
                 </div>

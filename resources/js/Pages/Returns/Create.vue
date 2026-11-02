@@ -214,8 +214,8 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                 <div v-if="item.selected" class="flex items-center gap-4">
                                     <!-- Quantity -->
                                     <div class="w-20">
-                                        <label :class="fieldLabel">{{ t('returns.columns.qty') }}</label>
-                                        <input
+                                        <label :for="fieldIdPrefix + '-repeat-1-' + index" :class="fieldLabel">{{ t('returns.columns.qty') }}</label>
+                                        <input :id="fieldIdPrefix + '-repeat-1-' + index"
                                             type="number"
                                             v-model.number="item.quantity"
                                             :min="1"
@@ -226,8 +226,8 @@ const fieldError = 'mt-1 text-xs text-status-danger';
 
                                     <!-- Condition -->
                                     <div class="w-36">
-                                        <label :class="fieldLabel">{{ t('returns.columns.condition') }}</label>
-                                        <select
+                                        <label :for="fieldIdPrefix + '-repeat-2-' + index" :class="fieldLabel">{{ t('returns.columns.condition') }}</label>
+                                        <select :id="fieldIdPrefix + '-repeat-2-' + index"
                                             v-model="item.condition"
                                             @change="updateCondition(item)"
                                             :class="fieldInput"
@@ -240,8 +240,8 @@ const fieldError = 'mt-1 text-xs text-status-danger';
 
                                     <!-- Restock -->
                                     <div class="text-center">
-                                        <label :class="fieldLabel">{{ t('returns.columns.restock') }}</label>
-                                        <input
+                                        <label :for="fieldIdPrefix + '-repeat-3-' + index" :class="fieldLabel">{{ t('returns.columns.restock') }}</label>
+                                        <input :id="fieldIdPrefix + '-repeat-3-' + index"
                                             type="checkbox"
                                             v-model="item.restock"
                                             class="rounded border-border-subtle text-brand ds-focus-ring"

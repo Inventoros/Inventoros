@@ -317,7 +317,10 @@
     "new": "Nouveau",
     "editWithName": "Modifier : {name}",
     "filters": "Filtres",
-    "expandTable": "Vue du tableau complet"
+    "expandTable": "Vue du tableau complet",
+    "selectAll": "Tout sélectionner",
+    "moveUp": "Monter",
+    "moveDown": "Descendre"
   },
   "nav": {
     "dashboard": "Tableau de bord",
@@ -3115,7 +3118,10 @@
       "name": "Nom du rapport",
       "description": "Description",
       "chartType": "Type de graphique",
-      "chartField": "Champ du graphique"
+      "chartField": "Champ du graphique",
+      "operator": "Opérateur",
+      "sortField": "Champ de tri",
+      "sortDirection": "Ordre de tri"
     },
     "placeholders": {
       "name": "Saisir le nom du rapport...",

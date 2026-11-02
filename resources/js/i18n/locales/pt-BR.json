@@ -317,7 +317,10 @@
     "new": "Novo",
     "editWithName": "Editar: {name}",
     "filters": "Filtros",
-    "expandTable": "Visualizar tabela completa"
+    "expandTable": "Visualizar tabela completa",
+    "selectAll": "Selecionar Tudo",
+    "moveUp": "Mover para cima",
+    "moveDown": "Mover para baixo"
   },
   "nav": {
     "dashboard": "Painel",
@@ -3115,7 +3118,10 @@
       "name": "Nome do Relatório",
       "description": "Descrição",
       "chartType": "Tipo de Gráfico",
-      "chartField": "Campo do Gráfico"
+      "chartField": "Campo do Gráfico",
+      "operator": "Operador",
+      "sortField": "Campo de ordenação",
+      "sortDirection": "Direção de ordenação"
     },
     "placeholders": {
       "name": "Digite o nome do relatório...",

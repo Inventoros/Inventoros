@@ -127,7 +127,7 @@ class ReturnOrderController extends Controller
             $returnOrder = $returns->create($request->user()->organization_id, $request->user(), $request->validated());
 
             return redirect()->route('returns.show', $returnOrder)
-                ->with('success', 'Return request created successfully.');
+                ->with('success', __('Return request created successfully.'));
         } catch (BusinessRuleException $e) {
             return redirect()->back()
                 ->withInput()

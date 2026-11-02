@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 
 for (const [url, trigger] of [
     ['/categories', 'Add Category'], ['/locations', 'Add Location'],
-    ['/settings/api-tokens', 'Create token'], ['/webhooks', 'Create Webhook'],
+    ['/settings/api-tokens', 'Create token'], ['/webhooks', 'Add Webhook'],
 ]) {
     test(`${url} dialog traps focus, closes with Escape and restores its trigger`, async ({ page }) => {
         await page.setViewportSize({ width: 320, height: 568 });
@@ -30,6 +30,18 @@ test('category fields have associated visible labels', async ({ page }) => {
     await page.getByRole('button', { name: 'Add Category', exact: true }).click();
     await expect(page.getByLabel('Category Name', { exact: false })).toBeVisible();
     await expect(page.getByLabel('Description', { exact: true })).toBeVisible();
+});
+
+test('a rejected category save preserves input and announces the error', async ({ page }) => {
+    await page.goto('/categories');
+    await page.getByRole('button', { name: 'Add Category', exact: true }).click();
+    const name = page.getByLabel('Category Name', { exact: false });
+    const overlongName = 'X'.repeat(256);
+    await name.fill(overlongName);
+    await page.getByRole('button', { name: 'Create Category', exact: true }).click();
+    await expect(page.getByRole('alert')).toContainText('255');
+    await expect(name).toHaveValue(overlongName);
+    await expect(page.getByRole('button', { name: 'Create Category', exact: true })).toBeEnabled();
 });
 
 test('language picker supports arrows, Escape, focus restoration and Arabic direction', async ({ page }) => {

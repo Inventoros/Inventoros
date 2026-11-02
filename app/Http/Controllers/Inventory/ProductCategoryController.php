@@ -78,7 +78,7 @@ class ProductCategoryController extends Controller
         }
 
         return redirect()->route('categories.index')
-            ->with('success', 'Category created successfully.');
+            ->with('success', __('Category created successfully.'));
     }
 
     /**
@@ -100,7 +100,7 @@ class ProductCategoryController extends Controller
         $category->update($validated);
 
         return redirect()->route('categories.index')
-            ->with('success', 'Category updated successfully.');
+            ->with('success', __('Category updated successfully.'));
     }
 
     /**
@@ -126,6 +126,6 @@ class ProductCategoryController extends Controller
         $category->delete();
 
         return redirect()->route('categories.index')
-            ->with('success', 'Category deleted successfully.');
+            ->with('success', __('Category deleted successfully.'));
     }
 }

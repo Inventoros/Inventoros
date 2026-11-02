@@ -317,7 +317,10 @@
     "new": "새로 만들기",
     "editWithName": "편집: {name}",
     "filters": "필터",
-    "expandTable": "표 전체 보기"
+    "expandTable": "표 전체 보기",
+    "selectAll": "모두 선택",
+    "moveUp": "위로 이동",
+    "moveDown": "아래로 이동"
   },
   "nav": {
     "dashboard": "대시보드",
@@ -3115,7 +3118,10 @@
       "name": "보고서 이름",
       "description": "설명",
       "chartType": "차트 유형",
-      "chartField": "차트 필드"
+      "chartField": "차트 필드",
+      "operator": "연산자",
+      "sortField": "정렬 필드",
+      "sortDirection": "정렬 방향"
     },
     "placeholders": {
       "name": "보고서 이름 입력...",

@@ -231,7 +231,7 @@ const thClassCenter = 'px-4 py-2.5 text-center text-xs font-medium tracking-tigh
                                         </span>
                                     </td>
                                     <td class="px-4 py-3 text-center">
-                                        <input
+                                        <input :aria-label="t('purchaseOrders.receive.receiveNow')"
                                             v-if="item.remaining > 0"
                                             type="number"
                                             v-model.number="item.quantity_to_receive"

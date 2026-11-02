@@ -8,7 +8,7 @@ import PageHeader from '@/Components/ui/PageHeader.vue';
 import Card from '@/Components/ui/Card.vue';
 import Button from '@/Components/ui/Button.vue';
 import Badge from '@/Components/ui/Badge.vue';
-import { Head, Link, router } from '@inertiajs/vue3';
+import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { Plus, Search, Pencil, Trash2, Tag, X } from '@lucide/vue';
@@ -25,7 +25,7 @@ const search = ref(props.filters?.search || '');
 const showCreateModal = ref(false);
 const showEditModal = ref(false);
 const editingCategory = ref(null);
-const categoryForm = ref({ name: '', description: '' });
+const categoryForm = useForm({ name: '', description: '' });
 
 const searchCategories = () => {
     router.get(route('categories.index'), {
@@ -42,34 +42,36 @@ const clearFilters = () => {
 };
 
 const openCreateModal = () => {
-    categoryForm.value = { name: '', description: '' };
+    categoryForm.clearErrors();
+    Object.assign(categoryForm, { name: '', description: '' });
     showCreateModal.value = true;
 };
 
 const openEditModal = (category) => {
+    categoryForm.clearErrors();
     editingCategory.value = category;
-    categoryForm.value = {
+    Object.assign(categoryForm, {
         name: category.name,
         description: category.description || '',
-    };
+    });
     showEditModal.value = true;
 };
 
 const createCategory = () => {
-    router.post(route('categories.store'), categoryForm.value, {
+    categoryForm.post(route('categories.store'), {
         onSuccess: () => {
             showCreateModal.value = false;
-            categoryForm.value = { name: '', description: '' };
+            Object.assign(categoryForm, { name: '', description: '' });
         },
     });
 };
 
 const updateCategory = () => {
-    router.put(route('categories.update', editingCategory.value.id), categoryForm.value, {
+    categoryForm.put(route('categories.update', editingCategory.value.id), {
         onSuccess: () => {
             showEditModal.value = false;
             editingCategory.value = null;
-            categoryForm.value = { name: '', description: '' };
+            Object.assign(categoryForm, { name: '', description: '' });
         },
     });
 };
@@ -124,7 +126,7 @@ const inputClass =
                     </div>
                 </div>
                 <div class="flex items-center gap-2">
-                    <Button type="submit" variant="default" size="sm">
+                    <Button :loading="categoryForm.processing" type="submit" variant="default" size="sm">
                         <Search :size="14" />
                         {{ t('common.search') }}
                     </Button>
@@ -204,7 +206,7 @@ const inputClass =
                         ]"
                         v-html="link.label"
                     />
-                    <span v-else class="inline-flex h-8 min-w-8 cursor-not-allowed items-center justify-center rounded-md border border-border-subtle px-2.5 text-xs text-text-tertiary opacity-50" v-html="link.label" />
+                    <span role="link" aria-disabled="true" v-else class="inline-flex h-8 min-w-8 cursor-not-allowed items-center justify-center rounded-md border border-border-subtle px-2.5 text-xs text-text-tertiary" v-html="link.label" />
                 </template>
             </nav>
         </div>
@@ -231,6 +233,9 @@ const inputClass =
                     </div>
 
                     <form @submit.prevent="createCategory" class="space-y-4">
+                        <div v-if="Object.keys(categoryForm.errors).length" role="alert" class="rounded-md border border-status-danger/25 bg-status-danger-soft p-3 text-sm text-status-danger">
+                            <p v-for="(error, field) in categoryForm.errors" :key="field">{{ error }}</p>
+                        </div>
                         <div>
                             <label :for="fieldIdPrefix + '-1'" class="mb-1 block text-xs font-medium text-text-secondary">
                                 {{ t('categories.categoryName') }} <span class="text-status-danger">*</span>
@@ -258,7 +263,7 @@ const inputClass =
 
                         <div class="mt-6 flex justify-end gap-2">
                             <Button type="button" variant="secondary" size="sm" @click="showCreateModal = false">{{ t('common.cancel') }}</Button>
-                            <Button type="submit" variant="default" size="sm">{{ t('categories.createCategory') }}</Button>
+                            <Button :loading="categoryForm.processing" type="submit" variant="default" size="sm">{{ t('categories.createCategory') }}</Button>
                         </div>
                     </form>
                 </div>
@@ -285,6 +290,9 @@ const inputClass =
                     </div>
 
                     <form @submit.prevent="updateCategory" class="space-y-4">
+                        <div v-if="Object.keys(categoryForm.errors).length" role="alert" class="rounded-md border border-status-danger/25 bg-status-danger-soft p-3 text-sm text-status-danger">
+                            <p v-for="(error, field) in categoryForm.errors" :key="field">{{ error }}</p>
+                        </div>
                         <div>
                             <label :for="fieldIdPrefix + '-3'" class="mb-1 block text-xs font-medium text-text-secondary">
                                 {{ t('categories.categoryName') }} <span class="text-status-danger">*</span>
@@ -310,7 +318,7 @@ const inputClass =
 
                         <div class="mt-6 flex justify-end gap-2">
                             <Button type="button" variant="secondary" size="sm" @click="showEditModal = false">{{ t('common.cancel') }}</Button>
-                            <Button type="submit" variant="default" size="sm">{{ t('categories.updateCategory') }}</Button>
+                            <Button :loading="categoryForm.processing" type="submit" variant="default" size="sm">{{ t('categories.updateCategory') }}</Button>
                         </div>
                     </form>
                 </div>

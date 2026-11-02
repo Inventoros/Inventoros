@@ -176,7 +176,7 @@ const thClass =
                                     link.active ? 'border-brand bg-brand text-brand-foreground' : 'border-border-subtle bg-surface-canvas text-text-secondary hover:bg-surface-overlay',
                                 ]"
                                 v-html="link.label" />
-                            <span v-else class="inline-flex h-8 min-w-8 cursor-not-allowed items-center justify-center rounded-md border border-border-subtle px-2.5 text-xs text-text-tertiary opacity-50" v-html="link.label" />
+                            <span role="link" aria-disabled="true" v-else class="inline-flex h-8 min-w-8 cursor-not-allowed items-center justify-center rounded-md border border-border-subtle px-2.5 text-xs text-text-tertiary" v-html="link.label" />
                         </template>
                     </nav>
                 </div>

@@ -317,7 +317,10 @@
     "new": "Neu",
     "editWithName": "Bearbeiten: {name}",
     "filters": "Filter",
-    "expandTable": "Vollbildtabelle"
+    "expandTable": "Vollbildtabelle",
+    "selectAll": "Alle auswählen",
+    "moveUp": "Nach oben",
+    "moveDown": "Nach unten"
   },
   "nav": {
     "dashboard": "Dashboard",
@@ -3115,7 +3118,10 @@
       "name": "Berichtsname",
       "description": "Beschreibung",
       "chartType": "Diagrammtyp",
-      "chartField": "Diagrammfeld"
+      "chartField": "Diagrammfeld",
+      "operator": "Operator",
+      "sortField": "Sortierfeld",
+      "sortDirection": "Sortierrichtung"
     },
     "placeholders": {
       "name": "Berichtsnamen eingeben...",

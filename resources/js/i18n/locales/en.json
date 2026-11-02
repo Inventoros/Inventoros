@@ -188,7 +188,10 @@
     "new": "New",
     "editWithName": "Edit: {name}",
     "filters": "Filters",
-    "expandTable": "Full table view"
+    "expandTable": "Full table view",
+    "selectAll": "Select All",
+    "moveUp": "Move up",
+    "moveDown": "Move down"
   },
   "nav": {
     "dashboard": "Dashboard",
@@ -2986,7 +2989,10 @@
       "name": "Report Name",
       "description": "Description",
       "chartType": "Chart Type",
-      "chartField": "Chart Field"
+      "chartField": "Chart Field",
+      "operator": "Operator",
+      "sortField": "Sort field",
+      "sortDirection": "Sort direction"
     },
     "placeholders": {
       "name": "Enter report name...",

@@ -96,7 +96,7 @@ class PluginController extends Controller
             $this->pluginService->activatePlugin($slug);
 
             return redirect()->back()
-                ->with('success', 'Plugin activated successfully.');
+                ->with('success', __('Plugin activated successfully.'));
         } catch (\Exception $e) {
             Log::error('Plugin activation failed', [
                 'slug' => $slug,
@@ -119,7 +119,7 @@ class PluginController extends Controller
             $this->pluginService->deactivatePlugin($slug);
 
             return redirect()->back()
-                ->with('success', 'Plugin deactivated successfully.');
+                ->with('success', __('Plugin deactivated successfully.'));
         } catch (PluginHookFailed $e) {
             return redirect()->back()->with('warning', $e->getMessage());
         } catch (\Exception $e) {
@@ -144,7 +144,7 @@ class PluginController extends Controller
             $this->pluginService->deletePlugin($slug);
 
             return redirect()->back()
-                ->with('success', 'Plugin deleted successfully.');
+                ->with('success', __('Plugin deleted successfully.'));
         } catch (PluginHookFailed $e) {
             return redirect()->back()->with('warning', $e->getMessage());
         } catch (\Exception $e) {

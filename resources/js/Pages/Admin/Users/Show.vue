@@ -126,7 +126,7 @@ const roleVariant = (role) =>
                     <p class="mt-2 text-sm text-text-secondary">{{ t('admin.users.show.effectivePermissionsHint') }}</p>
                     <label for="permission-search" class="mt-4 block text-sm text-text-secondary">{{ t('common.search') }}</label>
                     <input id="permission-search" v-model="permissionSearch" type="search" class="mt-1 h-9 w-full rounded-md border border-border-subtle bg-surface-canvas px-3 text-sm ds-focus-ring" />
-                    <div class="mt-4 max-h-96 overflow-y-auto space-y-4">
+                        <div class="mt-4 max-h-96 overflow-y-auto space-y-4 ds-focus-ring" tabindex="0" role="region" :aria-label="t('nav.activityLog')">
                         <div v-for="[category, permissions] in filteredPermissions" :key="category">
                             <h4 class="text-xs font-medium text-text-tertiary">{{ permissionCategoryLabel(category, i18n) }}</h4>
                             <ul class="mt-2 space-y-2">

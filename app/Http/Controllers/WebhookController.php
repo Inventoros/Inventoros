@@ -70,7 +70,7 @@ class WebhookController extends Controller
         // Hand the plaintext signing secret back exactly once so the receiver
         // can be configured. It is $hidden from serialization everywhere else.
         return redirect()->route('webhooks.index')
-            ->with('success', 'Webhook created successfully')
+            ->with('success', __('Webhook created successfully'))
             ->with('newWebhookSecret', $webhook->secret);
     }
 
@@ -113,7 +113,7 @@ class WebhookController extends Controller
 
         $webhook->update($validated);
 
-        return redirect()->route('webhooks.show', $webhook)->with('success', 'Webhook updated successfully');
+        return redirect()->route('webhooks.show', $webhook)->with('success', __('Webhook updated successfully'));
     }
 
     /**
@@ -128,7 +128,7 @@ class WebhookController extends Controller
 
         $webhook->delete();
 
-        return redirect()->route('webhooks.index')->with('success', 'Webhook deleted successfully');
+        return redirect()->route('webhooks.index')->with('success', __('Webhook deleted successfully'));
     }
 
     /**

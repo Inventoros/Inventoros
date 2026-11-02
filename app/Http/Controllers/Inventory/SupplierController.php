@@ -117,7 +117,7 @@ class SupplierController extends Controller
         }
 
         return redirect()->route('suppliers.index')
-            ->with('success', 'Supplier created successfully.');
+            ->with('success', __('Supplier created successfully.'));
     }
 
     /**
@@ -202,7 +202,7 @@ class SupplierController extends Controller
         }
 
         return redirect()->route('suppliers.index')
-            ->with('success', 'Supplier updated successfully.');
+            ->with('success', __('Supplier updated successfully.'));
     }
 
     /**
@@ -255,6 +255,6 @@ class SupplierController extends Controller
         }
 
         return redirect()->route('suppliers.index')
-            ->with('success', 'Supplier deleted successfully.');
+            ->with('success', __('Supplier deleted successfully.'));
     }
 }

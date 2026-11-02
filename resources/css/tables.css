@@ -38,6 +38,11 @@
 .table-nav-legal p {
     gap: 2px 5px;
 }
+.table-nav-legal a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 24px;
+}
 .table-nav-legal img {
     display: none;
 }

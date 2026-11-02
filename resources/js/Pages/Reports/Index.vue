@@ -160,7 +160,7 @@ const visibleReportCards = computed(() =>
                         <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-brand-soft text-brand">
                             <component :is="report.icon" :size="18" />
                         </span>
-                        <div class="min-w-0 flex-1">
+                        <div class="min-w-0 flex-1 [overflow-wrap:anywhere]">
                             <h3 class="text-sm font-semibold text-text-primary">{{ report.title }}</h3>
                             <p class="mt-1 text-sm text-text-secondary">{{ report.description }}</p>
                         </div>

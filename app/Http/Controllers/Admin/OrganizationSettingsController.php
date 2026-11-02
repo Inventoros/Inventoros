@@ -164,7 +164,7 @@ class OrganizationSettingsController extends Controller
         $organization = Organization::find($user->organization_id);
         $organization->update($validated);
 
-        return redirect()->back()->with('success', 'Organization settings updated successfully.');
+        return redirect()->back()->with('success', __('Organization settings updated successfully.'));
     }
 
     /**
@@ -191,6 +191,6 @@ class OrganizationSettingsController extends Controller
         $organization = Organization::find($user->organization_id);
         $organization->update($validated);
 
-        return redirect()->back()->with('success', 'Regional settings updated successfully.');
+        return redirect()->back()->with('success', __('Regional settings updated successfully.'));
     }
 }

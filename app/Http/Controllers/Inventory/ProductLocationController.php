@@ -103,7 +103,7 @@ class ProductLocationController extends Controller
         }
 
         return redirect()->route('locations.index')
-            ->with('success', 'Location created successfully.');
+            ->with('success', __('Location created successfully.'));
     }
 
     /**
@@ -132,7 +132,7 @@ class ProductLocationController extends Controller
         $location->update($validated);
 
         return redirect()->route('locations.index')
-            ->with('success', 'Location updated successfully.');
+            ->with('success', __('Location updated successfully.'));
     }
 
     /**
@@ -177,6 +177,6 @@ class ProductLocationController extends Controller
         $location->delete();
 
         return redirect()->route('locations.index')
-            ->with('success', 'Location deleted successfully.');
+            ->with('success', __('Location deleted successfully.'));
     }
 }

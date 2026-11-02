@@ -3,6 +3,7 @@ import { nextTick, onBeforeUnmount, ref, useId } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { Maximize2, X } from '@lucide/vue';
 import { lockPageScroll } from '@/lib/scrollLock';
+import { containTabFocus } from '@/lib/focus';
 
 defineOptions({ inheritAttrs: false });
 const props = defineProps({ label: { type: String, default: null } });
@@ -96,6 +97,7 @@ onBeforeUnmount(() => {
         class="table-full-dialog"
         :aria-labelledby="`${id}-title`"
         @close="restore"
+        @keydown="containTabFocus($event, dialog)"
         @keydown.esc.stop.prevent="dialog.close()"
     >
         <!-- The live table moves here when expanded; it is never duplicated. -->

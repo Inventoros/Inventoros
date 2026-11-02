@@ -227,7 +227,7 @@ const fieldCheckbox = 'rounded border-border-subtle bg-surface-canvas text-brand
                 <div class="p-5">
                     <!-- Product Search -->
                     <div class="mb-4">
-                        <input
+                        <input :aria-label="t('common.search')"
                             v-model="productSearch"
                             type="text"
                             :placeholder="t('stockAudits.create.searchProducts')"
@@ -237,7 +237,7 @@ const fieldCheckbox = 'rounded border-border-subtle bg-surface-canvas text-brand
 
                     <!-- Select All -->
                     <div class="mb-3 flex items-center gap-2">
-                        <input
+                        <input :aria-label="t('common.selectAll')"
                             type="checkbox"
                             v-model="selectAllProducts"
                             @change="toggleSelectAll"
