@@ -141,6 +141,21 @@ $app = Application::configure(basePath: dirname(__DIR__))
         // No-op when SENTRY_LARAVEL_DSN is empty (the default), so this is
         // inert until an operator opts in.
         Integration::handles($exceptions);
+        $exceptions->respond(function (\Symfony\Component\HttpFoundation\Response $response, \Throwable $exception, Request $request) {
+            // Staff browser visits receive the same localized recovery page as
+            // Inertia navigation. JSON/API and customer-portal contracts stay intact.
+            if ($response->getStatusCode() !== 403 || ! $request->isMethod('GET') || $request->expectsJson()
+                || $request->is('api/*', 'portal/*') || ! ($request->user() instanceof \App\Models\User)) {
+                return $response;
+            }
+            $previous = url()->previous();
+            if ($previous === $request->fullUrl() || ! str_starts_with($previous, $request->getSchemeAndHttpHost().'/')) {
+                $previous = route('dashboard');
+            }
+
+            return \Inertia\Inertia::render('Errors/403', ['previousUrl' => $previous])
+                ->toResponse($request)->setStatusCode(403);
+        });
     })->create();
 
 // Split (cPanel) installs keep the web root outside the app directory. The

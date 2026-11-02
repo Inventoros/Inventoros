@@ -49,8 +49,12 @@ final class CheckPermission
 
             // If it's an Inertia request, render the 403 page
             if ($request->header('X-Inertia')) {
+                $previous = url()->previous();
+                if ($previous === $request->fullUrl() || ! str_starts_with($previous, $request->getSchemeAndHttpHost().'/')) {
+                    $previous = route('dashboard');
+                }
                 return \Inertia\Inertia::render('Errors/403', [
-                    'previousUrl' => url()->previous(),
+                    'previousUrl' => $previous,
                 ])->toResponse($request)->setStatusCode(403);
             }
 

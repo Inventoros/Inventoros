@@ -41,7 +41,7 @@ const verificationLinkSent = computed(
         </div>
 
         <form @submit.prevent="submit">
-            <div class="mt-4 flex items-center justify-between">
+            <div class="mt-4 flex flex-col items-stretch justify-between gap-4 sm:flex-row sm:items-center">
                 <PrimaryButton
                     :class="{ 'opacity-25': form.processing }"
                     :disabled="form.processing"
@@ -53,7 +53,7 @@ const verificationLinkSent = computed(
                     :href="route('logout')"
                     method="post"
                     as="button"
-                    class="rounded-md text-sm text-text-secondary underline hover:text-text-primary ds-focus-ring"
+                    class="min-h-9 shrink-0 whitespace-nowrap rounded-md text-sm text-text-secondary underline hover:text-text-primary ds-focus-ring"
                     >{{ t('auth.verifyEmail.logOut') }}</Link
                 >
             </div>

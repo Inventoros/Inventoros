@@ -28,6 +28,15 @@ test.describe('Restricted user controls', () => {
         await signIn(page);
     });
 
+    test('direct permission errors provide a usable route back to the dashboard', async ({ page }) => {
+        const response = await page.goto('/users');
+        expect(response?.status()).toBe(403);
+        await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+        await page.locator('a[href$="/dashboard"]').click();
+        await expect(page).toHaveURL(/\/dashboard$/);
+        await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+    });
+
     test('dashboard shows no create buttons or catalogue tiles the user cannot open', async ({ page }) => {
         await page.goto('/dashboard', { waitUntil: 'networkidle' });
         await expectNone(page, 'a[href$="/orders/create"]');

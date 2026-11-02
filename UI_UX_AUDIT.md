@@ -4,7 +4,7 @@ Audit date: 2 November 2026. **Final rendered verification is running.** Counts 
 
 ## Executive summary
 
-The approved identity is retained: restrained blue actions, semantic light/dark surfaces, compact navigation and operational tables filling the workspace. The main defects were dialog focus, unnamed controls, mixed-language feedback, incomplete Arabic direction, stale translated labels, narrow-screen overflow and table alignment. The current register contains **30 findings: 28 implemented fixes and two remaining P2 items**. No P0 defect was found. Final P1 closure awaits the strict rendered results.
+The approved identity is retained: restrained blue actions, semantic light/dark surfaces, compact navigation and operational tables filling the workspace. The main defects were dialog focus, unnamed controls, mixed-language feedback, incomplete Arabic direction, stale translated labels, narrow-screen overflow and table alignment. The current register contains **31 findings: 29 implemented fixes and two remaining P2 items**. No P0 defect was found. Final P1 closure awaits the strict rendered results.
 
 ## Application discovery and audit checklist
 
@@ -75,6 +75,7 @@ Implemented rows require final regression sign-off. References name the main sha
 | 28 | P1 | Workspace menus/drawer lacked consistent keyboard dismissal/focus; open menus left partially covered targets clickable. | Shared disclosure keys, selection semantics, click-away layers, drawer containment/Escape restoration and regressions. |
 | 29 | P2 | Optional bundled plugins contain English copy outside core catalogs. | **Remaining:** localize plugin-owned copy/tax terminology through the existing scoped SDK. |
 | 30 | P2 | Eager application bundle is about 2.65MB minified / 790KB gzip. | **Remaining:** split locale/runtime payloads after measuring throttled first-interaction performance. |
+| 31 | P1 | Direct permission-denied visits showed a plain framework page without recovery navigation; refreshing could make Back loop. | Browser staff 403s use Errors/403 consistently; sanitize previous URL to a same-origin noncurrent fallback. JSON/API/portal behavior is preserved; PHP and browser regressions cover recovery. |
 
 ## Verification results
 
