@@ -24,6 +24,7 @@ const props = defineProps({
     disabled: { type: Boolean, default: false },
     loading: { type: Boolean, default: false },
     type: { type: String, default: 'button' },
+    class: { type: [String, Array, Object], default: null },
 });
 
 const button = cva(
@@ -61,7 +62,7 @@ const button = cva(
     }
 );
 
-const classes = computed(() => cn(button({ variant: props.variant, size: props.size })));
+const classes = computed(() => cn(button({ variant: props.variant, size: props.size }), props.class));
 const guardClick = (event) => {
     if (props.disabled || props.loading) {
         event.preventDefault();

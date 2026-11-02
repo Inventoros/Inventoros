@@ -37,6 +37,17 @@ test.beforeAll(() => {
     fx = JSON.parse(readFileSync(path.join(process.cwd(), 'e2e/.auth/layout-fixtures.json'), 'utf8'));
 });
 
+test('return form and submit actions fit a 320px screen', async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 812 });
+    await page.goto(`/returns/create?order_id=${fx.order}`);
+    await expect(page.getByRole('heading', { name: 'Create Return / Exchange' })).toBeVisible();
+    await page.getByRole('checkbox', { name: 'USB-C Hub Adapter 7-in-1', exact: true }).check();
+    await expectFitsPhone(page);
+    const submit = await page.getByRole('button', { name: 'Submit Return Request', exact: true }).boundingBox();
+    expect(submit!.x).toBeGreaterThanOrEqual(0);
+    expect(submit!.x + submit!.width).toBeLessThanOrEqual(320);
+});
+
 async function layoutProblems(page: Page) {
     await page.waitForLoadState('networkidle');
 

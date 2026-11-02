@@ -27,6 +27,7 @@ const submit = () => {
 <template>
     <GuestLayout>
         <Head :title="t('auth.forgotPassword.title')" />
+        <h1 class="sr-only">{{ t('auth.forgotPassword.title') }}</h1>
 
         <div class="mb-4 text-sm text-text-secondary">
             {{ t('auth.forgotPassword.description') }}

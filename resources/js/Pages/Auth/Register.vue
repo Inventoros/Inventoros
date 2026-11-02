@@ -26,6 +26,7 @@ const submit = () => {
 <template>
     <GuestLayout>
         <Head :title="t('auth.register.title')" />
+        <h1 class="sr-only">{{ t('auth.register.title') }}</h1>
 
         <form @submit.prevent="submit">
             <div>

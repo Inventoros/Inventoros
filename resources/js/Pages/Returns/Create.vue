@@ -264,8 +264,8 @@ const fieldError = 'mt-1 text-xs text-status-danger';
             <!-- Summary & Submit -->
             <Card :padded="false">
                 <div class="p-5">
-                    <div class="flex items-center justify-between">
-                        <div>
+                    <div class="flex flex-col items-stretch justify-between gap-4 sm:flex-row sm:flex-wrap sm:items-center">
+                        <div class="min-w-0">
                             <p class="text-sm text-text-tertiary">
                                 {{ t('returns.create.selectedSummary', { count: selectedItems.length, type: t(`portal.returns.types.${form.type}`) }, selectedItems.length) }}
                             </p>
@@ -273,13 +273,14 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                 {{ t('returns.create.estimatedRefund') }} <span class="text-brand">{{ formatMoney(estimatedRefund, order.currency) }}</span>
                             </p>
                         </div>
-                        <div class="flex gap-3">
-                            <Button variant="secondary" as="Link" :href="backHref">
+                        <div class="flex min-w-0 flex-col gap-3 sm:flex-row">
+                            <Button variant="secondary" as="Link" :href="backHref" class="h-auto min-h-9 whitespace-normal">
                                 {{ t('common.cancel') }}
                             </Button>
                             <Button
                                 type="submit"
                                 variant="default"
+                                class="h-auto min-h-9 whitespace-normal"
                                 :loading="form.processing"
                                 :disabled="form.processing || selectedItems.length === 0"
                             >

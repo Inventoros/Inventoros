@@ -35,6 +35,7 @@ const submit = () => {
 <template>
     <GuestLayout>
         <Head :title="t('auth.login.title')" />
+        <h1 class="sr-only">{{ t('auth.login.title') }}</h1>
 
         <div v-if="status" class="mb-4 text-sm font-medium text-status-success">
             {{ status }}

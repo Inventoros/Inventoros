@@ -2,6 +2,12 @@ name: ui-ux-audit
 
 on:
   workflow_dispatch:
+    inputs:
+      scope:
+        description: Rendered verification scope
+        type: choice
+        options: [full, desktop-and-states]
+        default: full
 
 permissions:
   contents: read
@@ -17,6 +23,7 @@ jobs:
       CI: true
       MAIL_MAILER: log
       REGISTRATION_ENABLED: true
+      UI_UX_AUDIT_GREP: ${{ inputs.scope == 'desktop-and-states' && 'authenticate|1440px|dark theme|dialogs,|verification,' || '.' }}
     steps:
       - uses: actions/checkout@v4
       - uses: shivammathur/setup-php@v2
@@ -40,7 +47,7 @@ jobs:
       - name: Audit rendered routes
         run: |
           php artisan serve --host=127.0.0.1 --port=8000 > /tmp/inventoros-server.log 2>&1 &
-          npx playwright test e2e/tests/ui-ux-audit.spec.ts --project=setup --project=chromium
+          npx playwright test e2e/tests/ui-ux-audit.spec.ts --project=setup --project=chromium --grep "$UI_UX_AUDIT_GREP"
       - uses: actions/upload-artifact@v4
         if: always()
         with:
