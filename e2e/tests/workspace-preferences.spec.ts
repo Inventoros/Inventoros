@@ -70,7 +70,9 @@ test('company logo survives reload and can be removed', async ({ page }) => {
         buffer: Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Y9Zl1sAAAAASUVORK5CYII=', 'base64'),
     });
     await page.locator('form').filter({ has: page.locator('#organization-logo') }).getByRole('button', { name: 'Save', exact: true }).click();
-    const logo = page.locator('aside img');
+    // The sidebar also contains the decorative Inventoros brand mark.
+    // Target the uploaded company logo by its accessible organization name.
+    const logo = page.locator('aside').getByRole('img', { name: E2E_TEST_ORGANIZATION.name, exact: true });
     await expect(logo).toHaveAttribute('alt', E2E_TEST_ORGANIZATION.name);
     await expect(logo).toHaveAttribute('src', /\/organizations\/\d+\/logo/);
     await page.reload();
@@ -78,6 +80,7 @@ test('company logo survives reload and can be removed', async ({ page }) => {
     await expect(page.locator('footer img[src*="inventoros"]')).toHaveCount(1);
     await page.getByRole('button', { name: 'Remove logo', exact: true }).click();
     await expect(logo).toHaveCount(0);
+    await expect(page.locator('aside').getByRole('link', { name: 'Inventoros', exact: true })).toBeVisible();
 });
 
 test('user permission inspection shows granted and ungranted actions', async ({ page }) => {
