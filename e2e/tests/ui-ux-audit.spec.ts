@@ -150,17 +150,27 @@ test('all supported languages across layout families', async ({ page }) => {
     const urls = ['/dashboard', '/products', '/products/create', '/orders', '/settings/account', '/reports'];
     await page.goto('/dashboard', { waitUntil: 'networkidle' });
     for (const locale of locales) {
+        const currentLocale = await page.locator('html').getAttribute('lang');
         await page.getByRole('button', { name: /Language:/ }).or(page.locator('button[aria-haspopup="listbox"]')).first().click();
+        const saved = currentLocale === locale ? Promise.resolve(null) : page.waitForResponse(response => response.request().method() === 'PATCH' && new URL(response.url()).pathname === '/settings/account/locale');
         await page.locator(`[role="option"][lang="${locale}"]`).click();
+        const response = await saved;
+        if (response) expect(response.status()).toBeLessThan(400);
         await page.waitForLoadState('networkidle');
         for (const width of [320, 1440]) {
             await page.setViewportSize({ width, height: width < 768 ? 812 : 1080 });
-            for (const url of urls) await inspect(page, `locale-${locale}-${url.slice(1).replaceAll('/', '-')}`, url, width);
+            for (const url of urls) {
+                const result = await inspect(page, `locale-${locale}-${url.slice(1).replaceAll('/', '-')}`, url, width);
+                expect.soft(result.lang, `${locale}: ${url}`).toBe(locale);
+                expect.soft(result.dir, `${locale}: ${url}`).toBe(locale === 'ar' ? 'rtl' : 'ltr');
+            }
         }
     }
     // Restore the shared fixture preference for other suites.
+    const restored = page.waitForResponse(response => response.request().method() === 'PATCH' && new URL(response.url()).pathname === '/settings/account/locale');
     await page.locator('button[aria-haspopup="listbox"]').click();
     await page.locator('[role="option"][lang="en"]').click();
+    await restored;
 });
 
 test('guest and portal routes', async ({ browser }) => {

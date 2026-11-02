@@ -6,7 +6,7 @@ on:
       scope:
         description: Rendered verification scope
         type: choice
-        options: [full, desktop-and-states, interactions]
+        options: [full, desktop-and-states, interactions, locales]
         default: full
 
 permissions:
@@ -24,7 +24,7 @@ jobs:
       MAIL_MAILER: log
       REGISTRATION_ENABLED: true
       UI_UX_AUDIT_SCOPE: ${{ inputs.scope }}
-      UI_UX_AUDIT_GREP: ${{ inputs.scope == 'interactions' && 'authenticate|dialogs,|verification,|runtime plugin' || inputs.scope == 'desktop-and-states' && 'authenticate|1440px|dark theme|dialogs,|verification,|runtime plugin' || '.' }}
+      UI_UX_AUDIT_GREP: ${{ inputs.scope == 'locales' && 'authenticate|all supported languages' || inputs.scope == 'interactions' && 'authenticate|dialogs,|verification,|runtime plugin' || inputs.scope == 'desktop-and-states' && 'authenticate|1440px|dark theme|dialogs,|verification,|runtime plugin' || '.' }}
     steps:
       - uses: actions/checkout@v4
       - uses: shivammathur/setup-php@v2
