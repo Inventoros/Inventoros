@@ -377,6 +377,7 @@ const isActive = (item) => item.active.some((pattern) => route().current(pattern
                     <LogOut :size="16" />
                     {{ t('nav.logOut') }}
                 </Link>
+                <LegalFooter v-if="tablePage" class="table-nav-legal px-2 pt-2" />
             </div>
         </aside>
 
@@ -403,7 +404,7 @@ const isActive = (item) => item.active.some((pattern) => route().current(pattern
                 <slot />
             </main>
 
-            <LegalFooter class="app-legal-footer px-4 md:px-6 py-6 border-t border-border-subtle" />
+            <LegalFooter v-if="!tablePage" class="app-legal-footer px-4 md:px-6 py-6 border-t border-border-subtle" />
         </div>
 
         <GlobalSearch ref="globalSearchRef" />

@@ -1,4 +1,5 @@
 <script setup>
+import TableViewport from '@/Components/ui/TableViewport.vue';
 import { ref, computed } from 'vue';
 import axios from 'axios';
 import { useI18n } from 'vue-i18n';
@@ -195,7 +196,7 @@ const statusBadgeClass = (status) => {
         </div>
 
         <!-- Serials Table -->
-        <div v-if="filteredSerials.length > 0" class="overflow-x-auto">
+        <TableViewport v-if="filteredSerials.length > 0" class="overflow-x-auto">
             <table class="w-full text-sm">
                 <thead>
                     <tr class="border-b border-gray-200 dark:border-border-subtle">
@@ -258,7 +259,7 @@ const statusBadgeClass = (status) => {
                     </tr>
                 </tbody>
             </table>
-        </div>
+        </TableViewport>
 
         <div v-else-if="localSerials.length === 0" class="text-center py-8 text-gray-500 dark:text-gray-400">
             <svg class="w-12 h-12 mx-auto mb-3 text-gray-300 dark:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">

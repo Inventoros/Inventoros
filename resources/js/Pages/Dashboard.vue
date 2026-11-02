@@ -1,4 +1,5 @@
 <script setup>
+import TableViewport from '@/Components/ui/TableViewport.vue';
 /** Approved design: overview, replenishment, orders/category breakdown,
  * finance and shortcuts. Existing plugin slots and widget keys stay intact.
  * Values and freshness come from the server; no synthetic trends. */
@@ -365,7 +366,7 @@ const ordersStatusIcon = (status) => (status === 'delivered' ? Check : status ==
                             >{{ t('dashboard.createFirstOrder') }}<ArrowRight :size="14"
                         /></Link>
                     </div>
-                    <div v-else class="dashboard-order-table">
+                    <TableViewport v-else class="dashboard-order-table">
                         <table>
                             <thead>
                                 <tr>
@@ -408,7 +409,7 @@ const ordersStatusIcon = (status) => (status === 'delivered' ? Check : status ==
                                 </tr>
                             </tbody>
                         </table>
-                    </div>
+                    </TableViewport>
                     <div class="dashboard-panel-footer">
                         <span>{{ formatNumber(recentOrders.length) }} / {{ formatNumber(stats.totalOrders) }} {{ t('nav.orders') }}</span>
                     </div>
@@ -535,7 +536,7 @@ const ordersStatusIcon = (status) => (status === 'delivered' ? Check : status ==
                         </CardHeader>
                     </div>
                     <div class="px-2 pb-2 pt-1">
-                        <div class="w-full overflow-x-auto rounded-lg bg-surface-raised">
+                        <TableViewport class="w-full overflow-x-auto rounded-lg bg-surface-raised">
                             <table class="w-full text-sm">
                                 <thead>
                                     <tr class="border-b border-border-subtle">
@@ -630,7 +631,7 @@ const ordersStatusIcon = (status) => (status === 'delivered' ? Check : status ==
                                     </tr>
                                 </tbody>
                             </table>
-                        </div>
+                        </TableViewport>
                         <div
                             v-if="quickReorder.canCreatePo.value"
                             class="flex flex-col gap-2 px-3 pb-2 pt-3 sm:flex-row sm:items-center sm:justify-between"

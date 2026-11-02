@@ -1,4 +1,5 @@
 <script setup>
+import TableViewport from '@/Components/ui/TableViewport.vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import PageHeader from '@/Components/ui/PageHeader.vue';
 import Card from '@/Components/ui/Card.vue';
@@ -154,7 +155,7 @@ const formatValue = (value, col) => {
                 </div>
 
                 <!-- Results table -->
-                <div v-else class="w-full overflow-x-auto rounded-lg border border-border-subtle">
+                <TableViewport v-else class="w-full overflow-x-auto rounded-lg border border-border-subtle">
                     <table class="min-w-full">
                         <thead>
                             <tr class="border-b border-border-subtle">
@@ -185,7 +186,7 @@ const formatValue = (value, col) => {
                             </tr>
                         </tbody>
                     </table>
-                </div>
+                </TableViewport>
             </div>
         </Card>
     </AppLayout>

@@ -1,4 +1,5 @@
 <script setup>
+import TableViewport from '@/Components/ui/TableViewport.vue';
 import PluginSlot from '@/Components/PluginSlot.vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import PageHeader from '@/Components/ui/PageHeader.vue';
@@ -184,7 +185,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                 <Card :padded="false">
                     <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">{{ t('warehouses.show.locationsCount', { count: locations?.length || 0 }) }}</h3></div>
                     <div class="p-5">
-                        <div v-if="locations && locations.length > 0" class="w-full overflow-x-auto rounded-lg border border-border-subtle">
+                        <TableViewport v-if="locations && locations.length > 0" class="w-full overflow-x-auto rounded-lg border border-border-subtle">
                             <table class="w-full text-sm">
                                 <thead>
                                     <tr class="border-b border-border-subtle">
@@ -225,7 +226,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                                     </tr>
                                 </tbody>
                             </table>
-                        </div>
+                        </TableViewport>
                         <div v-else class="flex flex-col items-center gap-2 py-8 text-center">
                             <MapPin :size="22" class="text-text-tertiary" />
                             <p class="text-sm text-text-tertiary">{{ t('warehouses.show.noLocations') }}</p>

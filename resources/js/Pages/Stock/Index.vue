@@ -17,7 +17,7 @@ const { hasPermission } = usePermissions();
 const enabled = (value) => [true, 1, '1', 'true'].includes(value);
 const form = useForm({ search: props.filters.search || '', warehouse_id: props.filters.warehouse_id || '', out_of_stock: enabled(props.filters.out_of_stock), include_zero: enabled(props.filters.include_zero), sort_by: props.filters.sort_by || 'sku', sort_dir: props.filters.sort_dir || 'asc' });
 const columns = computed(() => [
-    ['sku', t('products.sku')], ['product_name', t('common.product')], ['variant_title', t('orders.create.variant')],
+    ['sku', 'SKU'], ['product_name', t('common.product')], ['variant_title', t('orders.create.variant')],
     ['warehouse_name', t('locations.warehouse')], ['location_name', t('products.location')],
     ['on_hand', t('products.stock')], ['reserved', t('components.variantsTable.reserved')],
     ['available', t('components.variantsTable.available')], ['in_transit', t('stockTransfers.statuses.in_transit')],
@@ -40,8 +40,14 @@ const field = 'h-9 rounded-md border border-border-subtle bg-surface-canvas px-3
         </PageHeader>
         <Card class="mt-5 table-frame" :padded="false">
             <TableFilters :padded="false">
+                <template #quick>
+                    <form class="table-quick-search" @submit.prevent="apply">
+                        <label for="stock-search" class="sr-only">{{ t('common.search') }}</label>
+                        <input id="stock-search" v-model="form.search" :placeholder="t('products.searchPlaceholder')" />
+                        <button type="submit" class="ds-focus-ring">{{ t('common.search') }}</button>
+                    </form>
+                </template>
             <form class="flex flex-wrap items-end gap-3 p-4" @submit.prevent="apply">
-                <label class="min-w-48 flex-1 text-xs text-text-secondary">{{ t('common.search') }}<input v-model="form.search" :class="field + ' mt-1 w-full'" :placeholder="t('products.searchPlaceholder')" /></label>
                 <label class="text-xs text-text-secondary">{{ t('locations.warehouse') }}<select v-model="form.warehouse_id" :class="field + ' mt-1 block'">
                     <option value="">{{ t('warehouses.allWarehouses') }}</option>
                     <option v-for="warehouse in page.props.warehouses || []" :key="warehouse.id" :value="warehouse.id">{{ warehouse.name }}</option>
@@ -68,13 +74,15 @@ const field = 'h-9 rounded-md border border-border-subtle bg-surface-canvas px-3
                         <tr v-if="!balances.data.length"><td colspan="9" class="p-8 text-center text-text-secondary">{{ t('common.noResults') }}</td></tr>
                     </tbody>
                 </table>
+                <template #footer>
+                    <nav class="flex flex-wrap gap-2 table-pagination" :aria-label="t('common.pagination')">
+                        <template v-for="link in balances.links" :key="link.label">
+                            <Link v-if="link.url" :href="link.url" class="rounded-md border border-border-subtle px-3 py-2 text-sm ds-focus-ring" :class="link.active ? 'bg-brand text-brand-foreground' : 'bg-surface-canvas'" v-html="link.label" />
+                            <span v-else class="rounded-md border border-border-subtle px-3 py-2 text-sm text-text-tertiary" v-html="link.label" />
+                        </template>
+                    </nav>
+                </template>
             </TableViewport>
         </Card>
-        <nav class="mt-4 flex flex-wrap gap-2 table-pagination" :aria-label="t('common.pagination')">
-            <template v-for="link in balances.links" :key="link.label">
-                <Link v-if="link.url" :href="link.url" class="rounded-md border border-border-subtle px-3 py-2 text-sm ds-focus-ring" :class="link.active ? 'bg-brand text-brand-foreground' : 'bg-surface-canvas'" v-html="link.label" />
-                <span v-else class="rounded-md border border-border-subtle px-3 py-2 text-sm text-text-tertiary" v-html="link.label" />
-            </template>
-        </nav>
     </AppLayout>
 </template>

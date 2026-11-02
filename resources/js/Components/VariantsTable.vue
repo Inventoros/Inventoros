@@ -1,4 +1,5 @@
 <script setup>
+import TableViewport from '@/Components/ui/TableViewport.vue';
 import { computed } from 'vue';
 import VariantStockAdjuster from './VariantStockAdjuster.vue';
 
@@ -62,6 +63,7 @@ const onVariantUpdated = (updatedVariant) => {
 
 <template>
     <div class="overflow-x-auto">
+        <TableViewport>
         <table class="min-w-full divide-y divide-gray-200 dark:divide-border-subtle">
             <thead class="bg-gray-50 dark:bg-surface-canvas">
                 <tr>
@@ -141,6 +143,7 @@ const onVariantUpdated = (updatedVariant) => {
                 </tr>
             </tbody>
         </table>
+        </TableViewport>
 
         <!-- Summary Row -->
         <div v-if="variants.length > 0" class="mt-3 px-4 py-2 bg-gray-50 dark:bg-surface-canvas rounded-lg flex items-center justify-between text-sm">

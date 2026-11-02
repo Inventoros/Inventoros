@@ -1,4 +1,5 @@
 <script setup>
+import TableViewport from '@/Components/ui/TableViewport.vue';
 import PluginSlot from '@/Components/PluginSlot.vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import PageHeader from '@/Components/ui/PageHeader.vue';
@@ -189,7 +190,7 @@ const thClass = 'px-4 py-2.5 text-xs font-medium tracking-tight text-text-second
                     </div>
                     <p v-if="editingLines" class="px-5 pt-1 text-xs text-text-tertiary">{{ t('returns.lines.hint') }}</p>
                     <div class="p-5">
-                        <div v-if="returnOrder.items && returnOrder.items.length > 0" class="w-full overflow-x-auto rounded-lg border border-border-subtle">
+                        <TableViewport v-if="returnOrder.items && returnOrder.items.length > 0" class="w-full overflow-x-auto rounded-lg border border-border-subtle">
                             <table class="min-w-full">
                                 <thead>
                                     <tr class="border-b border-border-subtle">
@@ -247,7 +248,7 @@ const thClass = 'px-4 py-2.5 text-xs font-medium tracking-tight text-text-second
                                     </tr>
                                 </tbody>
                             </table>
-                        </div>
+                        </TableViewport>
 
                         <div v-else class="flex flex-col items-center gap-2 py-8 text-center">
                             <PackageOpen :size="22" class="text-text-tertiary" />

@@ -1,4 +1,5 @@
 <script setup>
+import TableViewport from '@/Components/ui/TableViewport.vue';
 import PortalLayout from '@/Layouts/PortalLayout.vue';
 import PortalStatusBadge from '@/Components/Portal/PortalStatusBadge.vue';
 import PageHeader from '@/Components/ui/PageHeader.vue';
@@ -54,7 +55,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                 </Link>
             </div>
             <div class="p-5">
-                <div v-if="recentOrders.length" class="w-full overflow-x-auto rounded-lg border border-border-subtle">
+                <TableViewport v-if="recentOrders.length" class="w-full overflow-x-auto rounded-lg border border-border-subtle">
                     <table class="min-w-full text-sm">
                         <thead>
                             <tr class="border-b border-border-subtle">
@@ -83,7 +84,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                             </tr>
                         </tbody>
                     </table>
-                </div>
+                </TableViewport>
                 <div v-else class="flex flex-col items-center gap-2 py-8 text-center">
                     <PackageOpen :size="22" class="text-text-tertiary" />
                     <p class="text-sm text-text-tertiary">{{ t('portal.dashboard.noOrders') }}</p>

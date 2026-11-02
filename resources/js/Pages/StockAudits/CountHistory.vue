@@ -1,4 +1,5 @@
 <script setup>
+import TableViewport from '@/Components/ui/TableViewport.vue';
 import { Head, Link } from '@inertiajs/vue3';
 import { useI18n } from 'vue-i18n';
 import AppLayout from '@/Layouts/AppLayout.vue';
@@ -37,7 +38,7 @@ const heading = 'whitespace-nowrap px-5 py-3 text-left text-xs font-semibold upp
                 </li>
                 <li v-if="!counts.data.length" class="p-5 text-center text-sm text-text-tertiary">{{ t('stockAudits.history.empty') }}</li>
             </ul>
-            <div class="hidden overflow-x-auto md:block">
+            <TableViewport class="hidden overflow-x-auto md:block">
                 <table class="w-full text-sm">
                     <thead class="border-b border-border-subtle bg-surface-overlay"><tr>
                         <th :class="heading">#</th><th :class="heading">{{ t('common.date') }}</th>
@@ -58,12 +59,13 @@ const heading = 'whitespace-nowrap px-5 py-3 text-left text-xs font-semibold upp
                     </tr>
                     <tr v-if="!counts.data.length"><td colspan="7" class="px-5 py-10 text-center text-text-tertiary">{{ t('stockAudits.history.empty') }}</td></tr></tbody>
                 </table>
-            </div>
-            <nav v-if="counts.last_page > 1" :aria-label="t('stockAudits.history.title')" class="flex justify-between border-t border-border-subtle p-4 text-sm">
+        </TableViewport>
+<nav v-if="counts.last_page > 1" :aria-label="t('stockAudits.history.title')" class="flex justify-between border-t border-border-subtle p-4 text-sm">
                 <Link v-if="counts.prev_page_url" :href="counts.prev_page_url" class="text-brand hover:underline">{{ t('common.previous') }}</Link><span v-else />
                 <span class="tabular-nums text-text-secondary">{{ counts.current_page }} / {{ counts.last_page }}</span>
                 <Link v-if="counts.next_page_url" :href="counts.next_page_url" class="text-brand hover:underline">{{ t('common.next') }}</Link><span v-else />
             </nav>
+
         </Card>
     </AppLayout>
 </template>

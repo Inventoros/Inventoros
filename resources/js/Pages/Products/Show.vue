@@ -1,4 +1,5 @@
 <script setup>
+import TableViewport from '@/Components/ui/TableViewport.vue';
 import { useCurrency } from '@/composables/useCurrency';
 
 import AppLayout from '@/Layouts/AppLayout.vue';
@@ -485,7 +486,7 @@ const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface
 
                     <Card v-if="product.has_variants && variantLocationBreakdown.length">
                         <h3 class="mb-3 text-sm font-semibold text-text-primary">{{ t('products.show.stockByLocation') }}</h3>
-                        <div class="overflow-x-auto">
+                        <TableViewport class="overflow-x-auto">
                             <table class="w-full text-left text-sm">
                                 <thead><tr class="border-b border-border-subtle text-text-secondary">
                                     <th class="p-2">{{ t('products.sku') }}</th>
@@ -500,7 +501,7 @@ const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface
                                     <td class="p-2 text-right tabular-nums">{{ bin.quantity }}</td>
                                 </tr></tbody>
                             </table>
-                        </div>
+                        </TableViewport>
                     </Card>
 
                     <!-- Per-warehouse stock and thresholds -->
@@ -527,7 +528,7 @@ const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface
                             </Button>
                         </div>
                         <div class="p-5">
-                            <div v-if="productSuppliers.length > 0" class="w-full overflow-x-auto rounded-lg border border-border-subtle">
+                            <TableViewport v-if="productSuppliers.length > 0" class="w-full overflow-x-auto rounded-lg border border-border-subtle">
                                 <table class="min-w-full text-sm">
                                     <thead>
                                         <tr class="border-b border-border-subtle">
@@ -554,7 +555,7 @@ const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface
                                         </tr>
                                     </tbody>
                                 </table>
-                            </div>
+                            </TableViewport>
                             <div v-else class="flex flex-col items-center gap-2 py-6 text-center">
                                 <Truck :size="20" class="text-text-tertiary" />
                                 <p class="text-sm text-text-tertiary">{{ t('productSuppliers.empty') }}</p>
@@ -569,7 +570,7 @@ const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface
                     <Card v-if="priceHistory.length > 0" :padded="false">
                         <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">{{ t('productSuppliers.priceHistory') }}</h3></div>
                         <div class="p-5">
-                            <div class="w-full overflow-x-auto rounded-lg border border-border-subtle">
+                            <TableViewport class="w-full overflow-x-auto rounded-lg border border-border-subtle">
                                 <table class="min-w-full text-sm">
                                     <thead>
                                         <tr class="border-b border-border-subtle">
@@ -603,7 +604,7 @@ const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface
                                         </tr>
                                     </tbody>
                                 </table>
-                            </div>
+                            </TableViewport>
                         </div>
                     </Card>
 
@@ -716,7 +717,7 @@ const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface
                             </div>
 
                             <!-- Components Table -->
-                            <div v-if="components.length > 0" class="w-full overflow-x-auto rounded-lg border border-border-subtle">
+                            <TableViewport v-if="components.length > 0" class="w-full overflow-x-auto rounded-lg border border-border-subtle">
                                 <table class="min-w-full">
                                     <thead>
                                         <tr class="border-b border-border-subtle">
@@ -773,7 +774,7 @@ const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface
                                         </tr>
                                     </tbody>
                                 </table>
-                            </div>
+                            </TableViewport>
 
                             <!-- Empty State -->
                             <div v-else class="flex flex-col items-center gap-2 py-8 text-center">

@@ -4,14 +4,13 @@ import AppLayout from '@/Layouts/AppLayout.vue';
 import TableFilters from '@/Components/ui/TableFilters.vue';
 import TableViewport from '@/Components/ui/TableViewport.vue';
 import PageHeader from '@/Components/ui/PageHeader.vue';
-import Card from '@/Components/ui/Card.vue';
 import Button from '@/Components/ui/Button.vue';
 import Badge from '@/Components/ui/Badge.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { usePermissions } from '@/composables/usePermissions';
-import { Plus, Search, Eye, Pencil, Trash2, Warehouse, Star } from '@lucide/vue';
+import { Plus, Eye, Pencil, Trash2, Warehouse, Star } from '@lucide/vue';
 
 const { t } = useI18n();
 const { hasPermission } = usePermissions();
@@ -40,11 +39,6 @@ const searchWarehouses = () => {
         preserveState: true,
         preserveScroll: true,
     });
-};
-
-const clearFilters = () => {
-    search.value = '';
-    searchWarehouses();
 };
 
 const makeDefault = (warehouse) => {
@@ -87,49 +81,22 @@ const thClass =
         <!-- Plugin Slot: Header -->
         <PluginSlot slot="header" :components="pluginComponents?.header" />
 
-        <!-- Access policy -->
-        <Card v-if="hasPermission('manage_warehouse_users')" class="mt-6">
-            <h3 class="text-sm font-semibold text-text-primary">{{ t('warehouses.access.title') }}</h3>
-            <label class="mt-3 flex items-start gap-3">
-                <input
-                    type="checkbox"
-                    :checked="restrictToAssigned"
-                    @change="updateAccessPolicy"
-                    class="mt-0.5 rounded border-border-subtle bg-surface-canvas text-brand ds-focus-ring"
-                />
+        <!-- Filters -->
+        <TableFilters class="mt-4" :label="t('warehouses.access.title')" :enabled="hasPermission('manage_warehouse_users')">
+            <template #quick>
+                <form class="table-quick-search" @submit.prevent="searchWarehouses">
+                    <label for="search" class="sr-only">{{ t('warehouses.index.searchLabel') }}</label>
+                    <input id="search" v-model="search" type="text" :placeholder="t('warehouses.searchPlaceholder')" />
+                    <button type="submit" class="ds-focus-ring">{{ t('common.search') }}</button>
+                </form>
+            </template>
+            <label class="flex items-start gap-3">
+                <input type="checkbox" :checked="restrictToAssigned" @change="updateAccessPolicy" class="mt-0.5 rounded border-border-subtle bg-surface-canvas text-brand ds-focus-ring" />
                 <span>
                     <span class="block text-sm font-medium text-text-primary">{{ t('warehouses.access.restrictLabel') }}</span>
                     <span class="mt-1 block text-xs text-text-tertiary">{{ t('warehouses.access.restrictHint') }}</span>
                 </span>
             </label>
-        </Card>
-
-        <!-- Filters -->
-        <TableFilters class="mt-4">
-            <form @submit.prevent="searchWarehouses" class="space-y-4">
-                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                    <div class="sm:col-span-2">
-                        <label for="search" class="mb-1 block text-xs font-medium text-text-secondary">{{ t('warehouses.index.searchLabel') }}</label>
-                        <div class="relative">
-                            <Search :size="15" class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-text-tertiary" />
-                            <input
-                                id="search"
-                                v-model="search"
-                                type="text"
-                                :placeholder="t('warehouses.searchPlaceholder')"
-                                class="h-9 w-full rounded-md border border-border-subtle bg-surface-canvas pl-9 pr-3 text-sm text-text-primary placeholder:text-text-tertiary ds-focus-ring"
-                            />
-                        </div>
-                    </div>
-                </div>
-                <div class="flex items-center gap-2">
-                    <Button type="submit" variant="default" size="sm">
-                        <Search :size="14" />
-                        {{ t('common.search') }}
-                    </Button>
-                    <Button type="button" variant="secondary" size="sm" @click="clearFilters">{{ t('common.clear') }}</Button>
-                </div>
-            </form>
         </TableFilters>
 
         <!-- Warehouses table -->
@@ -216,30 +183,33 @@ const thClass =
                     </tr>
                 </tbody>
             </table>
+
+            <template #footer>
+                <div v-if="warehouses.data.length > 0" class="mt-4 flex flex-col items-center justify-between gap-3 sm:flex-row table-pagination">
+                    <p class="text-xs text-text-tertiary">
+                        {{ t('common.showingResults', { from: warehouses.from, to: warehouses.to, total: warehouses.total }) }}
+                    </p>
+                    <nav class="inline-flex items-center gap-1">
+                        <template v-for="link in warehouses.links" :key="link.label">
+                            <Link
+                                v-if="link.url"
+                                :href="link.url"
+                                :class="[
+                                    'inline-flex h-8 min-w-8 items-center justify-center rounded-md border px-2.5 text-xs font-medium transition-colors',
+                                    link.active
+                                        ? 'border-brand bg-brand text-brand-foreground'
+                                        : 'border-border-subtle bg-surface-canvas text-text-secondary hover:bg-surface-overlay',
+                                ]"
+                                v-html="link.label"
+                            />
+                            <span v-else class="inline-flex h-8 min-w-8 cursor-not-allowed items-center justify-center rounded-md border border-border-subtle px-2.5 text-xs text-text-tertiary opacity-50" v-html="link.label" />
+                        </template>
+                    </nav>
+                </div>
+            </template>
         </TableViewport>
 
         <!-- Pagination -->
-        <div v-if="warehouses.data.length > 0" class="mt-4 flex flex-col items-center justify-between gap-3 sm:flex-row table-pagination">
-            <p class="text-xs text-text-tertiary">
-                {{ t('common.showingResults', { from: warehouses.from, to: warehouses.to, total: warehouses.total }) }}
-            </p>
-            <nav class="inline-flex items-center gap-1">
-                <template v-for="link in warehouses.links" :key="link.label">
-                    <Link
-                        v-if="link.url"
-                        :href="link.url"
-                        :class="[
-                            'inline-flex h-8 min-w-8 items-center justify-center rounded-md border px-2.5 text-xs font-medium transition-colors',
-                            link.active
-                                ? 'border-brand bg-brand text-brand-foreground'
-                                : 'border-border-subtle bg-surface-canvas text-text-secondary hover:bg-surface-overlay',
-                        ]"
-                        v-html="link.label"
-                    />
-                    <span v-else class="inline-flex h-8 min-w-8 cursor-not-allowed items-center justify-center rounded-md border border-border-subtle px-2.5 text-xs text-text-tertiary opacity-50" v-html="link.label" />
-                </template>
-            </nav>
-        </div>
 
         <!-- Plugin Slot: Footer -->
         <PluginSlot slot="footer" :components="pluginComponents?.footer" />

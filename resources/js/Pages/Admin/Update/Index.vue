@@ -1,4 +1,5 @@
 <script setup>
+import TableViewport from '@/Components/ui/TableViewport.vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import PageHeader from '@/Components/ui/PageHeader.vue';
 import Card from '@/Components/ui/Card.vue';
@@ -350,7 +351,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                 </div>
 
                 <div class="p-5">
-                    <div
+                    <TableViewport
                         v-if="backups && backups.length > 0"
                         class="w-full overflow-x-auto rounded-lg border border-border-subtle bg-surface-raised"
                     >
@@ -394,7 +395,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                                 </tr>
                             </tbody>
                         </table>
-                    </div>
+                    </TableViewport>
 
                     <div v-else class="flex flex-col items-center gap-2 py-8 text-center">
                         <Database :size="22" class="text-text-tertiary" />

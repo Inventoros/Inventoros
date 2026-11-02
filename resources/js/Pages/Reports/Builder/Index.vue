@@ -74,11 +74,12 @@ const thClass =
         </PageHeader>
 
         <!-- Search -->
-        <div class="mt-6">
+        <div class="table-toolbar">
             <div class="relative w-full md:w-96">
                 <Search :size="15" class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-text-tertiary" />
                 <input
                     v-model="search"
+                    :aria-label="t('common.search')"
                     type="text"
                     :placeholder="t('reportBuilder.searchPlaceholder')"
                     class="h-9 w-full rounded-md border border-border-subtle bg-surface-canvas pl-9 pr-3 text-sm text-text-primary placeholder:text-text-tertiary ds-focus-ring"

@@ -101,5 +101,6 @@ const cellPadding = computed(() => (props.dense ? 'px-3 py-2' : 'px-4 py-3'));
                 </tr>
             </tbody>
         </table>
+        <template v-if="$slots.footer" #footer><slot name="footer" /></template>
     </TableViewport>
 </template>

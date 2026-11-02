@@ -316,7 +316,8 @@
     "export": "エクスポート",
     "new": "新規",
     "editWithName": "編集: {name}",
-    "filters": "フィルター"
+    "filters": "フィルター",
+    "expandTable": "テーブルを全画面表示"
   },
   "nav": {
     "dashboard": "ダッシュボード",

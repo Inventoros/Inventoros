@@ -132,21 +132,16 @@ const selectClass =
 
         <!-- Filters -->
         <TableFilters class="mt-6">
+            <template #quick>
+                <form class="table-quick-search" @submit.prevent="searchOrders">
+                    <label for="search" class="sr-only">{{ t('orders.searchOrders') }}</label>
+                    <input id="search" v-model="search" type="text" :placeholder="t('orders.searchPlaceholder')" />
+                    <button type="submit" class="ds-focus-ring">{{ t('common.search') }}</button>
+                </form>
+            </template>
             <form @submit.prevent="searchOrders" class="space-y-4">
                 <div :class="['grid grid-cols-1 gap-4 sm:grid-cols-2', canViewPayments ? 'lg:grid-cols-3 xl:grid-cols-5' : 'lg:grid-cols-4']">
-                    <div class="sm:col-span-2">
-                        <label for="search" class="mb-1 block text-xs font-medium text-text-secondary">{{ t('orders.searchOrders') }}</label>
-                        <div class="relative">
-                            <Search :size="15" class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-text-tertiary" />
-                            <input
-                                id="search"
-                                v-model="search"
-                                type="text"
-                                :placeholder="t('orders.searchPlaceholder')"
-                                class="h-9 w-full rounded-md border border-border-subtle bg-surface-canvas pl-9 pr-3 text-sm text-text-primary placeholder:text-text-tertiary ds-focus-ring"
-                            />
-                        </div>
-                    </div>
+
                     <div>
                         <label for="status" class="mb-1 block text-xs font-medium text-text-secondary">{{ t('common.status') }}</label>
                         <select id="status" v-model="status" :class="selectClass">
@@ -229,32 +224,36 @@ const selectClass =
                         </Button>
                     </div>
                 </template>
-            </DataTable>
+
+                <template #footer>
+                    <div v-if="orders.data.length > 0" class="mt-4 flex flex-col items-center justify-between gap-3 sm:flex-row table-pagination">
+                        <p class="text-xs text-text-tertiary">
+                            {{ t('common.showing') }} <span class="font-medium text-text-secondary">{{ orders.from }}</span>
+                            {{ t('common.to') }} <span class="font-medium text-text-secondary">{{ orders.to }}</span>
+                            {{ t('common.of') }} <span class="font-medium text-text-secondary">{{ orders.total }}</span> {{ t('common.results') }}
+                        </p>
+                        <nav class="inline-flex items-center gap-1">
+                            <template v-for="link in orders.links" :key="link.label">
+                                <Link
+                                    v-if="link.url"
+                                    :href="link.url"
+                                    :class="[
+                                        'inline-flex h-8 min-w-8 items-center justify-center rounded-md border px-2.5 text-xs font-medium transition-colors',
+                                        link.active
+                                            ? 'border-brand bg-brand text-brand-foreground'
+                                            : 'border-border-subtle bg-surface-canvas text-text-secondary hover:bg-surface-overlay',
+                                    ]"
+                                    v-html="link.label"
+                                />
+                                <span v-else class="inline-flex h-8 min-w-8 cursor-not-allowed items-center justify-center rounded-md border border-border-subtle px-2.5 text-xs text-text-tertiary opacity-50" v-html="link.label" />
+                            </template>
+                        </nav>
+                    </div>
+                </template>
+        </DataTable>
 
             <!-- Pagination -->
-            <div v-if="orders.data.length > 0" class="mt-4 flex flex-col items-center justify-between gap-3 sm:flex-row table-pagination">
-                <p class="text-xs text-text-tertiary">
-                    {{ t('common.showing') }} <span class="font-medium text-text-secondary">{{ orders.from }}</span>
-                    {{ t('common.to') }} <span class="font-medium text-text-secondary">{{ orders.to }}</span>
-                    {{ t('common.of') }} <span class="font-medium text-text-secondary">{{ orders.total }}</span> {{ t('common.results') }}
-                </p>
-                <nav class="inline-flex items-center gap-1">
-                    <template v-for="link in orders.links" :key="link.label">
-                        <Link
-                            v-if="link.url"
-                            :href="link.url"
-                            :class="[
-                                'inline-flex h-8 min-w-8 items-center justify-center rounded-md border px-2.5 text-xs font-medium transition-colors',
-                                link.active
-                                    ? 'border-brand bg-brand text-brand-foreground'
-                                    : 'border-border-subtle bg-surface-canvas text-text-secondary hover:bg-surface-overlay',
-                            ]"
-                            v-html="link.label"
-                        />
-                        <span v-else class="inline-flex h-8 min-w-8 cursor-not-allowed items-center justify-center rounded-md border border-border-subtle px-2.5 text-xs text-text-tertiary opacity-50" v-html="link.label" />
-                    </template>
-                </nav>
-            </div>
+
         </div>
 
         <PluginSlot slot="footer" :components="pluginComponents?.footer" />

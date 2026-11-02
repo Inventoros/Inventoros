@@ -1,4 +1,5 @@
 <script setup>
+import TableViewport from '@/Components/ui/TableViewport.vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import PluginSlot from '@/Components/PluginSlot.vue';
 import PageHeader from '@/Components/ui/PageHeader.vue';
@@ -178,7 +179,7 @@ const thClassCenter = 'px-4 py-2.5 text-center text-xs font-medium tracking-tigh
                     </div>
                 </div>
                 <div class="p-5">
-                    <div class="w-full overflow-x-auto rounded-lg border border-border-subtle">
+                    <TableViewport class="w-full overflow-x-auto rounded-lg border border-border-subtle">
                         <table class="w-full text-sm">
                             <thead>
                                 <tr class="border-b border-border-subtle">
@@ -256,7 +257,7 @@ const thClassCenter = 'px-4 py-2.5 text-center text-xs font-medium tracking-tigh
                                 </tr>
                             </tbody>
                         </table>
-                    </div>
+                    </TableViewport>
                     <p v-if="form.errors.items" :class="fieldError">{{ form.errors.items }}</p>
                 </div>
 

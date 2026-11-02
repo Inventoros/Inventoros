@@ -1,4 +1,5 @@
 <script setup>
+import TableViewport from '@/Components/ui/TableViewport.vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import PageHeader from '@/Components/ui/PageHeader.vue';
 import Card from '@/Components/ui/Card.vue';
@@ -225,7 +226,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                 {{ t('workOrders.create.materialsNeeded', { count: form.quantity, name: selectedProduct.name }, form.quantity) }}
                             </p>
                         </div>
-                        <div class="overflow-x-auto">
+                        <TableViewport class="overflow-x-auto">
                             <table class="min-w-full divide-y divide-border-subtle">
                                 <thead class="bg-surface-canvas">
                                     <tr>
@@ -289,7 +290,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                     </tr>
                                 </tbody>
                             </table>
-                        </div>
+                        </TableViewport>
 
                         <!-- Insufficient Stock Warning -->
                         <div v-if="!allComponentsSufficient" class="border-t border-border-subtle bg-status-danger/10 px-4 py-3">

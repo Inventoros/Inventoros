@@ -1,4 +1,5 @@
 <script setup>
+import TableViewport from '@/Components/ui/TableViewport.vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import PageHeader from '@/Components/ui/PageHeader.vue';
 import Card from '@/Components/ui/Card.vue';
@@ -336,7 +337,7 @@ const selectClass =
                                                 <ChevronRight :size="14" class="transition-transform group-open:rotate-90" />
                                                 {{ t('admin.activityLog.viewChanges', { count: getChangedFields(activity.properties).length }, getChangedFields(activity.properties).length) }}
                                             </summary>
-                                            <div class="mt-2 overflow-x-auto rounded-lg border border-border-subtle bg-surface-canvas p-3">
+                                            <TableViewport class="mt-2 overflow-x-auto rounded-lg border border-border-subtle bg-surface-canvas p-3">
                                                 <table class="w-full text-xs">
                                                     <thead>
                                                         <tr class="border-b border-border-subtle">
@@ -357,7 +358,7 @@ const selectClass =
                                                         </tr>
                                                     </tbody>
                                                 </table>
-                                            </div>
+                                            </TableViewport>
                                         </details>
                                     </div>
                                 </div>

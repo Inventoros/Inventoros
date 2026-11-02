@@ -1,4 +1,5 @@
 <script setup>
+import TableViewport from '@/Components/ui/TableViewport.vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import PageHeader from '@/Components/ui/PageHeader.vue';
 import Card from '@/Components/ui/Card.vue';
@@ -154,7 +155,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                 <div class="px-5 pt-5">
                     <CardHeader :title="t('reports.categoryPerformance.title')" />
                 </div>
-                <div class="mt-2 w-full overflow-x-auto">
+                <TableViewport class="mt-2 w-full overflow-x-auto">
                     <table class="w-full text-sm">
                         <thead>
                             <tr class="border-b border-border-subtle">
@@ -187,7 +188,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                             </tr>
                         </tbody>
                     </table>
-                </div>
+                </TableViewport>
             </Card>
         </section>
 

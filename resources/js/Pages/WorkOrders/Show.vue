@@ -1,4 +1,5 @@
 <script setup>
+import TableViewport from '@/Components/ui/TableViewport.vue';
 import PluginSlot from '@/Components/PluginSlot.vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import PageHeader from '@/Components/ui/PageHeader.vue';
@@ -388,7 +389,7 @@ const fieldArea = 'w-full rounded-md border border-border-subtle bg-surface-canv
                 <Card :padded="false">
                     <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">{{ t('workOrders.components.title') }}</h3></div>
                     <div class="p-5">
-                        <div class="w-full overflow-x-auto rounded-lg border border-border-subtle">
+                        <TableViewport class="w-full overflow-x-auto rounded-lg border border-border-subtle">
                             <table class="min-w-full">
                                 <thead>
                                     <tr class="border-b border-border-subtle">
@@ -451,7 +452,7 @@ const fieldArea = 'w-full rounded-md border border-border-subtle bg-surface-canv
                                     </tr>
                                 </tbody>
                             </table>
-                        </div>
+                        </TableViewport>
                     </div>
                 </Card>
 

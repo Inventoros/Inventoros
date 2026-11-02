@@ -1,4 +1,5 @@
 <script setup>
+import TableViewport from '@/Components/ui/TableViewport.vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import PageHeader from '@/Components/ui/PageHeader.vue';
 import Card from '@/Components/ui/Card.vue';
@@ -408,6 +409,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                         <p class="mb-3 text-sm text-text-secondary">
                             {{ t('reportBuilder.previewShowing', { count: previewData.data?.length || 0, total: previewData.total || 0 }) }}
                         </p>
+                        <TableViewport>
                         <table class="min-w-full divide-y divide-border-subtle">
                             <thead class="bg-surface-overlay">
                                 <tr>
@@ -432,6 +434,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                 </tr>
                             </tbody>
                         </table>
+                        </TableViewport>
                     </div>
                     <div v-else-if="!previewLoading && !previewError" class="py-8 text-center">
                         <p class="text-sm text-text-tertiary">{{ t('reportBuilder.previewHint') }}</p>

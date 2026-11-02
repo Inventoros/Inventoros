@@ -1,4 +1,5 @@
 <script setup>
+import TableViewport from '@/Components/ui/TableViewport.vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import PageHeader from '@/Components/ui/PageHeader.vue';
 import Card from '@/Components/ui/Card.vue';
@@ -123,7 +124,7 @@ const thClassRight = 'px-4 py-2.5 text-right text-xs font-medium tracking-tight 
                 <p v-if="quickReorder.canCreatePo.value && products.length > 0" class="mt-1 text-xs text-text-tertiary">{{ t('quickReorder.hint') }}</p>
             </div>
 
-            <div v-if="products.length > 0" class="w-full overflow-x-auto">
+            <TableViewport v-if="products.length > 0" class="w-full overflow-x-auto">
                 <table class="w-full text-sm">
                     <thead>
                         <tr class="border-b border-border-subtle">
@@ -216,7 +217,7 @@ const thClassRight = 'px-4 py-2.5 text-right text-xs font-medium tracking-tight 
                         </tr>
                     </tbody>
                 </table>
-            </div>
+            </TableViewport>
 
             <div v-else class="flex flex-col items-center gap-2 px-5 py-12 text-center">
                 <CheckCircle2 :size="22" class="text-status-success" />

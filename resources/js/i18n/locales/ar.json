@@ -316,7 +316,8 @@
     "export": "تصدير",
     "new": "جديد",
     "editWithName": "تعديل: {name}",
-    "filters": "المرشحات"
+    "filters": "المرشحات",
+    "expandTable": "عرض الجدول بالكامل"
   },
   "nav": {
     "dashboard": "لوحة التحكم",

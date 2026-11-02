@@ -1,4 +1,5 @@
 <script setup>
+import TableViewport from '@/Components/ui/TableViewport.vue';
 import { ref, computed, watch } from 'vue';
 
 import { useI18n } from 'vue-i18n';
@@ -349,7 +350,7 @@ const getEffectivePurchasePrice = (variant) => {
             </div>
 
             <!-- Variants Table -->
-            <div class="overflow-x-auto">
+            <TableViewport class="overflow-x-auto">
                 <table class="min-w-full divide-y divide-gray-200 dark:divide-border-subtle">
                     <thead class="bg-gray-50 dark:bg-surface-canvas">
                         <tr>
@@ -430,7 +431,7 @@ const getEffectivePurchasePrice = (variant) => {
                         </tr>
                     </tbody>
                 </table>
-            </div>
+            </TableViewport>
 
             <!-- Bulk Actions -->
             <div class="mt-4 flex gap-4 text-sm">

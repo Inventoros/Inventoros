@@ -1,4 +1,5 @@
 <script setup>
+import TableViewport from '@/Components/ui/TableViewport.vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import PluginSlot from '@/Components/PluginSlot.vue';
 import PageHeader from '@/Components/ui/PageHeader.vue';
@@ -297,7 +298,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                             </div>
                         </dl>
 
-                        <div class="hidden w-full overflow-x-auto rounded-lg border border-border-subtle sm:block">
+                        <TableViewport class="hidden w-full overflow-x-auto rounded-lg border border-border-subtle sm:block">
                             <table class="w-full text-sm">
                                 <thead>
                                     <tr class="border-b border-border-subtle">
@@ -367,7 +368,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                                     </tr>
                                 </tfoot>
                             </table>
-                        </div>
+                        </TableViewport>
                     </div>
                 </Card>
             </div>

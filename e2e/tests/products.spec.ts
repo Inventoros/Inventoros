@@ -112,12 +112,14 @@ test.describe('Products', () => {
     });
 
     test('should filter products by category', async ({ page }) => {
-        const categorySelect = page.locator('select[name="category"], #category-filter');
-
-        if (await categorySelect.isVisible()) {
-            await categorySelect.selectOption({ index: 1 });
-            await page.waitForTimeout(500);
-        }
+        const filters = page.locator('.table-filters');
+        await filters.locator('summary').click();
+        const category = page.locator('#category');
+        await category.selectOption({ index: 1 });
+        const selected = await category.inputValue();
+        await filters.getByRole('button', { name: 'Search', exact: true }).click();
+        await expect(page).toHaveURL(new RegExp(`category=${selected}`));
+        await expect(filters).not.toHaveAttribute('open');
     });
 
     test('should display product details', async ({ page }) => {

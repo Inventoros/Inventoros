@@ -1,4 +1,5 @@
 <script setup>
+import TableViewport from '@/Components/ui/TableViewport.vue';
 import { useCurrency } from '@/composables/useCurrency';
 
 import PluginSlot from '@/Components/PluginSlot.vue';
@@ -235,7 +236,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                 <Card :padded="false">
                     <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">{{ t('customers.show.recentOrders') }}</h3></div>
                     <div class="p-5">
-                        <div v-if="orders.length > 0" class="w-full overflow-x-auto rounded-lg border border-border-subtle">
+                        <TableViewport v-if="orders.length > 0" class="w-full overflow-x-auto rounded-lg border border-border-subtle">
                             <table class="min-w-full text-sm">
                                 <thead>
                                     <tr class="border-b border-border-subtle">
@@ -276,7 +277,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                                     </tr>
                                 </tbody>
                             </table>
-                        </div>
+                        </TableViewport>
                         <div v-else class="flex flex-col items-center gap-2 py-8 text-center">
                             <PackageOpen :size="22" class="text-text-tertiary" />
                             <p class="text-sm text-text-tertiary">{{ t('customers.show.noOrdersYet') }}</p>

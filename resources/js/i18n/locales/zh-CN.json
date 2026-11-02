@@ -316,7 +316,8 @@
     "export": "导出",
     "new": "新建",
     "editWithName": "编辑：{name}",
-    "filters": "筛选"
+    "filters": "筛选",
+    "expandTable": "全屏表格"
   },
   "nav": {
     "dashboard": "仪表盘",

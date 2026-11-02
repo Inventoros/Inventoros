@@ -1,4 +1,5 @@
 <script setup>
+import TableViewport from '@/Components/ui/TableViewport.vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import PageHeader from '@/Components/ui/PageHeader.vue';
 import Card from '@/Components/ui/Card.vue';
@@ -81,7 +82,7 @@ const ariaSort = (key) => props.filters.sort_by !== key ? 'none' : (props.filter
 
         <Card class="mt-4" :padded="false">
             <p v-if="batches.data.length === 0" class="px-5 py-12 text-center text-sm text-text-secondary">{{ t('batchExpiryReport.empty') }}</p>
-            <div v-else class="overflow-x-auto ds-focus-ring" role="region" :aria-label="t('batchExpiryReport.title')" tabindex="0">
+            <TableViewport v-else class="overflow-x-auto ds-focus-ring" role="region" :aria-label="t('batchExpiryReport.title')" tabindex="0">
                 <table class="w-full min-w-[48rem] text-sm">
                     <caption class="sr-only">{{ t('batchExpiryReport.title') }}</caption>
                     <thead>
@@ -111,16 +112,20 @@ const ariaSort = (key) => props.filters.sort_by !== key ? 'none' : (props.filter
                         </tr>
                     </tbody>
                 </table>
-            </div>
-            <nav v-if="batches.total > 0" :aria-label="t('common.pagination')" class="flex flex-wrap items-center justify-between gap-3 border-t border-border-subtle px-4 py-3">
-                <p class="text-xs text-text-tertiary">{{ t('reportBuilder.pagination', { from: batches.from, to: batches.to, total: batches.total }) }}</p>
-                <div class="flex gap-2">
-                    <Button v-if="batches.prev_page_url" as="Link" :href="batches.prev_page_url" variant="outline" size="sm" preserve-scroll>{{ t('common.previous') }}</Button>
-                    <Button v-else disabled variant="outline" size="sm">{{ t('common.previous') }}</Button>
-                    <Button v-if="batches.next_page_url" as="Link" :href="batches.next_page_url" variant="outline" size="sm" preserve-scroll>{{ t('common.next') }}</Button>
-                    <Button v-else disabled variant="outline" size="sm">{{ t('common.next') }}</Button>
-                </div>
-            </nav>
+
+                <template #footer>
+                    <nav v-if="batches.total > 0" :aria-label="t('common.pagination')" class="flex flex-wrap items-center justify-between gap-3 border-t border-border-subtle px-4 py-3">
+                        <p class="text-xs text-text-tertiary">{{ t('reportBuilder.pagination', { from: batches.from, to: batches.to, total: batches.total }) }}</p>
+                        <div class="flex gap-2">
+                            <Button v-if="batches.prev_page_url" as="Link" :href="batches.prev_page_url" variant="outline" size="sm" preserve-scroll>{{ t('common.previous') }}</Button>
+                            <Button v-else disabled variant="outline" size="sm">{{ t('common.previous') }}</Button>
+                            <Button v-if="batches.next_page_url" as="Link" :href="batches.next_page_url" variant="outline" size="sm" preserve-scroll>{{ t('common.next') }}</Button>
+                            <Button v-else disabled variant="outline" size="sm">{{ t('common.next') }}</Button>
+                        </div>
+                    </nav>
+                </template>
+        </TableViewport>
+
         </Card>
     </AppLayout>
 </template>

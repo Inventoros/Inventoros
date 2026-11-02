@@ -1,4 +1,5 @@
 <script setup>
+import TableViewport from '@/Components/ui/TableViewport.vue';
 import PortalLayout from '@/Layouts/PortalLayout.vue';
 import PageHeader from '@/Components/ui/PageHeader.vue';
 import Card from '@/Components/ui/Card.vue';
@@ -82,7 +83,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
             <Card :padded="false">
                 <div class="p-5">
                     <p v-if="returnable.length === 0" class="text-sm text-text-tertiary">{{ t('portal.returnForm.noneReturnable') }}</p>
-                    <div v-else class="w-full overflow-x-auto rounded-lg border border-border-subtle">
+                    <TableViewport v-else class="w-full overflow-x-auto rounded-lg border border-border-subtle">
                         <table class="min-w-full text-sm">
                             <thead>
                                 <tr class="border-b border-border-subtle">
@@ -125,7 +126,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                                 </tr>
                             </tbody>
                         </table>
-                    </div>
+                    </TableViewport>
                     <InputError class="mt-2" :message="selectionError || form.errors.items" />
                 </div>
             </Card>

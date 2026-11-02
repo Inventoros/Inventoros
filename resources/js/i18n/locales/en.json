@@ -187,7 +187,8 @@
     "export": "Export",
     "new": "New",
     "editWithName": "Edit: {name}",
-    "filters": "Filters"
+    "filters": "Filters",
+    "expandTable": "Full table view"
   },
   "nav": {
     "dashboard": "Dashboard",

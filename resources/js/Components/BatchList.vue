@@ -1,4 +1,5 @@
 <script setup>
+import TableViewport from '@/Components/ui/TableViewport.vue';
 import { ref } from 'vue';
 import { usePage } from '@inertiajs/vue3';
 import axios from 'axios';
@@ -161,7 +162,7 @@ const isExpired = (batch) => {
         </div>
 
         <!-- Batches Table -->
-        <div v-if="localBatches.length > 0" class="overflow-x-auto">
+        <TableViewport v-if="localBatches.length > 0" class="overflow-x-auto">
             <table class="w-full text-sm">
                 <thead>
                     <tr class="border-b border-gray-200 dark:border-border-subtle">
@@ -196,7 +197,7 @@ const isExpired = (batch) => {
                     </tr>
                 </tbody>
             </table>
-        </div>
+        </TableViewport>
 
         <div v-else class="text-center py-8 text-gray-500 dark:text-gray-400">
             <svg class="w-12 h-12 mx-auto mb-3 text-gray-300 dark:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -1,4 +1,5 @@
 <script setup>
+import TableViewport from '@/Components/ui/TableViewport.vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import PageHeader from '@/Components/ui/PageHeader.vue';
 import StatTile from '@/Components/ui/StatTile.vue';
@@ -168,7 +169,7 @@ const thClass =
         </Card>
 
         <!-- Adjustments table -->
-        <div class="mt-4 w-full overflow-x-auto rounded-lg border border-border-subtle bg-surface-raised">
+        <TableViewport class="mt-4 w-full overflow-x-auto rounded-lg border border-border-subtle bg-surface-raised">
             <table class="w-full text-sm">
                 <thead>
                     <tr class="border-b border-border-subtle">
@@ -215,7 +216,7 @@ const thClass =
                     </tr>
                 </tbody>
             </table>
-        </div>
+        </TableViewport>
 
         <!-- Pagination -->
         <div v-if="adjustments.links && adjustments.links.length > 3" class="mt-4 flex justify-center">

@@ -94,31 +94,35 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium text-text-secondary';
                     </tr>
                 </tbody>
             </table>
+
+            <template #footer>
+                <div v-if="users && users.links && users.links.length > 3" class="mt-4 flex flex-col items-center justify-between gap-3 sm:flex-row table-pagination">
+                    <p v-if="users.total !== undefined" class="text-xs text-text-tertiary">
+                        {{ t('common.showing') }} <span class="font-medium text-text-secondary">{{ users.from }}</span>
+                        {{ t('common.to') }} <span class="font-medium text-text-secondary">{{ users.to }}</span>
+                        {{ t('common.of') }} <span class="font-medium text-text-secondary">{{ users.total }}</span> {{ t('common.results') }}
+                    </p>
+                    <nav class="inline-flex items-center gap-1">
+                        <template v-for="link in users.links" :key="link.label">
+                            <Link
+                                v-if="link.url"
+                                :href="link.url"
+                                :class="[
+                                    'inline-flex h-8 min-w-8 items-center justify-center rounded-md border px-2.5 text-xs font-medium transition-colors',
+                                    link.active
+                                        ? 'border-brand bg-brand text-brand-foreground'
+                                        : 'border-border-subtle bg-surface-canvas text-text-secondary hover:bg-surface-overlay',
+                                ]"
+                                v-html="link.label"
+                            />
+                            <span v-else class="inline-flex h-8 min-w-8 cursor-not-allowed items-center justify-center rounded-md border border-border-subtle px-2.5 text-xs text-text-tertiary opacity-50" v-html="link.label" />
+                        </template>
+                    </nav>
+                </div>
+            </template>
         </TableViewport>
 
         <!-- Pagination -->
-        <div v-if="users && users.links && users.links.length > 3" class="mt-4 flex flex-col items-center justify-between gap-3 sm:flex-row table-pagination">
-            <p v-if="users.total !== undefined" class="text-xs text-text-tertiary">
-                {{ t('common.showing') }} <span class="font-medium text-text-secondary">{{ users.from }}</span>
-                {{ t('common.to') }} <span class="font-medium text-text-secondary">{{ users.to }}</span>
-                {{ t('common.of') }} <span class="font-medium text-text-secondary">{{ users.total }}</span> {{ t('common.results') }}
-            </p>
-            <nav class="inline-flex items-center gap-1">
-                <template v-for="link in users.links" :key="link.label">
-                    <Link
-                        v-if="link.url"
-                        :href="link.url"
-                        :class="[
-                            'inline-flex h-8 min-w-8 items-center justify-center rounded-md border px-2.5 text-xs font-medium transition-colors',
-                            link.active
-                                ? 'border-brand bg-brand text-brand-foreground'
-                                : 'border-border-subtle bg-surface-canvas text-text-secondary hover:bg-surface-overlay',
-                        ]"
-                        v-html="link.label"
-                    />
-                    <span v-else class="inline-flex h-8 min-w-8 cursor-not-allowed items-center justify-center rounded-md border border-border-subtle px-2.5 text-xs text-text-tertiary opacity-50" v-html="link.label" />
-                </template>
-            </nav>
-        </div>
+
     </AppLayout>
 </template>

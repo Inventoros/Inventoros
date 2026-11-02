@@ -1,4 +1,5 @@
 <script setup>
+import TableViewport from '@/Components/ui/TableViewport.vue';
 import PortalLayout from '@/Layouts/PortalLayout.vue';
 import PortalStatusBadge from '@/Components/Portal/PortalStatusBadge.vue';
 import PageHeader from '@/Components/ui/PageHeader.vue';
@@ -59,7 +60,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                 <Card :padded="false">
                     <div class="px-5 pt-5"><h2 class="text-sm font-semibold text-text-primary">{{ t('portal.returnShow.items') }}</h2></div>
                     <div class="p-5">
-                        <div class="w-full overflow-x-auto rounded-lg border border-border-subtle">
+                        <TableViewport class="w-full overflow-x-auto rounded-lg border border-border-subtle">
                             <table class="min-w-full text-sm">
                                 <thead>
                                     <tr class="border-b border-border-subtle">
@@ -80,7 +81,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                                     </tr>
                                 </tbody>
                             </table>
-                        </div>
+                        </TableViewport>
                     </div>
                 </Card>
 

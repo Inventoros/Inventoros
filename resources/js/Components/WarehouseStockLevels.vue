@@ -1,4 +1,5 @@
 <script setup>
+import TableViewport from '@/Components/ui/TableViewport.vue';
 import Card from '@/Components/ui/Card.vue';
 import Button from '@/Components/ui/Button.vue';
 import Badge from '@/Components/ui/Badge.vue';
@@ -56,7 +57,7 @@ const cellInput = 'h-8 w-24 rounded-md border border-border-subtle bg-surface-ca
             <p v-if="levels.length === 0" class="text-sm text-text-tertiary">{{ t('warehouses.stockLevels.noWarehouses') }}</p>
 
             <form v-else @submit.prevent="save">
-                <div class="w-full overflow-x-auto rounded-lg border border-border-subtle">
+                <TableViewport class="w-full overflow-x-auto rounded-lg border border-border-subtle">
                     <table class="min-w-full text-sm">
                         <thead>
                             <tr class="border-b border-border-subtle">
@@ -97,7 +98,7 @@ const cellInput = 'h-8 w-24 rounded-md border border-border-subtle bg-surface-ca
                             </tr>
                         </tbody>
                     </table>
-                </div>
+                </TableViewport>
                 <div v-if="canEdit" class="mt-3 flex justify-end">
                     <Button type="submit" variant="default" size="sm" :loading="form.processing" :disabled="form.processing">
                         {{ t('warehouses.stockLevels.save') }}

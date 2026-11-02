@@ -1,4 +1,5 @@
 <script setup>
+import TableViewport from '@/Components/ui/TableViewport.vue';
 import PortalLayout from '@/Layouts/PortalLayout.vue';
 import PortalPagination from '@/Components/Portal/PortalPagination.vue';
 import PortalStatusBadge from '@/Components/Portal/PortalStatusBadge.vue';
@@ -27,7 +28,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
         <PageHeader :title="t('portal.orders.title')" :description="t('portal.orders.description', { org: orgName })" />
 
         <div class="mt-6">
-            <div v-if="orders.data.length" class="w-full overflow-x-auto rounded-lg border border-border-subtle bg-surface-raised">
+            <TableViewport v-if="orders.data.length" class="w-full overflow-x-auto rounded-lg border border-border-subtle bg-surface-raised">
                 <table class="min-w-full text-sm">
                     <thead>
                         <tr class="border-b border-border-subtle">
@@ -64,7 +65,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                         </tr>
                     </tbody>
                 </table>
-            </div>
+            </TableViewport>
             <div v-else class="flex flex-col items-center gap-2 rounded-lg border border-border-subtle bg-surface-raised py-12 text-center">
                 <PackageOpen :size="22" class="text-text-tertiary" />
                 <p class="text-sm text-text-tertiary">{{ t('portal.orders.empty') }}</p>

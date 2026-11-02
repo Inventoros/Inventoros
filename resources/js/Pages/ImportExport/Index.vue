@@ -1,4 +1,5 @@
 <script setup>
+import TableViewport from '@/Components/ui/TableViewport.vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import PageHeader from '@/Components/ui/PageHeader.vue';
 import Card from '@/Components/ui/Card.vue';
@@ -683,7 +684,7 @@ const code = 'rounded bg-surface-overlay px-1 py-0.5 font-mono text-xs text-text
                 <p class="mb-4 text-sm text-text-tertiary">
                     {{ t('importExport.exports.description') }}
                 </p>
-                <div class="w-full overflow-x-auto rounded-lg border border-border-subtle bg-surface-raised">
+                <TableViewport class="w-full overflow-x-auto rounded-lg border border-border-subtle bg-surface-raised">
                     <table class="w-full text-sm">
                         <thead>
                             <tr class="border-b border-border-subtle">
@@ -729,7 +730,7 @@ const code = 'rounded bg-surface-overlay px-1 py-0.5 font-mono text-xs text-text
                             </tr>
                         </tbody>
                     </table>
-                </div>
+                </TableViewport>
             </section>
         </div>
     </AppLayout>

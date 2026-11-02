@@ -242,16 +242,16 @@ const thClass =
 
         <!-- Filters -->
         <TableFilters class="mt-6">
+            <template #quick>
+                <form class="table-quick-search" @submit.prevent="searchProducts">
+                    <label for="search" class="sr-only">{{ t('products.searchProducts') }}</label>
+                    <Search :size="15" aria-hidden="true" />
+                    <input id="search" v-model="search" type="search" :placeholder="t('products.searchPlaceholder')" />
+                    <button type="submit" class="ds-focus-ring" :aria-label="t('common.search')"><Search :size="15" aria-hidden="true" /></button>
+                </form>
+            </template>
             <form @submit.prevent="searchProducts" class="space-y-4">
                 <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                    <div class="sm:col-span-2">
-                        <label for="search" class="mb-1 block text-xs font-medium text-text-secondary">{{ t('products.searchProducts') }}</label>
-                        <div class="relative">
-                            <Search :size="15" class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-text-tertiary" />
-                            <input id="search" v-model="search" type="text" :placeholder="t('products.searchPlaceholder')"
-                                class="h-9 w-full rounded-md border border-border-subtle bg-surface-canvas pl-9 pr-3 text-sm text-text-primary placeholder:text-text-tertiary ds-focus-ring" />
-                        </div>
-                    </div>
                     <div>
                         <label for="category" class="mb-1 block text-xs font-medium text-text-secondary">{{ t('products.category') }}</label>
                         <select id="category" v-model="category" :class="selectClass">
@@ -290,14 +290,6 @@ const thClass =
                 <Button variant="secondary" size="sm" :disabled="bulkProcessing" @click="bulkExport">{{ t('common.export') }}</Button>
                 <Button variant="danger" size="sm" :disabled="bulkProcessing" @click="bulkDelete"><Trash2 :size="14" />{{ t('common.delete') }}</Button>
             </div>
-        </div>
-
-        <div class="mt-4 flex flex-wrap items-center gap-3 text-sm text-text-secondary">
-            <label for="products_per_page">{{ t('inventoryCleanup.perPage') }}</label>
-            <select id="products_per_page" v-model="perPage" class="rounded-md border border-border-subtle bg-surface-canvas px-3 py-2 ds-focus-ring" @change="searchProducts">
-                <option v-for="size in [15, 25, 50, 100]" :key="size" :value="size">{{ size }}</option>
-            </select>
-            <span>{{ t('inventoryCleanup.selectionHint') }}</span>
         </div>
 
         <!-- Products table -->
@@ -361,27 +353,37 @@ const thClass =
                     </tr>
                 </tbody>
             </table>
+
+            <template #footer>
+                <div v-if="products.data.length > 0" class="mt-4 flex flex-col items-center justify-between gap-3 sm:flex-row table-pagination">
+                    <div class="flex items-center gap-2 text-xs text-text-secondary">
+                        <label for="products_per_page" class="sr-only sm:not-sr-only">{{ t('inventoryCleanup.perPage') }}</label>
+                        <select id="products_per_page" v-model="perPage" class="h-7 rounded border border-border-subtle bg-surface-canvas py-0 pl-2 pr-7 text-xs ds-focus-ring" :title="t('inventoryCleanup.selectionHint')" @change="searchProducts">
+                            <option v-for="size in [15, 25, 50, 100]" :key="size" :value="size">{{ size }}</option>
+                        </select>
+                    </div>
+                    <p class="hidden text-xs text-text-tertiary sm:block">
+                        {{ t('common.showing') }} <span class="font-medium text-text-secondary">{{ products.from }}</span>
+                        {{ t('common.to') }} <span class="font-medium text-text-secondary">{{ products.to }}</span>
+                        {{ t('common.of') }} <span class="font-medium text-text-secondary">{{ products.total }}</span> {{ t('common.results') }}
+                    </p>
+                    <span class="text-xs text-text-tertiary sm:hidden">{{ products.total }} {{ t('common.results') }}</span>
+                    <nav class="inline-flex items-center gap-1">
+                        <template v-for="link in products.links" :key="link.label">
+                            <Link v-if="link.url" preserve-state preserve-scroll :href="link.url"
+                                :class="[
+                                    'inline-flex h-8 min-w-8 items-center justify-center rounded-md border px-2.5 text-xs font-medium transition-colors',
+                                    link.active ? 'border-brand bg-brand text-brand-foreground' : 'border-border-subtle bg-surface-canvas text-text-secondary hover:bg-surface-overlay',
+                                ]"
+                                v-html="link.label" />
+                            <span v-else class="inline-flex h-8 min-w-8 cursor-not-allowed items-center justify-center rounded-md border border-border-subtle px-2.5 text-xs text-text-tertiary opacity-50" v-html="link.label" />
+                        </template>
+                    </nav>
+                </div>
+            </template>
         </TableViewport>
 
         <!-- Pagination -->
-        <div v-if="products.data.length > 0" class="mt-4 flex flex-col items-center justify-between gap-3 sm:flex-row table-pagination">
-            <p class="text-xs text-text-tertiary">
-                {{ t('common.showing') }} <span class="font-medium text-text-secondary">{{ products.from }}</span>
-                {{ t('common.to') }} <span class="font-medium text-text-secondary">{{ products.to }}</span>
-                {{ t('common.of') }} <span class="font-medium text-text-secondary">{{ products.total }}</span> {{ t('common.results') }}
-            </p>
-            <nav class="inline-flex items-center gap-1">
-                <template v-for="link in products.links" :key="link.label">
-                    <Link v-if="link.url" preserve-state preserve-scroll :href="link.url"
-                        :class="[
-                            'inline-flex h-8 min-w-8 items-center justify-center rounded-md border px-2.5 text-xs font-medium transition-colors',
-                            link.active ? 'border-brand bg-brand text-brand-foreground' : 'border-border-subtle bg-surface-canvas text-text-secondary hover:bg-surface-overlay',
-                        ]"
-                        v-html="link.label" />
-                    <span v-else class="inline-flex h-8 min-w-8 cursor-not-allowed items-center justify-center rounded-md border border-border-subtle px-2.5 text-xs text-text-tertiary opacity-50" v-html="link.label" />
-                </template>
-            </nav>
-        </div>
 
         <PluginSlot slot="footer" :components="pluginComponents?.footer" />
 

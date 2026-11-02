@@ -1,4 +1,5 @@
 <script setup>
+import TableViewport from '@/Components/ui/TableViewport.vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import PageHeader from '@/Components/ui/PageHeader.vue';
 import Card from '@/Components/ui/Card.vue';
@@ -179,7 +180,7 @@ const visibleReportCards = computed(() =>
                 </Button>
             </div>
             <Card :padded="false">
-                <div class="overflow-x-auto rounded-lg">
+                <TableViewport class="overflow-x-auto rounded-lg">
                     <table class="min-w-full divide-y divide-border-subtle">
                         <thead class="bg-surface-overlay">
                             <tr>
@@ -210,7 +211,7 @@ const visibleReportCards = computed(() =>
                             </tr>
                         </tbody>
                     </table>
-                </div>
+                </TableViewport>
             </Card>
         </section>
     </AppLayout>

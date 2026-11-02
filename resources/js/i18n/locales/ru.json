@@ -316,7 +316,8 @@
     "export": "Экспорт",
     "new": "Новый",
     "editWithName": "Редактирование: {name}",
-    "filters": "Фильтры"
+    "filters": "Фильтры",
+    "expandTable": "Таблица на весь экран"
   },
   "nav": {
     "dashboard": "Панель управления",

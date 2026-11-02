@@ -51,12 +51,12 @@ test.describe('Orders', () => {
     });
 
     test('should filter orders by status', async ({ page }) => {
-        const statusSelect = page.locator('select[name="status"], #status-filter');
-
-        if (await statusSelect.isVisible()) {
-            await statusSelect.selectOption('pending');
-            await page.waitForTimeout(500);
-        }
+        const filters = page.locator('.table-filters');
+        await filters.locator('summary').click();
+        await page.locator('#status').selectOption('pending');
+        await filters.getByRole('button', { name: 'Search', exact: true }).click();
+        await expect(page).toHaveURL(/status=pending/);
+        await expect(filters).not.toHaveAttribute('open');
     });
 
     test('should search orders', async ({ page }) => {

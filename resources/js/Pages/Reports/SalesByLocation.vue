@@ -1,4 +1,5 @@
 <script setup>
+import TableViewport from '@/Components/ui/TableViewport.vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import PageHeader from '@/Components/ui/PageHeader.vue';
 import Card from '@/Components/ui/Card.vue';
@@ -68,7 +69,7 @@ const thRightClass = 'px-4 py-2.5 text-right text-xs font-medium tracking-tight 
                         </template>
                     </CardHeader>
                 </div>
-                <div class="w-full overflow-x-auto p-3">
+                <TableViewport class="w-full overflow-x-auto p-3">
                     <table class="w-full text-sm">
                         <thead>
                             <tr class="border-b border-border-subtle">
@@ -96,7 +97,7 @@ const thRightClass = 'px-4 py-2.5 text-right text-xs font-medium tracking-tight 
                             </tr>
                         </tbody>
                     </table>
-                </div>
+                </TableViewport>
             </Card>
         </section>
 
@@ -109,7 +110,7 @@ const thRightClass = 'px-4 py-2.5 text-right text-xs font-medium tracking-tight 
                         </template>
                     </CardHeader>
                 </div>
-                <div class="w-full overflow-x-auto p-3">
+                <TableViewport class="w-full overflow-x-auto p-3">
                     <table class="w-full text-sm">
                         <thead>
                             <tr class="border-b border-border-subtle">
@@ -139,7 +140,7 @@ const thRightClass = 'px-4 py-2.5 text-right text-xs font-medium tracking-tight 
                             </tr>
                         </tbody>
                     </table>
-                </div>
+                </TableViewport>
             </Card>
         </section>
     </AppLayout>

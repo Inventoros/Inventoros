@@ -1,4 +1,5 @@
 <script setup>
+import TableViewport from '@/Components/ui/TableViewport.vue';
 import PluginSlot from '@/Components/PluginSlot.vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import PageHeader from '@/Components/ui/PageHeader.vue';
@@ -356,7 +357,6 @@ const scanMessage = ref('');
 const scanMessageTone = ref('info');
 const highlightedItemId = ref(null);
 
-
 const setScanMessage = (message, tone = 'info') => {
     scanMessage.value = message;
     scanMessageTone.value = tone;
@@ -693,7 +693,7 @@ const thClass = 'px-6 py-3 text-left text-xs font-medium uppercase tracking-wide
                 <label for="audit-lines-per-page" class="flex items-center gap-2 text-sm text-text-secondary">{{ t('auditPaging.perPage') }}<select id="audit-lines-per-page" v-model="linePageSize" class="h-10 rounded-md border border-border-subtle bg-surface-canvas px-3 text-text-primary ds-focus-ring" :disabled="savingCount || syncingDrafts || pendingScans > 0" @change="filterLines"><option :value="25">25</option><option :value="50">50</option><option :value="100">100</option></select></label>
                 <button type="submit" class="sr-only">{{ t('common.search') }}</button>
             </form>
-            <div class="mt-4 w-full overflow-x-auto">
+            <TableViewport class="mt-4 w-full overflow-x-auto">
                 <table class="min-w-full">
                     <thead>
                         <tr class="border-b border-border-subtle">
@@ -840,14 +840,15 @@ const thClass = 'px-6 py-3 text-left text-xs font-medium uppercase tracking-wide
                         </tr>
                     </tbody>
                 </table>
-            </div>
+                <template #footer>
+                    <nav v-if="itemPagination" :aria-label="t('stockAudits.show.auditItems')" class="table-pagination flex flex-wrap items-center justify-between gap-3 px-5 py-3 text-sm">
+                        <Link v-if="itemPagination.prev_page_url" :href="itemPagination.prev_page_url" preserve-state preserve-scroll class="text-brand hover:underline" @click="cancelCounting">{{ t('common.previous') }}</Link><span v-else />
+                        <span class="tabular-nums text-text-secondary">{{ t('auditPaging.results', { from: itemPagination.from || 0, to: itemPagination.to || 0, total: itemPagination.total }) }}</span>
+                        <Link v-if="itemPagination.next_page_url" :href="itemPagination.next_page_url" preserve-state preserve-scroll class="text-brand hover:underline" @click="cancelCounting">{{ t('common.next') }}</Link><span v-else />
+                    </nav>
+                </template>
+            </TableViewport>
         </Card>
-
-        <nav v-if="itemPagination" :aria-label="t('stockAudits.show.auditItems')" class="mt-4 flex flex-wrap items-center justify-between gap-3 text-sm">
-            <Link v-if="itemPagination.prev_page_url" :href="itemPagination.prev_page_url" preserve-state preserve-scroll class="text-brand hover:underline" @click="cancelCounting">{{ t('common.previous') }}</Link><span v-else />
-            <span class="tabular-nums text-text-secondary">{{ t('auditPaging.results', { from: itemPagination.from || 0, to: itemPagination.to || 0, total: itemPagination.total }) }}</span>
-            <Link v-if="itemPagination.next_page_url" :href="itemPagination.next_page_url" preserve-state preserve-scroll class="text-brand hover:underline" @click="cancelCounting">{{ t('common.next') }}</Link><span v-else />
-        </nav>
 
         <!-- Actions -->
         <Card v-if="canStart || canComplete" :padded="false" class="mt-4">

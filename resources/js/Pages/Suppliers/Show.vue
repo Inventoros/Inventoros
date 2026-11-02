@@ -1,4 +1,5 @@
 <script setup>
+import TableViewport from '@/Components/ui/TableViewport.vue';
 import { useCurrency } from '@/composables/useCurrency';
 
 import AppLayout from '@/Layouts/AppLayout.vue';
@@ -134,7 +135,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium text-text-secondary';
                         <Badge variant="brand" size="sm">{{ supplier.products?.length || 0 }}</Badge>
                     </div>
                     <div class="p-5">
-                        <div v-if="supplier.products?.length > 0" class="w-full overflow-x-auto rounded-lg border border-border-subtle">
+                        <TableViewport v-if="supplier.products?.length > 0" class="w-full overflow-x-auto rounded-lg border border-border-subtle">
                             <table class="min-w-full text-sm">
                                 <thead>
                                     <tr class="border-b border-border-subtle">
@@ -161,7 +162,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium text-text-secondary';
                                     </tr>
                                 </tbody>
                             </table>
-                        </div>
+                        </TableViewport>
                         <div v-else class="flex flex-col items-center gap-2 py-8 text-center">
                             <PackageOpen :size="22" class="text-text-tertiary" />
                             <p class="text-sm text-text-tertiary">{{ t('suppliers.show.noProducts') }}</p>

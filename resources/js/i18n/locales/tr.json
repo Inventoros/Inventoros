@@ -316,7 +316,8 @@
     "export": "Dışa Aktar",
     "new": "Yeni",
     "editWithName": "Düzenle: {name}",
-    "filters": "Filtreler"
+    "filters": "Filtreler",
+    "expandTable": "Tam tablo görünümü"
   },
   "nav": {
     "dashboard": "Gösterge Paneli",

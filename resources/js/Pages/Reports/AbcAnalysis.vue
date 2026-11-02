@@ -1,4 +1,5 @@
 <script setup>
+import TableViewport from '@/Components/ui/TableViewport.vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import PageHeader from '@/Components/ui/PageHeader.vue';
 import Card from '@/Components/ui/Card.vue';
@@ -81,7 +82,7 @@ const thRightClass = 'px-4 py-2.5 text-right text-xs font-medium tracking-tight 
                 </div>
                 <div class="p-3">
                     <p v-if="truncated" class="px-2 pb-2 text-xs text-status-warning">{{ t('reports.common.truncated', { count: rows.length }) }}</p>
-                    <div class="w-full overflow-x-auto">
+                    <TableViewport class="w-full overflow-x-auto">
                         <table class="w-full text-sm">
                             <thead>
                                 <tr class="border-b border-border-subtle">
@@ -116,7 +117,7 @@ const thRightClass = 'px-4 py-2.5 text-right text-xs font-medium tracking-tight 
                                 </tr>
                             </tbody>
                         </table>
-                    </div>
+                    </TableViewport>
                 </div>
             </Card>
         </section>

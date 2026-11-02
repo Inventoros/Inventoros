@@ -101,21 +101,15 @@ const thClass =
 
         <!-- Filters -->
         <TableFilters class="mt-6">
+            <template #quick>
+                <form class="table-quick-search" @submit.prevent="applyFilters">
+                    <label for="search" class="sr-only">{{ t('common.search') }}</label>
+                    <input id="search" v-model="search" type="text" :placeholder="t('stockAdjustments.searchPlaceholder')" />
+                    <button type="submit" class="ds-focus-ring">{{ t('common.search') }}</button>
+                </form>
+            </template>
             <form @submit.prevent="applyFilters" class="space-y-4">
                 <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-                    <div>
-                        <label for="search" class="mb-1 block text-xs font-medium text-text-secondary">{{ t('common.search') }}</label>
-                        <div class="relative">
-                            <Search :size="15" class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-text-tertiary" />
-                            <input
-                                id="search"
-                                v-model="search"
-                                type="text"
-                                :placeholder="t('stockAdjustments.searchPlaceholder')"
-                                class="h-9 w-full rounded-md border border-border-subtle bg-surface-canvas pl-9 pr-3 text-sm text-text-primary placeholder:text-text-tertiary ds-focus-ring"
-                            />
-                        </div>
-                    </div>
 
                     <div>
                         <label for="type" class="mb-1 block text-xs font-medium text-text-secondary">{{ t('common.type') }}</label>
@@ -232,31 +226,35 @@ const thClass =
                     </tr>
                 </tbody>
             </table>
+
+            <template #footer>
+                <div v-if="adjustments.data && adjustments.data.length > 0 && adjustments.links && adjustments.links.length > 3" class="mt-4 flex flex-col items-center justify-between gap-3 sm:flex-row table-pagination">
+                    <p v-if="adjustments.from" class="text-xs text-text-tertiary">
+                        {{ t('common.showing') }} <span class="font-medium text-text-secondary">{{ adjustments.from }}</span>
+                        {{ t('common.to') }} <span class="font-medium text-text-secondary">{{ adjustments.to }}</span>
+                        {{ t('common.of') }} <span class="font-medium text-text-secondary">{{ adjustments.total }}</span> {{ t('common.results') }}
+                    </p>
+                    <nav class="inline-flex items-center gap-1">
+                        <template v-for="link in adjustments.links" :key="link.label">
+                            <Link
+                                v-if="link.url"
+                                :href="link.url"
+                                :class="[
+                                    'inline-flex h-8 min-w-8 items-center justify-center rounded-md border px-2.5 text-xs font-medium transition-colors',
+                                    link.active
+                                        ? 'border-brand bg-brand text-brand-foreground'
+                                        : 'border-border-subtle bg-surface-canvas text-text-secondary hover:bg-surface-overlay',
+                                ]"
+                                v-html="link.label"
+                            />
+                            <span v-else class="inline-flex h-8 min-w-8 cursor-not-allowed items-center justify-center rounded-md border border-border-subtle px-2.5 text-xs text-text-tertiary opacity-50" v-html="link.label" />
+                        </template>
+                    </nav>
+                </div>
+            </template>
         </TableViewport>
 
         <!-- Pagination -->
-        <div v-if="adjustments.data && adjustments.data.length > 0 && adjustments.links && adjustments.links.length > 3" class="mt-4 flex flex-col items-center justify-between gap-3 sm:flex-row table-pagination">
-            <p v-if="adjustments.from" class="text-xs text-text-tertiary">
-                {{ t('common.showing') }} <span class="font-medium text-text-secondary">{{ adjustments.from }}</span>
-                {{ t('common.to') }} <span class="font-medium text-text-secondary">{{ adjustments.to }}</span>
-                {{ t('common.of') }} <span class="font-medium text-text-secondary">{{ adjustments.total }}</span> {{ t('common.results') }}
-            </p>
-            <nav class="inline-flex items-center gap-1">
-                <template v-for="link in adjustments.links" :key="link.label">
-                    <Link
-                        v-if="link.url"
-                        :href="link.url"
-                        :class="[
-                            'inline-flex h-8 min-w-8 items-center justify-center rounded-md border px-2.5 text-xs font-medium transition-colors',
-                            link.active
-                                ? 'border-brand bg-brand text-brand-foreground'
-                                : 'border-border-subtle bg-surface-canvas text-text-secondary hover:bg-surface-overlay',
-                        ]"
-                        v-html="link.label"
-                    />
-                    <span v-else class="inline-flex h-8 min-w-8 cursor-not-allowed items-center justify-center rounded-md border border-border-subtle px-2.5 text-xs text-text-tertiary opacity-50" v-html="link.label" />
-                </template>
-            </nav>
-        </div>
+
     </AppLayout>
 </template>

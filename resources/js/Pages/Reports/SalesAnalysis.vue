@@ -1,4 +1,5 @@
 <script setup>
+import TableViewport from '@/Components/ui/TableViewport.vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import PageHeader from '@/Components/ui/PageHeader.vue';
 import Card from '@/Components/ui/Card.vue';
@@ -248,7 +249,7 @@ const thClass =
                         <span v-if="plusOthers(summary.outstanding_by_currency, 'amount')" class="text-text-tertiary">({{ plusOthers(summary.outstanding_by_currency, 'amount') }})</span>
                     </Link>
                 </div>
-                <div class="mt-4 w-full overflow-x-auto">
+                <TableViewport class="mt-4 w-full overflow-x-auto">
                     <table class="w-full text-sm">
                         <thead>
                             <tr class="border-b border-border-subtle">
@@ -278,7 +279,7 @@ const thClass =
                             </tr>
                         </tbody>
                     </table>
-                </div>
+                </TableViewport>
             </Card>
         </section>
 
@@ -288,7 +289,7 @@ const thClass =
                 <div class="px-5 pt-5">
                     <CardHeader :title="t('reports.salesAnalysis.dailySalesTrend')" />
                 </div>
-                <div class="mt-4 w-full overflow-x-auto">
+                <TableViewport class="mt-4 w-full overflow-x-auto">
                     <table class="w-full text-sm">
                         <thead>
                             <tr class="border-b border-border-subtle">
@@ -312,7 +313,7 @@ const thClass =
                             </tr>
                         </tbody>
                     </table>
-                </div>
+                </TableViewport>
             </Card>
         </section>
     </AppLayout>

@@ -316,7 +316,8 @@
     "export": "내보내기",
     "new": "새로 만들기",
     "editWithName": "편집: {name}",
-    "filters": "필터"
+    "filters": "필터",
+    "expandTable": "표 전체 보기"
   },
   "nav": {
     "dashboard": "대시보드",

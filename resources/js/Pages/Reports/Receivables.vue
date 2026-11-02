@@ -1,4 +1,5 @@
 <script setup>
+import TableViewport from '@/Components/ui/TableViewport.vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import PageHeader from '@/Components/ui/PageHeader.vue';
 import Card from '@/Components/ui/Card.vue';
@@ -153,7 +154,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                 <div class="px-5 pt-5">
                     <CardHeader :title="t('receivables.byCustomer')" />
                 </div>
-                <div class="mt-4 w-full overflow-x-auto">
+                <TableViewport class="mt-4 w-full overflow-x-auto">
                     <table class="w-full text-sm">
                         <thead>
                             <tr class="border-b border-border-subtle">
@@ -177,7 +178,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                             </tr>
                         </tbody>
                     </table>
-                </div>
+                </TableViewport>
             </Card>
 
             <!-- By order -->
@@ -189,7 +190,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                         </template>
                     </CardHeader>
                 </div>
-                <div class="mt-4 w-full overflow-x-auto">
+                <TableViewport class="mt-4 w-full overflow-x-auto">
                     <table class="w-full text-sm">
                         <thead>
                             <tr class="border-b border-border-subtle">
@@ -219,7 +220,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                             </tr>
                         </tbody>
                     </table>
-                </div>
+                </TableViewport>
                 <p v-if="summary.orders_truncated" class="border-t border-border-subtle px-4 py-3 text-xs text-text-tertiary">
                     {{ t('receivables.truncated', { count: orders.length }) }}
                 </p>

@@ -316,7 +316,8 @@
     "export": "Exporteren",
     "new": "Nieuw",
     "editWithName": "Bewerken: {name}",
-    "filters": "Filters"
+    "filters": "Filters",
+    "expandTable": "Volledige tabelweergave"
   },
   "nav": {
     "dashboard": "Dashboard",
