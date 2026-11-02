@@ -128,6 +128,12 @@ test.describe('customer portal at 375px', () => {
         const expected = new Date(y, m - 1, d).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
         await expect(page.locator('header').filter({ has: page.locator('h1') }).first()).toContainText(expected);
 
+        await page.setViewportSize({ width: 320, height: 812 });
+        const itemTable = page.locator('table').first();
+        expect((await itemTable.boundingBox())!.width).toBeGreaterThanOrEqual(512);
+        expect(await itemTable.locator('td').first().evaluate(el => el.getBoundingClientRect().width)).toBeGreaterThan(180);
+        await expectFitsPhone(page);
+
         await page.goto(`/portal/${fx.portal_slug}/orders`);
         await expectFitsPhone(page);
     });

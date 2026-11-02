@@ -47,7 +47,7 @@ onUnmounted(() => document.removeEventListener('click', handleClickOutside));
             ref="triggerRef"
             type="button"
             @click="isOpen = !isOpen"
-            class="flex items-center gap-1.5 h-8 px-2 rounded-md text-xs text-text-secondary hover:text-text-primary hover:bg-surface-overlay transition-colors ds-focus-ring"
+            class="relative z-50 flex items-center gap-1.5 h-8 px-2 rounded-md text-xs text-text-secondary hover:text-text-primary hover:bg-surface-overlay transition-colors ds-focus-ring"
             :aria-expanded="isOpen"
             aria-haspopup="listbox"
             :aria-label="t('components.organizationSwitcher.ariaLabel', { name: active?.name || '' })"
@@ -57,6 +57,8 @@ onUnmounted(() => document.removeEventListener('click', handleClickOutside));
             <span class="hidden lg:inline max-w-[160px] truncate">{{ active?.name }}</span>
             <ChevronDown :size="14" class="transition-transform duration-200" :class="isOpen ? 'rotate-180' : ''" />
         </button>
+
+        <div v-if="isOpen" class="fixed inset-0 z-40" aria-hidden="true" @click="isOpen = false; triggerRef?.focus()" />
 
         <Transition
             enter-active-class="transition ease-out duration-150"

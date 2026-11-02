@@ -95,7 +95,7 @@ const thClass = 'px-3 sm:px-4 py-2.5 text-start text-xs font-medium tracking-tig
                     <div class="px-5 pt-5"><h2 class="text-sm font-semibold text-text-primary">{{ t('portal.order.lines') }}</h2></div>
                     <div class="p-5">
                         <TableViewport class="w-full overflow-x-auto rounded-lg border border-border-subtle">
-                            <table class="min-w-full text-sm">
+                            <table class="w-full min-w-[32rem] text-sm">
                                 <thead>
                                     <tr class="border-b border-border-subtle">
                                         <th :class="thClass">{{ t('portal.order.product') }}</th>

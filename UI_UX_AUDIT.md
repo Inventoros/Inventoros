@@ -66,13 +66,13 @@ Implemented rows require final regression sign-off. References name the main sha
 | 19 | P2 | Long German/Dutch/Russian dashboard text widened phone layouts. | Wrapping headings/actions and breakable content. |
 | 20 | P1 | Polish report actions and real return forms overflowed 320px. | Wrap report headers; stack return controls/footer; shared Button merges override classes via cn. |
 | 21 | P2 | Sales chart widened the document and showed raw statuses. | Bounded internal scroller and localized status labels. |
-| 22 | P2 | Pagination varied and could fall outside expanded portal/history tables. | Shared Pagination and TableViewport footer; current/disabled semantics and readable contrast. |
+| 22 | P2 | Pagination could fall outside expanded tables; portal product names squeezed to one word per line. | Shared Pagination/TableViewport footer, current/disabled semantics, readable minimum widths and internal scrolling for portal detail/forms. |
 | 23 | P2 | Numeric headings conflicted with start alignment; PO item count said quantity. | Explicit end/center table alignment, tabular cells, correct heading and browser regression. |
 | 24 | P2 | Movement types were technical values; zero adjustment looked like a decrease. | Localized type labels and neutral zero-change timeline. |
 | 25 | P2 | Notification intervals accumulated across Inertia remounts. | Unmount cleanup; clock-driven regression verifies one poll after navigation. |
 | 26 | P2 | Fresh-install titles said Laravel; auth heading semantics were missing. | Inventoros defaults and localized auth headings; existing configured APP_NAME is preserved. |
 | 27 | P2 | Demo order/PO totals lacked supporting lines and customer links. | Deterministic linked fixtures, exact totals/cost snapshots and consistency regression. |
-| 28 | P1 | Workspace menus/drawer lacked consistent keyboard dismissal and focus. | Shared disclosure keys, selection semantics, drawer containment/Escape restoration and regressions. |
+| 28 | P1 | Workspace menus/drawer lacked consistent keyboard dismissal/focus; open menus left partially covered targets clickable. | Shared disclosure keys, selection semantics, click-away layers, drawer containment/Escape restoration and regressions. |
 | 29 | P2 | Optional bundled plugins contain English copy outside core catalogs. | **Remaining:** localize plugin-owned copy/tax terminology through the existing scoped SDK. |
 | 30 | P2 | Eager application bundle is about 2.65MB minified / 790KB gzip. | **Remaining:** split locale/runtime payloads after measuring throttled first-interaction performance. |
 

@@ -27,6 +27,7 @@ const verificationLinkSent = computed(
 <template>
     <GuestLayout>
         <Head :title="t('auth.verifyEmail.title')" />
+        <h1 class="sr-only">{{ t('auth.verifyEmail.title') }}</h1>
 
         <div class="mb-4 text-sm text-text-secondary">
             {{ t('auth.verifyEmail.description') }}

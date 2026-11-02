@@ -84,7 +84,7 @@ const thClass = 'px-4 py-2.5 text-start text-xs font-medium tracking-tight text-
                 <div class="p-5">
                     <p v-if="returnable.length === 0" class="text-sm text-text-tertiary">{{ t('portal.returnForm.noneReturnable') }}</p>
                     <TableViewport v-else class="w-full overflow-x-auto rounded-lg border border-border-subtle">
-                        <table class="min-w-full text-sm">
+                        <table class="w-full min-w-[32rem] text-sm">
                             <thead>
                                 <tr class="border-b border-border-subtle">
                                     <th :class="thClass">{{ t('portal.order.product') }}</th>

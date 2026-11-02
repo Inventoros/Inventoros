@@ -37,6 +37,7 @@ const toggleMode = () => {
 <template>
     <GuestLayout>
         <Head :title="t('auth.twoFactorChallenge.title')" />
+        <h1 class="sr-only">{{ t('auth.twoFactorChallenge.title') }}</h1>
 
         <div class="mb-4 text-sm text-text-secondary">
             <template v-if="!useRecoveryCode">

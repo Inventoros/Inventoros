@@ -77,7 +77,7 @@ onUnmounted(() => document.removeEventListener('click', handleClickOutside));
             :id="`${listId}-trigger`"
             type="button"
             @click="isOpen = !isOpen"
-            class="flex items-center gap-1.5 h-8 px-2 rounded-md text-xs text-text-secondary hover:text-text-primary hover:bg-surface-overlay transition-colors ds-focus-ring"
+            class="relative z-50 flex items-center gap-1.5 h-8 px-2 rounded-md text-xs text-text-secondary hover:text-text-primary hover:bg-surface-overlay transition-colors ds-focus-ring"
             :aria-expanded="isOpen"
             aria-haspopup="listbox"
             :aria-controls="isOpen ? listId : undefined"
@@ -86,6 +86,8 @@ onUnmounted(() => document.removeEventListener('click', handleClickOutside));
             <Languages :size="15" />
             <span class="hidden sm:inline uppercase">{{ current.code }}</span>
         </button>
+
+        <div v-if="isOpen" class="fixed inset-0 z-40" aria-hidden="true" @click="close(true)" />
 
         <Transition
             enter-active-class="transition ease-out duration-150"

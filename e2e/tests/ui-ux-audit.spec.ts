@@ -21,21 +21,25 @@ async function inspect(page: Page, name: string, url: string, width: number, axe
     const response = navigate ? await page.goto(url, { waitUntil: 'networkidle' }) : null;
     await page.evaluate(() => document.fonts.ready);
     // Measure the settled interface, not intermediate fade-in contrast.
-    await page.evaluate(() => Promise.allSettled(document.getAnimations()
-        .filter(animation => animation.effect?.getComputedTiming().iterations !== Infinity)
-        .map(animation => animation.finished)));
+    await page.evaluate(async () => {
+        await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+        await Promise.allSettled(document.getAnimations()
+            .filter(animation => animation.effect?.getComputedTiming().iterations !== Infinity)
+            .map(animation => animation.finished));
+    });
     const layout = await page.evaluate(() => ({
         overflow: document.documentElement.scrollWidth - innerWidth,
         bodyOverflow: document.documentElement.scrollHeight - innerHeight,
         headings: [...document.querySelectorAll('h1')].filter(e => e.getClientRects().length).map(e => e.textContent?.trim()),
         lang: document.documentElement.lang,
         dir: document.documentElement.dir,
+        theme: document.documentElement.classList.contains('dark') ? 'dark' : 'light',
         tables: [...document.querySelectorAll('.table-viewport')].filter(e => e.getClientRects().length).map(e => ({ height: e.clientHeight, width: e.clientWidth, scrollHeight: e.scrollHeight, scrollWidth: e.scrollWidth })),
     }));
     const violations = axe ? (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa']).analyze()).violations.map(v => ({ id: v.id, impact: v.impact, description: v.description, nodes: v.nodes.map(n => ({ target: n.target, html: n.html, failureSummary: n.failureSummary })) })) : [];
     const key = `${name}-${width}`.replace(/[^a-zA-Z0-9_-]/g, '-');
     if (width === 320 || width === 1440) await page.screenshot({ path: path.join(out, `${key}.png`), fullPage: true, animations: 'disabled', caret: 'hide' });
-    const result = { name, url, finalUrl: page.url(), status: response?.status() ?? 200, width, errors, ...layout, violations };
+    const result = { name, url, finalUrl: page.url(), status: response?.status() ?? 200, width, errors, axeChecked: axe, ...layout, violations };
     writeFileSync(path.join(out, `${key}.json`), JSON.stringify(result, null, 2));
     page.off('pageerror', onError);
     if (process.env.UI_UX_AUDIT_STRICT) {

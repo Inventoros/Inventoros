@@ -48,6 +48,9 @@ jobs:
         run: |
           php artisan serve --host=127.0.0.1 --port=8000 > /tmp/inventoros-server.log 2>&1 &
           npx playwright test e2e/tests/ui-ux-audit.spec.ts --project=setup --project=chromium --grep "$UI_UX_AUDIT_GREP"
+      - name: Summarize rendered evidence
+        if: always()
+        run: node e2e/summarize-ui-audit.mjs >> "$GITHUB_STEP_SUMMARY"
       - uses: actions/upload-artifact@v4
         if: always()
         with:
