@@ -1,0 +1,1706 @@
+{
+  "audit_date": "2026-11-01",
+  "dataset": {
+    "rows_per_measured_table": 50000,
+    "tenants": 10,
+    "rows_per_tenant": 5000,
+    "soft_deleted_fraction": 0.1,
+    "date_span_days": 730,
+    "children_per_parent": 10
+  },
+  "timing_notes": "Warm-cache synthetic base-table queries. client_median_ms includes local Docker network overhead; plan timings are individual server measurements. No production data.",
+  "engines": {
+    "mysql": {
+      "version": "8.0.46",
+      "phases": {
+        "before": {
+          "products": {
+            "sql": "SELECT * FROM products WHERE organization_id = 1 AND deleted_at IS NULL ORDER BY created_at DESC LIMIT 15",
+            "client_median_ms": 7.19,
+            "returned_rows": 15,
+            "plan": [
+              "-> Limit: 15 row(s)  (cost=315 rows=15) (actual time=6.24..6.24 rows=15 loops=1)\n    -> Sort: products.created_at DESC, limit input to 15 row(s) per chunk  (cost=315 rows=5000) (actual time=6.24..6.24 rows=15 loops=1)\n        -> Filter: (products.deleted_at is null)  (cost=315 rows=5000) (actual time=0.0541..4.6 rows=4500 loops=1)\n            -> Index lookup on products using products_organization_id_type_index (organization_id=1)  (cost=315 rows=5000) (actual time=0.0504..4.37 rows=5000 loops=1)\n"
+            ]
+          },
+          "orders": {
+            "sql": "SELECT * FROM orders WHERE organization_id = 1 AND deleted_at IS NULL ORDER BY order_date DESC, id DESC LIMIT 15",
+            "client_median_ms": 1.156,
+            "returned_rows": 15,
+            "plan": [
+              "-> Limit: 15 row(s)  (cost=363 rows=15) (actual time=0.0289..0.0702 rows=15 loops=1)\n    -> Filter: (orders.deleted_at is null)  (cost=363 rows=500) (actual time=0.0281..0.0688 rows=15 loops=1)\n        -> Index lookup on orders using orders_organization_id_order_date_index (organization_id=1) (reverse)  (cost=363 rows=5000) (actual time=0.0275..0.0674 rows=15 loops=1)\n"
+            ]
+          },
+          "orders_recent": {
+            "sql": "SELECT * FROM orders WHERE organization_id = 1 AND deleted_at IS NULL ORDER BY created_at DESC, id DESC LIMIT 5",
+            "client_median_ms": 8.324,
+            "returned_rows": 5,
+            "plan": [
+              "-> Limit: 5 row(s)  (cost=363 rows=5) (actual time=7.37..7.37 rows=5 loops=1)\n    -> Sort: orders.created_at DESC, orders.id DESC, limit input to 5 row(s) per chunk  (cost=363 rows=5000) (actual time=7.37..7.37 rows=5 loops=1)\n        -> Filter: (orders.deleted_at is null)  (cost=363 rows=5000) (actual time=0.0192..5.85 rows=4500 loops=1)\n            -> Index lookup on orders using orders_organization_id_invoice_number_unique (organization_id=1)  (cost=363 rows=5000) (actual time=0.0184..5.57 rows=5000 loops=1)\n"
+            ]
+          },
+          "purchase_orders": {
+            "sql": "SELECT * FROM purchase_orders WHERE organization_id = 1 AND deleted_at IS NULL ORDER BY order_date DESC, id DESC LIMIT 15",
+            "client_median_ms": 6.465,
+            "returned_rows": 15,
+            "plan": [
+              "-> Limit: 15 row(s)  (cost=315 rows=15) (actual time=8.44..8.44 rows=15 loops=1)\n    -> Sort: purchase_orders.order_date DESC, purchase_orders.id DESC, limit input to 15 row(s) per chunk  (cost=315 rows=5000) (actual time=8.44..8.44 rows=15 loops=1)\n        -> Filter: (purchase_orders.deleted_at is null)  (cost=315 rows=5000) (actual time=0.039..6.69 rows=4500 loops=1)\n            -> Index lookup on purchase_orders using purchase_orders_organization_id_status_index (organization_id=1)  (cost=315 rows=5000) (actual time=0.0378..6.38 rows=5000 loops=1)\n"
+            ]
+          },
+          "return_order_items": {
+            "sql": "SELECT * FROM return_order_items WHERE return_order_id IN (2491,2492,2493,2494,2495,2496,2497,2498,2499,2500)",
+            "client_median_ms": 2.455,
+            "returned_rows": 100,
+            "plan": [
+              "-> Index range scan on return_order_items using return_order_items_return_order_id_foreign over (return_order_id = 2491) OR (return_order_id = 2492) OR (8 more), with index condition: (return_order_items.return_order_id in (2491,2492,2493,2494,2495,2496,2497,2498,2499,2500))  (cost=47.5 rows=100) (actual time=0.0673..0.242 rows=100 loops=1)\n"
+            ]
+          },
+          "stock_transfer_items": {
+            "sql": "SELECT * FROM stock_transfer_items WHERE stock_transfer_id IN (2491,2492,2493,2494,2495,2496,2497,2498,2499,2500)",
+            "client_median_ms": 1.059,
+            "returned_rows": 100,
+            "plan": [
+              "-> Index range scan on stock_transfer_items using stock_transfer_items_stock_transfer_id_foreign over (stock_transfer_id = 2491) OR (stock_transfer_id = 2492) OR (8 more), with index condition: (stock_transfer_items.stock_transfer_id in (2491,2492,2493,2494,2495,2496,2497,2498,2499,2500))  (cost=47.5 rows=100) (actual time=0.0108..0.0814 rows=100 loops=1)\n"
+            ]
+          },
+          "inter_company_transfer_lines": {
+            "sql": "SELECT * FROM inter_company_transfer_lines WHERE inter_company_transfer_id = 2500",
+            "client_median_ms": 1.098,
+            "returned_rows": 10,
+            "plan": [
+              "-> Index lookup on inter_company_transfer_lines using inter_company_transfer_lines_inter_company_transfer_id_foreign (inter_company_transfer_id=2500)  (cost=3.5 rows=10) (actual time=0.0326..0.036 rows=10 loops=1)\n"
+            ]
+          },
+          "inter_company_transfer_serials": {
+            "sql": "SELECT * FROM inter_company_transfer_serials WHERE inter_company_transfer_line_id = 2500",
+            "client_median_ms": 0.749,
+            "returned_rows": 10,
+            "plan": [
+              "-> Index lookup on inter_company_transfer_serials using ict_serials_line_foreign (inter_company_transfer_line_id=2500)  (cost=3.5 rows=10) (actual time=0.012..0.0181 rows=10 loops=1)\n"
+            ]
+          },
+          "inter_company_transfer_batches": {
+            "sql": "SELECT * FROM inter_company_transfer_batches WHERE inter_company_transfer_line_id = 2500",
+            "client_median_ms": 0.922,
+            "returned_rows": 10,
+            "plan": [
+              "-> Index lookup on inter_company_transfer_batches using ict_batches_line_foreign (inter_company_transfer_line_id=2500)  (cost=3.5 rows=10) (actual time=0.0353..0.0467 rows=10 loops=1)\n"
+            ]
+          }
+        },
+        "after": {
+          "products": {
+            "sql": "SELECT * FROM products WHERE organization_id = 1 AND deleted_at IS NULL ORDER BY created_at DESC LIMIT 15",
+            "client_median_ms": 0.663,
+            "returned_rows": 15,
+            "plan": [
+              "-> Limit: 15 row(s)  (cost=429 rows=15) (actual time=0.0127..0.0306 rows=15 loops=1)\n    -> Filter: (products.deleted_at is null)  (cost=429 rows=500) (actual time=0.0122..0.0295 rows=15 loops=1)\n        -> Index lookup on products using products_org_live_created_index (organization_id=1) (reverse)  (cost=429 rows=5000) (actual time=0.0113..0.0279 rows=15 loops=1)\n"
+            ]
+          },
+          "orders": {
+            "sql": "SELECT * FROM orders WHERE organization_id = 1 AND deleted_at IS NULL ORDER BY order_date DESC, id DESC LIMIT 15",
+            "client_median_ms": 0.723,
+            "returned_rows": 15,
+            "plan": [
+              "-> Limit: 15 row(s)  (cost=363 rows=15) (actual time=0.0114..0.0304 rows=15 loops=1)\n    -> Filter: (orders.deleted_at is null)  (cost=363 rows=500) (actual time=0.0111..0.0293 rows=15 loops=1)\n        -> Index lookup on orders using orders_organization_id_order_date_index (organization_id=1) (reverse)  (cost=363 rows=5000) (actual time=0.0103..0.0277 rows=15 loops=1)\n"
+            ]
+          },
+          "orders_recent": {
+            "sql": "SELECT * FROM orders WHERE organization_id = 1 AND deleted_at IS NULL ORDER BY created_at DESC, id DESC LIMIT 5",
+            "client_median_ms": 0.691,
+            "returned_rows": 5,
+            "plan": [
+              "-> Limit: 5 row(s)  (cost=363 rows=5) (actual time=0.0116..0.018 rows=5 loops=1)\n    -> Filter: (orders.deleted_at is null)  (cost=363 rows=500) (actual time=0.0112..0.0173 rows=5 loops=1)\n        -> Index lookup on orders using orders_org_live_created_index (organization_id=1) (reverse)  (cost=363 rows=5000) (actual time=0.0107..0.0166 rows=5 loops=1)\n"
+            ]
+          },
+          "purchase_orders": {
+            "sql": "SELECT * FROM purchase_orders WHERE organization_id = 1 AND deleted_at IS NULL ORDER BY order_date DESC, id DESC LIMIT 15",
+            "client_median_ms": 0.813,
+            "returned_rows": 15,
+            "plan": [
+              "-> Limit: 15 row(s)  (cost=315 rows=15) (actual time=0.0105..0.0265 rows=15 loops=1)\n    -> Filter: (purchase_orders.deleted_at is null)  (cost=315 rows=500) (actual time=0.0102..0.0256 rows=15 loops=1)\n        -> Index lookup on purchase_orders using purchase_orders_org_live_date_index (organization_id=1) (reverse)  (cost=315 rows=5000) (actual time=0.00968..0.0244 rows=15 loops=1)\n"
+            ]
+          },
+          "return_order_items": {
+            "sql": "SELECT * FROM return_order_items WHERE return_order_id IN (2491,2492,2493,2494,2495,2496,2497,2498,2499,2500)",
+            "client_median_ms": 1.038,
+            "returned_rows": 100,
+            "plan": [
+              "-> Index range scan on return_order_items using return_order_items_return_order_id_foreign over (return_order_id = 2491) OR (return_order_id = 2492) OR (8 more), with index condition: (return_order_items.return_order_id in (2491,2492,2493,2494,2495,2496,2497,2498,2499,2500))  (cost=47.5 rows=100) (actual time=0.0226..0.112 rows=100 loops=1)\n"
+            ]
+          },
+          "stock_transfer_items": {
+            "sql": "SELECT * FROM stock_transfer_items WHERE stock_transfer_id IN (2491,2492,2493,2494,2495,2496,2497,2498,2499,2500)",
+            "client_median_ms": 1.128,
+            "returned_rows": 100,
+            "plan": [
+              "-> Index range scan on stock_transfer_items using stock_transfer_items_stock_transfer_id_foreign over (stock_transfer_id = 2491) OR (stock_transfer_id = 2492) OR (8 more), with index condition: (stock_transfer_items.stock_transfer_id in (2491,2492,2493,2494,2495,2496,2497,2498,2499,2500))  (cost=47.5 rows=100) (actual time=0.00843..0.113 rows=100 loops=1)\n"
+            ]
+          },
+          "inter_company_transfer_lines": {
+            "sql": "SELECT * FROM inter_company_transfer_lines WHERE inter_company_transfer_id = 2500",
+            "client_median_ms": 0.509,
+            "returned_rows": 10,
+            "plan": [
+              "-> Index lookup on inter_company_transfer_lines using inter_company_transfer_lines_inter_company_transfer_id_foreign (inter_company_transfer_id=2500)  (cost=3.5 rows=10) (actual time=0.0174..0.0203 rows=10 loops=1)\n"
+            ]
+          },
+          "inter_company_transfer_serials": {
+            "sql": "SELECT * FROM inter_company_transfer_serials WHERE inter_company_transfer_line_id = 2500",
+            "client_median_ms": 0.546,
+            "returned_rows": 10,
+            "plan": [
+              "-> Index lookup on inter_company_transfer_serials using ict_serials_line_foreign (inter_company_transfer_line_id=2500)  (cost=3.5 rows=10) (actual time=0.0107..0.0149 rows=10 loops=1)\n"
+            ]
+          },
+          "inter_company_transfer_batches": {
+            "sql": "SELECT * FROM inter_company_transfer_batches WHERE inter_company_transfer_line_id = 2500",
+            "client_median_ms": 0.519,
+            "returned_rows": 10,
+            "plan": [
+              "-> Index lookup on inter_company_transfer_batches using ict_batches_line_foreign (inter_company_transfer_line_id=2500)  (cost=3.5 rows=10) (actual time=0.0104..0.0151 rows=10 loops=1)\n"
+            ]
+          }
+        }
+      },
+      "migration_verification": {
+        "engine": "mysql",
+        "round_trip": "passed",
+        "rows_unchanged": {
+          "organizations": {
+            "count": 10,
+            "ids": "55"
+          },
+          "products": {
+            "count": 50000,
+            "ids": "1250025000"
+          },
+          "orders": {
+            "count": 50000,
+            "ids": "1250025000"
+          },
+          "purchase_orders": {
+            "count": 50000,
+            "ids": "1250025000"
+          },
+          "return_order_items": {
+            "count": 50000,
+            "ids": "1250025000"
+          },
+          "stock_transfer_items": {
+            "count": 50000,
+            "ids": "1250025000"
+          },
+          "inter_company_transfer_lines": {
+            "count": 50000,
+            "ids": "1250025000"
+          },
+          "inter_company_transfer_serials": {
+            "count": 50000,
+            "ids": "1250025000"
+          },
+          "inter_company_transfer_batches": {
+            "count": 50000,
+            "ids": "1250025000"
+          }
+        },
+        "sku_uniqueness_and_tenant_reuse": "passed",
+        "one_relationship_index_each": {
+          "return_order_items": "return_order_items_return_order_id_foreign",
+          "stock_transfer_items": "stock_transfer_items_stock_transfer_id_foreign",
+          "inter_company_transfer_lines": "inter_company_transfer_lines_inter_company_transfer_id_foreign",
+          "inter_company_transfer_serials": "ict_serials_line_foreign",
+          "inter_company_transfer_batches": "ict_batches_line_foreign"
+        }
+      }
+    },
+    "pgsql": {
+      "version": "16.15",
+      "phases": {
+        "before": {
+          "products": {
+            "sql": "SELECT * FROM products WHERE organization_id = 1 AND deleted_at IS NULL ORDER BY created_at DESC LIMIT 15",
+            "client_median_ms": 3.904,
+            "returned_rows": 15,
+            "plan": [
+              {
+                "Plan": {
+                  "Node Type": "Limit",
+                  "Parallel Aware": false,
+                  "Async Capable": false,
+                  "Startup Cost": 1044.27,
+                  "Total Cost": 1044.31,
+                  "Plan Rows": 15,
+                  "Plan Width": 1461,
+                  "Actual Startup Time": 1.92,
+                  "Actual Total Time": 1.922,
+                  "Actual Rows": 15,
+                  "Actual Loops": 1,
+                  "Shared Hit Blocks": 82,
+                  "Shared Read Blocks": 0,
+                  "Shared Dirtied Blocks": 0,
+                  "Shared Written Blocks": 0,
+                  "Local Hit Blocks": 0,
+                  "Local Read Blocks": 0,
+                  "Local Dirtied Blocks": 0,
+                  "Local Written Blocks": 0,
+                  "Temp Read Blocks": 0,
+                  "Temp Written Blocks": 0,
+                  "Plans": [
+                    {
+                      "Node Type": "Sort",
+                      "Parent Relationship": "Outer",
+                      "Parallel Aware": false,
+                      "Async Capable": false,
+                      "Startup Cost": 1044.27,
+                      "Total Cost": 1055.66,
+                      "Plan Rows": 4553,
+                      "Plan Width": 1461,
+                      "Actual Startup Time": 1.919,
+                      "Actual Total Time": 1.92,
+                      "Actual Rows": 15,
+                      "Actual Loops": 1,
+                      "Sort Key": [
+                        "created_at DESC"
+                      ],
+                      "Sort Method": "top-N heapsort",
+                      "Sort Space Used": 28,
+                      "Sort Space Type": "Memory",
+                      "Shared Hit Blocks": 82,
+                      "Shared Read Blocks": 0,
+                      "Shared Dirtied Blocks": 0,
+                      "Shared Written Blocks": 0,
+                      "Local Hit Blocks": 0,
+                      "Local Read Blocks": 0,
+                      "Local Dirtied Blocks": 0,
+                      "Local Written Blocks": 0,
+                      "Temp Read Blocks": 0,
+                      "Temp Written Blocks": 0,
+                      "Plans": [
+                        {
+                          "Node Type": "Bitmap Heap Scan",
+                          "Parent Relationship": "Outer",
+                          "Parallel Aware": false,
+                          "Async Capable": false,
+                          "Relation Name": "products",
+                          "Alias": "products",
+                          "Startup Cost": 59.36,
+                          "Total Cost": 932.57,
+                          "Plan Rows": 4553,
+                          "Plan Width": 1461,
+                          "Actual Startup Time": 0.064,
+                          "Actual Total Time": 0.887,
+                          "Actual Rows": 4500,
+                          "Actual Loops": 1,
+                          "Recheck Cond": "(organization_id = 1)",
+                          "Rows Removed by Index Recheck": 0,
+                          "Filter": "(deleted_at IS NULL)",
+                          "Rows Removed by Filter": 500,
+                          "Exact Heap Blocks": 77,
+                          "Lossy Heap Blocks": 0,
+                          "Shared Hit Blocks": 82,
+                          "Shared Read Blocks": 0,
+                          "Shared Dirtied Blocks": 0,
+                          "Shared Written Blocks": 0,
+                          "Local Hit Blocks": 0,
+                          "Local Read Blocks": 0,
+                          "Local Dirtied Blocks": 0,
+                          "Local Written Blocks": 0,
+                          "Temp Read Blocks": 0,
+                          "Temp Written Blocks": 0,
+                          "Plans": [
+                            {
+                              "Node Type": "Bitmap Index Scan",
+                              "Parent Relationship": "Outer",
+                              "Parallel Aware": false,
+                              "Async Capable": false,
+                              "Index Name": "products_org_location_index",
+                              "Startup Cost": 0,
+                              "Total Cost": 58.22,
+                              "Plan Rows": 5057,
+                              "Plan Width": 0,
+                              "Actual Startup Time": 0.054,
+                              "Actual Total Time": 0.054,
+                              "Actual Rows": 5000,
+                              "Actual Loops": 1,
+                              "Index Cond": "(organization_id = 1)",
+                              "Shared Hit Blocks": 5,
+                              "Shared Read Blocks": 0,
+                              "Shared Dirtied Blocks": 0,
+                              "Shared Written Blocks": 0,
+                              "Local Hit Blocks": 0,
+                              "Local Read Blocks": 0,
+                              "Local Dirtied Blocks": 0,
+                              "Local Written Blocks": 0,
+                              "Temp Read Blocks": 0,
+                              "Temp Written Blocks": 0
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                "Planning": {
+                  "Shared Hit Blocks": 0,
+                  "Shared Read Blocks": 0,
+                  "Shared Dirtied Blocks": 0,
+                  "Shared Written Blocks": 0,
+                  "Local Hit Blocks": 0,
+                  "Local Read Blocks": 0,
+                  "Local Dirtied Blocks": 0,
+                  "Local Written Blocks": 0,
+                  "Temp Read Blocks": 0,
+                  "Temp Written Blocks": 0
+                },
+                "Planning Time": 0.111,
+                "Triggers": [],
+                "Execution Time": 1.944
+              }
+            ]
+          },
+          "orders": {
+            "sql": "SELECT * FROM orders WHERE organization_id = 1 AND deleted_at IS NULL ORDER BY order_date DESC, id DESC LIMIT 15",
+            "client_median_ms": 1.805,
+            "returned_rows": 15,
+            "plan": [
+              {
+                "Plan": {
+                  "Node Type": "Limit",
+                  "Parallel Aware": false,
+                  "Async Capable": false,
+                  "Startup Cost": 2.84,
+                  "Total Cost": 9.2,
+                  "Plan Rows": 15,
+                  "Plan Width": 3486,
+                  "Actual Startup Time": 0.051,
+                  "Actual Total Time": 0.053,
+                  "Actual Rows": 15,
+                  "Actual Loops": 1,
+                  "Shared Hit Blocks": 24,
+                  "Shared Read Blocks": 0,
+                  "Shared Dirtied Blocks": 0,
+                  "Shared Written Blocks": 0,
+                  "Local Hit Blocks": 0,
+                  "Local Read Blocks": 0,
+                  "Local Dirtied Blocks": 0,
+                  "Local Written Blocks": 0,
+                  "Temp Read Blocks": 0,
+                  "Temp Written Blocks": 0,
+                  "Plans": [
+                    {
+                      "Node Type": "Incremental Sort",
+                      "Parent Relationship": "Outer",
+                      "Parallel Aware": false,
+                      "Async Capable": false,
+                      "Startup Cost": 2.84,
+                      "Total Cost": 1930,
+                      "Plan Rows": 4548,
+                      "Plan Width": 3486,
+                      "Actual Startup Time": 0.051,
+                      "Actual Total Time": 0.051,
+                      "Actual Rows": 15,
+                      "Actual Loops": 1,
+                      "Sort Key": [
+                        "order_date DESC",
+                        "id DESC"
+                      ],
+                      "Presorted Key": [
+                        "order_date"
+                      ],
+                      "Full-sort Groups": {
+                        "Group Count": 1,
+                        "Sort Methods Used": [
+                          "quicksort"
+                        ],
+                        "Sort Space Memory": {
+                          "Average Sort Space Used": 29,
+                          "Peak Sort Space Used": 29
+                        }
+                      },
+                      "Shared Hit Blocks": 24,
+                      "Shared Read Blocks": 0,
+                      "Shared Dirtied Blocks": 0,
+                      "Shared Written Blocks": 0,
+                      "Local Hit Blocks": 0,
+                      "Local Read Blocks": 0,
+                      "Local Dirtied Blocks": 0,
+                      "Local Written Blocks": 0,
+                      "Temp Read Blocks": 0,
+                      "Temp Written Blocks": 0,
+                      "Plans": [
+                        {
+                          "Node Type": "Index Scan",
+                          "Parent Relationship": "Outer",
+                          "Parallel Aware": false,
+                          "Async Capable": false,
+                          "Scan Direction": "Backward",
+                          "Index Name": "orders_organization_id_order_date_index",
+                          "Relation Name": "orders",
+                          "Alias": "orders",
+                          "Startup Cost": 0.29,
+                          "Total Cost": 1798.51,
+                          "Plan Rows": 4548,
+                          "Plan Width": 3486,
+                          "Actual Startup Time": 0.012,
+                          "Actual Total Time": 0.036,
+                          "Actual Rows": 22,
+                          "Actual Loops": 1,
+                          "Index Cond": "(organization_id = 1)",
+                          "Rows Removed by Index Recheck": 0,
+                          "Filter": "(deleted_at IS NULL)",
+                          "Rows Removed by Filter": 0,
+                          "Shared Hit Blocks": 24,
+                          "Shared Read Blocks": 0,
+                          "Shared Dirtied Blocks": 0,
+                          "Shared Written Blocks": 0,
+                          "Local Hit Blocks": 0,
+                          "Local Read Blocks": 0,
+                          "Local Dirtied Blocks": 0,
+                          "Local Written Blocks": 0,
+                          "Temp Read Blocks": 0,
+                          "Temp Written Blocks": 0
+                        }
+                      ]
+                    }
+                  ]
+                },
+                "Planning": {
+                  "Shared Hit Blocks": 0,
+                  "Shared Read Blocks": 0,
+                  "Shared Dirtied Blocks": 0,
+                  "Shared Written Blocks": 0,
+                  "Local Hit Blocks": 0,
+                  "Local Read Blocks": 0,
+                  "Local Dirtied Blocks": 0,
+                  "Local Written Blocks": 0,
+                  "Temp Read Blocks": 0,
+                  "Temp Written Blocks": 0
+                },
+                "Planning Time": 0.112,
+                "Triggers": [],
+                "Execution Time": 0.068
+              }
+            ]
+          },
+          "orders_recent": {
+            "sql": "SELECT * FROM orders WHERE organization_id = 1 AND deleted_at IS NULL ORDER BY created_at DESC, id DESC LIMIT 5",
+            "client_median_ms": 4.129,
+            "returned_rows": 5,
+            "plan": [
+              {
+                "Plan": {
+                  "Node Type": "Limit",
+                  "Parallel Aware": false,
+                  "Async Capable": false,
+                  "Startup Cost": 1118.34,
+                  "Total Cost": 1118.35,
+                  "Plan Rows": 5,
+                  "Plan Width": 3486,
+                  "Actual Startup Time": 2.389,
+                  "Actual Total Time": 2.391,
+                  "Actual Rows": 5,
+                  "Actual Loops": 1,
+                  "Shared Hit Blocks": 96,
+                  "Shared Read Blocks": 0,
+                  "Shared Dirtied Blocks": 0,
+                  "Shared Written Blocks": 0,
+                  "Local Hit Blocks": 0,
+                  "Local Read Blocks": 0,
+                  "Local Dirtied Blocks": 0,
+                  "Local Written Blocks": 0,
+                  "Temp Read Blocks": 0,
+                  "Temp Written Blocks": 0,
+                  "Plans": [
+                    {
+                      "Node Type": "Sort",
+                      "Parent Relationship": "Outer",
+                      "Parallel Aware": false,
+                      "Async Capable": false,
+                      "Startup Cost": 1118.34,
+                      "Total Cost": 1129.52,
+                      "Plan Rows": 4475,
+                      "Plan Width": 3486,
+                      "Actual Startup Time": 2.387,
+                      "Actual Total Time": 2.388,
+                      "Actual Rows": 5,
+                      "Actual Loops": 1,
+                      "Sort Key": [
+                        "created_at DESC",
+                        "id DESC"
+                      ],
+                      "Sort Method": "top-N heapsort",
+                      "Sort Space Used": 26,
+                      "Sort Space Type": "Memory",
+                      "Shared Hit Blocks": 96,
+                      "Shared Read Blocks": 0,
+                      "Shared Dirtied Blocks": 0,
+                      "Shared Written Blocks": 0,
+                      "Local Hit Blocks": 0,
+                      "Local Read Blocks": 0,
+                      "Local Dirtied Blocks": 0,
+                      "Local Written Blocks": 0,
+                      "Temp Read Blocks": 0,
+                      "Temp Written Blocks": 0,
+                      "Plans": [
+                        {
+                          "Node Type": "Bitmap Heap Scan",
+                          "Parent Relationship": "Outer",
+                          "Parallel Aware": false,
+                          "Async Capable": false,
+                          "Relation Name": "orders",
+                          "Alias": "orders",
+                          "Startup Cost": 58.76,
+                          "Total Cost": 1044.01,
+                          "Plan Rows": 4475,
+                          "Plan Width": 3486,
+                          "Actual Startup Time": 0.123,
+                          "Actual Total Time": 1.072,
+                          "Actual Rows": 4500,
+                          "Actual Loops": 1,
+                          "Recheck Cond": "(organization_id = 1)",
+                          "Rows Removed by Index Recheck": 0,
+                          "Filter": "(deleted_at IS NULL)",
+                          "Rows Removed by Filter": 500,
+                          "Exact Heap Blocks": 91,
+                          "Lossy Heap Blocks": 0,
+                          "Shared Hit Blocks": 96,
+                          "Shared Read Blocks": 0,
+                          "Shared Dirtied Blocks": 0,
+                          "Shared Written Blocks": 0,
+                          "Local Hit Blocks": 0,
+                          "Local Read Blocks": 0,
+                          "Local Dirtied Blocks": 0,
+                          "Local Written Blocks": 0,
+                          "Temp Read Blocks": 0,
+                          "Temp Written Blocks": 0,
+                          "Plans": [
+                            {
+                              "Node Type": "Bitmap Index Scan",
+                              "Parent Relationship": "Outer",
+                              "Parallel Aware": false,
+                              "Async Capable": false,
+                              "Index Name": "orders_organization_id_payment_status_index",
+                              "Startup Cost": 0,
+                              "Total Cost": 57.64,
+                              "Plan Rows": 4980,
+                              "Plan Width": 0,
+                              "Actual Startup Time": 0.098,
+                              "Actual Total Time": 0.099,
+                              "Actual Rows": 5000,
+                              "Actual Loops": 1,
+                              "Index Cond": "(organization_id = 1)",
+                              "Shared Hit Blocks": 5,
+                              "Shared Read Blocks": 0,
+                              "Shared Dirtied Blocks": 0,
+                              "Shared Written Blocks": 0,
+                              "Local Hit Blocks": 0,
+                              "Local Read Blocks": 0,
+                              "Local Dirtied Blocks": 0,
+                              "Local Written Blocks": 0,
+                              "Temp Read Blocks": 0,
+                              "Temp Written Blocks": 0
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                "Planning": {
+                  "Shared Hit Blocks": 0,
+                  "Shared Read Blocks": 0,
+                  "Shared Dirtied Blocks": 0,
+                  "Shared Written Blocks": 0,
+                  "Local Hit Blocks": 0,
+                  "Local Read Blocks": 0,
+                  "Local Dirtied Blocks": 0,
+                  "Local Written Blocks": 0,
+                  "Temp Read Blocks": 0,
+                  "Temp Written Blocks": 0
+                },
+                "Planning Time": 0.179,
+                "Triggers": [],
+                "Execution Time": 2.448
+              }
+            ]
+          },
+          "purchase_orders": {
+            "sql": "SELECT * FROM purchase_orders WHERE organization_id = 1 AND deleted_at IS NULL ORDER BY order_date DESC, id DESC LIMIT 15",
+            "client_median_ms": 2.257,
+            "returned_rows": 15,
+            "plan": [
+              {
+                "Plan": {
+                  "Node Type": "Limit",
+                  "Parallel Aware": false,
+                  "Async Capable": false,
+                  "Startup Cost": 902.01,
+                  "Total Cost": 902.04,
+                  "Plan Rows": 15,
+                  "Plan Width": 819,
+                  "Actual Startup Time": 1.466,
+                  "Actual Total Time": 1.469,
+                  "Actual Rows": 15,
+                  "Actual Loops": 1,
+                  "Shared Hit Blocks": 72,
+                  "Shared Read Blocks": 0,
+                  "Shared Dirtied Blocks": 0,
+                  "Shared Written Blocks": 0,
+                  "Local Hit Blocks": 0,
+                  "Local Read Blocks": 0,
+                  "Local Dirtied Blocks": 0,
+                  "Local Written Blocks": 0,
+                  "Temp Read Blocks": 0,
+                  "Temp Written Blocks": 0,
+                  "Plans": [
+                    {
+                      "Node Type": "Sort",
+                      "Parent Relationship": "Outer",
+                      "Parallel Aware": false,
+                      "Async Capable": false,
+                      "Startup Cost": 902.01,
+                      "Total Cost": 913.43,
+                      "Plan Rows": 4568,
+                      "Plan Width": 819,
+                      "Actual Startup Time": 1.466,
+                      "Actual Total Time": 1.467,
+                      "Actual Rows": 15,
+                      "Actual Loops": 1,
+                      "Sort Key": [
+                        "order_date DESC",
+                        "id DESC"
+                      ],
+                      "Sort Method": "top-N heapsort",
+                      "Sort Space Used": 28,
+                      "Sort Space Type": "Memory",
+                      "Shared Hit Blocks": 72,
+                      "Shared Read Blocks": 0,
+                      "Shared Dirtied Blocks": 0,
+                      "Shared Written Blocks": 0,
+                      "Local Hit Blocks": 0,
+                      "Local Read Blocks": 0,
+                      "Local Dirtied Blocks": 0,
+                      "Local Written Blocks": 0,
+                      "Temp Read Blocks": 0,
+                      "Temp Written Blocks": 0,
+                      "Plans": [
+                        {
+                          "Node Type": "Bitmap Heap Scan",
+                          "Parent Relationship": "Outer",
+                          "Parallel Aware": false,
+                          "Async Capable": false,
+                          "Relation Name": "purchase_orders",
+                          "Alias": "purchase_orders",
+                          "Startup Cost": 59.49,
+                          "Total Cost": 789.93,
+                          "Plan Rows": 4568,
+                          "Plan Width": 819,
+                          "Actual Startup Time": 0.105,
+                          "Actual Total Time": 0.977,
+                          "Actual Rows": 4500,
+                          "Actual Loops": 1,
+                          "Recheck Cond": "(organization_id = 1)",
+                          "Rows Removed by Index Recheck": 0,
+                          "Filter": "(deleted_at IS NULL)",
+                          "Rows Removed by Filter": 500,
+                          "Exact Heap Blocks": 67,
+                          "Lossy Heap Blocks": 0,
+                          "Shared Hit Blocks": 72,
+                          "Shared Read Blocks": 0,
+                          "Shared Dirtied Blocks": 0,
+                          "Shared Written Blocks": 0,
+                          "Local Hit Blocks": 0,
+                          "Local Read Blocks": 0,
+                          "Local Dirtied Blocks": 0,
+                          "Local Written Blocks": 0,
+                          "Temp Read Blocks": 0,
+                          "Temp Written Blocks": 0,
+                          "Plans": [
+                            {
+                              "Node Type": "Bitmap Index Scan",
+                              "Parent Relationship": "Outer",
+                              "Parallel Aware": false,
+                              "Async Capable": false,
+                              "Index Name": "purchase_orders_organization_id_approval_status_index",
+                              "Startup Cost": 0,
+                              "Total Cost": 58.35,
+                              "Plan Rows": 5075,
+                              "Plan Width": 0,
+                              "Actual Startup Time": 0.093,
+                              "Actual Total Time": 0.093,
+                              "Actual Rows": 5000,
+                              "Actual Loops": 1,
+                              "Index Cond": "(organization_id = 1)",
+                              "Shared Hit Blocks": 5,
+                              "Shared Read Blocks": 0,
+                              "Shared Dirtied Blocks": 0,
+                              "Shared Written Blocks": 0,
+                              "Local Hit Blocks": 0,
+                              "Local Read Blocks": 0,
+                              "Local Dirtied Blocks": 0,
+                              "Local Written Blocks": 0,
+                              "Temp Read Blocks": 0,
+                              "Temp Written Blocks": 0
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                "Planning": {
+                  "Shared Hit Blocks": 0,
+                  "Shared Read Blocks": 0,
+                  "Shared Dirtied Blocks": 0,
+                  "Shared Written Blocks": 0,
+                  "Local Hit Blocks": 0,
+                  "Local Read Blocks": 0,
+                  "Local Dirtied Blocks": 0,
+                  "Local Written Blocks": 0,
+                  "Temp Read Blocks": 0,
+                  "Temp Written Blocks": 0
+                },
+                "Planning Time": 0.083,
+                "Triggers": [],
+                "Execution Time": 1.486
+              }
+            ]
+          },
+          "return_order_items": {
+            "sql": "SELECT * FROM return_order_items WHERE return_order_id IN (2491,2492,2493,2494,2495,2496,2497,2498,2499,2500)",
+            "client_median_ms": 4.034,
+            "returned_rows": 100,
+            "plan": [
+              {
+                "Plan": {
+                  "Node Type": "Seq Scan",
+                  "Parallel Aware": false,
+                  "Async Capable": false,
+                  "Relation Name": "return_order_items",
+                  "Alias": "return_order_items",
+                  "Startup Cost": 0.03,
+                  "Total Cost": 1266.03,
+                  "Plan Rows": 100,
+                  "Plan Width": 81,
+                  "Actual Startup Time": 1.012,
+                  "Actual Total Time": 2.051,
+                  "Actual Rows": 100,
+                  "Actual Loops": 1,
+                  "Filter": "(return_order_id = ANY ('{2491,2492,2493,2494,2495,2496,2497,2498,2499,2500}'::bigint[]))",
+                  "Rows Removed by Filter": 49900,
+                  "Shared Hit Blocks": 516,
+                  "Shared Read Blocks": 0,
+                  "Shared Dirtied Blocks": 0,
+                  "Shared Written Blocks": 0,
+                  "Local Hit Blocks": 0,
+                  "Local Read Blocks": 0,
+                  "Local Dirtied Blocks": 0,
+                  "Local Written Blocks": 0,
+                  "Temp Read Blocks": 0,
+                  "Temp Written Blocks": 0
+                },
+                "Planning": {
+                  "Shared Hit Blocks": 0,
+                  "Shared Read Blocks": 0,
+                  "Shared Dirtied Blocks": 0,
+                  "Shared Written Blocks": 0,
+                  "Local Hit Blocks": 0,
+                  "Local Read Blocks": 0,
+                  "Local Dirtied Blocks": 0,
+                  "Local Written Blocks": 0,
+                  "Temp Read Blocks": 0,
+                  "Temp Written Blocks": 0
+                },
+                "Planning Time": 0.062,
+                "Triggers": [],
+                "Execution Time": 2.067
+              }
+            ]
+          },
+          "stock_transfer_items": {
+            "sql": "SELECT * FROM stock_transfer_items WHERE stock_transfer_id IN (2491,2492,2493,2494,2495,2496,2497,2498,2499,2500)",
+            "client_median_ms": 3.712,
+            "returned_rows": 100,
+            "plan": [
+              {
+                "Plan": {
+                  "Node Type": "Seq Scan",
+                  "Parallel Aware": false,
+                  "Async Capable": false,
+                  "Relation Name": "stock_transfer_items",
+                  "Alias": "stock_transfer_items",
+                  "Startup Cost": 0.03,
+                  "Total Cost": 1118.03,
+                  "Plan Rows": 100,
+                  "Plan Width": 84,
+                  "Actual Startup Time": 1.372,
+                  "Actual Total Time": 2.464,
+                  "Actual Rows": 100,
+                  "Actual Loops": 1,
+                  "Filter": "(stock_transfer_id = ANY ('{2491,2492,2493,2494,2495,2496,2497,2498,2499,2500}'::bigint[]))",
+                  "Rows Removed by Filter": 49900,
+                  "Shared Hit Blocks": 368,
+                  "Shared Read Blocks": 0,
+                  "Shared Dirtied Blocks": 0,
+                  "Shared Written Blocks": 0,
+                  "Local Hit Blocks": 0,
+                  "Local Read Blocks": 0,
+                  "Local Dirtied Blocks": 0,
+                  "Local Written Blocks": 0,
+                  "Temp Read Blocks": 0,
+                  "Temp Written Blocks": 0
+                },
+                "Planning": {
+                  "Shared Hit Blocks": 0,
+                  "Shared Read Blocks": 0,
+                  "Shared Dirtied Blocks": 0,
+                  "Shared Written Blocks": 0,
+                  "Local Hit Blocks": 0,
+                  "Local Read Blocks": 0,
+                  "Local Dirtied Blocks": 0,
+                  "Local Written Blocks": 0,
+                  "Temp Read Blocks": 0,
+                  "Temp Written Blocks": 0
+                },
+                "Planning Time": 0.057,
+                "Triggers": [],
+                "Execution Time": 2.479
+              }
+            ]
+          },
+          "inter_company_transfer_lines": {
+            "sql": "SELECT * FROM inter_company_transfer_lines WHERE inter_company_transfer_id = 2500",
+            "client_median_ms": 3.41,
+            "returned_rows": 10,
+            "plan": [
+              {
+                "Plan": {
+                  "Node Type": "Seq Scan",
+                  "Parallel Aware": false,
+                  "Async Capable": false,
+                  "Relation Name": "inter_company_transfer_lines",
+                  "Alias": "inter_company_transfer_lines",
+                  "Startup Cost": 0,
+                  "Total Cost": 1093,
+                  "Plan Rows": 10,
+                  "Plan Width": 120,
+                  "Actual Startup Time": 1.534,
+                  "Actual Total Time": 2.876,
+                  "Actual Rows": 10,
+                  "Actual Loops": 1,
+                  "Filter": "(inter_company_transfer_id = 2500)",
+                  "Rows Removed by Filter": 49990,
+                  "Shared Hit Blocks": 468,
+                  "Shared Read Blocks": 0,
+                  "Shared Dirtied Blocks": 0,
+                  "Shared Written Blocks": 0,
+                  "Local Hit Blocks": 0,
+                  "Local Read Blocks": 0,
+                  "Local Dirtied Blocks": 0,
+                  "Local Written Blocks": 0,
+                  "Temp Read Blocks": 0,
+                  "Temp Written Blocks": 0
+                },
+                "Planning": {
+                  "Shared Hit Blocks": 0,
+                  "Shared Read Blocks": 0,
+                  "Shared Dirtied Blocks": 0,
+                  "Shared Written Blocks": 0,
+                  "Local Hit Blocks": 0,
+                  "Local Read Blocks": 0,
+                  "Local Dirtied Blocks": 0,
+                  "Local Written Blocks": 0,
+                  "Temp Read Blocks": 0,
+                  "Temp Written Blocks": 0
+                },
+                "Planning Time": 0.061,
+                "Triggers": [],
+                "Execution Time": 2.894
+              }
+            ]
+          },
+          "inter_company_transfer_serials": {
+            "sql": "SELECT * FROM inter_company_transfer_serials WHERE inter_company_transfer_line_id = 2500",
+            "client_median_ms": 3.609,
+            "returned_rows": 10,
+            "plan": [
+              {
+                "Plan": {
+                  "Node Type": "Seq Scan",
+                  "Parallel Aware": false,
+                  "Async Capable": false,
+                  "Relation Name": "inter_company_transfer_serials",
+                  "Alias": "inter_company_transfer_serials",
+                  "Startup Cost": 0,
+                  "Total Cost": 1083,
+                  "Plan Rows": 10,
+                  "Plan Width": 56,
+                  "Actual Startup Time": 0.823,
+                  "Actual Total Time": 1.626,
+                  "Actual Rows": 10,
+                  "Actual Loops": 1,
+                  "Filter": "(inter_company_transfer_line_id = 2500)",
+                  "Rows Removed by Filter": 49990,
+                  "Shared Hit Blocks": 458,
+                  "Shared Read Blocks": 0,
+                  "Shared Dirtied Blocks": 0,
+                  "Shared Written Blocks": 0,
+                  "Local Hit Blocks": 0,
+                  "Local Read Blocks": 0,
+                  "Local Dirtied Blocks": 0,
+                  "Local Written Blocks": 0,
+                  "Temp Read Blocks": 0,
+                  "Temp Written Blocks": 0
+                },
+                "Planning": {
+                  "Shared Hit Blocks": 0,
+                  "Shared Read Blocks": 0,
+                  "Shared Dirtied Blocks": 0,
+                  "Shared Written Blocks": 0,
+                  "Local Hit Blocks": 0,
+                  "Local Read Blocks": 0,
+                  "Local Dirtied Blocks": 0,
+                  "Local Written Blocks": 0,
+                  "Temp Read Blocks": 0,
+                  "Temp Written Blocks": 0
+                },
+                "Planning Time": 0.031,
+                "Triggers": [],
+                "Execution Time": 1.634
+              }
+            ]
+          },
+          "inter_company_transfer_batches": {
+            "sql": "SELECT * FROM inter_company_transfer_batches WHERE inter_company_transfer_line_id = 2500",
+            "client_median_ms": 4.048,
+            "returned_rows": 10,
+            "plan": [
+              {
+                "Plan": {
+                  "Node Type": "Seq Scan",
+                  "Parallel Aware": false,
+                  "Async Capable": false,
+                  "Relation Name": "inter_company_transfer_batches",
+                  "Alias": "inter_company_transfer_batches",
+                  "Startup Cost": 0,
+                  "Total Cost": 1141,
+                  "Plan Rows": 10,
+                  "Plan Width": 69,
+                  "Actual Startup Time": 0.83,
+                  "Actual Total Time": 1.752,
+                  "Actual Rows": 10,
+                  "Actual Loops": 1,
+                  "Filter": "(inter_company_transfer_line_id = 2500)",
+                  "Rows Removed by Filter": 49990,
+                  "Shared Hit Blocks": 516,
+                  "Shared Read Blocks": 0,
+                  "Shared Dirtied Blocks": 0,
+                  "Shared Written Blocks": 0,
+                  "Local Hit Blocks": 0,
+                  "Local Read Blocks": 0,
+                  "Local Dirtied Blocks": 0,
+                  "Local Written Blocks": 0,
+                  "Temp Read Blocks": 0,
+                  "Temp Written Blocks": 0
+                },
+                "Planning": {
+                  "Shared Hit Blocks": 0,
+                  "Shared Read Blocks": 0,
+                  "Shared Dirtied Blocks": 0,
+                  "Shared Written Blocks": 0,
+                  "Local Hit Blocks": 0,
+                  "Local Read Blocks": 0,
+                  "Local Dirtied Blocks": 0,
+                  "Local Written Blocks": 0,
+                  "Temp Read Blocks": 0,
+                  "Temp Written Blocks": 0
+                },
+                "Planning Time": 0.028,
+                "Triggers": [],
+                "Execution Time": 1.761
+              }
+            ]
+          }
+        },
+        "after": {
+          "products": {
+            "sql": "SELECT * FROM products WHERE organization_id = 1 AND deleted_at IS NULL ORDER BY created_at DESC LIMIT 15",
+            "client_median_ms": 1.711,
+            "returned_rows": 15,
+            "plan": [
+              {
+                "Plan": {
+                  "Node Type": "Limit",
+                  "Parallel Aware": false,
+                  "Async Capable": false,
+                  "Startup Cost": 0.29,
+                  "Total Cost": 5.58,
+                  "Plan Rows": 15,
+                  "Plan Width": 1461,
+                  "Actual Startup Time": 0.012,
+                  "Actual Total Time": 0.031,
+                  "Actual Rows": 15,
+                  "Actual Loops": 1,
+                  "Shared Hit Blocks": 17,
+                  "Shared Read Blocks": 0,
+                  "Shared Dirtied Blocks": 0,
+                  "Shared Written Blocks": 0,
+                  "Local Hit Blocks": 0,
+                  "Local Read Blocks": 0,
+                  "Local Dirtied Blocks": 0,
+                  "Local Written Blocks": 0,
+                  "Temp Read Blocks": 0,
+                  "Temp Written Blocks": 0,
+                  "Plans": [
+                    {
+                      "Node Type": "Index Scan",
+                      "Parent Relationship": "Outer",
+                      "Parallel Aware": false,
+                      "Async Capable": false,
+                      "Scan Direction": "Backward",
+                      "Index Name": "products_org_live_created_index",
+                      "Relation Name": "products",
+                      "Alias": "products",
+                      "Startup Cost": 0.29,
+                      "Total Cost": 1592.46,
+                      "Plan Rows": 4518,
+                      "Plan Width": 1461,
+                      "Actual Startup Time": 0.012,
+                      "Actual Total Time": 0.03,
+                      "Actual Rows": 15,
+                      "Actual Loops": 1,
+                      "Index Cond": "((organization_id = 1) AND (deleted_at IS NULL))",
+                      "Rows Removed by Index Recheck": 0,
+                      "Shared Hit Blocks": 17,
+                      "Shared Read Blocks": 0,
+                      "Shared Dirtied Blocks": 0,
+                      "Shared Written Blocks": 0,
+                      "Local Hit Blocks": 0,
+                      "Local Read Blocks": 0,
+                      "Local Dirtied Blocks": 0,
+                      "Local Written Blocks": 0,
+                      "Temp Read Blocks": 0,
+                      "Temp Written Blocks": 0
+                    }
+                  ]
+                },
+                "Planning": {
+                  "Shared Hit Blocks": 0,
+                  "Shared Read Blocks": 0,
+                  "Shared Dirtied Blocks": 0,
+                  "Shared Written Blocks": 0,
+                  "Local Hit Blocks": 0,
+                  "Local Read Blocks": 0,
+                  "Local Dirtied Blocks": 0,
+                  "Local Written Blocks": 0,
+                  "Temp Read Blocks": 0,
+                  "Temp Written Blocks": 0
+                },
+                "Planning Time": 0.076,
+                "Triggers": [],
+                "Execution Time": 0.042
+              }
+            ]
+          },
+          "orders": {
+            "sql": "SELECT * FROM orders WHERE organization_id = 1 AND deleted_at IS NULL ORDER BY order_date DESC, id DESC LIMIT 15",
+            "client_median_ms": 1.761,
+            "returned_rows": 15,
+            "plan": [
+              {
+                "Plan": {
+                  "Node Type": "Limit",
+                  "Parallel Aware": false,
+                  "Async Capable": false,
+                  "Startup Cost": 2.84,
+                  "Total Cost": 9.26,
+                  "Plan Rows": 15,
+                  "Plan Width": 3486,
+                  "Actual Startup Time": 0.047,
+                  "Actual Total Time": 0.048,
+                  "Actual Rows": 15,
+                  "Actual Loops": 1,
+                  "Shared Hit Blocks": 24,
+                  "Shared Read Blocks": 0,
+                  "Shared Dirtied Blocks": 0,
+                  "Shared Written Blocks": 0,
+                  "Local Hit Blocks": 0,
+                  "Local Read Blocks": 0,
+                  "Local Dirtied Blocks": 0,
+                  "Local Written Blocks": 0,
+                  "Temp Read Blocks": 0,
+                  "Temp Written Blocks": 0,
+                  "Plans": [
+                    {
+                      "Node Type": "Incremental Sort",
+                      "Parent Relationship": "Outer",
+                      "Parallel Aware": false,
+                      "Async Capable": false,
+                      "Startup Cost": 2.84,
+                      "Total Cost": 1926.4,
+                      "Plan Rows": 4490,
+                      "Plan Width": 3486,
+                      "Actual Startup Time": 0.046,
+                      "Actual Total Time": 0.047,
+                      "Actual Rows": 15,
+                      "Actual Loops": 1,
+                      "Sort Key": [
+                        "order_date DESC",
+                        "id DESC"
+                      ],
+                      "Presorted Key": [
+                        "order_date"
+                      ],
+                      "Full-sort Groups": {
+                        "Group Count": 1,
+                        "Sort Methods Used": [
+                          "quicksort"
+                        ],
+                        "Sort Space Memory": {
+                          "Average Sort Space Used": 29,
+                          "Peak Sort Space Used": 29
+                        }
+                      },
+                      "Shared Hit Blocks": 24,
+                      "Shared Read Blocks": 0,
+                      "Shared Dirtied Blocks": 0,
+                      "Shared Written Blocks": 0,
+                      "Local Hit Blocks": 0,
+                      "Local Read Blocks": 0,
+                      "Local Dirtied Blocks": 0,
+                      "Local Written Blocks": 0,
+                      "Temp Read Blocks": 0,
+                      "Temp Written Blocks": 0,
+                      "Plans": [
+                        {
+                          "Node Type": "Index Scan",
+                          "Parent Relationship": "Outer",
+                          "Parallel Aware": false,
+                          "Async Capable": false,
+                          "Scan Direction": "Backward",
+                          "Index Name": "orders_organization_id_order_date_index",
+                          "Relation Name": "orders",
+                          "Alias": "orders",
+                          "Startup Cost": 0.29,
+                          "Total Cost": 1796.81,
+                          "Plan Rows": 4490,
+                          "Plan Width": 3486,
+                          "Actual Startup Time": 0.011,
+                          "Actual Total Time": 0.031,
+                          "Actual Rows": 22,
+                          "Actual Loops": 1,
+                          "Index Cond": "(organization_id = 1)",
+                          "Rows Removed by Index Recheck": 0,
+                          "Filter": "(deleted_at IS NULL)",
+                          "Rows Removed by Filter": 0,
+                          "Shared Hit Blocks": 24,
+                          "Shared Read Blocks": 0,
+                          "Shared Dirtied Blocks": 0,
+                          "Shared Written Blocks": 0,
+                          "Local Hit Blocks": 0,
+                          "Local Read Blocks": 0,
+                          "Local Dirtied Blocks": 0,
+                          "Local Written Blocks": 0,
+                          "Temp Read Blocks": 0,
+                          "Temp Written Blocks": 0
+                        }
+                      ]
+                    }
+                  ]
+                },
+                "Planning": {
+                  "Shared Hit Blocks": 0,
+                  "Shared Read Blocks": 0,
+                  "Shared Dirtied Blocks": 0,
+                  "Shared Written Blocks": 0,
+                  "Local Hit Blocks": 0,
+                  "Local Read Blocks": 0,
+                  "Local Dirtied Blocks": 0,
+                  "Local Written Blocks": 0,
+                  "Temp Read Blocks": 0,
+                  "Temp Written Blocks": 0
+                },
+                "Planning Time": 0.082,
+                "Triggers": [],
+                "Execution Time": 0.06
+              }
+            ]
+          },
+          "orders_recent": {
+            "sql": "SELECT * FROM orders WHERE organization_id = 1 AND deleted_at IS NULL ORDER BY created_at DESC, id DESC LIMIT 5",
+            "client_median_ms": 1.336,
+            "returned_rows": 5,
+            "plan": [
+              {
+                "Plan": {
+                  "Node Type": "Limit",
+                  "Parallel Aware": false,
+                  "Async Capable": false,
+                  "Startup Cost": 0.41,
+                  "Total Cost": 2.5,
+                  "Plan Rows": 5,
+                  "Plan Width": 3486,
+                  "Actual Startup Time": 0.008,
+                  "Actual Total Time": 0.011,
+                  "Actual Rows": 5,
+                  "Actual Loops": 1,
+                  "Shared Hit Blocks": 8,
+                  "Shared Read Blocks": 0,
+                  "Shared Dirtied Blocks": 0,
+                  "Shared Written Blocks": 0,
+                  "Local Hit Blocks": 0,
+                  "Local Read Blocks": 0,
+                  "Local Dirtied Blocks": 0,
+                  "Local Written Blocks": 0,
+                  "Temp Read Blocks": 0,
+                  "Temp Written Blocks": 0,
+                  "Plans": [
+                    {
+                      "Node Type": "Index Scan",
+                      "Parent Relationship": "Outer",
+                      "Parallel Aware": false,
+                      "Async Capable": false,
+                      "Scan Direction": "Backward",
+                      "Index Name": "orders_org_live_created_index",
+                      "Relation Name": "orders",
+                      "Alias": "orders",
+                      "Startup Cost": 0.41,
+                      "Total Cost": 1884,
+                      "Plan Rows": 4517,
+                      "Plan Width": 3486,
+                      "Actual Startup Time": 0.008,
+                      "Actual Total Time": 0.011,
+                      "Actual Rows": 5,
+                      "Actual Loops": 1,
+                      "Index Cond": "((organization_id = 1) AND (deleted_at IS NULL))",
+                      "Rows Removed by Index Recheck": 0,
+                      "Shared Hit Blocks": 8,
+                      "Shared Read Blocks": 0,
+                      "Shared Dirtied Blocks": 0,
+                      "Shared Written Blocks": 0,
+                      "Local Hit Blocks": 0,
+                      "Local Read Blocks": 0,
+                      "Local Dirtied Blocks": 0,
+                      "Local Written Blocks": 0,
+                      "Temp Read Blocks": 0,
+                      "Temp Written Blocks": 0
+                    }
+                  ]
+                },
+                "Planning": {
+                  "Shared Hit Blocks": 0,
+                  "Shared Read Blocks": 0,
+                  "Shared Dirtied Blocks": 0,
+                  "Shared Written Blocks": 0,
+                  "Local Hit Blocks": 0,
+                  "Local Read Blocks": 0,
+                  "Local Dirtied Blocks": 0,
+                  "Local Written Blocks": 0,
+                  "Temp Read Blocks": 0,
+                  "Temp Written Blocks": 0
+                },
+                "Planning Time": 0.061,
+                "Triggers": [],
+                "Execution Time": 0.021
+              }
+            ]
+          },
+          "purchase_orders": {
+            "sql": "SELECT * FROM purchase_orders WHERE organization_id = 1 AND deleted_at IS NULL ORDER BY order_date DESC, id DESC LIMIT 15",
+            "client_median_ms": 1.452,
+            "returned_rows": 15,
+            "plan": [
+              {
+                "Plan": {
+                  "Node Type": "Limit",
+                  "Parallel Aware": false,
+                  "Async Capable": false,
+                  "Startup Cost": 0.41,
+                  "Total Cost": 5.11,
+                  "Plan Rows": 15,
+                  "Plan Width": 819,
+                  "Actual Startup Time": 0.018,
+                  "Actual Total Time": 0.034,
+                  "Actual Rows": 15,
+                  "Actual Loops": 1,
+                  "Shared Hit Blocks": 18,
+                  "Shared Read Blocks": 0,
+                  "Shared Dirtied Blocks": 0,
+                  "Shared Written Blocks": 0,
+                  "Local Hit Blocks": 0,
+                  "Local Read Blocks": 0,
+                  "Local Dirtied Blocks": 0,
+                  "Local Written Blocks": 0,
+                  "Temp Read Blocks": 0,
+                  "Temp Written Blocks": 0,
+                  "Plans": [
+                    {
+                      "Node Type": "Index Scan",
+                      "Parent Relationship": "Outer",
+                      "Parallel Aware": false,
+                      "Async Capable": false,
+                      "Scan Direction": "Backward",
+                      "Index Name": "purchase_orders_org_live_date_index",
+                      "Relation Name": "purchase_orders",
+                      "Alias": "purchase_orders",
+                      "Startup Cost": 0.41,
+                      "Total Cost": 1423.5,
+                      "Plan Rows": 4543,
+                      "Plan Width": 819,
+                      "Actual Startup Time": 0.017,
+                      "Actual Total Time": 0.032,
+                      "Actual Rows": 15,
+                      "Actual Loops": 1,
+                      "Index Cond": "((organization_id = 1) AND (deleted_at IS NULL))",
+                      "Rows Removed by Index Recheck": 0,
+                      "Shared Hit Blocks": 18,
+                      "Shared Read Blocks": 0,
+                      "Shared Dirtied Blocks": 0,
+                      "Shared Written Blocks": 0,
+                      "Local Hit Blocks": 0,
+                      "Local Read Blocks": 0,
+                      "Local Dirtied Blocks": 0,
+                      "Local Written Blocks": 0,
+                      "Temp Read Blocks": 0,
+                      "Temp Written Blocks": 0
+                    }
+                  ]
+                },
+                "Planning": {
+                  "Shared Hit Blocks": 0,
+                  "Shared Read Blocks": 0,
+                  "Shared Dirtied Blocks": 0,
+                  "Shared Written Blocks": 0,
+                  "Local Hit Blocks": 0,
+                  "Local Read Blocks": 0,
+                  "Local Dirtied Blocks": 0,
+                  "Local Written Blocks": 0,
+                  "Temp Read Blocks": 0,
+                  "Temp Written Blocks": 0
+                },
+                "Planning Time": 0.114,
+                "Triggers": [],
+                "Execution Time": 0.047
+              }
+            ]
+          },
+          "return_order_items": {
+            "sql": "SELECT * FROM return_order_items WHERE return_order_id IN (2491,2492,2493,2494,2495,2496,2497,2498,2499,2500)",
+            "client_median_ms": 1.483,
+            "returned_rows": 100,
+            "plan": [
+              {
+                "Plan": {
+                  "Node Type": "Index Scan",
+                  "Parallel Aware": false,
+                  "Async Capable": false,
+                  "Scan Direction": "Forward",
+                  "Index Name": "return_items_return_index",
+                  "Relation Name": "return_order_items",
+                  "Alias": "return_order_items",
+                  "Startup Cost": 0.29,
+                  "Total Cost": 49.65,
+                  "Plan Rows": 100,
+                  "Plan Width": 81,
+                  "Actual Startup Time": 0.006,
+                  "Actual Total Time": 0.016,
+                  "Actual Rows": 100,
+                  "Actual Loops": 1,
+                  "Index Cond": "(return_order_id = ANY ('{2491,2492,2493,2494,2495,2496,2497,2498,2499,2500}'::bigint[]))",
+                  "Rows Removed by Index Recheck": 0,
+                  "Shared Hit Blocks": 22,
+                  "Shared Read Blocks": 0,
+                  "Shared Dirtied Blocks": 0,
+                  "Shared Written Blocks": 0,
+                  "Local Hit Blocks": 0,
+                  "Local Read Blocks": 0,
+                  "Local Dirtied Blocks": 0,
+                  "Local Written Blocks": 0,
+                  "Temp Read Blocks": 0,
+                  "Temp Written Blocks": 0
+                },
+                "Planning": {
+                  "Shared Hit Blocks": 0,
+                  "Shared Read Blocks": 0,
+                  "Shared Dirtied Blocks": 0,
+                  "Shared Written Blocks": 0,
+                  "Local Hit Blocks": 0,
+                  "Local Read Blocks": 0,
+                  "Local Dirtied Blocks": 0,
+                  "Local Written Blocks": 0,
+                  "Temp Read Blocks": 0,
+                  "Temp Written Blocks": 0
+                },
+                "Planning Time": 0.038,
+                "Triggers": [],
+                "Execution Time": 0.024
+              }
+            ]
+          },
+          "stock_transfer_items": {
+            "sql": "SELECT * FROM stock_transfer_items WHERE stock_transfer_id IN (2491,2492,2493,2494,2495,2496,2497,2498,2499,2500)",
+            "client_median_ms": 1.648,
+            "returned_rows": 100,
+            "plan": [
+              {
+                "Plan": {
+                  "Node Type": "Index Scan",
+                  "Parallel Aware": false,
+                  "Async Capable": false,
+                  "Scan Direction": "Forward",
+                  "Index Name": "transfer_items_transfer_index",
+                  "Relation Name": "stock_transfer_items",
+                  "Alias": "stock_transfer_items",
+                  "Startup Cost": 0.29,
+                  "Total Cost": 48.65,
+                  "Plan Rows": 100,
+                  "Plan Width": 84,
+                  "Actual Startup Time": 0.009,
+                  "Actual Total Time": 0.02,
+                  "Actual Rows": 100,
+                  "Actual Loops": 1,
+                  "Index Cond": "(stock_transfer_id = ANY ('{2491,2492,2493,2494,2495,2496,2497,2498,2499,2500}'::bigint[]))",
+                  "Rows Removed by Index Recheck": 0,
+                  "Shared Hit Blocks": 21,
+                  "Shared Read Blocks": 0,
+                  "Shared Dirtied Blocks": 0,
+                  "Shared Written Blocks": 0,
+                  "Local Hit Blocks": 0,
+                  "Local Read Blocks": 0,
+                  "Local Dirtied Blocks": 0,
+                  "Local Written Blocks": 0,
+                  "Temp Read Blocks": 0,
+                  "Temp Written Blocks": 0
+                },
+                "Planning": {
+                  "Shared Hit Blocks": 0,
+                  "Shared Read Blocks": 0,
+                  "Shared Dirtied Blocks": 0,
+                  "Shared Written Blocks": 0,
+                  "Local Hit Blocks": 0,
+                  "Local Read Blocks": 0,
+                  "Local Dirtied Blocks": 0,
+                  "Local Written Blocks": 0,
+                  "Temp Read Blocks": 0,
+                  "Temp Written Blocks": 0
+                },
+                "Planning Time": 0.048,
+                "Triggers": [],
+                "Execution Time": 0.028
+              }
+            ]
+          },
+          "inter_company_transfer_lines": {
+            "sql": "SELECT * FROM inter_company_transfer_lines WHERE inter_company_transfer_id = 2500",
+            "client_median_ms": 1.442,
+            "returned_rows": 10,
+            "plan": [
+              {
+                "Plan": {
+                  "Node Type": "Index Scan",
+                  "Parallel Aware": false,
+                  "Async Capable": false,
+                  "Scan Direction": "Forward",
+                  "Index Name": "ict_lines_transfer_index",
+                  "Relation Name": "inter_company_transfer_lines",
+                  "Alias": "inter_company_transfer_lines",
+                  "Startup Cost": 0.29,
+                  "Total Cost": 8.46,
+                  "Plan Rows": 10,
+                  "Plan Width": 120,
+                  "Actual Startup Time": 0.013,
+                  "Actual Total Time": 0.015,
+                  "Actual Rows": 10,
+                  "Actual Loops": 1,
+                  "Index Cond": "(inter_company_transfer_id = 2500)",
+                  "Rows Removed by Index Recheck": 0,
+                  "Shared Hit Blocks": 3,
+                  "Shared Read Blocks": 0,
+                  "Shared Dirtied Blocks": 0,
+                  "Shared Written Blocks": 0,
+                  "Local Hit Blocks": 0,
+                  "Local Read Blocks": 0,
+                  "Local Dirtied Blocks": 0,
+                  "Local Written Blocks": 0,
+                  "Temp Read Blocks": 0,
+                  "Temp Written Blocks": 0
+                },
+                "Planning": {
+                  "Shared Hit Blocks": 0,
+                  "Shared Read Blocks": 0,
+                  "Shared Dirtied Blocks": 0,
+                  "Shared Written Blocks": 0,
+                  "Local Hit Blocks": 0,
+                  "Local Read Blocks": 0,
+                  "Local Dirtied Blocks": 0,
+                  "Local Written Blocks": 0,
+                  "Temp Read Blocks": 0,
+                  "Temp Written Blocks": 0
+                },
+                "Planning Time": 0.053,
+                "Triggers": [],
+                "Execution Time": 0.025
+              }
+            ]
+          },
+          "inter_company_transfer_serials": {
+            "sql": "SELECT * FROM inter_company_transfer_serials WHERE inter_company_transfer_line_id = 2500",
+            "client_median_ms": 1.34,
+            "returned_rows": 10,
+            "plan": [
+              {
+                "Plan": {
+                  "Node Type": "Index Scan",
+                  "Parallel Aware": false,
+                  "Async Capable": false,
+                  "Scan Direction": "Forward",
+                  "Index Name": "ict_serials_line_index",
+                  "Relation Name": "inter_company_transfer_serials",
+                  "Alias": "inter_company_transfer_serials",
+                  "Startup Cost": 0.29,
+                  "Total Cost": 8.46,
+                  "Plan Rows": 10,
+                  "Plan Width": 56,
+                  "Actual Startup Time": 0.005,
+                  "Actual Total Time": 0.006,
+                  "Actual Rows": 10,
+                  "Actual Loops": 1,
+                  "Index Cond": "(inter_company_transfer_line_id = 2500)",
+                  "Rows Removed by Index Recheck": 0,
+                  "Shared Hit Blocks": 3,
+                  "Shared Read Blocks": 0,
+                  "Shared Dirtied Blocks": 0,
+                  "Shared Written Blocks": 0,
+                  "Local Hit Blocks": 0,
+                  "Local Read Blocks": 0,
+                  "Local Dirtied Blocks": 0,
+                  "Local Written Blocks": 0,
+                  "Temp Read Blocks": 0,
+                  "Temp Written Blocks": 0
+                },
+                "Planning": {
+                  "Shared Hit Blocks": 0,
+                  "Shared Read Blocks": 0,
+                  "Shared Dirtied Blocks": 0,
+                  "Shared Written Blocks": 0,
+                  "Local Hit Blocks": 0,
+                  "Local Read Blocks": 0,
+                  "Local Dirtied Blocks": 0,
+                  "Local Written Blocks": 0,
+                  "Temp Read Blocks": 0,
+                  "Temp Written Blocks": 0
+                },
+                "Planning Time": 0.036,
+                "Triggers": [],
+                "Execution Time": 0.012
+              }
+            ]
+          },
+          "inter_company_transfer_batches": {
+            "sql": "SELECT * FROM inter_company_transfer_batches WHERE inter_company_transfer_line_id = 2500",
+            "client_median_ms": 1.175,
+            "returned_rows": 10,
+            "plan": [
+              {
+                "Plan": {
+                  "Node Type": "Index Scan",
+                  "Parallel Aware": false,
+                  "Async Capable": false,
+                  "Scan Direction": "Forward",
+                  "Index Name": "ict_batches_line_index",
+                  "Relation Name": "inter_company_transfer_batches",
+                  "Alias": "inter_company_transfer_batches",
+                  "Startup Cost": 0.29,
+                  "Total Cost": 8.46,
+                  "Plan Rows": 10,
+                  "Plan Width": 69,
+                  "Actual Startup Time": 0.004,
+                  "Actual Total Time": 0.006,
+                  "Actual Rows": 10,
+                  "Actual Loops": 1,
+                  "Index Cond": "(inter_company_transfer_line_id = 2500)",
+                  "Rows Removed by Index Recheck": 0,
+                  "Shared Hit Blocks": 3,
+                  "Shared Read Blocks": 0,
+                  "Shared Dirtied Blocks": 0,
+                  "Shared Written Blocks": 0,
+                  "Local Hit Blocks": 0,
+                  "Local Read Blocks": 0,
+                  "Local Dirtied Blocks": 0,
+                  "Local Written Blocks": 0,
+                  "Temp Read Blocks": 0,
+                  "Temp Written Blocks": 0
+                },
+                "Planning": {
+                  "Shared Hit Blocks": 0,
+                  "Shared Read Blocks": 0,
+                  "Shared Dirtied Blocks": 0,
+                  "Shared Written Blocks": 0,
+                  "Local Hit Blocks": 0,
+                  "Local Read Blocks": 0,
+                  "Local Dirtied Blocks": 0,
+                  "Local Written Blocks": 0,
+                  "Temp Read Blocks": 0,
+                  "Temp Written Blocks": 0
+                },
+                "Planning Time": 0.025,
+                "Triggers": [],
+                "Execution Time": 0.012
+              }
+            ]
+          }
+        }
+      },
+      "migration_verification": {
+        "engine": "pgsql",
+        "round_trip": "passed",
+        "rows_unchanged": {
+          "organizations": {
+            "count": 10,
+            "ids": "55"
+          },
+          "products": {
+            "count": 50000,
+            "ids": "1250025000"
+          },
+          "orders": {
+            "count": 50000,
+            "ids": "1250025000"
+          },
+          "purchase_orders": {
+            "count": 50000,
+            "ids": "1250025000"
+          },
+          "return_order_items": {
+            "count": 50000,
+            "ids": "1250025000"
+          },
+          "stock_transfer_items": {
+            "count": 50000,
+            "ids": "1250025000"
+          },
+          "inter_company_transfer_lines": {
+            "count": 50000,
+            "ids": "1250025000"
+          },
+          "inter_company_transfer_serials": {
+            "count": 50000,
+            "ids": "1250025000"
+          },
+          "inter_company_transfer_batches": {
+            "count": 50000,
+            "ids": "1250025000"
+          }
+        },
+        "sku_uniqueness_and_tenant_reuse": "passed",
+        "one_relationship_index_each": {
+          "return_order_items": "return_items_return_index",
+          "stock_transfer_items": "transfer_items_transfer_index",
+          "inter_company_transfer_lines": "ict_lines_transfer_index",
+          "inter_company_transfer_serials": "ict_serials_line_index",
+          "inter_company_transfer_batches": "ict_batches_line_index"
+        }
+      }
+    }
+  }
+}
