@@ -1,0 +1,113 @@
+{
+  "audit_date": "2026-11-02",
+  "implementation_commit": "25a5cc41",
+  "strict_locale_harness_commit": "6d3672e7",
+  "runs": {
+    "full": "https://github.com/Inventoros/Inventoros/actions/runs/41502431909",
+    "strict_locales": "https://github.com/Inventoros/Inventoros/actions/runs/41505431538",
+    "interactions": "https://github.com/Inventoros/Inventoros/actions/runs/41502425404",
+    "backend": "https://github.com/Inventoros/Inventoros/actions/runs/41502425546",
+    "e2e": "https://github.com/Inventoros/Inventoros/actions/runs/41502425572",
+    "screenshots": "https://github.com/Inventoros/Inventoros/actions/runs/41497379156"
+  },
+  "findings": {
+    "discovered": 31,
+    "fixed": 29,
+    "remaining": {
+      "P0": 0,
+      "P1": 0,
+      "P2": 2,
+      "P3": 0
+    }
+  },
+  "full_sweep": {
+    "checks": 1164,
+    "screenshots": 544,
+    "widths": {
+      "320": 226,
+      "375": 124,
+      "430": 124,
+      "768": 124,
+      "1024": 124,
+      "1440": 318,
+      "1920": 124
+    },
+    "languages": {
+      "ar": 12,
+      "de": 12,
+      "en": 1008,
+      "es": 12,
+      "fr": 12,
+      "it": 12,
+      "ja": 12,
+      "ko": 12,
+      "nl": 11,
+      "pl": 12,
+      "pt-BR": 12,
+      "ru": 13,
+      "tr": 12,
+      "zh-CN": 12
+    },
+    "axeChecked": 246,
+    "unexpectedHttp": [],
+    "javascriptExceptions": [],
+    "documentOverflows": [],
+    "accessibilityFindings": []
+  },
+  "strict_locale_sweep": {
+    "checks": 168,
+    "screenshots": 168,
+    "widths": {
+      "320": 84,
+      "1440": 84
+    },
+    "languages": {
+      "ar": 12,
+      "de": 12,
+      "en": 12,
+      "es": 12,
+      "fr": 12,
+      "it": 12,
+      "ja": 12,
+      "ko": 12,
+      "nl": 12,
+      "pl": 12,
+      "pt-BR": 12,
+      "ru": 12,
+      "tr": 12,
+      "zh-CN": 12
+    },
+    "axeChecked": 0,
+    "unexpectedHttp": [],
+    "javascriptExceptions": [],
+    "documentOverflows": [],
+    "accessibilityFindings": []
+  },
+  "interaction_sweep": {
+    "checks": 100,
+    "screenshots": 45,
+    "widths": {
+      "320": 23,
+      "375": 11,
+      "430": 11,
+      "768": 11,
+      "1024": 11,
+      "1440": 22,
+      "1920": 11
+    },
+    "languages": {
+      "en": 100
+    },
+    "axeChecked": 34,
+    "unexpectedHttp": [],
+    "javascriptExceptions": [],
+    "documentOverflows": [],
+    "accessibilityFindings": []
+  },
+  "scope_notes": [
+    "Application code is unchanged between the implementation and stricter locale-harness commits.",
+    "One Dutch capture in the first full run used Russian before the preference save completed. The strict locale sweep waits for persistence and verifies exactly 12 checks per locale.",
+    "Warehouse popup accessibility scans cover the foreground menu. Base pages and other dialog states receive document-wide scans; keyboard and click-away regressions verify background access after dismissal.",
+    "These counts describe automated rendered checks, not manual inspection of every screenshot or complete WCAG conformance."
+  ]
+}

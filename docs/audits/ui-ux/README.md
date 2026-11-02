@@ -19,3 +19,7 @@ Item content wraps without squeezing and the summary/actions stack within the vi
 | ![Overflowing return form](return-mobile-before.png) | ![Return form fitting the mobile viewport](return-mobile-after.png) |
 
 The [public screenshot gallery](../../../screenshots) contains the regenerated light/dark operational views. Full route/locale/state captures are retained as GitHub Actions artifacts linked in [the audit report](../../../UI_UX_AUDIT.md).
+
+## Full-height operational workspace
+
+The desktop [after capture](workspace-after.png) measures 1920x911. The document has no horizontal or vertical overflow; the table occupies 724px and independently scrolls 891px of row content.
