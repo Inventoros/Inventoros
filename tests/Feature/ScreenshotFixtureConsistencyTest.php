@@ -25,6 +25,9 @@ class ScreenshotFixtureConsistencyTest extends TestCase
             $revenue = bcadd($revenue, (string) $order->total, 2);
         }
         $this->assertSame('2711.85', $revenue);
+        $baseOrder = Order::withoutGlobalScopes()->where('order_number', \Database\Seeders\E2ETestSeeder::STAFF_ORDER_NUMBER)->firstOrFail();
+        $this->assertCount(1, $baseOrder->items);
+        $this->assertSame((string) $baseOrder->total, (string) $baseOrder->items->first()->total);
         $purchases = PurchaseOrder::withoutGlobalScopes()->whereBetween('po_number', ['PO-60001', 'PO-60006'])->with('items')->get();
         $this->assertCount(6, $purchases);
         $total = '0.00';

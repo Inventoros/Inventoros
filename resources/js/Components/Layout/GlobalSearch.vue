@@ -232,7 +232,7 @@ defineExpose({ open });
                 >
                     <!-- Search Input -->
                     <div class="flex items-center px-4 border-b border-gray-200 dark:border-gray-700">
-                        <svg class="w-5 h-5 text-gray-400 dark:text-gray-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="w-5 h-5 text-text-tertiary shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                         </svg>
                         <input
@@ -244,13 +244,13 @@ defineExpose({ open });
                             class="flex-1 px-3 py-4 bg-transparent border-0 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:ring-0 focus:outline-hidden text-sm"
                         />
                         <div class="flex items-center gap-2">
-                            <span v-if="isLoading" class="text-gray-400">
+                            <span v-if="isLoading" class="text-text-tertiary">
                                 <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
                                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                 </svg>
                             </span>
-                            <kbd class="hidden sm:inline-flex items-center px-1.5 py-0.5 text-[10px] font-medium text-gray-400 dark:text-gray-500 bg-gray-100 dark:bg-gray-700 rounded border border-gray-200 dark:border-gray-600">
+                            <kbd class="hidden sm:inline-flex items-center px-1.5 py-0.5 text-[10px] font-medium text-text-tertiary bg-gray-100 dark:bg-gray-700 rounded border border-gray-200 dark:border-gray-600">
                                 ESC
                             </kbd>
                         </div>
@@ -261,7 +261,7 @@ defineExpose({ open });
                         <!-- Recent Searches -->
                         <div v-if="showRecent && !hasQuery && recentSearches.length > 0" class="py-2">
                             <div class="px-4 py-1.5">
-                                <p class="text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">{{ $t('nav.globalSearch.recent') }}</p>
+                                <p class="text-[11px] font-semibold text-text-tertiary uppercase tracking-wider">{{ $t('nav.globalSearch.recent') }}</p>
                             </div>
                             <button
                                 v-for="item in recentSearches"
@@ -269,12 +269,12 @@ defineExpose({ open });
                                 @click="navigateToResult(item)"
                                 class="w-full flex items-center gap-3 px-4 py-2.5 text-start hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
                             >
-                                <svg class="w-4 h-4 text-gray-400 dark:text-gray-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg class="w-4 h-4 text-text-tertiary shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                                 </svg>
                                 <div class="flex-1 min-w-0">
                                     <p class="text-sm font-medium text-gray-700 dark:text-gray-200 truncate">{{ item.title }}</p>
-                                    <p v-if="item.subtitle" class="text-xs text-gray-400 dark:text-gray-500 truncate">{{ item.subtitle }}</p>
+                                    <p v-if="item.subtitle" class="text-xs text-text-tertiary truncate">{{ item.subtitle }}</p>
                                 </div>
                             </button>
                         </div>
@@ -284,7 +284,7 @@ defineExpose({ open });
                             <template v-for="(item, index) in flatResults" :key="index">
                                 <!-- Category Header -->
                                 <div v-if="item.kind === 'header'" class="px-4 py-1.5 mt-1 first:mt-0">
-                                    <p class="text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">{{ $t(item.label) }}</p>
+                                    <p class="text-[11px] font-semibold text-text-tertiary uppercase tracking-wider">{{ $t(item.label) }}</p>
                                 </div>
 
                                 <!-- Result Item -->
@@ -299,16 +299,16 @@ defineExpose({ open });
                                             : 'hover:bg-gray-50 dark:hover:bg-gray-700/50'
                                     ]"
                                 >
-                                    <svg class="w-4 h-4 text-gray-400 dark:text-gray-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg class="w-4 h-4 text-text-tertiary shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="getIconPath(item.icon || item.type)" />
                                     </svg>
                                     <div class="flex-1 min-w-0">
                                         <p class="text-sm font-medium text-gray-700 dark:text-gray-200 truncate">{{ item.title }}</p>
-                                        <p v-if="item.subtitle" class="text-xs text-gray-400 dark:text-gray-500 truncate">{{ item.subtitle }}</p>
+                                        <p v-if="item.subtitle" class="text-xs text-text-tertiary truncate">{{ item.subtitle }}</p>
                                     </div>
                                     <svg
                                         v-if="getSelectableIndex(item) === selectedIndex"
-                                        class="w-4 h-4 text-gray-400 dark:text-gray-500 shrink-0"
+                                        class="w-4 h-4 text-text-tertiary shrink-0"
                                         fill="none"
                                         stroke="currentColor"
                                         viewBox="0 0 24 24"
@@ -324,8 +324,8 @@ defineExpose({ open });
                             <svg class="w-10 h-10 mx-auto text-gray-300 dark:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                             </svg>
-                            <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">{{ $t('nav.globalSearch.noResults', { query }) }}</p>
-                            <p class="mt-1 text-xs text-gray-400 dark:text-gray-500">{{ $t('nav.globalSearch.tryDifferent') }}</p>
+                            <p class="mt-2 text-sm text-text-secondary">{{ $t('nav.globalSearch.noResults', { query }) }}</p>
+                            <p class="mt-1 text-xs text-text-tertiary">{{ $t('nav.globalSearch.tryDifferent') }}</p>
                         </div>
 
                         <!-- Empty State -->
@@ -333,14 +333,14 @@ defineExpose({ open });
                             <svg class="w-10 h-10 mx-auto text-gray-300 dark:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                             </svg>
-                            <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">{{ $t('nav.globalSearch.startTyping') }}</p>
-                            <p class="mt-1 text-xs text-gray-400 dark:text-gray-500">{{ $t('nav.globalSearch.hint') }}</p>
+                            <p class="mt-2 text-sm text-text-secondary">{{ $t('nav.globalSearch.startTyping') }}</p>
+                            <p class="mt-1 text-xs text-text-tertiary">{{ $t('nav.globalSearch.hint') }}</p>
                         </div>
                     </div>
 
                     <!-- Footer -->
                     <div class="px-4 py-2.5 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between">
-                        <div class="flex items-center gap-3 text-xs text-gray-400 dark:text-gray-500">
+                        <div class="flex items-center gap-3 text-xs text-text-tertiary">
                             <span class="inline-flex items-center gap-1">
                                 <kbd class="px-1 py-0.5 bg-gray-100 dark:bg-gray-700 rounded text-[10px] border border-gray-200 dark:border-gray-600">↑</kbd>
                                 <kbd class="px-1 py-0.5 bg-gray-100 dark:bg-gray-700 rounded text-[10px] border border-gray-200 dark:border-gray-600">↓</kbd>

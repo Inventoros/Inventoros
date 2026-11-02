@@ -130,7 +130,7 @@ test('mobile navigation contains keyboard focus and returns it after Escape', as
     const nav = page.locator('#workspace-navigation');
     await expect(nav.locator('a').first()).toBeFocused();
     await page.keyboard.press('Shift+Tab');
-    await expect(page.getByTestId('logout')).toBeFocused();
+    await expect(nav.getByRole('link', { name: 'Source code', exact: true })).toBeFocused();
     await page.keyboard.press('Escape');
     await expect(toggle).toBeFocused();
     await expect(nav).toHaveAttribute('inert', '');

@@ -142,6 +142,12 @@ class ScreenshotSeeder extends Seeder
 
         // Get the E2E test user for created_by fields
         $user = User::where('email', E2ETestSeeder::TEST_EMAIL)->firstOrFail();
+        $baseOrder = Order::withoutGlobalScopes()->where('organization_id', $orgId)->where('order_number', E2ETestSeeder::STAFF_ORDER_NUMBER)->firstOrFail();
+        $baseProduct = Product::withoutGlobalScopes()->where('organization_id', $orgId)->where('sku', E2ETestSeeder::TEST_PRODUCT_SKU)->firstOrFail();
+        OrderItem::updateOrCreate(
+            ['order_id' => $baseOrder->id, 'product_id' => $baseProduct->id],
+            ['product_name' => $baseProduct->name, 'sku' => $baseProduct->sku, 'quantity' => 1, 'unit_price' => 10, 'unit_cost' => 5, 'subtotal' => 10, 'tax' => 0, 'total' => 10],
+        );
 
         // Create orders with varied statuses
         $orderStatuses = ['pending', 'processing', 'shipped', 'delivered', 'pending', 'processing', 'shipped', 'delivered'];
@@ -168,7 +174,7 @@ class ScreenshotSeeder extends Seeder
             );
             OrderItem::updateOrCreate(
                 ['order_id' => $order->id, 'product_id' => $product->id],
-                ['product_name' => $product->name, 'sku' => $product->sku, 'quantity' => $quantity, 'unit_price' => $product->price, 'subtotal' => $total, 'tax' => 0, 'total' => $total],
+                ['product_name' => $product->name, 'sku' => $product->sku, 'quantity' => $quantity, 'unit_price' => $product->price, 'unit_cost' => $product->purchase_price, 'subtotal' => $total, 'tax' => 0, 'total' => $total],
             );
         }
 

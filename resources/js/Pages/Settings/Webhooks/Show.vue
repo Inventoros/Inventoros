@@ -512,7 +512,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                         <h3 class="text-base font-semibold text-text-primary">
                             {{ t('settings.webhooks.editWebhook') }}
                         </h3>
-                        <button @click="closeEditModal" class="rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-surface-overlay hover:text-text-primary">
+                        <button type="button" :aria-label="t('common.dismiss')" @click="closeEditModal" class="rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-surface-overlay hover:text-text-primary">
                             <X :size="18" />
                         </button>
                     </div>

@@ -20,6 +20,10 @@ async function inspect(page: Page, name: string, url: string, width: number, axe
     page.on('pageerror', onError);
     const response = navigate ? await page.goto(url, { waitUntil: 'networkidle' }) : null;
     await page.evaluate(() => document.fonts.ready);
+    // Measure the settled interface, not intermediate fade-in contrast.
+    await page.evaluate(() => Promise.allSettled(document.getAnimations()
+        .filter(animation => animation.effect?.getComputedTiming().iterations !== Infinity)
+        .map(animation => animation.finished)));
     const layout = await page.evaluate(() => ({
         overflow: document.documentElement.scrollWidth - innerWidth,
         bodyOverflow: document.documentElement.scrollHeight - innerHeight,
