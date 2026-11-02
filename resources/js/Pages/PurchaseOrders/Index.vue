@@ -7,7 +7,7 @@ import Button from '@/Components/ui/Button.vue';
 import Badge from '@/Components/ui/Badge.vue';
 import DataTable from '@/Components/ui/DataTable.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { displayCalendarDate } from '@/lib/dates';
 import { formatMoney } from '@/lib/money';
@@ -65,15 +65,15 @@ const formatDate = (dateString) =>
 const statusVariant = (s) =>
     ({ draft: 'neutral', sent: 'info', partial: 'warning', received: 'success', cancelled: 'danger' }[s] || 'neutral');
 
-const statusLabels = {
+const statusLabels = computed(() => ({
     draft: t('purchaseOrders.status.draft'),
     sent: t('purchaseOrders.status.sent'),
     partial: t('purchaseOrders.status.partial'),
     received: t('purchaseOrders.status.received'),
     cancelled: t('purchaseOrders.status.cancelled'),
-};
+}));
 
-const columns = [
+const columns = computed(() => ([
     { key: 'po_number', label: t('purchaseOrders.poNumber') },
     { key: 'supplier', label: t('purchaseOrders.supplier') },
     { key: 'order_date', label: t('purchaseOrders.orderDate') },
@@ -82,7 +82,7 @@ const columns = [
     { key: 'total', label: t('common.total'), align: 'right' },
     { key: 'status', label: t('common.status') },
     { key: 'actions', label: t('common.actions'), align: 'right' },
-];
+]));
 
 const selectClass =
     'h-9 w-full rounded-md border border-border-subtle bg-surface-canvas px-3 text-sm text-text-primary ds-focus-ring';

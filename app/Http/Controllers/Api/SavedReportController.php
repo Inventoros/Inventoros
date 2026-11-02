@@ -75,7 +75,7 @@ class SavedReportController extends Controller
         // Validate the data source
         if (! $this->reportDataService->isValidDataSource($validated['data_source'])) {
             return response()->json([
-                'message' => 'Invalid data source.',
+                'message' => __('Invalid data source.'),
                 'error' => 'invalid_data_source',
             ], 422);
         }
@@ -211,7 +211,7 @@ class SavedReportController extends Controller
 
         if (isset($validated['data_source']) && ! $this->reportDataService->isValidDataSource($dataSource)) {
             return response()->json([
-                'message' => 'Invalid data source.',
+                'message' => __('Invalid data source.'),
                 'error' => 'invalid_data_source',
             ], 422);
         }

@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { readFileSync } from 'node:fs';
 
 for (const [url, trigger] of [
     ['/categories', 'Add Category'], ['/locations', 'Add Location'],
@@ -93,9 +94,21 @@ test('language picker supports arrows, Escape, focus restoration and Arabic dire
 });
 
 test('global search shortcut toggles without reopening itself', async ({ page }) => {
-    await page.goto('/dashboard');
+    await page.goto('/dashboard', { waitUntil: 'networkidle' });
+    await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
     await page.keyboard.press('Control+k');
     await expect(page.locator('dialog[open]')).toHaveCount(1);
     await page.keyboard.press('Control+k');
     await expect(page.locator('dialog[open]')).toHaveCount(0);
+});
+
+test('switching language updates table headings without navigating away', async ({ page }) => {
+    const french = JSON.parse(readFileSync('resources/js/i18n/locales/fr.json', 'utf8'));
+    await page.goto('/orders');
+    await page.locator('button[aria-haspopup="listbox"]').click();
+    await page.locator('[role="option"][lang="fr"]').click();
+    await expect(page.getByRole('columnheader', { name: french.orders.customer, exact: true })).toBeVisible();
+    await page.locator('button[aria-haspopup="listbox"]').click();
+    await page.locator('[role="option"][lang="en"]').click();
+    await expect(page.getByRole('columnheader', { name: 'Customer', exact: true })).toBeVisible();
 });

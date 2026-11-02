@@ -2,6 +2,7 @@ import { test, expect, type Page } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import { readFileSync, mkdirSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
+import { execFileSync } from 'node:child_process';
 
 // Opt-in evidence sweep, separate from the fast functional regression suite.
 // Violations are recorded rather than hidden by exclusions or disabled rules.
@@ -121,7 +122,7 @@ test('guest and portal routes', async ({ browser }) => {
     const context = await browser.newContext({ storageState: { cookies: [], origins: [] }, viewport: { width: 1440, height: 1080 } });
     const page = await context.newPage();
     const fx = manifest().layout;
-    const guest = ['/login', '/register', '/forgot-password', '/reset-password/audit-preview?email=audit%40example.test', `/portal/${fx.portal_slug}/login`, `/portal/${fx.portal_slug}/forgot-password`, `/portal/${fx.portal_slug}/reset-password/audit-preview?email=${encodeURIComponent(fx.portal_email)}`];
+    const guest = ['/login', '/register', '/forgot-password', '/reset-password/audit-preview?email=audit%40example.test', `/portal/${fx.portal_slug}/login`, `/portal/${fx.portal_slug}/forgot-password`, `/portal/${fx.portal_slug}/reset-password/audit-preview?email=${encodeURIComponent(fx.portal_email)}`, manifest().states.invitation];
     for (const width of widths) {
         await page.setViewportSize({ width, height: width < 768 ? 812 : 1080 });
         for (const [i, url] of guest.entries()) await inspect(page, `guest-${i}`, url, width, width === 1440);
@@ -137,4 +138,53 @@ test('guest and portal routes', async ({ browser }) => {
         for (const [i, url] of portal.entries()) await inspect(page, `portal-${i}`, `/portal/${fx.portal_slug}${url}`, width, width === 1440);
     }
     await context.close();
+});
+
+test('verification, two-factor, restricted and installer states', async ({ browser }) => {
+    test.setTimeout(10 * 60_000);
+    const states = manifest().states;
+    for (const [name, email, password, url, expected] of [
+        ['verify-email', states.unverified, states.password, '/verify-email', 200],
+        ['two-factor-challenge', states.mfa, states.password, '/two-factor-challenge', 200],
+        ['permission-denied', 'e2e-staff@inventoros.test', 'E2EStaffPassword123!', '/users', 403],
+    ] as const) {
+        const context = await browser.newContext({ storageState: { cookies: [], origins: [] } });
+        const page = await context.newPage();
+        await page.goto('/login');
+        await page.locator('#email').fill(email);
+        await page.locator('#password').fill(password);
+        await page.getByRole('button', { name: 'Log in', exact: true }).click();
+        await page.waitForURL(u => u.pathname !== '/login');
+        for (const width of widths) {
+            await page.setViewportSize({ width, height: width < 768 ? 812 : 1080 });
+            // A permission-denied page is an expected 403, not an application failure.
+            const strict = process.env.UI_UX_AUDIT_STRICT;
+            if (expected === 403) delete process.env.UI_UX_AUDIT_STRICT;
+            try {
+                const result = await inspect(page, name, url, width, width === 1440);
+                expect.soft(result.status).toBe(expected);
+                expect.soft(result.errors).toEqual([]);
+                expect.soft(result.overflow).toBeLessThanOrEqual(1);
+                expect.soft(result.violations).toEqual([]);
+            } finally { if (strict) process.env.UI_UX_AUDIT_STRICT = strict; }
+        }
+        await context.close();
+    }
+    const context = await browser.newContext({ storageState: { cookies: [], origins: [] } });
+    const page = await context.newPage();
+    const installed = (value: boolean) => execFileSync('php', ['artisan', 'tinker', `--execute=App\\Models\\System\\SystemSetting::set('installed', ${value ? 'true' : 'false'}, 'boolean');`]);
+    try {
+        installed(false);
+        for (const width of widths) {
+            await page.setViewportSize({ width, height: width < 768 ? 812 : 1080 });
+            for (const [name, url] of [['welcome', '/install'], ['requirements', '/install/requirements'], ['database', '/install/database'], ['admin', '/install/admin']]) {
+                await inspect(page, `installer-${name}`, url, width, width === 1440);
+            }
+        }
+        installed(true);
+        for (const width of widths) {
+            await page.setViewportSize({ width, height: width < 768 ? 812 : 1080 });
+            await inspect(page, 'installer-complete', '/install/complete', width, width === 1440);
+        }
+    } finally { installed(true); await context.close(); }
 });

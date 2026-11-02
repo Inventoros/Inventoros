@@ -58,13 +58,13 @@ const statusVariant = (status) =>
         cancelled: 'danger',
     }[status] || 'neutral');
 
-const statusLabels = {
+const statusLabels = computed(() => ({
     draft: t('purchaseOrders.status.draft'),
     sent: t('purchaseOrders.status.sent'),
     partial: t('purchaseOrders.status.partial'),
     received: t('purchaseOrders.status.received'),
     cancelled: t('purchaseOrders.status.cancelled'),
-};
+}));
 
 const showSendModal = ref(false);
 

@@ -22,7 +22,7 @@ import {
     ArrowLeft,
 } from '@lucide/vue';
 
-const { t } = useI18n();
+const { t, te } = useI18n();
 
 const props = defineProps({
     adjustments: Object,
@@ -198,7 +198,7 @@ const thClass =
                             <div class="text-xs text-text-tertiary">{{ adj.product.sku }}</div>
                         </td>
                         <td class="whitespace-nowrap px-4 py-3">
-                            <Badge :variant="typeVariant(adj.type)" size="sm">{{ adj.type }}</Badge>
+                            <Badge :variant="typeVariant(adj.type)" size="sm">{{ te(`stockAdjustments.types.${adj.type}`) ? t(`stockAdjustments.types.${adj.type}`) : adj.type }}</Badge>
                         </td>
                         <td class="whitespace-nowrap px-4 py-3 text-end tabular-nums text-text-secondary">
                             {{ adj.quantity_before }}

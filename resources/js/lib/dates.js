@@ -253,6 +253,15 @@ export function displayDate(value) {
     return displayDay(toInstant(value));
 }
 
+/** The viewer's time of an instant, using the saved regional time format. */
+export function displayTime(value) {
+    const date = toInstant(value);
+    if (!date) return '-';
+    return orgTimeFormat()
+        ? formatPhpDate(date, orgTimeFormat())
+        : date.toLocaleTimeString(formatLocale(), { timeStyle: 'short' });
+}
+
 /**
  * A timestamp with its time, locale-aware, in the viewer's timezone.
  * '-' when empty.
@@ -264,8 +273,5 @@ export function displayDateTime(value) {
     if (!date) return '-';
     if (!orgDateFormat() && !orgTimeFormat())
         return date.toLocaleString(formatLocale(), { dateStyle: 'medium', timeStyle: 'short' });
-    const time = orgTimeFormat()
-        ? formatPhpDate(date, orgTimeFormat())
-        : date.toLocaleTimeString(formatLocale(), { timeStyle: 'short' });
-    return `${displayDay(date)} ${time}`;
+    return `${displayDay(date)} ${displayTime(date)}`;
 }

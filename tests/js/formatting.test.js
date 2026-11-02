@@ -10,13 +10,21 @@ import { test, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { applyFormatSettings, applyRegionalProp, formatLocale, defaultCurrency, orgDateFormat } from '../../resources/js/lib/formatSettings.js';
 import { formatMoney, formatCompactMoney, formatNumber } from '../../resources/js/lib/money.js';
-import { formatPhpDate, displayCalendarDate, displayDate, displayDateTime } from '../../resources/js/lib/dates.js';
+import { formatPhpDate, displayCalendarDate, displayDate, displayTime, displayDateTime } from '../../resources/js/lib/dates.js';
 
 // Intl separates French thousands with a narrow no-break space and puts a
 // no-break space before the symbol; normalise both for readable assertions.
 const plain = (s) => s.replace(/[  ]/g, ' ');
 
 beforeEach(() => applyFormatSettings({ locale: 'en', currency: 'USD', dateFormat: null, timeFormat: null }));
+
+test('standalone times use regional preferences and treat zone-less server times as UTC', () => {
+    applyFormatSettings({ timeFormat: 'H:i' });
+    assert.equal(displayTime('2026-07-01 20:05:00'), '13:05');
+    applyFormatSettings({ timeFormat: 'h:i A' });
+    assert.equal(displayTime('2026-07-01T20:05:00Z'), '01:05 PM');
+    assert.equal(displayTime(null), '-');
+});
 
 test('settings are read from the shared regional prop and the UI locale', () => {
     applyFormatSettings({ locale: 'de', currency: 'eur', dateFormat: 'd.m.Y' });

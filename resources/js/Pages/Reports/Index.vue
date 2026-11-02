@@ -38,7 +38,7 @@ const props = defineProps({
     },
 });
 
-const reportCards = [
+const reportCards = computed(() => ([
     {
         href: route('reports.inventory-valuation'),
         icon: DollarSign,
@@ -131,10 +131,10 @@ const reportCards = [
         title: t('reports.customReports.title'),
         description: t('reports.customReports.description'),
     },
-];
+]));
 
 const visibleReportCards = computed(() =>
-    reportCards.filter((card) => !card.requires || hasAllPermissions(card.requires))
+    reportCards.value.filter((card) => !card.requires || hasAllPermissions(card.requires))
 );
 </script>
 

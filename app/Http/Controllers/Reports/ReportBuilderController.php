@@ -111,14 +111,14 @@ class ReportBuilderController extends Controller
 
         // Validate the data source
         if (! $this->reportDataService->isValidDataSource($validated['data_source'])) {
-            return back()->withErrors(['data_source' => 'Invalid data source.']);
+            return back()->withErrors(['data_source' => __('Invalid data source.')]);
         }
 
         // Validate columns belong to the data source
         $validColumns = $this->reportDataService->getValidColumns($validated['data_source']);
         $invalidColumns = array_diff($validated['columns'], $validColumns);
         if (! empty($invalidColumns)) {
-            return back()->withErrors(['columns' => 'Invalid columns: '.implode(', ', $invalidColumns)]);
+            return back()->withErrors(['columns' => __('Invalid columns: :columns', ['columns' => implode(', ', $invalidColumns)])]);
         }
 
         $report = SavedReport::create([
@@ -306,13 +306,13 @@ class ReportBuilderController extends Controller
         ]);
 
         if (! $this->reportDataService->isValidDataSource($validated['data_source'])) {
-            return back()->withErrors(['data_source' => 'Invalid data source.']);
+            return back()->withErrors(['data_source' => __('Invalid data source.')]);
         }
 
         $validColumns = $this->reportDataService->getValidColumns($validated['data_source']);
         $invalidColumns = array_diff($validated['columns'], $validColumns);
         if (! empty($invalidColumns)) {
-            return back()->withErrors(['columns' => 'Invalid columns: '.implode(', ', $invalidColumns)]);
+            return back()->withErrors(['columns' => __('Invalid columns: :columns', ['columns' => implode(', ', $invalidColumns)])]);
         }
 
         $savedReport->update([
@@ -410,7 +410,7 @@ class ReportBuilderController extends Controller
         ]);
 
         if (! $this->reportDataService->isValidDataSource($validated['data_source'])) {
-            return response()->json(['error' => 'Invalid data source.'], 422);
+            return response()->json(['error' => __('Invalid data source.')], 422);
         }
 
         $validColumns = $this->reportDataService->getValidColumns($validated['data_source']);

@@ -49,14 +49,14 @@ const usersForm = useForm({
     user_ids: [...props.assignedUserIds],
 });
 
-const timezones = [
+const timezones = computed(() => ([
     { value: 'America/St_Johns', label: t('warehouses.timezoneOptions.stJohns') },
     { value: 'America/Halifax', label: t('warehouses.timezoneOptions.halifax') },
     { value: 'America/Toronto', label: t('warehouses.timezoneOptions.toronto') },
     { value: 'America/Winnipeg', label: t('warehouses.timezoneOptions.winnipeg') },
     { value: 'America/Edmonton', label: t('warehouses.timezoneOptions.edmonton') },
     { value: 'America/Vancouver', label: t('warehouses.timezoneOptions.vancouver') },
-];
+]));
 
 
 const userSearch = ref('');

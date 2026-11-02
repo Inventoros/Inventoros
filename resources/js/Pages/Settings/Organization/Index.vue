@@ -116,10 +116,10 @@ const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface
 const fieldArea = 'w-full rounded-md border border-border-subtle bg-surface-canvas px-3 py-2 text-sm text-text-primary placeholder:text-text-tertiary ds-focus-ring';
 const fieldError = 'mt-1 text-xs text-status-danger';
 
-const tabs = [
+const tabs = computed(() => ([
     { key: 'general', label: t('settings.organization.generalInfo') },
     { key: 'regional', label: t('settings.organization.regionalSettings') },
-];
+]));
 </script>
 
 <template>

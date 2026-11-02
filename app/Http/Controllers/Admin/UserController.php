@@ -193,7 +193,7 @@ class UserController extends Controller
         // Don't allow deleting yourself
         if ($user->id === $currentUser->id) {
             return redirect()->back()
-                ->withErrors(['user' => 'You cannot delete your own account.']);
+                ->withErrors(['user' => __('You cannot delete your own account.')]);
         }
 
         // Don't allow deleting the last admin
@@ -204,7 +204,7 @@ class UserController extends Controller
 
             if ($adminCount <= 1) {
                 return redirect()->back()
-                    ->withErrors(['user' => 'Cannot delete the last administrator.']);
+                    ->withErrors(['user' => __('Cannot delete the last administrator.')]);
             }
         }
 

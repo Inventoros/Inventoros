@@ -9,8 +9,7 @@ import { Head, Link } from '@inertiajs/vue3';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { ArrowLeft, Boxes, ArrowUp, ArrowDown, Clock, CheckCircle2 } from '@lucide/vue';
-import { displayDate } from '@/lib/dates';
-import { formatLocale } from '@/lib/formatSettings';
+import { displayDate, displayTime } from '@/lib/dates';
 
 const { t } = useI18n();
 
@@ -29,7 +28,7 @@ const typeVariant = (type) =>
         order: 'neutral',
     }[type] || 'info');
 
-const typeLabels = {
+const typeLabels = computed(() => ({
     'manual': t('stockAdjustments.types.manual'),
     'recount': t('stockAdjustments.types.recount'),
     'damage': t('stockAdjustments.types.damage'),
@@ -38,18 +37,15 @@ const typeLabels = {
     'correction': t('stockAdjustments.types.correction'),
     'order': t('stockAdjustments.types.order'),
     'opening_stock': t('stockAdjustments.types.opening_stock'),
-};
+}));
 
 const isIncrease = computed(() => props.adjustment.adjustment_quantity > 0);
 const isDecrease = computed(() => props.adjustment.adjustment_quantity < 0);
 
 const formatDate = (date) => displayDate(date);
 
-const formatTime = (date) =>
-    new Date(date).toLocaleTimeString(formatLocale(), {
-        hour: '2-digit',
-        minute: '2-digit',
-    });
+const formatTime = displayTime;
+const changeTextClass = computed(() => isIncrease.value ? 'text-status-success' : isDecrease.value ? 'text-status-danger' : 'text-text-secondary');
 </script>
 
 <template>
@@ -197,22 +193,23 @@ const formatTime = (date) =>
                     <div class="relative mb-8 flex items-start gap-4">
                         <div
                             class="relative z-10 flex h-16 w-16 shrink-0 items-center justify-center rounded-full"
-                            :class="isIncrease ? 'bg-status-success-soft' : 'bg-status-danger-soft'"
+                            :class="isIncrease ? 'bg-status-success-soft' : isDecrease ? 'bg-status-danger-soft' : 'bg-surface-inset'"
                         >
                             <ArrowUp v-if="isIncrease" :size="28" class="text-status-success" />
-                            <ArrowDown v-else :size="28" class="text-status-danger" />
+                            <ArrowDown v-else-if="isDecrease" :size="28" class="text-status-danger" />
+                            <Boxes v-else :size="28" class="text-text-secondary" />
                         </div>
                         <div
                             class="flex-1 rounded-lg border p-4"
-                            :class="isIncrease ? 'border-status-success/20 bg-status-success-soft' : 'border-status-danger/20 bg-status-danger-soft'"
+                            :class="isIncrease ? 'border-status-success/20 bg-status-success-soft' : isDecrease ? 'border-status-danger/20 bg-status-danger-soft' : 'border-border-subtle bg-surface-inset'"
                         >
-                            <p class="text-sm font-medium" :class="isIncrease ? 'text-status-success' : 'text-status-danger'">
-                                {{ isIncrease ? t('stockAdjustments.show.stockIncreased') : t('stockAdjustments.show.stockDecreased') }}
+                            <p class="text-sm font-medium" :class="changeTextClass">
+                                {{ isIncrease ? t('stockAdjustments.show.stockIncreased') : isDecrease ? t('stockAdjustments.show.stockDecreased') : t('stockAdjustments.create.adjustment') }}
                             </p>
-                            <p class="mt-1 text-2xl font-bold tabular-nums" :class="isIncrease ? 'text-status-success' : 'text-status-danger'">
+                            <p class="mt-1 text-2xl font-bold tabular-nums" :class="changeTextClass">
                                 {{ adjustment.adjustment_quantity > 0 ? '+' : '' }}{{ t('stockAdjustments.show.unitsCount', { count: adjustment.adjustment_quantity }, Math.abs(adjustment.adjustment_quantity)) }}
                             </p>
-                            <p class="mt-2 text-xs" :class="isIncrease ? 'text-status-success' : 'text-status-danger'">
+                            <p class="mt-2 text-xs" :class="changeTextClass">
                                 {{ adjustment.reason }}
                             </p>
                         </div>

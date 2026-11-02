@@ -33,7 +33,7 @@ const { hasPermission } = usePermissions();
  * Every settings page. Permissions and installation administration mirror
  * the server's route guards.
  */
-const allSections = [
+const allSections = computed(() => ([
     {
         href: route('settings.storage.index'),
         icon: HardDrive,
@@ -101,10 +101,10 @@ const allSections = [
         perm: 'manage_organization',
         updatesOnly: true,
     },
-];
+]));
 
 const settingsSections = computed(() =>
-    allSections.filter((s) => (!s.perm || hasPermission(s.perm)) && (!s.updatesOnly || page.props.auth?.canManageUpdates) && (!s.storageOnly || page.props.auth?.canManageStorage))
+    allSections.value.filter((s) => (!s.perm || hasPermission(s.perm)) && (!s.updatesOnly || page.props.auth?.canManageUpdates) && (!s.storageOnly || page.props.auth?.canManageStorage))
 );
 </script>
 

@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Database\Seeders;
 
 use App\Models\Customer;
+use App\Models\CustomerContact;
+use App\Models\Inventory\InventoryResetRun;
 use App\Models\Inventory\CycleCountSchedule;
 use App\Models\Inventory\Product;
 use App\Models\Inventory\ProductLocation;
@@ -19,6 +21,8 @@ use App\Models\Warehouse;
 use App\Models\Webhook;
 use App\Services\StockAuditService;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 
 /** Only invoked by the opt-in UI audit against its disposable database. */
 final class E2EUiAuditSeeder extends Seeder
@@ -35,11 +39,17 @@ final class E2EUiAuditSeeder extends Seeder
         $item = $audit->items()->create(['product_id' => $product->id, 'system_quantity' => $product->stock, 'status' => 'pending']);
         app(StockAuditService::class)->recordCount($audit, $item, $user, 3, 'First count');
         $cycle = CycleCountSchedule::create(['organization_id' => $org, 'name' => 'Weekly warehouse cycle', 'frequency' => 'weekly', 'scope_type' => 'all', 'products_per_run' => 20, 'created_by' => $user->id]);
-        $adjustment = StockAdjustment::create(['organization_id' => $org, 'product_id' => $product->id, 'user_id' => $user->id, 'type' => 'adjustment', 'quantity_before' => 5, 'quantity_after' => 5, 'adjustment_quantity' => 0, 'reason' => 'Audit display fixture']);
+        $adjustment = StockAdjustment::create(['organization_id' => $org, 'product_id' => $product->id, 'user_id' => $user->id, 'type' => 'manual', 'quantity_before' => 5, 'quantity_after' => 5, 'adjustment_quantity' => 0, 'reason' => 'Audit display fixture']);
         $transfer = StockTransfer::create(['organization_id' => $org, 'transfer_number' => 'TRANSFER-UI-QA', 'from_location_id' => $locations[0]->id, 'to_location_id' => $locations[1]->id, 'transferred_by' => $user->id, 'status' => 'pending']);
         $work = WorkOrder::create(['organization_id' => $org, 'product_id' => $product->id, 'created_by' => $user->id, 'work_order_number' => 'WORK-UI-QA', 'quantity' => 10, 'quantity_produced' => 0, 'status' => 'pending']);
         $webhook = Webhook::create(['organization_id' => $org, 'name' => 'Audit integration', 'url' => 'https://example.test/webhook', 'events' => ['order.created'], 'is_active' => false, 'created_by' => $user->id]);
         $layout = json_decode(file_get_contents(base_path('e2e/.auth/layout-fixtures.json')), true);
+        $password = 'E2EAuditPassword123!';
+        $unverified = User::factory()->create(['organization_id' => $org, 'email' => 'ui-unverified@inventoros.test', 'email_verified_at' => null, 'password' => Hash::make($password)]);
+        $mfa = User::factory()->create(['organization_id' => $org, 'email' => 'ui-mfa@inventoros.test', 'password' => Hash::make($password), 'two_factor_enabled' => true, 'two_factor_secret' => encrypt('JBSWY3DPEHPK3PXP')]);
+        $contact = CustomerContact::create(['organization_id' => $org, 'customer_id' => CustomerContact::where('email', E2ELayoutSeeder::PORTAL_EMAIL)->firstOrFail()->customer_id, 'name' => 'Invited Customer Contact', 'email' => 'ui-invited@inventoros.test', 'invited_at' => now()->startOfSecond()]);
+        $invitation = app(\App\Services\Portal\PortalInvitationService::class)->acceptUrl($contact);
+        $reset = InventoryResetRun::create(['organization_id' => $org, 'actor_id' => $user->id, 'public_id' => (string) Str::uuid(), 'status' => 'failed', 'signature' => str_repeat('0', 64), 'reason' => 'Display-only QA fixture; no inventory was reset.', 'counts' => ['products' => 0, 'product_variants' => 0, 'product_location_stocks' => 0, 'variant_location_stocks' => 0, 'product_serials' => 0, 'product_batches' => 0], 'error_code' => 'stockReset.errors.failed', 'finished_at' => now()]);
         $ids = [
             'product' => $product->id, 'customer' => Customer::withoutGlobalScopes()->where('organization_id', $org)->firstOrFail()->id,
             'supplier' => Supplier::withoutGlobalScopes()->where('organization_id', $org)->firstOrFail()->id,
@@ -48,6 +58,7 @@ final class E2EUiAuditSeeder extends Seeder
             'order' => $layout['order'], 'purchaseOrder' => $layout['purchase_order'], 'returnOrder' => $layout['return'], 'saved_report' => $layout['report'],
             'stockAudit' => $audit->id, 'item' => $item->id, 'stockAdjustment' => $adjustment->id, 'stockTransfer' => $transfer->id,
             'work_order' => $work->id, 'cycleCount' => $cycle->id, 'webhook' => $webhook->id,
+            'resetRun' => $reset->public_id,
         ];
         $map = json_decode(file_get_contents(base_path('docs/audits/ui-ux-application-map.json')), true);
         $routes = [];
@@ -71,6 +82,6 @@ final class E2EUiAuditSeeder extends Seeder
         // Invokable controllers and conditional pages need explicit coverage.
         $routes[] = ['name' => 'reports.batch-expiry', 'url' => '/reports/batch-expiry', 'pages' => ['Reports/BatchExpiry']];
         $routes[] = ['name' => 'returns.create.with-order', 'url' => '/returns/create?order_id='.$layout['order'], 'pages' => ['Returns/Create']];
-        file_put_contents(base_path('e2e/.auth/ui-audit.json'), json_encode(['routes' => $routes, 'excluded' => $excluded, 'layout' => $layout], JSON_PRETTY_PRINT));
+        file_put_contents(base_path('e2e/.auth/ui-audit.json'), json_encode(['routes' => $routes, 'excluded' => $excluded, 'layout' => $layout, 'states' => ['unverified' => $unverified->email, 'mfa' => $mfa->email, 'password' => $password, 'invitation' => $invitation]], JSON_PRETTY_PRINT));
     }
 }

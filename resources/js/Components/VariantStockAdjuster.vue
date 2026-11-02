@@ -1,8 +1,8 @@
 <script setup>
-import { useId as useFieldId } from 'vue';
+import { computed, useId as useFieldId } from 'vue';
 const fieldIdPrefix = useFieldId();
 import DialogSurface from '@/Components/DialogSurface.vue';
-import { ref, computed } from 'vue';
+import { ref } from 'vue';
 import axios from 'axios';
 
 import { useI18n } from 'vue-i18n';
@@ -31,13 +31,13 @@ const error = ref('');
 // unchanged until an approver accepts it.
 const pendingNotice = ref('');
 
-const adjustTypes = [
+const adjustTypes = computed(() => ([
     { value: 'increase', label: t('components.stockAdjuster.increase'), icon: '+' },
     { value: 'decrease', label: t('components.stockAdjuster.decrease'), icon: '-' },
     { value: 'recount', label: t('reports.adjustmentTypes.recount'), icon: '=' },
     { value: 'damage', label: t('reports.adjustmentTypes.damage'), icon: '!' },
     { value: 'return', label: t('reports.adjustmentTypes.return'), icon: 'R' },
-];
+]));
 
 const stockStatus = computed(() => {
     if (props.variant.stock <= 0) {

@@ -9,8 +9,7 @@ import { Head, Link, router } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { Plus, Search, Eye, ClipboardList } from '@lucide/vue';
-import { displayDate } from '@/lib/dates';
-import { formatLocale } from '@/lib/formatSettings';
+import { displayDate, displayTime } from '@/lib/dates';
 
 const { t, te } = useI18n();
 
@@ -194,7 +193,7 @@ const thClass =
                             {{ displayDate(adjustment.created_at) }}
                             <br />
                             <span class="text-xs text-text-tertiary">
-                                {{ new Date(adjustment.created_at).toLocaleTimeString(formatLocale()) }}
+                                {{ displayTime(adjustment.created_at) }}
                             </span>
                         </td>
                         <td class="px-4 py-3">

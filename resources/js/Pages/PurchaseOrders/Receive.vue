@@ -96,13 +96,13 @@ const statusVariant = (status) =>
         cancelled: 'danger',
     }[status] || 'neutral');
 
-const statusLabels = {
+const statusLabels = computed(() => ({
     draft: t('purchaseOrders.status.draft'),
     sent: t('purchaseOrders.status.sent'),
     partial: t('purchaseOrders.status.partial'),
     received: t('purchaseOrders.status.received'),
     cancelled: t('purchaseOrders.status.cancelled'),
-};
+}));
 
 const fieldLabel = 'mb-1 block text-sm font-medium text-text-secondary';
 const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface-canvas px-3 text-sm text-text-primary placeholder:text-text-tertiary ds-focus-ring';

@@ -120,7 +120,7 @@ class ProductCategoryController extends Controller
         // Check if category has products
         if ($category->products()->count() > 0) {
             return redirect()->back()
-                ->withErrors(['category' => 'Cannot delete category with associated products.']);
+                ->withErrors(['category' => __('Cannot delete category with associated products.')]);
         }
 
         $category->delete();

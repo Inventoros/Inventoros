@@ -91,14 +91,14 @@ class TwoFactorController extends Controller
 
         if (! $secret) {
             return redirect()->route('two-factor.setup')
-                ->withErrors(['code' => 'Please start the setup process again.']);
+                ->withErrors(['code' => __('Please start the setup process again.')]);
         }
 
         $valid = $this->google2fa->verifyKey($secret, $request->input('code'));
 
         if (! $valid) {
             return redirect()->back()
-                ->withErrors(['code' => 'The provided code is invalid.']);
+                ->withErrors(['code' => __('The provided code is invalid.')]);
         }
 
         $recoveryCodes = $request->session()->get('two_factor_recovery_codes', $this->generateRecoveryCodes());
@@ -110,7 +110,7 @@ class TwoFactorController extends Controller
 
             if ($user->two_factor_enabled) {
                 throw ValidationException::withMessages([
-                    'code' => 'Two-factor authentication is already enabled. Disable it with your current password before setting it up again.',
+                    'code' => __('Two-factor authentication is already enabled. Disable it with your current password before setting it up again.'),
                 ]);
             }
 
@@ -147,7 +147,7 @@ class TwoFactorController extends Controller
 
         if (! Hash::check($request->input('password'), $request->user()->password)) {
             return redirect()->back()
-                ->withErrors(['password' => 'The provided password is incorrect.']);
+                ->withErrors(['password' => __('auth.password')]);
         }
 
         $request->user()->update([
@@ -195,7 +195,7 @@ class TwoFactorController extends Controller
             app(SecurityEventLogger::class)->record(SecurityEvent::TWO_FACTOR_FAILED, $user, $user, ['method' => 'totp']);
 
             return redirect()->back()
-                ->withErrors(['code' => 'The provided code is invalid.']);
+                ->withErrors(['code' => __('The provided code is invalid.')]);
         }
 
         $request->session()->put('two_factor_verified', true);
@@ -228,7 +228,7 @@ class TwoFactorController extends Controller
             app(SecurityEventLogger::class)->record(SecurityEvent::TWO_FACTOR_FAILED, $user, $user, ['method' => 'recovery_code']);
 
             return redirect()->back()
-                ->withErrors(['code' => 'The provided recovery code is invalid.']);
+                ->withErrors(['code' => __('The provided recovery code is invalid.')]);
         }
 
         $request->session()->put('two_factor_verified', true);

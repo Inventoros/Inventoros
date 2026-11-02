@@ -187,7 +187,7 @@ class RoleController extends Controller
         // Don't allow editing Administrator role (system-administrator slug)
         if ($role->slug === 'system-administrator') {
             return redirect()->route('roles.index')
-                ->withErrors(['role' => 'The Administrator role cannot be edited.']);
+                ->withErrors(['role' => __('The Administrator role cannot be edited.')]);
         }
 
         $permissions = Permission::grouped();
@@ -238,7 +238,7 @@ class RoleController extends Controller
         // Don't allow editing Administrator role
         if ($role->slug === 'system-administrator') {
             return redirect()->back()
-                ->withErrors(['role' => 'The Administrator role cannot be edited.']);
+                ->withErrors(['role' => __('The Administrator role cannot be edited.')]);
         }
 
         $validated = $request->validated();
@@ -298,13 +298,13 @@ class RoleController extends Controller
         // Don't allow deleting system roles
         if ($role->is_system) {
             return redirect()->back()
-                ->withErrors(['role' => 'System roles cannot be deleted.']);
+                ->withErrors(['role' => __('System roles cannot be deleted.')]);
         }
 
         // Check if role is assigned to any users
         if ($role->users()->count() > 0) {
             return redirect()->back()
-                ->withErrors(['role' => 'Cannot delete a role that is assigned to users. Please reassign users first.']);
+                ->withErrors(['role' => __('Cannot delete a role that is assigned to users. Please reassign users first.')]);
         }
 
         $role->delete();

@@ -121,7 +121,7 @@ class ReportScheduleController extends Controller
         $outsiders = array_diff($recipients, $members->map(fn (User $u) => mb_strtolower((string) $u->email))->all());
         if ($outsiders !== []) {
             throw ValidationException::withMessages([
-                'recipients' => 'Recipients must be members of your organization: '.implode(', ', $outsiders),
+                'recipients' => __('Recipients must be members of your organization: :recipients', ['recipients' => implode(', ', $outsiders)]),
             ]);
         }
 
@@ -135,7 +135,7 @@ class ReportScheduleController extends Controller
             ->all();
         if ($withoutAccess !== []) {
             throw ValidationException::withMessages([
-                'recipients' => 'Recipients must be able to view this report ('.implode(', ', $required).'): '.implode(', ', $withoutAccess),
+                'recipients' => __('Recipients must be able to view this report (:permissions): :recipients', ['permissions' => implode(', ', $required), 'recipients' => implode(', ', $withoutAccess)]),
             ]);
         }
 

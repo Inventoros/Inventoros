@@ -26,12 +26,12 @@ const props = defineProps({
 const processing = ref(false);
 const quantityProduced = ref(props.workOrder.quantity);
 
-const statusSteps = [
+const statusSteps = computed(() => ([
     { key: 'draft', label: t('workOrders.statuses.draft') },
     { key: 'pending', label: t('workOrders.statuses.pending') },
     { key: 'in_progress', label: t('workOrders.statuses.in_progress') },
     { key: 'completed', label: t('workOrders.statuses.completed') },
-];
+]));
 
 const statusOrder = { draft: 0, pending: 1, in_progress: 2, completed: 3, cancelled: -1 };
 

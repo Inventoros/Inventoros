@@ -8,7 +8,7 @@ import Button from '@/Components/ui/Button.vue';
 import Badge from '@/Components/ui/Badge.vue';
 import DataTable from '@/Components/ui/DataTable.vue';
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { displayCalendarDate, todayIsoDate } from '@/lib/dates';
 import { formatMoney } from '@/lib/money';
@@ -82,7 +82,7 @@ const statusVariant = orderStatusVariant;
 const paymentStatusVariant = (s) =>
     ({ unpaid: 'warning', partial: 'info', paid: 'success', overpaid: 'brand', refunded: 'neutral' }[s] || 'neutral');
 
-const columns = [
+const columns = computed(() => ([
     { key: 'order_number', label: t('orders.orderCol') },
     { key: 'customer_name', label: t('orders.customer') },
     { key: 'items', label: t('orders.itemsCol'), align: 'right' },
@@ -93,7 +93,7 @@ const columns = [
     { key: 'source', label: t('orders.source') },
     { key: 'order_date', label: t('common.date') },
     { key: 'actions', label: t('common.actions'), align: 'right' },
-];
+]));
 
 const selectClass =
     'h-9 w-full rounded-md border border-border-subtle bg-surface-canvas px-3 text-sm text-text-primary ds-focus-ring';

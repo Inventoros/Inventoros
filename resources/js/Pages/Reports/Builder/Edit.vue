@@ -1,5 +1,5 @@
 <script setup>
-import { useId as useFieldId } from 'vue';
+import { computed, useId as useFieldId } from 'vue';
 const fieldIdPrefix = useFieldId();
 import TableViewport from '@/Components/ui/TableViewport.vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
@@ -8,7 +8,7 @@ import Card from '@/Components/ui/Card.vue';
 import Button from '@/Components/ui/Button.vue';
 import Badge from '@/Components/ui/Badge.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
-import { ref, computed, watch } from 'vue';
+import { ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { ArrowLeft, Eye, Plus, Trash2, ChevronUp, ChevronDown, RefreshCw } from '@lucide/vue';
 import axios from 'axios';
@@ -91,7 +91,7 @@ const removeFilter = (index) => {
     form.filters.splice(index, 1);
 };
 
-const operators = [
+const operators = computed(() => ([
     { value: 'eq', label: t('reportBuilder.operators.equals') },
     { value: 'neq', label: t('reportBuilder.operators.notEquals') },
     { value: 'gt', label: t('reportBuilder.operators.greaterThan') },
@@ -103,16 +103,16 @@ const operators = [
     { value: 'ends_with', label: t('reportBuilder.operators.endsWith') },
     { value: 'is_null', label: t('reportBuilder.operators.isEmpty') },
     { value: 'is_not_null', label: t('reportBuilder.operators.isNotEmpty') },
-];
+]));
 
 const noValueOperators = ['is_null', 'is_not_null'];
 
-const chartTypes = [
+const chartTypes = computed(() => ([
     { value: null, label: t('reportBuilder.chartNone') },
     { value: 'bar', label: t('reportBuilder.chartBar') },
     { value: 'line', label: t('reportBuilder.chartLine') },
     { value: 'pie', label: t('reportBuilder.chartPie') },
-];
+]));
 
 const getColumnType = (fieldKey) => {
     const col = availableColumns.value.find(c => c.key === fieldKey);

@@ -74,7 +74,7 @@ class AccountSettingsController extends Controller
 
         // Verify current password
         if (!Hash::check($validated['current_password'], $user->password)) {
-            return redirect()->back()->withErrors(['current_password' => 'Current password is incorrect.']);
+            return redirect()->back()->withErrors(['current_password' => __('auth.password')]);
         }
 
         $user->update([

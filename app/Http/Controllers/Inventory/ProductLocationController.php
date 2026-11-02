@@ -154,7 +154,7 @@ class ProductLocationController extends Controller
         // Check if location has products (as their primary location)
         if ($location->products()->count() > 0) {
             return redirect()->back()
-                ->withErrors(['location' => 'Cannot delete location with associated products.']);
+                ->withErrors(['location' => __('Cannot delete location with associated products.')]);
         }
 
         // Check if the location still holds stock in a bin. Locations are
@@ -167,11 +167,11 @@ class ProductLocationController extends Controller
             ->where('quantity', '>', 0)
             ->exists()) {
             return redirect()->back()
-                ->withErrors(['location' => 'Cannot delete a location that still holds stock. Transfer its stock elsewhere first.']);
+                ->withErrors(['location' => __('Cannot delete a location that still holds stock. Transfer its stock elsewhere first.')]);
         }
 
         if (\App\Models\Inventory\VariantLocationStock::query()->where('location_id', $location->id)->where('quantity', '>', 0)->exists()) {
-            return redirect()->back()->withErrors(['location' => 'Cannot delete a location that still holds variant stock. Transfer its stock elsewhere first.']);
+            return redirect()->back()->withErrors(['location' => __('Cannot delete a location that still holds variant stock. Transfer its stock elsewhere first.')]);
         }
 
         $location->delete();

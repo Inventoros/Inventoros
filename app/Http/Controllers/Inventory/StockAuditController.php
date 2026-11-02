@@ -270,7 +270,7 @@ class StockAuditController extends Controller
         // location spans the whole organization.
         if ($stockAudit->warehouse_id !== null) {
             if (($validated['warehouse_location_id'] ?? null) != $stockAudit->warehouse_location_id) {
-                throw ValidationException::withMessages(['warehouse_location_id' => 'Create a new audit to change its warehouse count scope.']);
+                throw ValidationException::withMessages(['warehouse_location_id' => __('Create a new audit to change its warehouse count scope.')]);
             }
         } else {
             $this->warehouseAccess->authorizeLocation($request->user(), $validated['warehouse_location_id'] ?? null);
@@ -279,7 +279,7 @@ class StockAuditController extends Controller
         DB::transaction(function () use ($stockAudit, $request, $validated): void {
             $locked = StockAudit::whereKey($stockAudit->id)->where('organization_id', $request->user()->organization_id)->lockForUpdate()->firstOrFail();
             if ($locked->status !== 'draft') {
-                throw ValidationException::withMessages(['audit' => 'Only draft audits can be edited.']);
+                throw ValidationException::withMessages(['audit' => __('Only draft audits can be edited.')]);
             }
             $this->warehouseAccess->authorizeStockAudit($request->user(), $locked);
             $locked->update([
