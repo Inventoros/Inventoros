@@ -1,4 +1,6 @@
 <script setup>
+import { useId as useFieldId } from 'vue';
+const fieldIdPrefix = useFieldId();
 import AppLayout from '@/Layouts/AppLayout.vue';
 import PageHeader from '@/Components/ui/PageHeader.vue';
 import Card from '@/Components/ui/Card.vue';
@@ -147,7 +149,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                 <select
                                     v-model="form.product_id"
                                     required
-                                    :class="[fieldInput, 'pr-12', { 'border-status-danger': form.errors.product_id }]"
+                                    :class="[fieldInput, 'pe-12', { 'border-status-danger': form.errors.product_id }]"
                                 >
                                     <option value="">{{ t('stockAdjustments.create.selectProduct') }}</option>
                                     <option v-for="product in products" :key="product.id" :value="product.id">
@@ -159,7 +161,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                     v-if="$page.props.auth.permissions.includes('stock_adjustments.create')"
                                     type="button"
                                     @click="openScanner"
-                                    class="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1.5 text-text-tertiary transition-colors hover:text-brand"
+                                    class="absolute end-2 top-1/2 -translate-y-1/2 rounded-md p-1.5 text-text-tertiary transition-colors hover:text-brand"
                                     :title="t('stockAdjustments.create.scanBarcode')"
                                 >
                                     <ScanLine :size="18" />
@@ -217,10 +219,10 @@ const fieldError = 'mt-1 text-xs text-status-danger';
 
                         <!-- Adjustment Type -->
                         <div>
-                            <label :class="fieldLabel">
+                            <label :for="fieldIdPrefix + '-1'" :class="fieldLabel">
                                 {{ t('common.type') }} <span class="text-status-danger">*</span>
                             </label>
-                            <select
+                            <select :id="fieldIdPrefix + '-1'"
                                 v-model="form.type"
                                 required
                                 :class="[fieldInput, { 'border-status-danger': form.errors.type }]"
@@ -234,8 +236,8 @@ const fieldError = 'mt-1 text-xs text-status-danger';
 
                         <!-- Location (optional) -->
                         <div v-if="locations.length">
-                            <label :class="fieldLabel">{{ t('stockAdjustments.create.locationOptional') }}</label>
-                            <select
+                            <label :for="fieldIdPrefix + '-2'" :class="fieldLabel">{{ t('stockAdjustments.create.locationOptional') }}</label>
+                            <select :id="fieldIdPrefix + '-2'"
                                 v-model="form.location_id"
                                 :class="[fieldInput, { 'border-status-danger': form.errors.location_id }]"
                             >
@@ -254,10 +256,10 @@ const fieldError = 'mt-1 text-xs text-status-danger';
 
                         <!-- Adjustment Quantity -->
                         <div>
-                            <label :class="fieldLabel">
+                            <label :for="fieldIdPrefix + '-3'" :class="fieldLabel">
                                 {{ t('stockAdjustments.create.adjustmentQuantity') }} <span class="text-status-danger">*</span>
                             </label>
-                            <input
+                            <input :id="fieldIdPrefix + '-3'"
                                 v-model="form.adjustment_quantity"
                                 type="number"
                                 required
@@ -275,10 +277,10 @@ const fieldError = 'mt-1 text-xs text-status-danger';
 
                         <!-- Reason -->
                         <div>
-                            <label :class="fieldLabel">
+                            <label :for="fieldIdPrefix + '-4'" :class="fieldLabel">
                                 {{ t('stockAdjustments.create.reason') }} <span class="text-status-danger">*</span>
                             </label>
-                            <input
+                            <input :id="fieldIdPrefix + '-4'"
                                 v-model="form.reason"
                                 type="text"
                                 required
@@ -293,10 +295,10 @@ const fieldError = 'mt-1 text-xs text-status-danger';
 
                         <!-- Notes -->
                         <div>
-                            <label :class="fieldLabel">
+                            <label :for="fieldIdPrefix + '-5'" :class="fieldLabel">
                                 {{ t('stockAdjustments.create.notesOptional') }}
                             </label>
-                            <textarea
+                            <textarea :id="fieldIdPrefix + '-5'"
                                 v-model="form.notes"
                                 rows="4"
                                 :class="[fieldArea, { 'border-status-danger': form.errors.notes }]"

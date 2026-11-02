@@ -60,6 +60,7 @@ import OrganizationSwitcher from '@/Components/OrganizationSwitcher.vue';
 import LanguageSwitcher from '@/Components/LanguageSwitcher.vue';
 import LegalFooter from '@/Components/LegalFooter.vue';
 import { pluginLabel } from '@/plugins/pluginI18n';
+import { lockPageScroll } from '@/lib/scrollLock';
 
 const { t, te } = useI18n();
 defineProps({ tablePage: { type: Boolean, default: false } });
@@ -71,6 +72,7 @@ const isMobile = ref(false);
 const globalSearchRef = ref(null);
 let removeNavigationListener;
 let removeMediaListener;
+let releaseDrawerScroll;
 
 // Close mobile drawer on navigation
 onMounted(() => {
@@ -97,23 +99,20 @@ onMounted(() => {
  * mid-animation cannot strand the lock.
  */
 watch(mobileOpen, (open) => {
-    document.body.style.overflow = open ? 'hidden' : '';
+    releaseDrawerScroll?.();
+    releaseDrawerScroll = open ? lockPageScroll() : undefined;
 });
 
 onBeforeUnmount(() => {
-    document.body.style.overflow = '';
+    releaseDrawerScroll?.();
     window.removeEventListener('keydown', handleHotkey);
     removeNavigationListener?.();
     removeMediaListener?.();
 });
 
-// Cmd/Ctrl-K opens global search anywhere
+// GlobalSearch owns Cmd/Ctrl-K; the shell handles the navigation drawer.
 const handleHotkey = (e) => {
     if (e.key === 'Escape') mobileOpen.value = false;
-    if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
-        e.preventDefault();
-        globalSearchRef.value?.open();
-    }
 };
 onMounted(() => window.addEventListener('keydown', handleHotkey));
 
@@ -271,10 +270,10 @@ const isActive = (item) => item.active.some((pattern) => route().current(pattern
             id="workspace-navigation"
             :inert="isMobile && !mobileOpen"
             :class="[
-                'fixed md:fixed inset-y-0 left-0 z-50 w-60 flex flex-col',
+                'fixed md:fixed inset-y-0 start-0 z-50 w-60 flex flex-col',
                 'bg-surface-base border-r border-border-subtle',
                 'transform transition-transform duration-200',
-                mobileOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0',
+                mobileOpen ? 'translate-x-0' : '-translate-x-full rtl:translate-x-full md:translate-x-0 rtl:md:translate-x-0',
                 'pt-12 md:pt-0',
             ]"
         >
@@ -291,7 +290,7 @@ const isActive = (item) => item.active.some((pattern) => route().current(pattern
                 >
                     <img v-if="workspaceLogo" :src="workspaceLogo" :alt="workspaceName" class="h-7 w-7 shrink-0 object-contain" />
                     <span v-else class="h-7 w-7 shrink-0 rounded-md bg-surface-overlay grid place-items-center text-sm font-semibold">{{ workspaceName.charAt(0).toUpperCase() }}</span>
-                    <span class="text-xs font-semibold tracking-tight truncate flex-1 text-left">
+                    <span class="text-xs font-semibold tracking-tight truncate flex-1 text-start">
                         {{ workspaceName }}
                     </span>
                     <PackageSearch :size="14" class="text-text-tertiary" />
@@ -307,7 +306,7 @@ const isActive = (item) => item.active.some((pattern) => route().current(pattern
                            transition-colors ds-focus-ring"
                 >
                     <Search :size="13" />
-                    <span class="flex-1 text-left">{{ t('nav.search') }}</span>
+                    <span class="flex-1 text-start">{{ t('nav.search') }}</span>
                     <kbd class="hidden md:inline px-1.5 py-0.5 rounded bg-surface-overlay text-[10px] font-mono text-text-secondary border border-border-subtle">
                         ⌘K
                     </kbd>
@@ -342,7 +341,7 @@ const isActive = (item) => item.active.some((pattern) => route().current(pattern
                             <span class="truncate flex-1">{{ item.name }}</span>
                             <span
                                 v-if="item.badge"
-                                class="ml-auto inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-status-warning-soft px-1.5 text-[11px] font-semibold tabular-nums text-status-warning"
+                                class="ms-auto inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-status-warning-soft px-1.5 text-[11px] font-semibold tabular-nums text-status-warning"
                                 :aria-label="t('nav.waitingCount', { count: item.badge })"
                             >
                                 {{ item.badge > 99 ? '99+' : item.badge }}
@@ -362,7 +361,7 @@ const isActive = (item) => item.active.some((pattern) => route().current(pattern
                     <span class="h-7 w-7 rounded-full bg-surface-overlay grid place-items-center text-[11px] font-semibold text-text-primary shrink-0">
                         {{ (user?.name || '?').charAt(0).toUpperCase() }}
                     </span>
-                    <div class="min-w-0 flex-1 text-left">
+                    <div class="min-w-0 flex-1 text-start">
                         <p class="text-[13px] font-medium text-text-primary truncate">{{ user?.name }}</p>
                         <p class="text-[11px] text-text-tertiary truncate">{{ user?.email }}</p>
                     </div>
@@ -382,7 +381,7 @@ const isActive = (item) => item.active.some((pattern) => route().current(pattern
         </aside>
 
         <!-- Main column -->
-        <div class="app-main-column md:pl-60 pt-12 md:pt-0" :inert="isMobile && mobileOpen">
+        <div class="app-main-column md:ps-60 pt-12 md:pt-0" :inert="isMobile && mobileOpen">
             <!-- Top strip — sticky, thin -->
             <div class="app-topbar sticky top-0 z-30 h-14 flex items-center justify-between gap-3 px-4 md:px-8 bg-surface-raised border-b border-border-subtle">
                 <div class="app-breadcrumb flex-1 min-w-0">

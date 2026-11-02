@@ -594,10 +594,7 @@
         "updateQuantityFailed": "Aantal bijwerken mislukt",
         "confirmRemove": "Dit component uit de stuklijst verwijderen?",
         "removeFailed": "Component verwijderen mislukt"
-      },
-      "prepareTransfer": "Voorraad voorbereiden",
-      "shipTransfer": "Transfer verzenden",
-      "receiveTransfer": "Transfer ontvangen"
+      }
     },
     "quickAddCategory": {
       "title": "Snel categorie toevoegen",
@@ -665,7 +662,7 @@
     }
   },
   "orders": {
-      "channelOrderNumber": "Bestelnummer van verkoopkanaal",
+    "channelOrderNumber": "Bestelnummer van verkoopkanaal",
     "itemsCol": "Artikelen",
     "sources": {
       "manual": "Handmatig",
@@ -1536,12 +1533,12 @@
       "download": "Downloaden",
       "availableUntil": "Beschikbaar tot {date}",
       "statuses": {
+        "prepared": "Voorbereid",
         "pending": "In afwachting",
         "processing": "In verwerking",
         "completed": "Voltooid",
         "failed": "Mislukt",
-        "expired": "Verlopen",
-        "prepared": "Voorbereid"
+        "expired": "Verlopen"
       }
     }
   },
@@ -3919,7 +3916,8 @@
       "pending": "In afwachting",
       "in_transit": "Onderweg",
       "completed": "Voltooid",
-      "cancelled": "Geannuleerd"
+      "cancelled": "Geannuleerd",
+      "prepared": "Voorbereid"
     },
     "create": {
       "title": "Voorraadoverboeking aanmaken",
@@ -3958,7 +3956,10 @@
       "cancelTransfer": "Overboeking annuleren",
       "completeHint": "Bij het voltooien van de overboeking wordt de voorraad van de bronlocatie afgeboekt en aan de bestemmingslocatie toegevoegd.",
       "confirmComplete": "Weet u zeker dat u deze overboeking wilt voltooien? De voorraadniveaus worden aangepast.",
-      "confirmCancel": "Weet u zeker dat u deze overboeking wilt annuleren?"
+      "confirmCancel": "Weet u zeker dat u deze overboeking wilt annuleren?",
+      "prepareTransfer": "Voorraad voorbereiden",
+      "shipTransfer": "Transfer verzenden",
+      "receiveTransfer": "Transfer ontvangen"
     }
   },
   "tax": {
@@ -3970,39 +3971,39 @@
     "title": "Voorraad per magazijn",
     "includeZero": "Nulstanden tonen"
   },
-    "storage": {
-        "title": "Bestandsopslag",
-        "description": "Lokale en externe opslag voor geüploade bestanden.",
-        "configure": "Configureer INVENTOROS_UPLOADS_DISK en AWS-inloggegevens in .env of config/filesystems.php, vernieuw de configuratiecache en herstart wachtrijwerkers.",
-        "existingFiles": "Bestaande bestanden behouden hun opgeslagen schijf. Bewaar oude schijfdefinities bij het wijzigen van opslag.",
-        "probe": "De verbindingstest schrijft, leest en verwijdert een klein tijdelijk privébestand.",
-        "driver": "Stuurprogramma",
-        "notConfigured": "Niet geconfigureerd",
-        "usedFor": "Gebruikt voor",
-        "bucket": "Bucket",
-        "region": "Regio",
-        "connected": "Verbinding bevestigd: schrijven, lezen en verwijderen geslaagd.",
-        "failed": "Verbinding mislukt tijdens {step}. Controleer serverconfiguratie en rechten.",
-        "unchecked": "Geen recente verbindingstest.",
-        "checkedAt": "Gecontroleerd: {time}",
-        "cleanupFailed": "Het testbestand kon niet worden verwijderd. Controleer het voorvoegsel connection-checks na het herstellen van de rechten.",
-        "requestFailed": "Test kon niet worden uitgevoerd. Probeer het zo opnieuw.",
-        "checking": "Controleren…",
-        "check": "Verbinding testen",
-        "purposes": {
-            "products": "Productafbeeldingen",
-            "logos": "Organisatielogos",
-            "labels": "Verzendlabels",
-            "imports": "Importen in wachtrij",
-            "exports": "Gegenereerde exporten"
-        },
-        "steps": {
-            "connect": "verbinden",
-            "write": "schrijven",
-            "read": "lezen",
-            "delete": "verwijderen"
-        }
+  "storage": {
+    "title": "Bestandsopslag",
+    "description": "Lokale en externe opslag voor geüploade bestanden.",
+    "configure": "Configureer INVENTOROS_UPLOADS_DISK en AWS-inloggegevens in .env of config/filesystems.php, vernieuw de configuratiecache en herstart wachtrijwerkers.",
+    "existingFiles": "Bestaande bestanden behouden hun opgeslagen schijf. Bewaar oude schijfdefinities bij het wijzigen van opslag.",
+    "probe": "De verbindingstest schrijft, leest en verwijdert een klein tijdelijk privébestand.",
+    "driver": "Stuurprogramma",
+    "notConfigured": "Niet geconfigureerd",
+    "usedFor": "Gebruikt voor",
+    "bucket": "Bucket",
+    "region": "Regio",
+    "connected": "Verbinding bevestigd: schrijven, lezen en verwijderen geslaagd.",
+    "failed": "Verbinding mislukt tijdens {step}. Controleer serverconfiguratie en rechten.",
+    "unchecked": "Geen recente verbindingstest.",
+    "checkedAt": "Gecontroleerd: {time}",
+    "cleanupFailed": "Het testbestand kon niet worden verwijderd. Controleer het voorvoegsel connection-checks na het herstellen van de rechten.",
+    "requestFailed": "Test kon niet worden uitgevoerd. Probeer het zo opnieuw.",
+    "checking": "Controleren…",
+    "check": "Verbinding testen",
+    "purposes": {
+      "products": "Productafbeeldingen",
+      "logos": "Organisatielogos",
+      "labels": "Verzendlabels",
+      "imports": "Importen in wachtrij",
+      "exports": "Gegenereerde exporten"
     },
+    "steps": {
+      "connect": "verbinden",
+      "write": "schrijven",
+      "read": "lezen",
+      "delete": "verwijderen"
+    }
+  },
   "batchExpiryReport": {
     "title": "Vervaldatums van partijen",
     "description": "Vind verlopen partijen en plan voor naderende vervaldatums.",

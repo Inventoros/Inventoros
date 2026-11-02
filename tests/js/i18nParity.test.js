@@ -31,6 +31,23 @@ const pluralForms = (message) => message.split('|').length;
 const en = flatten(read('en.json'));
 const locales = readdirSync(localesDir).filter((f) => f.endsWith('.json') && f !== 'en.json');
 
+test('literal translation keys used by first-party UI exist in the source locale', () => {
+    const missing = [];
+    const visit = (directory) => {
+        for (const entry of readdirSync(directory, { withFileTypes: true })) {
+            const file = join(directory, entry.name);
+            if (entry.isDirectory()) visit(file);
+            else if (/\.(vue|js)$/.test(entry.name)) {
+                for (const match of readFileSync(file, 'utf8').matchAll(/\b(?:t|\$t)\(\s*['"]([^'"`]+)['"]/g)) {
+                    if (!(match[1] in en)) missing.push(`${file}: ${match[1]}`);
+                }
+            }
+        }
+    };
+    visit(join(localesDir, '../..'));
+    assert.deepEqual(missing, []);
+});
+
 test('there are 13 non-English locales to check', () => {
     assert.equal(locales.length, 13);
 });

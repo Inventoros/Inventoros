@@ -204,7 +204,7 @@ const systemWarningMessage = (warning) => {
 };
 const quickReorder = useQuickReorder(computed(() => props.reorderSuggestions));
 const selectedSuggestion = computed(() => props.reorderSuggestions.find((row) => row.id === selectedProduct.value?.id));
-const reorderThClass = 'px-3 py-2 text-left text-xs font-medium tracking-tight text-text-secondary';
+const reorderThClass = 'px-3 py-2 text-start text-xs font-medium tracking-tight text-text-secondary';
 const ordersStatusIcon = (status) => (status === 'delivered' ? Check : status === 'pending' ? Clock3 : CircleDot);
 </script>
 
@@ -509,7 +509,7 @@ const ordersStatusIcon = (status) => (status === 'delivered' ? Check : status ==
                             <Link :href="route('products.show', product.id)" class="dashboard-product-name">{{ product.name }}</Link>
                             <p class="dashboard-product-meta">{{ product.category?.name || t('products.show.uncategorized') }}</p>
                         </div>
-                        <div class="text-right">
+                        <div class="text-end">
                             <strong>{{ formatCurrency(product.price, product.currency) }}</strong>
                             <p class="dashboard-product-meta">
                                 {{ t('dashboard.qty', { count: formatPlainNumber(product.effective_stock ?? product.stock) }) }}
@@ -552,10 +552,10 @@ const ordersStatusIcon = (status) => (status === 'delivered' ? Check : status ==
                                         </th>
                                         <th :class="reorderThClass">{{ t('common.product') }}</th>
                                         <th :class="reorderThClass">{{ t('purchaseOrders.supplier') }}</th>
-                                        <th :class="[reorderThClass, 'text-right']">{{ t('products.stock') }}</th>
-                                        <th :class="[reorderThClass, 'text-right']">{{ t('dashboard.reorderSuggestions.reorderAt') }}</th>
-                                        <th :class="[reorderThClass, 'text-right']">{{ t('quickReorder.suggestedQty') }}</th>
-                                        <th v-if="quickReorder.canCreatePo.value" :class="[reorderThClass, 'text-right']">
+                                        <th :class="[reorderThClass, 'text-end']">{{ t('products.stock') }}</th>
+                                        <th :class="[reorderThClass, 'text-end']">{{ t('dashboard.reorderSuggestions.reorderAt') }}</th>
+                                        <th :class="[reorderThClass, 'text-end']">{{ t('quickReorder.suggestedQty') }}</th>
+                                        <th v-if="quickReorder.canCreatePo.value" :class="[reorderThClass, 'text-end']">
                                             <span class="sr-only">{{ t('common.actions') }}</span>
                                         </th>
                                     </tr>
@@ -599,14 +599,14 @@ const ordersStatusIcon = (status) => (status === 'delivered' ? Check : status ==
                                                 >
                                             </span>
                                         </td>
-                                        <td class="px-3 py-2 text-right">
+                                        <td class="px-3 py-2 text-end">
                                             <Badge :variant="row.stock === 0 ? 'danger' : 'warning'" size="sm" dot>{{ row.stock }}</Badge>
                                         </td>
-                                        <td class="px-3 py-2 text-right tabular-nums text-text-secondary">{{ row.reorder_point }}</td>
-                                        <td class="px-3 py-2 text-right font-medium tabular-nums text-text-primary">
+                                        <td class="px-3 py-2 text-end tabular-nums text-text-secondary">{{ row.reorder_point }}</td>
+                                        <td class="px-3 py-2 text-end font-medium tabular-nums text-text-primary">
                                             {{ row.suggested_quantity }}
                                         </td>
-                                        <td v-if="quickReorder.canCreatePo.value" class="px-3 py-2 text-right">
+                                        <td v-if="quickReorder.canCreatePo.value" class="px-3 py-2 text-end">
                                             <Button
                                                 v-if="row.supplier_id && row.can_quick_reorder !== false"
                                                 variant="ghost"

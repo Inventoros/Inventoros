@@ -50,7 +50,7 @@ const progress = computed(() => [
     { key: 'delivered', label: t('portal.order.delivered'), date: props.order.delivered_at, done: props.order.status === 'delivered' || !!props.order.delivered_at },
 ]);
 
-const thClass = 'px-3 sm:px-4 py-2.5 text-left text-xs font-medium tracking-tight text-text-secondary';
+const thClass = 'px-3 sm:px-4 py-2.5 text-start text-xs font-medium tracking-tight text-text-secondary';
 </script>
 
 <template>
@@ -99,9 +99,9 @@ const thClass = 'px-3 sm:px-4 py-2.5 text-left text-xs font-medium tracking-tigh
                                 <thead>
                                     <tr class="border-b border-border-subtle">
                                         <th :class="thClass">{{ t('portal.order.product') }}</th>
-                                        <th :class="[thClass, 'text-right']">{{ t('portal.order.quantity') }}</th>
-                                        <th :class="[thClass, 'hidden text-right sm:table-cell']">{{ t('portal.order.unitPrice') }}</th>
-                                        <th :class="[thClass, 'text-right']">{{ t('portal.order.lineTotal') }}</th>
+                                        <th :class="[thClass, 'text-end']">{{ t('portal.order.quantity') }}</th>
+                                        <th :class="[thClass, 'hidden text-end sm:table-cell']">{{ t('portal.order.unitPrice') }}</th>
+                                        <th :class="[thClass, 'text-end']">{{ t('portal.order.lineTotal') }}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -116,15 +116,15 @@ const thClass = 'px-3 sm:px-4 py-2.5 text-left text-xs font-medium tracking-tigh
                                                 <span v-if="item.returned_quantity > 0"> · {{ t('portal.order.returned', { count: item.returned_quantity }) }}</span>
                                             </div>
                                         </td>
-                                        <td class="px-3 py-3 sm:px-4 text-right tabular-nums text-text-secondary">{{ item.quantity }}</td>
-                                        <td class="hidden px-3 py-3 sm:px-4 text-right tabular-nums text-text-secondary sm:table-cell">{{ money(item.unit_price) }}</td>
-                                        <td class="whitespace-nowrap px-3 py-3 sm:px-4 text-right font-medium tabular-nums text-text-primary">{{ money(item.total) }}</td>
+                                        <td class="px-3 py-3 sm:px-4 text-end tabular-nums text-text-secondary">{{ item.quantity }}</td>
+                                        <td class="hidden px-3 py-3 sm:px-4 text-end tabular-nums text-text-secondary sm:table-cell">{{ money(item.unit_price) }}</td>
+                                        <td class="whitespace-nowrap px-3 py-3 sm:px-4 text-end font-medium tabular-nums text-text-primary">{{ money(item.total) }}</td>
                                     </tr>
                                 </tbody>
                             </table>
                         </TableViewport>
 
-                        <dl class="ml-auto mt-4 w-full max-w-xs space-y-1.5 text-sm">
+                        <dl class="ms-auto mt-4 w-full max-w-xs space-y-1.5 text-sm">
                             <div class="flex justify-between text-text-secondary">
                                 <dt>{{ t('portal.order.subtotal') }}</dt>
                                 <dd class="tabular-nums">{{ money(order.subtotal) }}</dd>
@@ -192,7 +192,7 @@ const thClass = 'px-3 sm:px-4 py-2.5 text-left text-xs font-medium tracking-tigh
                                     </a>
                                 </div>
                             </div>
-                            <ul v-if="shipment.items.length" class="ml-6 space-y-0.5 text-xs text-text-secondary">
+                            <ul v-if="shipment.items.length" class="ms-6 space-y-0.5 text-xs text-text-secondary">
                                 <li v-for="(line, lineIndex) in shipment.items" :key="lineIndex">
                                     {{ line.quantity }} x {{ line.product_name }}<template v-if="line.variant_title"> ({{ line.variant_title }})</template> <span class="text-text-tertiary">({{ line.sku }})</span>
                                 </li>

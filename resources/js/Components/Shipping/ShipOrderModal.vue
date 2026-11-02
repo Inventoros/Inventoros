@@ -1,4 +1,5 @@
 <script setup>
+import DialogSurface from '@/Components/DialogSurface.vue';
 import { formatMoney as formatAppMoney } from '@/lib/money';
 import Button from '@/Components/ui/Button.vue';
 import { router } from '@inertiajs/vue3';
@@ -212,14 +213,12 @@ const sectionTitle = 'text-xs font-semibold uppercase tracking-wide text-text-te
 </script>
 
 <template>
-    <Teleport to="body">
+    <DialogSurface :show="!!(show)" @close="close">
         <div v-if="show" class="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto py-8" @click="close">
             <div class="fixed inset-0 bg-black/50"></div>
 
             <div
                 class="relative mx-4 w-full max-w-2xl rounded-xl border border-border-subtle bg-surface-raised p-6 shadow-lg"
-                role="dialog"
-                aria-modal="true"
                 @click.stop
             >
                 <div class="mb-5 flex items-center justify-between">
@@ -276,7 +275,7 @@ const sectionTitle = 'text-xs font-semibold uppercase tracking-wide text-text-te
                                     min="0"
                                     :max="line.remaining"
                                     :disabled="line.remaining === 0"
-                                    class="h-8 w-20 rounded-md border border-border-subtle bg-surface-canvas px-2 text-right text-sm tabular-nums text-text-primary ds-focus-ring disabled:opacity-50"
+                                    class="h-8 w-20 rounded-md border border-border-subtle bg-surface-canvas px-2 text-end text-sm tabular-nums text-text-primary ds-focus-ring disabled:opacity-50"
                                 />
                             </div>
                         </div>
@@ -408,5 +407,5 @@ const sectionTitle = 'text-xs font-semibold uppercase tracking-wide text-text-te
                 </div>
             </div>
         </div>
-    </Teleport>
+    </DialogSurface>
 </template>

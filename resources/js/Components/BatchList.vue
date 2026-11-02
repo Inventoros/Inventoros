@@ -1,4 +1,6 @@
 <script setup>
+import { useId as useFieldId } from 'vue';
+const fieldIdPrefix = useFieldId();
 import TableViewport from '@/Components/ui/TableViewport.vue';
 import { ref } from 'vue';
 import { usePage } from '@inertiajs/vue3';
@@ -93,9 +95,9 @@ const isExpired = (batch) => {
             </h3>
             <button
                 @click="showForm = !showForm"
-                class="inline-flex items-center px-3 py-1.5 bg-brand text-white text-sm font-medium rounded-md hover:bg-brand-hover transition"
+                class="inline-flex items-center px-3 py-1.5 bg-brand text-brand-foreground text-sm font-medium rounded-md hover:bg-brand-hover transition"
             >
-                <svg v-if="!showForm" class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg v-if="!showForm" class="w-4 h-4 me-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                 </svg>
                 {{ showForm ? t('common.cancel') : t('components.batchList.addBatch') }}
@@ -109,8 +111,8 @@ const isExpired = (batch) => {
             </div>
             <div class="grid grid-cols-2 gap-3 mb-3">
                 <div>
-                    <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">{{ t('components.batchList.batchNumberLabel') }}</label>
-                    <input
+                    <label :for="fieldIdPrefix + '-1'" class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">{{ t('components.batchList.batchNumberLabel') }}</label>
+                    <input :id="fieldIdPrefix + '-1'"
                         v-model="form.batch_number"
                         type="text"
                         placeholder="e.g. BATCH-20260312-0001"
@@ -118,8 +120,8 @@ const isExpired = (batch) => {
                     />
                 </div>
                 <div>
-                    <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">{{ t('common.quantity') }} *</label>
-                    <input
+                    <label :for="fieldIdPrefix + '-2'" class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">{{ t('common.quantity') }} *</label>
+                    <input :id="fieldIdPrefix + '-2'"
                         v-model="form.quantity"
                         type="number"
                         min="0"
@@ -128,16 +130,16 @@ const isExpired = (batch) => {
                     />
                 </div>
                 <div>
-                    <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">{{ t('components.batchList.manufacturedDate') }}</label>
-                    <input
+                    <label :for="fieldIdPrefix + '-3'" class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">{{ t('components.batchList.manufacturedDate') }}</label>
+                    <input :id="fieldIdPrefix + '-3'"
                         v-model="form.manufactured_date"
                         type="date"
                         class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-border-subtle rounded-md bg-white dark:bg-surface-raised text-gray-900 dark:text-gray-100 focus:ring-brand focus:border-brand"
                     />
                 </div>
                 <div>
-                    <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">{{ t('components.batchList.expiryDate') }}</label>
-                    <input
+                    <label :for="fieldIdPrefix + '-4'" class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">{{ t('components.batchList.expiryDate') }}</label>
+                    <input :id="fieldIdPrefix + '-4'"
                         v-model="form.expiry_date"
                         type="date"
                         class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-border-subtle rounded-md bg-white dark:bg-surface-raised text-gray-900 dark:text-gray-100 focus:ring-brand focus:border-brand"
@@ -145,8 +147,8 @@ const isExpired = (batch) => {
                 </div>
             </div>
             <div class="mb-3">
-                <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">{{ t('common.notes') }}</label>
-                <textarea
+                <label :for="fieldIdPrefix + '-5'" class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">{{ t('common.notes') }}</label>
+                <textarea :id="fieldIdPrefix + '-5'"
                     v-model="form.notes"
                     rows="2"
                     class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-border-subtle rounded-md bg-white dark:bg-surface-raised text-gray-900 dark:text-gray-100 focus:ring-brand focus:border-brand"
@@ -155,7 +157,7 @@ const isExpired = (batch) => {
             <button
                 @click="createBatch"
                 :disabled="loading || !form.quantity"
-                class="px-4 py-2 bg-brand text-white text-sm font-medium rounded-md hover:bg-brand-hover transition disabled:opacity-50"
+                class="px-4 py-2 bg-brand text-brand-foreground text-sm font-medium rounded-md hover:bg-brand-hover transition disabled:opacity-50"
             >
                 {{ loading ? t('common.creating') : t('components.batchList.createBatch') }}
             </button>
@@ -166,11 +168,11 @@ const isExpired = (batch) => {
             <table class="w-full text-sm">
                 <thead>
                     <tr class="border-b border-gray-200 dark:border-border-subtle">
-                        <th class="text-left py-2 px-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">{{ t('components.batchList.columns.batchNumber') }}</th>
-                        <th class="text-left py-2 px-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">{{ t('components.batchList.columns.quantity') }}</th>
-                        <th class="text-left py-2 px-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">{{ t('components.batchList.columns.manufactured') }}</th>
-                        <th class="text-left py-2 px-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">{{ t('components.batchList.columns.expiry') }}</th>
-                        <th class="text-left py-2 px-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">{{ t('common.notes') }}</th>
+                        <th class="text-start py-2 px-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">{{ t('components.batchList.columns.batchNumber') }}</th>
+                        <th class="text-start py-2 px-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">{{ t('components.batchList.columns.quantity') }}</th>
+                        <th class="text-start py-2 px-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">{{ t('components.batchList.columns.manufactured') }}</th>
+                        <th class="text-start py-2 px-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">{{ t('components.batchList.columns.expiry') }}</th>
+                        <th class="text-start py-2 px-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">{{ t('common.notes') }}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -189,7 +191,7 @@ const isExpired = (batch) => {
                                     : 'text-gray-600 dark:text-gray-400'
                             ]">
                                 {{ formatDate(batch.expiry_date) }}
-                                <span v-if="isExpired(batch)" class="text-xs ml-1">{{ t('components.batchList.expired') }}</span>
+                                <span v-if="isExpired(batch)" class="text-xs ms-1">{{ t('components.batchList.expired') }}</span>
                             </span>
                             <span v-else class="text-gray-400">-</span>
                         </td>

@@ -212,7 +212,7 @@ const labelClass = 'mb-1 block text-xs font-medium text-text-secondary';
                             {{ t('reportBuilder.schedules.nextRun') }}: {{ schedule.is_active ? formatDateTime(schedule.next_run_at) : '-' }}
                             <template v-if="schedule.last_run_at">
                                 · {{ t('reportBuilder.schedules.lastRun') }}: {{ formatDateTime(schedule.last_run_at) }}
-                                <Badge v-if="schedule.last_status" :variant="statusVariant(schedule.last_status)" size="sm" class="ml-1">
+                                <Badge v-if="schedule.last_status" :variant="statusVariant(schedule.last_status)" size="sm" class="ms-1">
                                     {{ t(`reportBuilder.schedules.status.${schedule.last_status}`) }}
                                 </Badge>
                             </template>

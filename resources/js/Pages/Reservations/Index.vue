@@ -68,7 +68,7 @@ const release = (reservation) => {
 const selectClass =
     'h-9 w-full rounded-md border border-border-subtle bg-surface-canvas px-3 text-sm text-text-primary ds-focus-ring';
 const thClass =
-    'px-4 py-2.5 text-left text-xs font-medium text-text-secondary';
+    'px-4 py-2.5 text-start text-xs font-medium text-text-secondary';
 </script>
 
 <template>
@@ -136,13 +136,13 @@ const thClass =
                 <thead>
                     <tr class="border-b border-border-subtle">
                         <th :class="thClass">{{ t('reservations.product') }}</th>
-                        <th :class="[thClass, 'text-right']">{{ t('reservations.quantity') }}</th>
+                        <th :class="[thClass, 'text-end']">{{ t('reservations.quantity') }}</th>
                         <th :class="thClass">{{ t('reservations.heldIn') }}</th>
                         <th :class="thClass">{{ t('reservations.owner') }}</th>
                         <th :class="thClass">{{ t('reservations.reference') }}</th>
                         <th :class="thClass">{{ t('reservations.expires') }}</th>
                         <th :class="thClass">{{ t('common.status') }}</th>
-                        <th v-if="canRelease" :class="[thClass, 'text-right']">{{ t('common.actions') }}</th>
+                        <th v-if="canRelease" :class="[thClass, 'text-end']">{{ t('common.actions') }}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -163,7 +163,7 @@ const thClass =
                                 {{ reservation.variant ? (reservation.variant.title || reservation.variant.sku) : reservation.product?.sku }}
                             </p>
                         </td>
-                        <td class="px-4 py-3 text-right tabular-nums text-text-primary">{{ reservation.quantity }}</td>
+                        <td class="px-4 py-3 text-end tabular-nums text-text-primary">{{ reservation.quantity }}</td>
                         <td class="px-4 py-3 text-text-secondary">{{ heldIn(reservation) }}</td>
                         <td class="px-4 py-3"><span class="font-mono text-xs text-text-secondary">{{ reservation.owner_type }}</span></td>
                         <td class="px-4 py-3"><span class="font-mono text-xs text-text-primary">{{ reservation.owner_reference }}</span></td>

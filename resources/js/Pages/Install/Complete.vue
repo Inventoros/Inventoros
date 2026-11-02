@@ -28,29 +28,29 @@ const { t } = useI18n();
                 </p>
 
                 <!-- Success Details -->
-                <div class="bg-status-success-soft border border-status-success/20 rounded-lg p-6 mb-8 text-left">
+                <div class="bg-status-success-soft border border-status-success/20 rounded-lg p-6 mb-8 text-start">
                     <h2 class="text-lg font-semibold text-text-primary mb-4">{{ t('install.complete.whatsNext') }}</h2>
                     <ul class="space-y-3">
                         <li class="flex items-start">
-                            <svg class="w-5 h-5 text-status-success mt-0.5 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                            <svg class="w-5 h-5 text-status-success mt-0.5 me-3" fill="currentColor" viewBox="0 0 20 20">
                                 <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
                             </svg>
                             <span class="text-text-secondary">{{ t('install.complete.step1') }}</span>
                         </li>
                         <li class="flex items-start">
-                            <svg class="w-5 h-5 text-status-success mt-0.5 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                            <svg class="w-5 h-5 text-status-success mt-0.5 me-3" fill="currentColor" viewBox="0 0 20 20">
                                 <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
                             </svg>
                             <span class="text-text-secondary">{{ t('install.complete.step2') }}</span>
                         </li>
                         <li class="flex items-start">
-                            <svg class="w-5 h-5 text-status-success mt-0.5 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                            <svg class="w-5 h-5 text-status-success mt-0.5 me-3" fill="currentColor" viewBox="0 0 20 20">
                                 <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
                             </svg>
                             <span class="text-text-secondary">{{ t('install.complete.step3') }}</span>
                         </li>
                         <li class="flex items-start">
-                            <svg class="w-5 h-5 text-status-success mt-0.5 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                            <svg class="w-5 h-5 text-status-success mt-0.5 me-3" fill="currentColor" viewBox="0 0 20 20">
                                 <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
                             </svg>
                             <span class="text-text-secondary">{{ t('install.complete.step4') }}</span>
@@ -59,7 +59,7 @@ const { t } = useI18n();
                 </div>
 
                 <!-- Resources -->
-                <div class="bg-status-info-soft border border-status-info/20 rounded-lg p-6 mb-8 text-left">
+                <div class="bg-status-info-soft border border-status-info/20 rounded-lg p-6 mb-8 text-start">
                     <h2 class="text-lg font-semibold text-text-primary mb-4">{{ t('install.complete.resources') }}</h2>
                     <ul class="space-y-2 text-sm">
                         <li>
@@ -87,7 +87,7 @@ const { t } = useI18n();
                         class="inline-flex items-center px-8 py-3 bg-brand text-brand-foreground font-semibold rounded-lg hover:bg-brand-hover transition"
                     >
                         {{ t('install.complete.goToLogin') }}
-                        <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="w-5 h-5 ms-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
                         </svg>
                     </Link>

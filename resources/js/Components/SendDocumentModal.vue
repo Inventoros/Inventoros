@@ -1,4 +1,5 @@
 <script setup>
+import DialogSurface from '@/Components/DialogSurface.vue';
 import Button from '@/Components/ui/Button.vue';
 import { useForm } from '@inertiajs/vue3';
 import { watch } from 'vue';
@@ -62,7 +63,7 @@ const errorClass = 'mt-1 text-xs text-status-danger';
 </script>
 
 <template>
-    <Teleport to="body">
+    <DialogSurface :show="!!(show)" @close="close">
         <div v-if="show" class="fixed inset-0 z-50 flex items-center justify-center" @click="close">
             <div class="fixed inset-0 bg-black/50"></div>
 
@@ -142,5 +143,5 @@ const errorClass = 'mt-1 text-xs text-status-danger';
                 </div>
             </form>
         </div>
-    </Teleport>
+    </DialogSurface>
 </template>

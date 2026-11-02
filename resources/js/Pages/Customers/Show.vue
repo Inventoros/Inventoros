@@ -99,7 +99,7 @@ const deleteCustomer = () => {
     }
 };
 
-const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-text-secondary';
+const thClass = 'px-4 py-2.5 text-start text-xs font-medium tracking-tight text-text-secondary';
 </script>
 
 <template>
@@ -243,8 +243,8 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                                         <th :class="thClass">{{ t('orders.show.orderNumber2') }}</th>
                                         <th :class="thClass">{{ t('purchaseOrders.orderDate') }}</th>
                                         <th :class="thClass">{{ t('common.status') }}</th>
-                                        <th :class="[thClass, 'text-right']">{{ t('common.total') }}</th>
-                                        <th :class="[thClass, 'text-right']">{{ t('common.actions') }}</th>
+                                        <th :class="[thClass, 'text-end']">{{ t('common.total') }}</th>
+                                        <th :class="[thClass, 'text-end']">{{ t('common.actions') }}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -266,10 +266,10 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                                             </Badge>
                                             <span v-else class="text-text-tertiary">-</span>
                                         </td>
-                                        <td class="px-4 py-3 text-right font-medium tabular-nums text-text-primary">
+                                        <td class="px-4 py-3 text-end font-medium tabular-nums text-text-primary">
                                             {{ order.total != null ? formatCurrency(order.total) : '-' }}
                                         </td>
-                                        <td class="px-4 py-3 text-right">
+                                        <td class="px-4 py-3 text-end">
                                             <Link v-if="canVisit('orders.show')" :href="route('orders.show', order.id)" class="text-sm text-brand hover:underline">
                                                 {{ t('common.view') }}
                                             </Link>

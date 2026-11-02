@@ -28,8 +28,8 @@ defineProps({
 const marginClass = (value) =>
     value === null || value === undefined ? 'text-text-tertiary' : Number(value) < 0 ? 'text-status-danger' : 'text-status-success';
 
-const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-text-secondary';
-const thRightClass = 'px-4 py-2.5 text-right text-xs font-medium tracking-tight text-text-secondary';
+const thClass = 'px-4 py-2.5 text-start text-xs font-medium tracking-tight text-text-secondary';
+const thRightClass = 'px-4 py-2.5 text-end text-xs font-medium tracking-tight text-text-secondary';
 </script>
 
 <template>
@@ -117,11 +117,11 @@ const thRightClass = 'px-4 py-2.5 text-right text-xs font-medium tracking-tight 
                                 class="border-b border-border-subtle transition-colors last:border-b-0 hover:bg-surface-overlay"
                             >
                                 <td class="px-4 py-3 font-medium text-text-primary">{{ row.category || t('reports.common.uncategorized') }}</td>
-                                <td class="px-4 py-3 text-right tabular-nums text-text-secondary">{{ formatNumber(row.units) }}</td>
-                                <td class="px-4 py-3 text-right tabular-nums text-text-secondary">{{ formatCurrency(row.revenue) }}</td>
-                                <td class="px-4 py-3 text-right tabular-nums text-text-secondary">{{ formatCurrency(row.cogs) }}</td>
-                                <td class="px-4 py-3 text-right font-semibold tabular-nums" :class="marginClass(row.margin)">{{ formatCurrency(row.margin) }}</td>
-                                <td class="px-4 py-3 text-right tabular-nums" :class="marginClass(row.margin_pct)">{{ formatPercent(row.margin_pct) }}</td>
+                                <td class="px-4 py-3 text-end tabular-nums text-text-secondary">{{ formatNumber(row.units) }}</td>
+                                <td class="px-4 py-3 text-end tabular-nums text-text-secondary">{{ formatCurrency(row.revenue) }}</td>
+                                <td class="px-4 py-3 text-end tabular-nums text-text-secondary">{{ formatCurrency(row.cogs) }}</td>
+                                <td class="px-4 py-3 text-end font-semibold tabular-nums" :class="marginClass(row.margin)">{{ formatCurrency(row.margin) }}</td>
+                                <td class="px-4 py-3 text-end tabular-nums" :class="marginClass(row.margin_pct)">{{ formatPercent(row.margin_pct) }}</td>
                             </tr>
                             <tr v-if="categories.length === 0">
                                 <td colspan="6" class="px-4 py-8 text-center text-sm text-text-tertiary">{{ t('reports.common.noData') }}</td>
@@ -161,17 +161,17 @@ const thRightClass = 'px-4 py-2.5 text-right text-xs font-medium tracking-tight 
                                     <td class="px-4 py-3">
                                         <p class="font-medium text-text-primary">
                                             {{ row.name }}
-                                            <Badge v-if="row.cost_missing" variant="warning" size="sm" class="ml-1">{{ t('reports.common.costMissing') }}</Badge>
-                                            <Badge v-if="row.cost_estimated" variant="neutral" size="sm" class="ml-1">{{ t('reports.profitMargin.estimatedBadge') }}</Badge>
+                                            <Badge v-if="row.cost_missing" variant="warning" size="sm" class="ms-1">{{ t('reports.common.costMissing') }}</Badge>
+                                            <Badge v-if="row.cost_estimated" variant="neutral" size="sm" class="ms-1">{{ t('reports.profitMargin.estimatedBadge') }}</Badge>
                                         </p>
                                         <p class="font-mono text-xs text-text-tertiary">{{ row.sku }}</p>
                                     </td>
                                     <td class="px-4 py-3 text-text-secondary">{{ row.category || t('reports.common.uncategorized') }}</td>
-                                    <td class="px-4 py-3 text-right tabular-nums text-text-secondary">{{ formatNumber(row.units) }}</td>
-                                    <td class="px-4 py-3 text-right tabular-nums text-text-secondary">{{ formatCurrency(row.revenue) }}</td>
-                                    <td class="px-4 py-3 text-right tabular-nums text-text-secondary">{{ formatCurrency(row.cogs) }}</td>
-                                    <td class="px-4 py-3 text-right font-semibold tabular-nums" :class="marginClass(row.margin)">{{ formatCurrency(row.margin) }}</td>
-                                    <td class="px-4 py-3 text-right tabular-nums" :class="marginClass(row.margin_pct)">{{ formatPercent(row.margin_pct) }}</td>
+                                    <td class="px-4 py-3 text-end tabular-nums text-text-secondary">{{ formatNumber(row.units) }}</td>
+                                    <td class="px-4 py-3 text-end tabular-nums text-text-secondary">{{ formatCurrency(row.revenue) }}</td>
+                                    <td class="px-4 py-3 text-end tabular-nums text-text-secondary">{{ formatCurrency(row.cogs) }}</td>
+                                    <td class="px-4 py-3 text-end font-semibold tabular-nums" :class="marginClass(row.margin)">{{ formatCurrency(row.margin) }}</td>
+                                    <td class="px-4 py-3 text-end tabular-nums" :class="marginClass(row.margin_pct)">{{ formatPercent(row.margin_pct) }}</td>
                                 </tr>
                                 <tr v-if="products.length === 0">
                                     <td colspan="7" class="px-4 py-8 text-center text-sm text-text-tertiary">{{ t('reports.common.noData') }}</td>

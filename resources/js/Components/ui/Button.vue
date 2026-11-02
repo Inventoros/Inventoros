@@ -45,7 +45,7 @@ const button = cva(
                     'border border-border-strong bg-surface-canvas text-text-primary ' +
                     'hover:bg-surface-overlay',
                 danger:
-                    'bg-status-danger text-white hover:opacity-90 shadow-xs',
+                    'bg-action-danger text-white hover:opacity-90 shadow-xs',
                 link:
                     'text-brand hover:underline underline-offset-4 px-0',
             },
@@ -62,6 +62,12 @@ const button = cva(
 );
 
 const classes = computed(() => cn(button({ variant: props.variant, size: props.size })));
+const guardClick = (event) => {
+    if (props.disabled || props.loading) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+    }
+};
 
 const ComponentTag = computed(() => {
     if (props.as === 'Link') return Link;
@@ -75,6 +81,10 @@ const ComponentTag = computed(() => {
         :href="href"
         :type="as === 'button' ? type : undefined"
         :disabled="disabled || loading"
+        :aria-disabled="as !== 'button' && (disabled || loading) ? true : undefined"
+        :aria-busy="loading || undefined"
+        :tabindex="as !== 'button' && (disabled || loading) ? -1 : undefined"
+        @click.capture="guardClick"
         :class="classes"
     >
         <svg

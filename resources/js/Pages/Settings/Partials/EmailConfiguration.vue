@@ -1,4 +1,6 @@
 <script setup>
+import { useId as useFieldId } from 'vue';
+const fieldIdPrefix = useFieldId();
 import { useForm } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
@@ -79,10 +81,10 @@ const fieldError = 'mt-1 text-xs text-status-danger';
         <form @submit.prevent="submit" class="space-y-6 px-6 py-5">
             <!-- Email Provider -->
             <div>
-                <label :class="fieldLabel">
+                <label :for="fieldIdPrefix + '-1'" :class="fieldLabel">
                     {{ t('settings.email.provider') }}
                 </label>
-                <select v-model="form.provider" :class="fieldInput">
+                <select :id="fieldIdPrefix + '-1'" v-model="form.provider" :class="fieldInput">
                     <option value="smtp">{{ t('settings.email.smtp') }}</option>
                     <option value="phpmail">{{ t('settings.email.phpMail') }}</option>
                     <option value="mailgun">{{ t('settings.email.mailgun') }}</option>
@@ -92,10 +94,10 @@ const fieldError = 'mt-1 text-xs text-status-danger';
 
             <!-- From Address -->
             <div>
-                <label :class="fieldLabel">
+                <label :for="fieldIdPrefix + '-2'" :class="fieldLabel">
                     {{ t('settings.email.fromEmail') }}
                 </label>
-                <input
+                <input :id="fieldIdPrefix + '-2'"
                     v-model="form.from_address"
                     type="email"
                     required
@@ -107,10 +109,10 @@ const fieldError = 'mt-1 text-xs text-status-danger';
 
             <!-- From Name -->
             <div>
-                <label :class="fieldLabel">
+                <label :for="fieldIdPrefix + '-3'" :class="fieldLabel">
                     {{ t('settings.email.fromName') }}
                 </label>
-                <input
+                <input :id="fieldIdPrefix + '-3'"
                     v-model="form.from_name"
                     type="text"
                     required
@@ -126,10 +128,10 @@ const fieldError = 'mt-1 text-xs text-status-danger';
 
                 <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
                     <div>
-                        <label :class="fieldLabel">
+                        <label :for="fieldIdPrefix + '-4'" :class="fieldLabel">
                             {{ t('settings.email.host') }}
                         </label>
-                        <input
+                        <input :id="fieldIdPrefix + '-4'"
                             v-model="form.smtp.host"
                             type="text"
                             :class="fieldInput"
@@ -138,10 +140,10 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                     </div>
 
                     <div>
-                        <label :class="fieldLabel">
+                        <label :for="fieldIdPrefix + '-5'" :class="fieldLabel">
                             {{ t('settings.email.port') }}
                         </label>
-                        <input
+                        <input :id="fieldIdPrefix + '-5'"
                             v-model.number="form.smtp.port"
                             type="number"
                             :class="fieldInput"
@@ -151,10 +153,10 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                 </div>
 
                 <div>
-                    <label :class="fieldLabel">
+                    <label :for="fieldIdPrefix + '-6'" :class="fieldLabel">
                         {{ t('settings.email.username') }}
                     </label>
-                    <input
+                    <input :id="fieldIdPrefix + '-6'"
                         v-model="form.smtp.username"
                         type="text"
                         :class="fieldInput"
@@ -162,10 +164,10 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                 </div>
 
                 <div>
-                    <label :class="fieldLabel">
+                    <label :for="fieldIdPrefix + '-7'" :class="fieldLabel">
                         {{ t('settings.email.password') }}
                     </label>
-                    <input
+                    <input :id="fieldIdPrefix + '-7'"
                         v-model="form.smtp.password"
                         type="password"
                         :class="fieldInput"
@@ -175,10 +177,10 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                 </div>
 
                 <div>
-                    <label :class="fieldLabel">
+                    <label :for="fieldIdPrefix + '-8'" :class="fieldLabel">
                         {{ t('settings.email.encryption') }}
                     </label>
-                    <select v-model="form.smtp.encryption" :class="fieldInput">
+                    <select :id="fieldIdPrefix + '-8'" v-model="form.smtp.encryption" :class="fieldInput">
                         <option value="tls">{{ t('settings.email.tls') }}</option>
                         <option value="ssl">{{ t('settings.email.ssl') }}</option>
                         <option value="none">{{ t('settings.email.none') }}</option>
@@ -191,10 +193,10 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                 <h4 class="font-medium text-text-primary">{{ t('settings.email.mailgunConfig') }}</h4>
 
                 <div>
-                    <label :class="fieldLabel">
+                    <label :for="fieldIdPrefix + '-9'" :class="fieldLabel">
                         {{ t('settings.email.domain') }}
                     </label>
-                    <input
+                    <input :id="fieldIdPrefix + '-9'"
                         v-model="form.mailgun.domain"
                         type="text"
                         :class="fieldInput"
@@ -203,10 +205,10 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                 </div>
 
                 <div>
-                    <label :class="fieldLabel">
+                    <label :for="fieldIdPrefix + '-10'" :class="fieldLabel">
                         {{ t('settings.email.apiSecret') }}
                     </label>
-                    <input
+                    <input :id="fieldIdPrefix + '-10'"
                         v-model="form.mailgun.secret"
                         type="password"
                         :class="fieldInput"
@@ -221,10 +223,10 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                 <h4 class="font-medium text-text-primary">{{ t('settings.email.sendgridConfig') }}</h4>
 
                 <div>
-                    <label :class="fieldLabel">
+                    <label :for="fieldIdPrefix + '-11'" :class="fieldLabel">
                         {{ t('settings.email.apiKey') }}
                     </label>
-                    <input
+                    <input :id="fieldIdPrefix + '-11'"
                         v-model="form.sendgrid.api_key"
                         type="password"
                         :class="fieldInput"

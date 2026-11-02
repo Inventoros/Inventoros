@@ -34,7 +34,7 @@ onBeforeUnmount(() => clearInterval(timer));
             <p class="text-sm text-text-tertiary">{{ t('stockReset.countsHint') }}</p>
             <dl class="grid grid-cols-2 gap-3 text-sm">
                 <template v-for="[label, count] in rows" :key="label">
-                    <dt class="text-text-secondary">{{ t(`stockReset.${label}`) }}</dt><dd class="text-right font-semibold tabular-nums">{{ count }}</dd>
+                    <dt class="text-text-secondary">{{ t(`stockReset.${label}`) }}</dt><dd class="text-end font-semibold tabular-nums">{{ count }}</dd>
                 </template>
             </dl>
             <dl class="space-y-2 text-sm">

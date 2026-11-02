@@ -18,7 +18,7 @@ const { t } = useI18n();
 const page = usePage();
 const orgName = computed(() => page.props.portal?.organization?.name ?? '');
 
-const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-text-secondary';
+const thClass = 'px-4 py-2.5 text-start text-xs font-medium tracking-tight text-text-secondary';
 </script>
 
 <template>
@@ -35,9 +35,9 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                             <th :class="thClass">{{ t('portal.orders.number') }}</th>
                             <th :class="thClass">{{ t('portal.orders.date') }}</th>
                             <th :class="thClass">{{ t('portal.orders.status') }}</th>
-                            <th :class="[thClass, 'text-right']">{{ t('portal.orders.items') }}</th>
-                            <th :class="[thClass, 'text-right']">{{ t('portal.orders.total') }}</th>
-                            <th :class="[thClass, 'text-right']"><span class="sr-only">{{ t('portal.orders.view') }}</span></th>
+                            <th :class="[thClass, 'text-end']">{{ t('portal.orders.items') }}</th>
+                            <th :class="[thClass, 'text-end']">{{ t('portal.orders.total') }}</th>
+                            <th :class="[thClass, 'text-end']"><span class="sr-only">{{ t('portal.orders.view') }}</span></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -53,11 +53,11 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                             </td>
                             <td class="px-4 py-3 text-text-tertiary">{{ formatDay(order.order_date) }}</td>
                             <td class="px-4 py-3"><PortalStatusBadge :status="order.status" /></td>
-                            <td class="px-4 py-3 text-right tabular-nums text-text-secondary">{{ order.items_count }}</td>
-                            <td class="px-4 py-3 text-right font-medium tabular-nums text-text-primary">
+                            <td class="px-4 py-3 text-end tabular-nums text-text-secondary">{{ order.items_count }}</td>
+                            <td class="px-4 py-3 text-end font-medium tabular-nums text-text-primary">
                                 {{ formatMoney(order.total, order.currency) }}
                             </td>
-                            <td class="px-4 py-3 text-right">
+                            <td class="px-4 py-3 text-end">
                                 <Link :href="route('portal.orders.show', { order: order.id })" class="text-sm text-brand hover:underline">
                                     {{ t('portal.orders.view') }}
                                 </Link>

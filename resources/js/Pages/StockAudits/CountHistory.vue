@@ -10,7 +10,7 @@ import StockAuditReviewEvidence from '@/Components/StockAuditReviewEvidence.vue'
 
 defineProps({ audit: Object, item: Object, counts: Object, reviews: Object });
 const { t } = useI18n();
-const heading = 'whitespace-nowrap px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-text-tertiary';
+const heading = 'whitespace-nowrap px-5 py-3 text-start text-xs font-semibold uppercase tracking-wide text-text-tertiary';
 </script>
 
 <template>
@@ -29,9 +29,9 @@ const heading = 'whitespace-nowrap px-5 py-3 text-left text-xs font-semibold upp
                     </div>
                     <p class="text-text-secondary">{{ count.actor_name || '-' }}</p>
                     <dl class="grid grid-cols-2 gap-2">
-                        <dt class="text-text-secondary">{{ t('stockAudits.columns.countedQty') }}</dt><dd class="text-right font-semibold tabular-nums text-text-primary">{{ count.counted_quantity }}</dd>
-                        <dt class="text-text-secondary">{{ t('stockAudits.columns.systemQty') }}</dt><dd class="text-right tabular-nums text-text-secondary">{{ count.system_quantity }}</dd>
-                        <dt class="text-text-secondary">{{ t('stockAudits.columns.discrepancy') }}</dt><dd class="text-right tabular-nums text-text-secondary">{{ count.discrepancy }}</dd>
+                        <dt class="text-text-secondary">{{ t('stockAudits.columns.countedQty') }}</dt><dd class="text-end font-semibold tabular-nums text-text-primary">{{ count.counted_quantity }}</dd>
+                        <dt class="text-text-secondary">{{ t('stockAudits.columns.systemQty') }}</dt><dd class="text-end tabular-nums text-text-secondary">{{ count.system_quantity }}</dd>
+                        <dt class="text-text-secondary">{{ t('stockAudits.columns.discrepancy') }}</dt><dd class="text-end tabular-nums text-text-secondary">{{ count.discrepancy }}</dd>
                     </dl>
                     <p class="whitespace-pre-wrap break-words text-text-secondary">{{ count.notes || '-' }}</p>
                     <StockAuditReviewEvidence :review="reviews?.[`count-${count.sequence}`]" />

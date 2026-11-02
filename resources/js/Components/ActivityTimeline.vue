@@ -101,7 +101,7 @@ const getChangedFields = (properties) => {
                     <!-- Connecting line -->
                     <span
                         v-if="idx !== activities.length - 1"
-                        class="absolute left-4 top-4 -ml-px h-full w-0.5 bg-gray-200 dark:bg-border-subtle"
+                        class="absolute start-4 top-4 -ms-px h-full w-0.5 bg-gray-200 dark:bg-border-subtle"
                         aria-hidden="true"
                     />
 
@@ -122,7 +122,7 @@ const getChangedFields = (properties) => {
                                     <span class="font-medium text-gray-900 dark:text-gray-100">
                                         {{ activity.user?.name || t('components.activityTimeline.system') }}
                                     </span>
-                                    <span class="ml-1 text-gray-500 dark:text-gray-400">
+                                    <span class="ms-1 text-gray-500 dark:text-gray-400">
                                         {{ ['created', 'updated', 'deleted', 'viewed'].includes(activity.action) ? t(`components.activityTimeline.actionOnProduct.${activity.action}`) : t('components.activityTimeline.actionOnProduct.other', { action: activity.action }) }}
                                     </span>
                                 </div>

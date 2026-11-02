@@ -411,7 +411,7 @@ const tabs = [
                                     <span class="block text-xs text-text-tertiary">{{ t('approvals.settings.purchaseOrdersHelp') }}</span>
                                 </span>
                             </label>
-                            <div v-if="approvalsForm.purchase_orders_enabled" class="pl-8 sm:max-w-xs">
+                            <div v-if="approvalsForm.purchase_orders_enabled" class="ps-8 sm:max-w-xs">
                                 <label for="po_threshold" :class="fieldLabel">{{ t('approvals.settings.poThreshold') }}</label>
                                 <input id="po_threshold" v-model="approvalsForm.purchase_orders_threshold" type="number" min="0" step="0.01" inputmode="decimal" :class="fieldInput" :disabled="!canManage" :placeholder="t('approvals.settings.everyOne')" />
                                 <p v-if="approvalsForm.errors.purchase_orders_threshold" :class="fieldError">{{ approvalsForm.errors.purchase_orders_threshold }}</p>
@@ -427,7 +427,7 @@ const tabs = [
                                     <span class="block text-xs text-text-tertiary">{{ t('approvals.settings.stockAdjustmentsHelp') }}</span>
                                 </span>
                             </label>
-                            <div v-if="approvalsForm.stock_adjustments_enabled" class="grid grid-cols-1 gap-4 pl-8 sm:grid-cols-2">
+                            <div v-if="approvalsForm.stock_adjustments_enabled" class="grid grid-cols-1 gap-4 ps-8 sm:grid-cols-2">
                                 <div>
                                     <label for="adj_qty_threshold" :class="fieldLabel">{{ t('approvals.settings.quantityThreshold') }}</label>
                                     <input id="adj_qty_threshold" v-model="approvalsForm.stock_adjustments_quantity_threshold" type="number" min="0" step="1" inputmode="numeric" :class="fieldInput" :disabled="!canManage" :placeholder="t('approvals.settings.noLimit')" />

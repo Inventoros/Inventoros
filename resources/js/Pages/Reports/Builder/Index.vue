@@ -44,7 +44,7 @@ const exportReport = (report) => {
 };
 
 const thClass =
-    'px-4 py-2.5 text-left text-xs font-medium text-text-secondary';
+    'px-4 py-2.5 text-start text-xs font-medium text-text-secondary';
 </script>
 
 <template>
@@ -76,13 +76,13 @@ const thClass =
         <!-- Search -->
         <div class="table-toolbar">
             <div class="relative w-full md:w-96">
-                <Search :size="15" class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-text-tertiary" />
+                <Search :size="15" class="pointer-events-none absolute start-3 top-1/2 -translate-y-1/2 text-text-tertiary" />
                 <input
                     v-model="search"
                     :aria-label="t('common.search')"
                     type="text"
                     :placeholder="t('reportBuilder.searchPlaceholder')"
-                    class="h-9 w-full rounded-md border border-border-subtle bg-surface-canvas pl-9 pr-3 text-sm text-text-primary placeholder:text-text-tertiary ds-focus-ring"
+                    class="h-9 w-full rounded-md border border-border-subtle bg-surface-canvas ps-9 pe-3 text-sm text-text-primary placeholder:text-text-tertiary ds-focus-ring"
                 />
             </div>
         </div>
@@ -97,7 +97,7 @@ const thClass =
                         <th :class="thClass">{{ t('reportBuilder.columns.createdBy') }}</th>
                         <th :class="thClass">{{ t('reportBuilder.columns.shared') }}</th>
                         <th :class="thClass">{{ t('reportBuilder.columns.created') }}</th>
-                        <th :class="[thClass, 'text-right']">{{ t('reportBuilder.columns.actions') }}</th>
+                        <th :class="[thClass, 'text-end']">{{ t('reportBuilder.columns.actions') }}</th>
                     </tr>
                 </thead>
                 <tbody>

@@ -155,7 +155,7 @@ const visibleReportCards = computed(() =>
         <!-- Report cards -->
         <div class="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-2 xl:grid-cols-3">
             <Link v-for="report in visibleReportCards" :key="report.href" :href="report.href">
-                <Card hoverable>
+                <Card hoverable class="h-full">
                     <div class="flex items-start gap-4">
                         <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-brand-soft text-brand">
                             <component :is="report.icon" :size="18" />
@@ -184,11 +184,11 @@ const visibleReportCards = computed(() =>
                     <table class="min-w-full divide-y divide-border-subtle">
                         <thead class="bg-surface-overlay">
                             <tr>
-                                <th class="px-6 py-3 text-left text-[11px] font-medium uppercase tracking-wider text-text-tertiary">{{ t('reportBuilder.columns.name') }}</th>
-                                <th class="px-6 py-3 text-left text-[11px] font-medium uppercase tracking-wider text-text-tertiary">{{ t('reportBuilder.columns.dataSource') }}</th>
-                                <th class="px-6 py-3 text-left text-[11px] font-medium uppercase tracking-wider text-text-tertiary">{{ t('reportBuilder.columns.createdBy') }}</th>
-                                <th class="px-6 py-3 text-left text-[11px] font-medium uppercase tracking-wider text-text-tertiary">{{ t('reportBuilder.columns.created') }}</th>
-                                <th class="px-6 py-3 text-right text-[11px] font-medium uppercase tracking-wider text-text-tertiary"></th>
+                                <th class="px-6 py-3 text-start text-[11px] font-medium uppercase tracking-wider text-text-tertiary">{{ t('reportBuilder.columns.name') }}</th>
+                                <th class="px-6 py-3 text-start text-[11px] font-medium uppercase tracking-wider text-text-tertiary">{{ t('reportBuilder.columns.dataSource') }}</th>
+                                <th class="px-6 py-3 text-start text-[11px] font-medium uppercase tracking-wider text-text-tertiary">{{ t('reportBuilder.columns.createdBy') }}</th>
+                                <th class="px-6 py-3 text-start text-[11px] font-medium uppercase tracking-wider text-text-tertiary">{{ t('reportBuilder.columns.created') }}</th>
+                                <th class="px-6 py-3 text-end text-[11px] font-medium uppercase tracking-wider text-text-tertiary"></th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-border-subtle">
@@ -203,7 +203,7 @@ const visibleReportCards = computed(() =>
                                 </td>
                                 <td class="px-6 py-4 text-sm text-text-secondary">{{ report.creator?.name || '-' }}</td>
                                 <td class="px-6 py-4 text-sm text-text-secondary">{{ displayDate(report.created_at) }}</td>
-                                <td class="px-6 py-4 text-right">
+                                <td class="px-6 py-4 text-end">
                                     <Link :href="route('reports.builder.show', report.id)" class="text-sm text-brand transition-colors hover:text-brand-hover">
                                         {{ t('reportBuilder.actions.view') }}
                                     </Link>

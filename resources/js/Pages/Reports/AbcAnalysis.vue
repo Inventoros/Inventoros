@@ -29,8 +29,8 @@ const classVariant = (cls) => ({ A: 'success', B: 'info', C: 'neutral' }[cls] ||
 const classIcon = { A: Award, B: Medal, C: CircleDot };
 const classTone = { A: 'success', B: 'info', C: 'brand' };
 
-const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-text-secondary';
-const thRightClass = 'px-4 py-2.5 text-right text-xs font-medium tracking-tight text-text-secondary';
+const thClass = 'px-4 py-2.5 text-start text-xs font-medium tracking-tight text-text-secondary';
+const thRightClass = 'px-4 py-2.5 text-end text-xs font-medium tracking-tight text-text-secondary';
 </script>
 
 <template>
@@ -106,10 +106,10 @@ const thRightClass = 'px-4 py-2.5 text-right text-xs font-medium tracking-tight 
                                         <p class="font-medium text-text-primary">{{ row.name }}</p>
                                         <p class="font-mono text-xs text-text-tertiary">{{ row.sku }}</p>
                                     </td>
-                                    <td class="px-4 py-3 text-right tabular-nums text-text-secondary">{{ formatNumber(row.units) }}</td>
-                                    <td class="px-4 py-3 text-right font-semibold tabular-nums text-text-primary">{{ formatCurrency(row.revenue) }}</td>
-                                    <td class="px-4 py-3 text-right tabular-nums text-text-secondary">{{ formatPercent(row.share_pct) }}</td>
-                                    <td class="px-4 py-3 text-right tabular-nums text-text-secondary">{{ formatPercent(row.cumulative_pct) }}</td>
+                                    <td class="px-4 py-3 text-end tabular-nums text-text-secondary">{{ formatNumber(row.units) }}</td>
+                                    <td class="px-4 py-3 text-end font-semibold tabular-nums text-text-primary">{{ formatCurrency(row.revenue) }}</td>
+                                    <td class="px-4 py-3 text-end tabular-nums text-text-secondary">{{ formatPercent(row.share_pct) }}</td>
+                                    <td class="px-4 py-3 text-end tabular-nums text-text-secondary">{{ formatPercent(row.cumulative_pct) }}</td>
                                     <td class="px-4 py-3"><Badge :variant="classVariant(row.class)" size="sm">{{ row.class }}</Badge></td>
                                 </tr>
                                 <tr v-if="rows.length === 0">

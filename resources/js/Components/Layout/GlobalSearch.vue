@@ -1,4 +1,5 @@
 <script setup>
+import DialogSurface from '@/Components/DialogSurface.vue';
 import { ref, watch, onMounted, onUnmounted, nextTick, computed } from 'vue';
 import { router } from '@inertiajs/vue3';
 import axios from 'axios';
@@ -194,7 +195,7 @@ defineExpose({ open });
 </script>
 
 <template>
-    <Teleport to="body">
+    <DialogSurface :show="!!(isOpen)" :label="$t('nav.search')" @close="close">
         <!-- Backdrop -->
         <Transition
             enter-active-class="transition duration-200 ease-out"
@@ -236,6 +237,7 @@ defineExpose({ open });
                         </svg>
                         <input
                             ref="searchInput"
+                            :aria-label="$t('nav.globalSearch.placeholder')"
                             v-model="query"
                             type="text"
                             :placeholder="$t('nav.globalSearch.placeholder')"
@@ -265,7 +267,7 @@ defineExpose({ open });
                                 v-for="item in recentSearches"
                                 :key="item.type + '-' + item.id"
                                 @click="navigateToResult(item)"
-                                class="w-full flex items-center gap-3 px-4 py-2.5 text-left hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
+                                class="w-full flex items-center gap-3 px-4 py-2.5 text-start hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
                             >
                                 <svg class="w-4 h-4 text-gray-400 dark:text-gray-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -291,7 +293,7 @@ defineExpose({ open });
                                     @click="navigateToResult(item)"
                                     @mouseenter="selectedIndex = getSelectableIndex(item)"
                                     :class="[
-                                        'w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors',
+                                        'w-full flex items-center gap-3 px-4 py-2.5 text-start transition-colors',
                                         getSelectableIndex(item) === selectedIndex
                                             ? 'bg-brand-soft dark:bg-brand/20'
                                             : 'hover:bg-gray-50 dark:hover:bg-gray-700/50'
@@ -357,5 +359,5 @@ defineExpose({ open });
                 </div>
             </div>
         </Transition>
-    </Teleport>
+    </DialogSurface>
 </template>

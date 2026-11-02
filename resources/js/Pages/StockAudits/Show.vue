@@ -479,7 +479,7 @@ const getDiscrepancyText = (item) => {
     return (disc > 0 ? '+' : '') + disc;
 };
 
-const thClass = 'px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-text-tertiary';
+const thClass = 'px-6 py-3 text-start text-xs font-medium uppercase tracking-wider text-text-tertiary';
 </script>
 
 <template>
@@ -699,9 +699,9 @@ const thClass = 'px-6 py-3 text-left text-xs font-medium uppercase tracking-wide
                         <tr class="border-b border-border-subtle">
                             <th :class="thClass">{{ t('common.product') }}</th>
                             <th :class="thClass">{{ t('stockAudits.columns.location') }}</th>
-                            <th :class="[thClass, 'text-right']">{{ t('stockAudits.columns.systemQty') }}</th>
-                            <th :class="[thClass, 'text-right']">{{ t('stockAudits.columns.countedQty') }}</th>
-                            <th :class="[thClass, 'text-right']">{{ t('stockAudits.columns.discrepancy') }}</th>
+                            <th :class="[thClass, 'text-end']">{{ t('stockAudits.columns.systemQty') }}</th>
+                            <th :class="[thClass, 'text-end']">{{ t('stockAudits.columns.countedQty') }}</th>
+                            <th :class="[thClass, 'text-end']">{{ t('stockAudits.columns.discrepancy') }}</th>
                             <th :class="thClass">{{ t('common.status') }}</th>
                             <th :class="thClass">{{ t('stockAudits.columns.countedBy') }}</th>
                             <th v-if="canCount" :class="thClass">{{ t('common.actions') }}</th>
@@ -719,14 +719,14 @@ const thClass = 'px-6 py-3 text-left text-xs font-medium uppercase tracking-wide
                                 <td class="whitespace-nowrap px-6 py-4 text-sm text-text-secondary">
                                     {{ item.location?.name || '-' }}
                                 </td>
-                                <td class="whitespace-nowrap px-6 py-4 text-right text-sm tabular-nums text-text-secondary">
+                                <td class="whitespace-nowrap px-6 py-4 text-end text-sm tabular-nums text-text-secondary">
                                     {{ item.system_quantity }}
                                 </td>
-                                <td class="whitespace-nowrap px-6 py-4 text-right text-sm font-medium tabular-nums text-text-primary">
+                                <td class="whitespace-nowrap px-6 py-4 text-end text-sm font-medium tabular-nums text-text-primary">
                                     {{ item.counted_quantity !== null ? item.counted_quantity : '-' }}
                                     <span v-if="drafts[item.id]" class="mt-1 block text-xs text-status-warning">{{ t('stockAudits.drafts.localCount', { count: drafts[item.id].quantity || '-' }) }}</span>
                                 </td>
-                                <td class="whitespace-nowrap px-6 py-4 text-right text-sm font-semibold tabular-nums" :class="getDiscrepancyClass(item)">
+                                <td class="whitespace-nowrap px-6 py-4 text-end text-sm font-semibold tabular-nums" :class="getDiscrepancyClass(item)">
                                     {{ getDiscrepancyText(item) }}
                                 </td>
                                 <td class="whitespace-nowrap px-6 py-4">
@@ -765,7 +765,7 @@ const thClass = 'px-6 py-3 text-left text-xs font-medium uppercase tracking-wide
                                 <td class="whitespace-nowrap px-6 py-4 text-sm text-text-secondary">
                                     {{ item.location?.name || '-' }}
                                 </td>
-                                <td class="whitespace-nowrap px-6 py-4 text-right text-sm tabular-nums text-text-secondary">
+                                <td class="whitespace-nowrap px-6 py-4 text-end text-sm tabular-nums text-text-secondary">
                                     {{ item.system_quantity }}
                                 </td>
                                 <td class="px-6 py-3">
@@ -778,12 +778,12 @@ const thClass = 'px-6 py-3 text-left text-xs font-medium uppercase tracking-wide
                                         step="1"
                                         :aria-label="t('stockAudits.columns.countedQty')"
                                         :disabled="savingCount || syncingDrafts"
-                                        class="ml-auto block h-9 w-24 rounded-md border border-border-subtle bg-surface-canvas px-3 text-right text-sm text-text-primary ds-focus-ring"
+                                        class="ms-auto block h-9 w-24 rounded-md border border-border-subtle bg-surface-canvas px-3 text-end text-sm text-text-primary ds-focus-ring"
                                         @keyup.enter="saveCount(item)"
                                         @keyup.escape="cancelCounting"
                                     />
                                 </td>
-                                <td class="whitespace-nowrap px-6 py-4 text-right text-sm font-semibold tabular-nums" :class="(countValue - item.system_quantity) > 0 ? 'text-status-success' : (countValue - item.system_quantity) < 0 ? 'text-status-danger' : 'text-text-secondary'">
+                                <td class="whitespace-nowrap px-6 py-4 text-end text-sm font-semibold tabular-nums" :class="(countValue - item.system_quantity) > 0 ? 'text-status-success' : (countValue - item.system_quantity) < 0 ? 'text-status-danger' : 'text-text-secondary'">
                                     {{ (countValue - item.system_quantity) > 0 ? '+' : '' }}{{ countValue - item.system_quantity }}
                                 </td>
                                 <td colspan="2" class="px-6 py-3">

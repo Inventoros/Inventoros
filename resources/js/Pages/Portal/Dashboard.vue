@@ -21,7 +21,7 @@ const page = usePage();
 const contact = computed(() => page.props.portal?.contact ?? {});
 const orgName = computed(() => page.props.portal?.organization?.name ?? '');
 
-const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-text-secondary';
+const thClass = 'px-4 py-2.5 text-start text-xs font-medium tracking-tight text-text-secondary';
 </script>
 
 <template>
@@ -62,7 +62,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                                 <th :class="thClass">{{ t('portal.orders.number') }}</th>
                                 <th :class="thClass">{{ t('portal.orders.date') }}</th>
                                 <th :class="thClass">{{ t('portal.orders.status') }}</th>
-                                <th :class="[thClass, 'text-right']">{{ t('portal.orders.total') }}</th>
+                                <th :class="[thClass, 'text-end']">{{ t('portal.orders.total') }}</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -78,7 +78,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                                 </td>
                                 <td class="px-4 py-3 text-text-tertiary">{{ formatDay(order.order_date) }}</td>
                                 <td class="px-4 py-3"><PortalStatusBadge :status="order.status" /></td>
-                                <td class="px-4 py-3 text-right font-medium tabular-nums text-text-primary">
+                                <td class="px-4 py-3 text-end font-medium tabular-nums text-text-primary">
                                     {{ formatMoney(order.total, order.currency) }}
                                 </td>
                             </tr>

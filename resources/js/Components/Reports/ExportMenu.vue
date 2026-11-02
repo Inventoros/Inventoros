@@ -36,7 +36,7 @@ const links = computed(() => formats.map((f) => ({ ...f, href: hrefFor(f.key) })
 
 <template>
     <div class="inline-flex items-center gap-1" role="group" :aria-label="t('reports.export.label')">
-        <span class="inline-flex items-center gap-1 pr-1 text-xs text-text-tertiary">
+        <span class="inline-flex items-center gap-1 pe-1 text-xs text-text-tertiary">
             <Download :size="14" />
             {{ t('reports.export.label') }}
         </span>

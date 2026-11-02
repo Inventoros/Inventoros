@@ -49,7 +49,7 @@ const pick = (n) => {
                 :class="value && n <= value ? 'fill-status-warning text-status-warning' : 'text-text-tertiary'"
             />
         </button>
-        <span class="ml-2 text-xs text-text-tertiary">
+        <span class="ms-2 text-xs text-text-tertiary">
             {{ value ? t('suppliers.rating.stars', { count: value }) : t('suppliers.rating.none') }}
         </span>
     </div>

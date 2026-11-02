@@ -1,4 +1,6 @@
 <script setup>
+import { useId as useFieldId } from 'vue';
+const fieldIdPrefix = useFieldId();
 import { ref, watch } from 'vue';
 import axios from 'axios';
 import QuickAddModal from './QuickAddModal.vue';
@@ -120,7 +122,7 @@ const close = () => {
                         type="button"
                         @click="selectPreset(preset)"
                         :class="[
-                            'p-3 text-left rounded-lg border-2 transition',
+                            'p-3 text-start rounded-lg border-2 transition',
                             selectedPattern === preset.pattern
                                 ? 'border-brand bg-brand/10'
                                 : 'border-gray-200 dark:border-border-subtle hover:border-brand/50'
@@ -143,10 +145,10 @@ const close = () => {
 
             <!-- Custom Pattern -->
             <div>
-                <label class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">
+                <label :for="fieldIdPrefix + '-1'" class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">
                     {{ t('components.skuGenerator.customPattern') }}
                 </label>
-                <input
+                <input :id="fieldIdPrefix + '-1'"
                     v-model="customPattern"
                     @input="onCustomPatternInput"
                     type="text"
@@ -161,7 +163,7 @@ const close = () => {
                 <div class="grid grid-cols-2 gap-2">
                     <div v-for="variable in skuPatterns.variables" :key="variable.key" class="text-xs">
                         <code class="px-1 py-0.5 bg-gray-200 dark:bg-surface-raised rounded text-brand">{{ variable.key }}</code>
-                        <span class="text-gray-600 dark:text-gray-400 ml-1">{{ variable.description }}</span>
+                        <span class="text-gray-600 dark:text-gray-400 ms-1">{{ variable.description }}</span>
                     </div>
                 </div>
             </div>
@@ -189,7 +191,7 @@ const close = () => {
                 type="button"
                 @click="applySKU"
                 :disabled="!skuPreview || skuPreview === t('components.skuGenerator.previewError')"
-                class="px-4 py-2 bg-brand text-white rounded-md hover:bg-brand-hover disabled:opacity-50"
+                class="px-4 py-2 bg-brand text-brand-foreground rounded-md hover:bg-brand-hover disabled:opacity-50"
             >
                 {{ t('components.skuGenerator.applySku') }}
             </button>

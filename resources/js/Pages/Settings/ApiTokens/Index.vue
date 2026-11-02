@@ -1,4 +1,5 @@
 <script setup>
+import DialogSurface from '@/Components/DialogSurface.vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import TableViewport from '@/Components/ui/TableViewport.vue';
 import PageHeader from '@/Components/ui/PageHeader.vue';
@@ -103,7 +104,7 @@ const abilitySummary = (token) => {
     return t('settings.apiTokens.abilitiesCount', { count: abilities.length }, abilities.length);
 };
 
-const thClass = 'px-4 py-2.5 text-left text-xs font-medium text-text-secondary';
+const thClass = 'px-4 py-2.5 text-start text-xs font-medium text-text-secondary';
 const fieldLabel = 'mb-1 block text-sm font-medium text-text-secondary';
 const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface-canvas px-3 text-sm text-text-primary placeholder:text-text-tertiary ds-focus-ring';
 const fieldError = 'mt-1 text-xs text-status-danger';
@@ -160,7 +161,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                             <th :class="thClass">{{ t('settings.apiTokens.abilities') }}</th>
                             <th :class="thClass">{{ t('settings.apiTokens.lastUsed') }}</th>
                             <th :class="thClass">{{ t('settings.apiTokens.created') }}</th>
-                            <th :class="[thClass, 'text-right']">{{ t('common.actions') }}</th>
+                            <th :class="[thClass, 'text-end']">{{ t('common.actions') }}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -202,13 +203,10 @@ const fieldError = 'mt-1 text-xs text-status-danger';
             </TableViewport>
 
             <!-- Create modal -->
-            <Teleport to="body">
+            <DialogSurface :show="!!(showCreateModal)" @close="closeCreateModal">
                 <div v-if="showCreateModal" class="fixed inset-0 z-50 flex items-center justify-center">
                     <div class="fixed inset-0 bg-black/50" @click="closeCreateModal"></div>
                     <div
-                        role="dialog"
-                        aria-modal="true"
-                        aria-labelledby="api-token-create-title"
                         class="relative mx-4 my-8 max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-xl border border-border-subtle bg-surface-raised p-6 shadow-lg"
                     >
                         <div class="mb-6 flex items-center justify-between">
@@ -293,7 +291,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                         </form>
                     </div>
                 </div>
-            </Teleport>
+            </DialogSurface>
         </div>
     </AppLayout>
 </template>

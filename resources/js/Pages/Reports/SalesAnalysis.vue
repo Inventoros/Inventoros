@@ -93,7 +93,7 @@ const barHeight = (revenue) => {
 const inputClass =
     'h-9 w-full rounded-md border border-border-subtle bg-surface-canvas px-3 text-sm text-text-primary ds-focus-ring';
 const thClass =
-    'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-text-secondary';
+    'px-4 py-2.5 text-start text-xs font-medium tracking-tight text-text-secondary';
 </script>
 
 <template>
@@ -254,10 +254,10 @@ const thClass =
                         <thead>
                             <tr class="border-b border-border-subtle">
                                 <th :class="thClass">{{ t('payments.paymentStatus') }}</th>
-                                <th :class="[thClass, 'text-right']">{{ t('nav.orders') }}</th>
-                                <th :class="[thClass, 'text-right']">{{ t('common.total') }}</th>
-                                <th :class="[thClass, 'text-right']">{{ t('payments.amountPaid') }}</th>
-                                <th :class="[thClass, 'text-right']">{{ t('payments.balanceDue') }}</th>
+                                <th :class="[thClass, 'text-end']">{{ t('nav.orders') }}</th>
+                                <th :class="[thClass, 'text-end']">{{ t('common.total') }}</th>
+                                <th :class="[thClass, 'text-end']">{{ t('payments.amountPaid') }}</th>
+                                <th :class="[thClass, 'text-end']">{{ t('payments.balanceDue') }}</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -269,10 +269,10 @@ const thClass =
                                 <td class="px-4 py-3">
                                     <Badge :variant="paymentStatusVariant(row.payment_status)" size="sm" dot>{{ t(`payments.status.${row.payment_status}`) }}</Badge>
                                 </td>
-                                <td class="px-4 py-3 text-right tabular-nums text-text-secondary">{{ row.count }}</td>
-                                <td class="px-4 py-3 text-right tabular-nums text-text-secondary">{{ formatCurrency(row.total) }}</td>
-                                <td class="px-4 py-3 text-right tabular-nums text-text-secondary">{{ formatCurrency(row.amount_paid) }}</td>
-                                <td class="px-4 py-3 text-right font-medium tabular-nums text-text-primary">
+                                <td class="px-4 py-3 text-end tabular-nums text-text-secondary">{{ row.count }}</td>
+                                <td class="px-4 py-3 text-end tabular-nums text-text-secondary">{{ formatCurrency(row.total) }}</td>
+                                <td class="px-4 py-3 text-end tabular-nums text-text-secondary">{{ formatCurrency(row.amount_paid) }}</td>
+                                <td class="px-4 py-3 text-end font-medium tabular-nums text-text-primary">
                                     {{ formatCurrency(row.balance_due) }}
                                     <span v-if="plusOthers(row.by_currency, 'balance_due')" class="block text-[11px] font-normal text-text-tertiary">{{ plusOthers(row.by_currency, 'balance_due') }}</span>
                                 </td>
@@ -294,8 +294,8 @@ const thClass =
                         <thead>
                             <tr class="border-b border-border-subtle">
                                 <th :class="thClass">{{ t('common.date') }}</th>
-                                <th :class="[thClass, 'text-right']">{{ t('nav.orders') }}</th>
-                                <th :class="[thClass, 'text-right']">{{ t('reports.salesAnalysis.revenue') }}</th>
+                                <th :class="[thClass, 'text-end']">{{ t('nav.orders') }}</th>
+                                <th :class="[thClass, 'text-end']">{{ t('reports.salesAnalysis.revenue') }}</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -305,8 +305,8 @@ const thClass =
                                 class="border-b border-border-subtle transition-colors last:border-b-0 hover:bg-surface-overlay"
                             >
                                 <td class="px-4 py-3 text-text-primary">{{ displayCalendarDate(day.date) }}</td>
-                                <td class="px-4 py-3 text-right tabular-nums text-text-secondary">{{ day.orders }}</td>
-                                <td class="px-4 py-3 text-right font-medium tabular-nums text-status-success">
+                                <td class="px-4 py-3 text-end tabular-nums text-text-secondary">{{ day.orders }}</td>
+                                <td class="px-4 py-3 text-end font-medium tabular-nums text-status-success">
                                     {{ formatCurrency(day.revenue) }}
                                     <span v-if="plusOthers(day.by_currency, 'revenue')" class="block text-[11px] font-normal text-text-tertiary">{{ plusOthers(day.by_currency, 'revenue') }}</span>
                                 </td>

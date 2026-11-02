@@ -153,7 +153,7 @@ const resetVerification = () => {
 
 useBarcodeWedge(onVerifyCode, { enabled: () => verifying.value && canComplete.value && !showScanner.value });
 
-const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-text-secondary';
+const thClass = 'px-4 py-2.5 text-start text-xs font-medium tracking-tight text-text-secondary';
 </script>
 
 <template>
@@ -256,7 +256,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                                 <tr class="border-b border-border-subtle">
                                     <th :class="thClass">{{ t('common.product') }}</th>
                                     <th :class="thClass">SKU</th>
-                                    <th :class="[thClass, 'text-right']">{{ t('common.quantity') }}</th>
+                                    <th :class="[thClass, 'text-end']">{{ t('common.quantity') }}</th>
                                     <th :class="thClass">{{ t('common.notes') }}</th>
                                 </tr>
                             </thead>
@@ -268,7 +268,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                                     <td class="whitespace-nowrap px-4 py-3 text-sm text-text-tertiary">
                                         {{ item.product?.sku || '-' }}
                                     </td>
-                                    <td class="whitespace-nowrap px-4 py-3 text-right text-sm font-medium tabular-nums text-text-primary">
+                                    <td class="whitespace-nowrap px-4 py-3 text-end text-sm font-medium tabular-nums text-text-primary">
                                         {{ item.quantity }}
                                     </td>
                                     <td class="px-4 py-3 text-sm text-text-tertiary">
@@ -279,7 +279,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                             <tfoot>
                                 <tr class="border-t border-border-subtle">
                                     <td colspan="2" class="px-4 py-3 text-sm font-medium text-text-primary">{{ t('common.total') }}</td>
-                                    <td class="px-4 py-3 text-right text-sm font-bold tabular-nums text-text-primary">
+                                    <td class="px-4 py-3 text-end text-sm font-bold tabular-nums text-text-primary">
                                         {{ transfer.items?.reduce((sum, item) => sum + item.quantity, 0) || 0 }}
                                     </td>
                                     <td></td>

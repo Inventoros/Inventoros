@@ -35,7 +35,7 @@ const formatCurrency = (value) => {
     return formatMoney(value, props.supplier.currency);
 };
 
-const thClass = 'px-4 py-2.5 text-left text-xs font-medium text-text-secondary';
+const thClass = 'px-4 py-2.5 text-start text-xs font-medium text-text-secondary';
 </script>
 
 <template>
@@ -142,7 +142,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium text-text-secondary';
                                         <th :class="thClass">{{ t('common.product') }}</th>
                                         <th :class="thClass">SKU</th>
                                         <th :class="thClass">{{ t('suppliers.show.supplierSku') }}</th>
-                                        <th :class="[thClass, 'text-right']">{{ t('suppliers.show.costPrice') }}</th>
+                                        <th :class="[thClass, 'text-end']">{{ t('suppliers.show.costPrice') }}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -158,7 +158,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium text-text-secondary';
                                         </td>
                                         <td class="px-4 py-3 text-sm text-text-tertiary">{{ product.sku }}</td>
                                         <td class="px-4 py-3 text-sm text-text-tertiary">{{ product.pivot?.supplier_sku || '-' }}</td>
-                                        <td class="px-4 py-3 text-right text-sm tabular-nums text-text-secondary">{{ product.pivot?.cost_price != null ? formatCurrency(product.pivot.cost_price) : '-' }}</td>
+                                        <td class="px-4 py-3 text-end text-sm tabular-nums text-text-secondary">{{ product.pivot?.cost_price != null ? formatCurrency(product.pivot.cost_price) : '-' }}</td>
                                     </tr>
                                 </tbody>
                             </table>

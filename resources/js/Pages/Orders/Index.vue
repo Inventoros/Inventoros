@@ -1,4 +1,5 @@
 <script setup>
+import DialogSurface from '@/Components/DialogSurface.vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import TableFilters from '@/Components/ui/TableFilters.vue';
 import PluginSlot from '@/Components/PluginSlot.vue';
@@ -259,7 +260,7 @@ const selectClass =
         <PluginSlot slot="footer" :components="pluginComponents?.footer" />
 
         <!-- Mark pre-tracking orders paid -->
-        <Teleport to="body">
+        <DialogSurface :show="!!(showMarkPaidModal)" @close="showMarkPaidModal = false">
             <div v-if="showMarkPaidModal" class="fixed inset-0 z-50 flex items-center justify-center" @click="showMarkPaidModal = false">
                 <div class="fixed inset-0 bg-black/50"></div>
 
@@ -287,6 +288,6 @@ const selectClass =
                     </div>
                 </form>
             </div>
-        </Teleport>
+        </DialogSurface>
     </AppLayout>
 </template>

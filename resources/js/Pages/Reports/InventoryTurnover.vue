@@ -27,8 +27,8 @@ defineProps({
 const ratio = (value) => (value === null || value === undefined ? t('reports.inventoryTurnover.notAvailable') : `${formatPlainNumber(value, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}x`);
 const daysOf = (value) => (value === null || value === undefined ? t('reports.inventoryTurnover.notAvailable') : formatNumber(value));
 
-const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-text-secondary';
-const thRightClass = 'px-4 py-2.5 text-right text-xs font-medium tracking-tight text-text-secondary';
+const thClass = 'px-4 py-2.5 text-start text-xs font-medium tracking-tight text-text-secondary';
+const thRightClass = 'px-4 py-2.5 text-end text-xs font-medium tracking-tight text-text-secondary';
 </script>
 
 <template>
@@ -119,11 +119,11 @@ const thRightClass = 'px-4 py-2.5 text-right text-xs font-medium tracking-tight 
                                 class="border-b border-border-subtle transition-colors last:border-b-0 hover:bg-surface-overlay"
                             >
                                 <td class="px-4 py-3 font-medium text-text-primary">{{ row.category || t('reports.common.uncategorized') }}</td>
-                                <td class="px-4 py-3 text-right tabular-nums text-text-secondary">{{ formatNumber(row.units_sold) }}</td>
-                                <td class="px-4 py-3 text-right tabular-nums text-text-secondary">{{ formatCurrency(row.average_value) }}</td>
-                                <td class="px-4 py-3 text-right tabular-nums text-text-secondary">{{ formatCurrency(row.cogs) }}</td>
-                                <td class="px-4 py-3 text-right font-semibold tabular-nums text-text-primary">{{ ratio(row.turnover) }}</td>
-                                <td class="px-4 py-3 text-right tabular-nums text-text-secondary">{{ daysOf(row.days_of_inventory) }}</td>
+                                <td class="px-4 py-3 text-end tabular-nums text-text-secondary">{{ formatNumber(row.units_sold) }}</td>
+                                <td class="px-4 py-3 text-end tabular-nums text-text-secondary">{{ formatCurrency(row.average_value) }}</td>
+                                <td class="px-4 py-3 text-end tabular-nums text-text-secondary">{{ formatCurrency(row.cogs) }}</td>
+                                <td class="px-4 py-3 text-end font-semibold tabular-nums text-text-primary">{{ ratio(row.turnover) }}</td>
+                                <td class="px-4 py-3 text-end tabular-nums text-text-secondary">{{ daysOf(row.days_of_inventory) }}</td>
                             </tr>
                             <tr v-if="categories.length === 0">
                                 <td colspan="6" class="px-4 py-8 text-center text-sm text-text-tertiary">{{ t('reports.common.noData') }}</td>
@@ -165,13 +165,13 @@ const thRightClass = 'px-4 py-2.5 text-right text-xs font-medium tracking-tight 
                                         <p class="font-medium text-text-primary">{{ row.name }}</p>
                                         <p class="font-mono text-xs text-text-tertiary">{{ row.sku }}</p>
                                     </td>
-                                    <td class="px-4 py-3 text-right tabular-nums text-text-secondary">{{ formatNumber(row.units_sold) }}</td>
-                                    <td class="px-4 py-3 text-right tabular-nums text-text-secondary">{{ formatNumber(row.opening_units) }}</td>
-                                    <td class="px-4 py-3 text-right tabular-nums text-text-secondary">{{ formatNumber(row.closing_units) }}</td>
-                                    <td class="px-4 py-3 text-right tabular-nums text-text-secondary">{{ formatCurrency(row.average_value) }}</td>
-                                    <td class="px-4 py-3 text-right tabular-nums text-text-secondary">{{ formatCurrency(row.cogs) }}</td>
-                                    <td class="px-4 py-3 text-right font-semibold tabular-nums text-text-primary">{{ ratio(row.turnover) }}</td>
-                                    <td class="px-4 py-3 text-right tabular-nums text-text-secondary">{{ daysOf(row.days_of_inventory) }}</td>
+                                    <td class="px-4 py-3 text-end tabular-nums text-text-secondary">{{ formatNumber(row.units_sold) }}</td>
+                                    <td class="px-4 py-3 text-end tabular-nums text-text-secondary">{{ formatNumber(row.opening_units) }}</td>
+                                    <td class="px-4 py-3 text-end tabular-nums text-text-secondary">{{ formatNumber(row.closing_units) }}</td>
+                                    <td class="px-4 py-3 text-end tabular-nums text-text-secondary">{{ formatCurrency(row.average_value) }}</td>
+                                    <td class="px-4 py-3 text-end tabular-nums text-text-secondary">{{ formatCurrency(row.cogs) }}</td>
+                                    <td class="px-4 py-3 text-end font-semibold tabular-nums text-text-primary">{{ ratio(row.turnover) }}</td>
+                                    <td class="px-4 py-3 text-end tabular-nums text-text-secondary">{{ daysOf(row.days_of_inventory) }}</td>
                                 </tr>
                                 <tr v-if="products.length === 0">
                                     <td colspan="8" class="px-4 py-8 text-center text-sm text-text-tertiary">{{ t('reports.common.noData') }}</td>

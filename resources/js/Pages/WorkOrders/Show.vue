@@ -205,7 +205,7 @@ const deleteWorkOrder = () => {
     });
 };
 
-const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-text-secondary';
+const thClass = 'px-4 py-2.5 text-start text-xs font-medium tracking-tight text-text-secondary';
 const fieldLabel = 'block text-sm font-medium text-text-secondary';
 const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface-canvas px-3 text-sm text-text-primary placeholder:text-text-tertiary ds-focus-ring';
 const fieldArea = 'w-full rounded-md border border-border-subtle bg-surface-canvas px-3 py-2 text-sm text-text-primary placeholder:text-text-tertiary ds-focus-ring';
@@ -286,7 +286,7 @@ const fieldArea = 'w-full rounded-md border border-border-subtle bg-surface-canv
                                 <span v-else>{{ index + 1 }}</span>
                             </div>
                             <span
-                                class="ml-2 hidden text-sm font-medium sm:inline"
+                                class="ms-2 hidden text-sm font-medium sm:inline"
                                 :class="isStepCurrent(step.key) ? 'text-brand' : isStepCompleted(step.key) ? 'text-text-primary' : 'text-text-tertiary'"
                             >
                                 {{ step.label }}

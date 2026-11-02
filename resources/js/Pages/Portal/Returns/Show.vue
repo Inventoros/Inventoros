@@ -31,7 +31,7 @@ const conditionLabel = (condition) => {
     return te(key) ? t(key) : condition;
 };
 
-const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-text-secondary';
+const thClass = 'px-4 py-2.5 text-start text-xs font-medium tracking-tight text-text-secondary';
 </script>
 
 <template>
@@ -66,7 +66,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                                     <tr class="border-b border-border-subtle">
                                         <th :class="thClass">{{ t('portal.order.product') }}</th>
                                         <th :class="thClass">{{ t('portal.returnShow.condition') }}</th>
-                                        <th :class="[thClass, 'text-right']">{{ t('portal.order.quantity') }}</th>
+                                        <th :class="[thClass, 'text-end']">{{ t('portal.order.quantity') }}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -77,7 +77,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                                             <div class="text-xs text-text-tertiary">{{ t('portal.order.sku') }} {{ item.sku }}</div>
                                         </td>
                                         <td class="px-4 py-3 text-text-secondary">{{ conditionLabel(item.condition) }}</td>
-                                        <td class="px-4 py-3 text-right tabular-nums text-text-primary">{{ item.quantity }}</td>
+                                        <td class="px-4 py-3 text-end tabular-nums text-text-primary">{{ item.quantity }}</td>
                                     </tr>
                                 </tbody>
                             </table>

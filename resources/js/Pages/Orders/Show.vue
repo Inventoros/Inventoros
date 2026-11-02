@@ -1,4 +1,7 @@
 <script setup>
+import { useId as useFieldId } from 'vue';
+const fieldIdPrefix = useFieldId();
+import DialogSurface from '@/Components/DialogSurface.vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import PluginSlot from '@/Components/PluginSlot.vue';
 import PluginTabs from '@/Components/PluginTabs.vue';
@@ -284,17 +287,17 @@ const formatOrderDate = (date, long = false) =>
                                         </Link>
                                     </div>
 
-                                    <div class="ml-auto text-right">
+                                    <div class="ms-auto text-end">
                                         <p class="text-xs text-text-tertiary">{{ t('common.quantity') }}</p>
                                         <p class="font-medium tabular-nums text-text-primary">{{ item.quantity }}</p>
                                     </div>
 
-                                    <div class="text-right">
+                                    <div class="text-end">
                                         <p class="text-xs text-text-tertiary">{{ t('orders.show.unitPrice') }}</p>
                                         <p class="font-medium tabular-nums text-text-primary">{{ money(item.unit_price) }}</p>
                                     </div>
 
-                                    <div class="min-w-[100px] text-right">
+                                    <div class="min-w-[100px] text-end">
                                         <p class="text-xs text-text-tertiary">{{ t('common.total') }}</p>
                                         <p class="font-semibold tabular-nums text-text-primary">
                                             {{ money(item.total || item.subtotal || (item.quantity * item.unit_price)) }}
@@ -654,7 +657,7 @@ const formatOrderDate = (date, long = false) =>
         />
 
         <!-- Record payment / refund modal -->
-        <Teleport to="body">
+        <DialogSurface :show="!!(showPaymentModal)" @close="closePaymentModal">
             <div v-if="showPaymentModal" class="fixed inset-0 z-50 flex items-center justify-center" @click="closePaymentModal">
                 <div class="fixed inset-0 bg-black/50"></div>
 
@@ -716,10 +719,10 @@ const formatOrderDate = (date, long = false) =>
                     </div>
                 </form>
             </div>
-        </Teleport>
+        </DialogSurface>
 
         <!-- Void payment modal -->
-        <Teleport to="body">
+        <DialogSurface :show="!!(voidingPayment)" @close="voidingPayment = null">
             <div v-if="voidingPayment" class="fixed inset-0 z-50 flex items-center justify-center" @click="voidingPayment = null">
                 <div class="fixed inset-0 bg-black/50"></div>
 
@@ -747,10 +750,10 @@ const formatOrderDate = (date, long = false) =>
                     </div>
                 </form>
             </div>
-        </Teleport>
+        </DialogSurface>
 
         <!-- Delete Confirmation Modal -->
-        <Teleport to="body">
+        <DialogSurface :show="!!(showDeleteModal)" @close="showDeleteModal = false">
             <div v-if="showDeleteModal" class="fixed inset-0 z-50 flex items-center justify-center" @click="showDeleteModal = false">
                 <div class="fixed inset-0 bg-black/50"></div>
 
@@ -793,10 +796,10 @@ const formatOrderDate = (date, long = false) =>
                     </div>
                 </div>
             </div>
-        </Teleport>
+        </DialogSurface>
 
         <!-- Approval Modal -->
-        <Teleport to="body">
+        <DialogSurface :show="!!(showApprovalModal)" @close="showApprovalModal = false">
             <div v-if="showApprovalModal" class="fixed inset-0 z-50 flex items-center justify-center" @click="showApprovalModal = false">
                 <div class="fixed inset-0 bg-black/50"></div>
 
@@ -822,10 +825,10 @@ const formatOrderDate = (date, long = false) =>
                         </p>
 
                         <div>
-                            <label class="mb-1 block text-sm font-medium text-text-secondary">
+                            <label :for="fieldIdPrefix + '-1'" class="mb-1 block text-sm font-medium text-text-secondary">
                                 {{ t('common.notes') }} {{ approvalAction === 'reject' ? t('orders.show.notesRequired') : t('orders.show.notesOptional') }}
                             </label>
-                            <textarea
+                            <textarea :id="fieldIdPrefix + '-1'"
                                 v-model="approvalNotes"
                                 rows="3"
                                 class="w-full rounded-md border border-border-subtle bg-surface-canvas px-3 py-2 text-sm text-text-primary placeholder:text-text-tertiary ds-focus-ring"
@@ -851,6 +854,6 @@ const formatOrderDate = (date, long = false) =>
                     </div>
                 </div>
             </div>
-        </Teleport>
+        </DialogSurface>
     </AppLayout>
 </template>

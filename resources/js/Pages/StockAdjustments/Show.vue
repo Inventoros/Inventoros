@@ -180,7 +180,7 @@ const formatTime = (date) =>
             <div class="p-5">
                 <div class="relative">
                     <!-- Timeline line -->
-                    <div class="absolute left-8 top-8 bottom-8 w-px bg-border-subtle"></div>
+                    <div class="absolute start-8 top-8 bottom-8 w-px bg-border-subtle"></div>
 
                     <!-- Before -->
                     <div class="relative mb-8 flex items-start gap-4">

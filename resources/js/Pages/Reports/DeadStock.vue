@@ -37,8 +37,8 @@ const apply = () => {
 
 const inputClass =
     'h-9 w-full rounded-md border border-border-subtle bg-surface-canvas px-3 text-sm text-text-primary ds-focus-ring';
-const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-text-secondary';
-const thRightClass = 'px-4 py-2.5 text-right text-xs font-medium tracking-tight text-text-secondary';
+const thClass = 'px-4 py-2.5 text-start text-xs font-medium tracking-tight text-text-secondary';
+const thRightClass = 'px-4 py-2.5 text-end text-xs font-medium tracking-tight text-text-secondary';
 </script>
 
 <template>
@@ -141,12 +141,12 @@ const thRightClass = 'px-4 py-2.5 text-right text-xs font-medium tracking-tight 
                                     </td>
                                     <td class="px-4 py-3 text-text-secondary">{{ row.category || t('reports.common.uncategorized') }}</td>
                                     <td class="px-4 py-3 text-text-secondary">{{ row.location || '-' }}</td>
-                                    <td class="px-4 py-3 text-right tabular-nums text-text-primary">{{ formatNumber(row.stock) }}</td>
-                                    <td class="px-4 py-3 text-right tabular-nums text-text-secondary">
+                                    <td class="px-4 py-3 text-end tabular-nums text-text-primary">{{ formatNumber(row.stock) }}</td>
+                                    <td class="px-4 py-3 text-end tabular-nums text-text-secondary">
                                         <Badge v-if="row.cost_missing" variant="warning" size="sm">{{ t('reports.common.costMissing') }}</Badge>
                                         <span v-else>{{ formatCurrency(row.unit_cost, row.currency) }}</span>
                                     </td>
-                                    <td class="px-4 py-3 text-right font-semibold tabular-nums text-text-primary">{{ formatCurrency(row.tied_up_value, row.currency) }}</td>
+                                    <td class="px-4 py-3 text-end font-semibold tabular-nums text-text-primary">{{ formatCurrency(row.tied_up_value, row.currency) }}</td>
                                     <td class="px-4 py-3 text-text-secondary">{{ row.last_sale_at ? formatDay(row.last_sale_at) : t('reports.deadStock.never') }}</td>
                                     <td class="px-4 py-3 text-text-secondary">{{ row.last_outbound_at ? formatTimestampDate(row.last_outbound_at) : t('reports.deadStock.never') }}</td>
                                 </tr>

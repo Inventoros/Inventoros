@@ -201,13 +201,13 @@ const selectClass =
                     <div class="lg:col-span-3">
                         <label for="search" class="mb-1 block text-xs font-medium text-text-secondary">{{ t('admin.activityLog.searchDescription') }}</label>
                         <div class="relative">
-                            <Search :size="15" class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-text-tertiary" />
+                            <Search :size="15" class="pointer-events-none absolute start-3 top-1/2 -translate-y-1/2 text-text-tertiary" />
                             <input
                                 id="search"
                                 v-model="search"
                                 type="text"
                                 :placeholder="t('admin.activityLog.searchPlaceholder')"
-                                class="h-9 w-full rounded-md border border-border-subtle bg-surface-canvas pl-9 pr-3 text-sm text-text-primary placeholder:text-text-tertiary ds-focus-ring"
+                                class="h-9 w-full rounded-md border border-border-subtle bg-surface-canvas ps-9 pe-3 text-sm text-text-primary placeholder:text-text-tertiary ds-focus-ring"
                             />
                         </div>
                     </div>
@@ -341,9 +341,9 @@ const selectClass =
                                                 <table class="w-full text-xs">
                                                     <thead>
                                                         <tr class="border-b border-border-subtle">
-                                                            <th class="px-3 py-2 text-left font-medium text-text-secondary">{{ t('admin.activityLog.field') }}</th>
-                                                            <th class="px-3 py-2 text-left font-medium text-status-danger">{{ t('stockAdjustments.show.stockBefore') }}</th>
-                                                            <th class="px-3 py-2 text-left font-medium text-status-success">{{ t('stockAdjustments.show.stockAfter') }}</th>
+                                                            <th class="px-3 py-2 text-start font-medium text-text-secondary">{{ t('admin.activityLog.field') }}</th>
+                                                            <th class="px-3 py-2 text-start font-medium text-status-danger">{{ t('stockAdjustments.show.stockBefore') }}</th>
+                                                            <th class="px-3 py-2 text-start font-medium text-status-success">{{ t('stockAdjustments.show.stockAfter') }}</th>
                                                         </tr>
                                                     </thead>
                                                     <tbody class="divide-y divide-border-subtle">
@@ -364,7 +364,7 @@ const selectClass =
                                 </div>
 
                                 <!-- Timestamp -->
-                                <div class="shrink-0 text-right">
+                                <div class="shrink-0 text-end">
                                     <p class="text-xs text-text-secondary">{{ formatRelativeTime(activity.created_at) }}</p>
                                     <p class="mt-0.5 text-xs text-text-tertiary">{{ formatDate(activity.created_at) }}</p>
                                 </div>

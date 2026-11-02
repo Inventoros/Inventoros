@@ -46,7 +46,7 @@ const deleteSupplier = (supplier) => {
 };
 
 const thClass =
-    'px-4 py-2.5 text-left text-xs font-medium text-text-secondary';
+    'px-4 py-2.5 text-start text-xs font-medium text-text-secondary';
 </script>
 
 <template>
@@ -109,7 +109,7 @@ const thClass =
                         <th :class="thClass">{{ t('common.products') }}</th>
                         <th :class="thClass">{{ t('suppliers.rating.label') }}</th>
                         <th :class="thClass">{{ t('common.status') }}</th>
-                        <th :class="[thClass, 'text-right']">{{ t('common.actions') }}</th>
+                        <th :class="[thClass, 'text-end']">{{ t('common.actions') }}</th>
                     </tr>
                 </thead>
                 <tbody>

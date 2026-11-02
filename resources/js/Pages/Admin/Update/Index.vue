@@ -169,7 +169,7 @@ const deleteBackup = async (backupFile) => {
     }
 };
 
-const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-text-secondary';
+const thClass = 'px-4 py-2.5 text-start text-xs font-medium tracking-tight text-text-secondary';
 </script>
 
 <template>
@@ -292,7 +292,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                 <div class="p-5">
                     <div v-if="isUpdating" class="space-y-3">
                         <div class="flex items-center gap-3">
-                            <span class="h-4 w-4 animate-spin rounded-full border-2 border-brand border-r-transparent"></span>
+                            <span class="h-4 w-4 animate-spin rounded-full border-2 border-brand border-e-transparent"></span>
                             <span class="text-sm text-text-secondary">{{ t('admin.update.updatingApp') }}</span>
                         </div>
                         <div class="h-1.5 w-full overflow-hidden rounded-full bg-surface-sunken">
@@ -361,7 +361,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                                     <th :class="thClass">{{ t('admin.update.filename') }}</th>
                                     <th :class="thClass">{{ t('admin.update.size') }}</th>
                                     <th :class="thClass">{{ t('common.createdAt') }}</th>
-                                    <th :class="[thClass, 'text-right']">{{ t('common.actions') }}</th>
+                                    <th :class="[thClass, 'text-end']">{{ t('common.actions') }}</th>
                                 </tr>
                             </thead>
                             <tbody>

@@ -1,4 +1,6 @@
 <script setup>
+import { useId as useFieldId } from 'vue';
+const fieldIdPrefix = useFieldId();
 import AppLayout from '@/Layouts/AppLayout.vue';
 import PageHeader from '@/Components/ui/PageHeader.vue';
 import Card from '@/Components/ui/Card.vue';
@@ -162,8 +164,8 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                     <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
                         <!-- From Location -->
                         <div>
-                            <label :class="fieldLabel">{{ t('stockTransfers.fromLocation') }} <span class="text-status-danger">*</span></label>
-                            <select
+                            <label :for="fieldIdPrefix + '-1'" :class="fieldLabel">{{ t('stockTransfers.fromLocation') }} <span class="text-status-danger">*</span></label>
+                            <select :id="fieldIdPrefix + '-1'"
                                 v-model="form.from_location_id"
                                 required
                                 :class="fieldInput"
@@ -180,8 +182,8 @@ const fieldError = 'mt-1 text-xs text-status-danger';
 
                         <!-- To Location -->
                         <div>
-                            <label :class="fieldLabel">{{ t('stockTransfers.toLocation') }} <span class="text-status-danger">*</span></label>
-                            <select
+                            <label :for="fieldIdPrefix + '-2'" :class="fieldLabel">{{ t('stockTransfers.toLocation') }} <span class="text-status-danger">*</span></label>
+                            <select :id="fieldIdPrefix + '-2'"
                                 v-model="form.to_location_id"
                                 required
                                 :class="fieldInput"
@@ -208,8 +210,8 @@ const fieldError = 'mt-1 text-xs text-status-danger';
 
                     <!-- Notes -->
                     <div class="mt-4">
-                        <label :class="fieldLabel">{{ t('stockAdjustments.create.notesOptional') }}</label>
-                        <textarea
+                        <label :for="fieldIdPrefix + '-3'" :class="fieldLabel">{{ t('stockAdjustments.create.notesOptional') }}</label>
+                        <textarea :id="fieldIdPrefix + '-3'"
                             v-model="form.notes"
                             rows="3"
                             :class="fieldArea"

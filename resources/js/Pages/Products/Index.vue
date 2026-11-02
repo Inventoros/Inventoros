@@ -1,4 +1,7 @@
 <script setup>
+import { useId as useFieldId } from 'vue';
+const fieldIdPrefix = useFieldId();
+import DialogSurface from '@/Components/DialogSurface.vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import TableFilters from '@/Components/ui/TableFilters.vue';
 import TableViewport from '@/Components/ui/TableViewport.vue';
@@ -212,7 +215,7 @@ const duplicateProduct = (product) => {
 const selectClass =
     'h-9 w-full rounded-md border border-border-subtle bg-surface-canvas px-3 text-sm text-text-primary ds-focus-ring';
 const thClass =
-    'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-text-secondary';
+    'px-4 py-2.5 text-start text-xs font-medium tracking-tight text-text-secondary';
 </script>
 
 <template>
@@ -304,9 +307,9 @@ const thClass =
                         <th :class="thClass">{{ t('products.skuBarcode') }}</th>
                         <th :class="thClass">{{ t('products.category') }}</th>
                         <th :class="thClass">{{ t('products.location') }}</th>
-                        <th :class="thClass">{{ t('products.stock') }}</th>
-                        <th :class="thClass">{{ t('common.price') }}</th>
-                        <th :class="[thClass, 'text-right']">{{ t('common.actions') }}</th>
+                        <th :class="[thClass, 'text-end']">{{ t('products.stock') }}</th>
+                        <th :class="[thClass, 'text-end']">{{ t('common.price') }}</th>
+                        <th :class="[thClass, 'text-end']">{{ t('common.actions') }}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -333,14 +336,14 @@ const thClass =
                         </td>
                         <td class="px-4 py-3"><Badge variant="brand" size="sm">{{ product.category?.name || t('common.na') }}</Badge></td>
                         <td class="px-4 py-3"><Badge variant="neutral" size="sm">{{ product.location?.name || t('common.na') }}</Badge></td>
-                        <td class="px-4 py-3">
-                            <div class="flex items-center gap-1">
+                        <td class="px-4 py-3 text-end">
+                            <div class="flex items-center justify-end gap-1">
                                 <span :class="['font-medium tabular-nums', isLowStock(product) ? 'text-status-danger' : 'text-text-primary']">{{ onHand(product) }}</span>
                                 <AlertTriangle v-if="isLowStock(product)" :size="14" class="text-status-danger" />
                             </div>
                             <p class="text-[11px] text-text-tertiary">{{ t('products.min', { count: product.min_stock }) }}</p>
                         </td>
-                        <td class="px-4 py-3 font-medium tabular-nums text-text-primary">{{ formatCurrency(product.display_price ?? product.price, product.currency) }}</td>
+                        <td class="px-4 py-3 text-end font-medium tabular-nums text-text-primary">{{ formatCurrency(product.display_price ?? product.price, product.currency) }}</td>
                         <td class="px-4 py-3">
                             <div class="flex items-center justify-end gap-1">
                                 <Link :href="route('products.show', product.id)" class="rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-surface-sunken hover:text-brand" :title="t('common.view')"><Eye :size="16" /></Link>
@@ -358,7 +361,7 @@ const thClass =
                 <div v-if="products.data.length > 0" class="mt-4 flex flex-col items-center justify-between gap-3 sm:flex-row table-pagination">
                     <div class="flex items-center gap-2 text-xs text-text-secondary">
                         <label for="products_per_page" class="sr-only sm:not-sr-only">{{ t('inventoryCleanup.perPage') }}</label>
-                        <select id="products_per_page" v-model="perPage" class="h-7 rounded border border-border-subtle bg-surface-canvas py-0 pl-2 pr-7 text-xs ds-focus-ring" :title="t('inventoryCleanup.selectionHint')" @change="searchProducts">
+                        <select id="products_per_page" v-model="perPage" class="h-7 rounded border border-border-subtle bg-surface-canvas py-0 ps-2 pe-7 text-xs ds-focus-ring" :title="t('inventoryCleanup.selectionHint')" @change="searchProducts">
                             <option v-for="size in [15, 25, 50, 100]" :key="size" :value="size">{{ size }}</option>
                         </select>
                     </div>
@@ -388,7 +391,7 @@ const thClass =
         <PluginSlot slot="footer" :components="pluginComponents?.footer" />
 
         <!-- Bulk Category Modal -->
-        <Teleport to="body">
+        <DialogSurface :show="!!(showBulkCategoryModal)" @close="showBulkCategoryModal = false">
             <div v-if="showBulkCategoryModal" class="fixed inset-0 z-50 flex items-center justify-center">
                 <div class="fixed inset-0 bg-black/50" @click="showBulkCategoryModal = false"></div>
                 <div class="relative mx-4 w-full max-w-md rounded-xl border border-border-subtle bg-surface-raised p-6 shadow-lg">
@@ -404,10 +407,10 @@ const thClass =
                     </div>
                 </div>
             </div>
-        </Teleport>
+        </DialogSurface>
 
         <!-- Bulk Price Modal -->
-        <Teleport to="body">
+        <DialogSurface :show="!!(showBulkPriceModal)" @close="showBulkPriceModal = false">
             <div v-if="showBulkPriceModal" class="fixed inset-0 z-50 flex items-center justify-center">
                 <div class="fixed inset-0 bg-black/50" @click="showBulkPriceModal = false"></div>
                 <div class="relative mx-4 w-full max-w-md rounded-xl border border-border-subtle bg-surface-raised p-6 shadow-lg">
@@ -415,15 +418,15 @@ const thClass =
                     <p class="mb-4 text-sm text-text-secondary">{{ t('products.bulk.adjustPriceFor', { count: selectedProducts.length }, selectedProducts.length) }}</p>
                     <div class="space-y-4">
                         <div>
-                            <label class="mb-1 block text-xs font-medium text-text-secondary">{{ t('products.bulk.adjustmentType') }}</label>
-                            <select v-model="bulkPriceType" :class="selectClass">
+                            <label :for="fieldIdPrefix + '-1'" class="mb-1 block text-xs font-medium text-text-secondary">{{ t('products.bulk.adjustmentType') }}</label>
+                            <select :id="fieldIdPrefix + '-1'" v-model="bulkPriceType" :class="selectClass">
                                 <option value="percentage">{{ t('products.bulk.percentage') }}</option>
                                 <option value="fixed">{{ t('products.bulk.fixedAmount') }}</option>
                             </select>
                         </div>
                         <div>
-                            <label class="mb-1 block text-xs font-medium text-text-secondary">{{ t('products.bulk.value') }} <span class="text-text-tertiary">{{ t('products.bulk.useNegative') }}</span></label>
-                            <input v-model.number="bulkPriceValue" type="number" step="0.01"
+                            <label :for="fieldIdPrefix + '-2'" class="mb-1 block text-xs font-medium text-text-secondary">{{ t('products.bulk.value') }} <span class="text-text-tertiary">{{ t('products.bulk.useNegative') }}</span></label>
+                            <input :id="fieldIdPrefix + '-2'" v-model.number="bulkPriceValue" type="number" step="0.01"
                                 class="h-9 w-full rounded-md border border-border-subtle bg-surface-canvas px-3 text-sm text-text-primary placeholder:text-text-tertiary ds-focus-ring"
                                 :placeholder="bulkPriceType === 'percentage' ? t('products.bulk.percentagePlaceholder') : t('products.bulk.fixedPlaceholder')" />
                         </div>
@@ -434,13 +437,13 @@ const thClass =
                     </div>
                 </div>
             </div>
-        </Teleport>
+        </DialogSurface>
 
         <!-- Floating barcode scan button -->
         <button
             v-if="$page.props.auth.permissions.includes('products.view')"
             @click="openScanner"
-            class="fixed bottom-6 right-6 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-brand text-brand-foreground shadow-md transition-colors duration-200 hover:bg-brand-hover"
+            class="fixed bottom-6 end-6 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-brand text-brand-foreground shadow-md transition-colors duration-200 hover:bg-brand-hover"
             :title="t('products.scanBarcode')"
         >
             <ScanLine :size="24" />

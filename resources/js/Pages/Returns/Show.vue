@@ -1,4 +1,7 @@
 <script setup>
+import { useId as useFieldId } from 'vue';
+const fieldIdPrefix = useFieldId();
+import DialogSurface from '@/Components/DialogSurface.vue';
 import TableViewport from '@/Components/ui/TableViewport.vue';
 import PluginSlot from '@/Components/PluginSlot.vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
@@ -194,8 +197,8 @@ const thClass = 'px-4 py-2.5 text-xs font-medium tracking-tight text-text-second
                             <table class="min-w-full">
                                 <thead>
                                     <tr class="border-b border-border-subtle">
-                                        <th :class="[thClass, 'text-left']">{{ t('common.product') }}</th>
-                                        <th :class="[thClass, 'text-left']">SKU</th>
+                                        <th :class="[thClass, 'text-start']">{{ t('common.product') }}</th>
+                                        <th :class="[thClass, 'text-start']">SKU</th>
                                         <th :class="[thClass, 'text-center']">{{ t('returns.columns.qty') }}</th>
                                         <th :class="[thClass, 'text-center']">{{ t('returns.columns.condition') }}</th>
                                         <th :class="[thClass, 'text-center']">{{ t('returns.columns.restock') }}</th>
@@ -393,7 +396,7 @@ const thClass = 'px-4 py-2.5 text-xs font-medium tracking-tight text-text-second
         </div>
 
         <!-- Reject Modal -->
-        <Teleport to="body">
+        <DialogSurface :show="!!(showRejectModal)" @close="showRejectModal = false">
             <div v-if="showRejectModal" class="fixed inset-0 z-50 flex items-center justify-center" @click="showRejectModal = false">
                 <div class="fixed inset-0 bg-black/50"></div>
 
@@ -409,8 +412,8 @@ const thClass = 'px-4 py-2.5 text-xs font-medium tracking-tight text-text-second
                     </div>
 
                     <div class="mb-6">
-                        <label class="mb-1 block text-sm font-medium text-text-secondary">{{ t('returns.show.rejectReason') }}</label>
-                        <textarea
+                        <label :for="fieldIdPrefix + '-1'" class="mb-1 block text-sm font-medium text-text-secondary">{{ t('returns.show.rejectReason') }}</label>
+                        <textarea :id="fieldIdPrefix + '-1'"
                             v-model="rejectNotes"
                             rows="3"
                             class="w-full rounded-md border border-border-subtle bg-surface-canvas px-3 py-2 text-sm text-text-primary placeholder:text-text-tertiary ds-focus-ring"
@@ -429,7 +432,7 @@ const thClass = 'px-4 py-2.5 text-xs font-medium tracking-tight text-text-second
                     </div>
                 </div>
             </div>
-        </Teleport>
+        </DialogSurface>
 
         <!-- Plugin Slot: Footer -->
         <PluginSlot slot="footer" :components="pluginComponents?.footer" />

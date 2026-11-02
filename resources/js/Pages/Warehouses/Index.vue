@@ -54,7 +54,7 @@ const deleteWarehouse = (warehouse) => {
 };
 
 const thClass =
-    'px-4 py-2.5 text-left text-xs font-medium text-text-secondary';
+    'px-4 py-2.5 text-start text-xs font-medium text-text-secondary';
 </script>
 
 <template>
@@ -110,7 +110,7 @@ const thClass =
                         <th :class="thClass">{{ t('warehouses.columns.locations') }}</th>
                         <th :class="thClass">{{ t('warehouses.columns.status') }}</th>
                         <th :class="thClass">{{ t('warehouses.columns.default') }}</th>
-                        <th :class="[thClass, 'text-right']">{{ t('warehouses.columns.actions') }}</th>
+                        <th :class="[thClass, 'text-end']">{{ t('warehouses.columns.actions') }}</th>
                     </tr>
                 </thead>
                 <tbody>

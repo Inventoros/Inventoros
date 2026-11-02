@@ -83,7 +83,7 @@ watch(() => props.modelValue, (file) => {
         <div v-else class="flex items-center justify-between rounded-lg bg-surface-raised px-4 py-3">
             <div class="flex min-w-0 items-center gap-3">
                 <FileSpreadsheet :size="28" class="shrink-0 text-status-success" />
-                <div class="min-w-0 text-left">
+                <div class="min-w-0 text-start">
                     <p class="truncate font-medium text-text-primary">{{ modelValue.name }}</p>
                     <p class="text-sm text-text-tertiary">{{ t('importExport.import.readyToImport') }}</p>
                 </div>

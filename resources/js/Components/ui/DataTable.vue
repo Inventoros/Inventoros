@@ -33,10 +33,10 @@ const keyOf = (row, idx) => {
 };
 
 const alignClass = (align) => ({
-    right: 'text-right',
+    right: 'text-end',
     center: 'text-center',
-    left: 'text-left',
-}[align] || 'text-left');
+    left: 'text-start',
+}[align] || 'text-start');
 
 const cellPadding = computed(() => (props.dense ? 'px-3 py-2' : 'px-4 py-3'));
 </script>

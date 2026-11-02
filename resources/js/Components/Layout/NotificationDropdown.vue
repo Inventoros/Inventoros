@@ -137,7 +137,7 @@ defineExpose({ closeDropdown });
         <div
             v-show="notificationsOpen"
             @click.stop
-            class="absolute inset-x-4 top-full mt-1 sm:inset-x-auto sm:right-0 sm:top-auto sm:mt-2 sm:w-96 bg-white dark:bg-surface-raised border border-gray-200 dark:border-border-subtle rounded-xl shadow-xl overflow-hidden z-50"
+            class="absolute inset-x-4 top-full mt-1 sm:inset-x-auto sm:end-0 sm:top-auto sm:mt-2 sm:w-96 bg-white dark:bg-surface-raised border border-gray-200 dark:border-border-subtle rounded-xl shadow-xl overflow-hidden z-50"
         >
             <!-- Header -->
             <div class="flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-border-subtle">
@@ -181,7 +181,7 @@ defineExpose({ closeDropdown });
                     v-for="notification in notifications"
                     :key="notification.id"
                     @click="markAsRead(notification)"
-                    class="w-full flex items-start gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-slate-800/50 transition border-b border-gray-50 dark:border-border-subtle last:border-b-0 text-left"
+                    class="w-full flex items-start gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-slate-800/50 transition border-b border-gray-50 dark:border-border-subtle last:border-b-0 text-start"
                 >
                     <div :class="['shrink-0 w-9 h-9 rounded-lg flex items-center justify-center', getTypeColor(notification.type)]">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

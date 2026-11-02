@@ -486,7 +486,7 @@
     "printBarcodes": "Barcodes drucken",
     "printQrLabels": "QR-Etiketten drucken",
     "scanBarcode": "Barcode scannen (Strg+B)",
-    "confirmDelete": "Sind Sie sicher, dass Sie \u201E{name}\u201C löschen möchten?",
+    "confirmDelete": "Sind Sie sicher, dass Sie „{name}“ löschen möchten?",
     "create": {
       "title": "Produkt erstellen",
       "basicInfo": "Grundinformationen",
@@ -594,10 +594,7 @@
         "updateQuantityFailed": "Menge konnte nicht aktualisiert werden",
         "confirmRemove": "Diese Komponente aus der Stückliste entfernen?",
         "removeFailed": "Komponente konnte nicht entfernt werden"
-      },
-      "prepareTransfer": "Bestand reservieren",
-      "shipTransfer": "Transfer versenden",
-      "receiveTransfer": "Transfer empfangen"
+      }
     },
     "quickAddCategory": {
       "title": "Kategorie schnell hinzufügen",
@@ -665,7 +662,7 @@
     }
   },
   "orders": {
-      "channelOrderNumber": "Bestellnummer des Vertriebskanals",
+    "channelOrderNumber": "Bestellnummer des Vertriebskanals",
     "itemsCol": "Artikel",
     "sources": {
       "manual": "Manuell",
@@ -1536,12 +1533,12 @@
       "download": "Herunterladen",
       "availableUntil": "Verfügbar bis {date}",
       "statuses": {
+        "prepared": "Vorbereitet",
         "pending": "Ausstehend",
         "processing": "In Bearbeitung",
         "completed": "Abgeschlossen",
         "failed": "Fehlgeschlagen",
-        "expired": "Abgelaufen",
-        "prepared": "Vorbereitet"
+        "expired": "Abgelaufen"
       }
     }
   },
@@ -1842,7 +1839,7 @@
       "addUser": "Benutzer hinzufügen",
       "description": "Verwalten Sie die Benutzer Ihrer Organisation. Sie können Benutzer hinzufügen, bearbeiten und entfernen sowie Rollen und Berechtigungen zuweisen.",
       "role": "Rolle",
-      "noUsersFound": "Keine Benutzer gefunden. Klicken Sie auf ‘Benutzer hinzuf\u00FCgen’, um Ihren ersten Benutzer zu erstellen.",
+      "noUsersFound": "Keine Benutzer gefunden. Klicken Sie auf ‘Benutzer hinzufügen’, um Ihren ersten Benutzer zu erstellen.",
       "create": {
         "title": "Benutzer erstellen",
         "backToUsers": "Zurück zu Benutzer",
@@ -2087,7 +2084,7 @@
       "filename": "Dateiname",
       "size": "Größe",
       "restore": "Wiederherstellen",
-      "noBackups": "Keine Sicherungen verf\u00FCgbar. Klicken Sie auf ‘Sicherung erstellen’, um Ihre erste Sicherung zu erstellen.",
+      "noBackups": "Keine Sicherungen verfügbar. Klicken Sie auf ‘Sicherung erstellen’, um Ihre erste Sicherung zu erstellen.",
       "updateInfo": "Aktualisierungsinformationen",
       "fetchedFrom": "Updates werden abgerufen von",
       "onGithub": "auf GitHub",
@@ -3919,7 +3916,8 @@
       "pending": "Ausstehend",
       "in_transit": "Unterwegs",
       "completed": "Abgeschlossen",
-      "cancelled": "Storniert"
+      "cancelled": "Storniert",
+      "prepared": "Vorbereitet"
     },
     "create": {
       "title": "Umlagerung erstellen",
@@ -3958,7 +3956,10 @@
       "cancelTransfer": "Umlagerung stornieren",
       "completeHint": "Beim Abschluss der Umlagerung wird der Bestand vom Quelllagerort abgezogen und dem Ziellagerort hinzugefügt.",
       "confirmComplete": "Sind Sie sicher, dass Sie diese Umlagerung abschließen möchten? Die Bestände werden angepasst.",
-      "confirmCancel": "Sind Sie sicher, dass Sie diese Umlagerung stornieren möchten?"
+      "confirmCancel": "Sind Sie sicher, dass Sie diese Umlagerung stornieren möchten?",
+      "prepareTransfer": "Bestand reservieren",
+      "shipTransfer": "Transfer versenden",
+      "receiveTransfer": "Transfer empfangen"
     }
   },
   "tax": {
@@ -3970,39 +3971,39 @@
     "title": "Bestand nach Lager",
     "includeZero": "Nullbestände anzeigen"
   },
-    "storage": {
-        "title": "Dateispeicher",
-        "description": "Lokaler und externer Speicher für hochgeladene Dateien.",
-        "configure": "INVENTOROS_UPLOADS_DISK und AWS-Zugangsdaten in .env oder config/filesystems.php konfigurieren, dann den Konfigurationscache erneuern und Queue-Worker neu starten.",
-        "existingFiles": "Vorhandene Dateien behalten ihren gespeicherten Datenträger. Alte Datenträgerdefinitionen beim Wechsel beibehalten.",
-        "probe": "Die Verbindungsprüfung schreibt, liest und löscht eine kleine temporäre private Datei.",
-        "driver": "Treiber",
-        "notConfigured": "Nicht konfiguriert",
-        "usedFor": "Verwendung",
-        "bucket": "Bucket",
-        "region": "Region",
-        "connected": "Verbindung bestätigt: Schreiben, Lesen und Löschen erfolgreich.",
-        "failed": "Verbindung bei {step} fehlgeschlagen. Serverkonfiguration und Berechtigungen prüfen.",
-        "unchecked": "Keine aktuelle Verbindungsprüfung.",
-        "checkedAt": "Geprüft: {time}",
-        "cleanupFailed": "Die temporäre Testdatei konnte nicht entfernt werden. Nach Korrektur der Berechtigungen das Präfix connection-checks prüfen.",
-        "requestFailed": "Prüfung nicht möglich. In Kürze erneut versuchen.",
-        "checking": "Wird geprüft…",
-        "check": "Verbindung prüfen",
-        "purposes": {
-            "products": "Produktbilder",
-            "logos": "Organisationslogos",
-            "labels": "Versandetiketten",
-            "imports": "Importe in der Warteschlange",
-            "exports": "Erstellte Exporte"
-        },
-        "steps": {
-            "connect": "Verbinden",
-            "write": "Schreiben",
-            "read": "Lesen",
-            "delete": "Löschen"
-        }
+  "storage": {
+    "title": "Dateispeicher",
+    "description": "Lokaler und externer Speicher für hochgeladene Dateien.",
+    "configure": "INVENTOROS_UPLOADS_DISK und AWS-Zugangsdaten in .env oder config/filesystems.php konfigurieren, dann den Konfigurationscache erneuern und Queue-Worker neu starten.",
+    "existingFiles": "Vorhandene Dateien behalten ihren gespeicherten Datenträger. Alte Datenträgerdefinitionen beim Wechsel beibehalten.",
+    "probe": "Die Verbindungsprüfung schreibt, liest und löscht eine kleine temporäre private Datei.",
+    "driver": "Treiber",
+    "notConfigured": "Nicht konfiguriert",
+    "usedFor": "Verwendung",
+    "bucket": "Bucket",
+    "region": "Region",
+    "connected": "Verbindung bestätigt: Schreiben, Lesen und Löschen erfolgreich.",
+    "failed": "Verbindung bei {step} fehlgeschlagen. Serverkonfiguration und Berechtigungen prüfen.",
+    "unchecked": "Keine aktuelle Verbindungsprüfung.",
+    "checkedAt": "Geprüft: {time}",
+    "cleanupFailed": "Die temporäre Testdatei konnte nicht entfernt werden. Nach Korrektur der Berechtigungen das Präfix connection-checks prüfen.",
+    "requestFailed": "Prüfung nicht möglich. In Kürze erneut versuchen.",
+    "checking": "Wird geprüft…",
+    "check": "Verbindung prüfen",
+    "purposes": {
+      "products": "Produktbilder",
+      "logos": "Organisationslogos",
+      "labels": "Versandetiketten",
+      "imports": "Importe in der Warteschlange",
+      "exports": "Erstellte Exporte"
     },
+    "steps": {
+      "connect": "Verbinden",
+      "write": "Schreiben",
+      "read": "Lesen",
+      "delete": "Löschen"
+    }
+  },
   "batchExpiryReport": {
     "title": "Chargenablauf",
     "description": "Abgelaufene Chargen finden und kommende Ablaufdaten planen.",

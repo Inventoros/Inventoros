@@ -43,6 +43,7 @@
         --status-warning: 36.08 87.73% 31.96%;
         --status-warning-soft: 39.13 100.00% 95.49%;
         --status-danger: 0 72% 45%;
+        --action-danger: 0 72% 45%;
         --status-danger-soft: 0 86% 97%;
         --status-info: 217 91% 50%;
         --status-info-soft: 214 95% 97%;
@@ -82,6 +83,7 @@
         --status-warning: 36.59 77.36% 68.82%;
         --status-warning-soft: 35.45 28.95% 14.90%;
         --status-danger: 0 84% 65%;
+        --action-danger: 0 72% 45%;
         --status-danger-soft: 0 30% 18%;
         --status-info: 217 91% 65%;
         --status-info-soft: 217 30% 18%;
@@ -108,6 +110,20 @@
             BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
             sans-serif;
         letter-spacing: -0.01em;
+    }
+
+    :where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+        outline: 2px solid hsl(var(--ring));
+        outline-offset: 2px;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        *, *::before, *::after {
+            animation-duration: 0.01ms !important;
+            animation-iteration-count: 1 !important;
+            transition-duration: 0.01ms !important;
+            scroll-behavior: auto !important;
+        }
     }
 
     /* Linear-style scrollbar — thin, fades in on hover */

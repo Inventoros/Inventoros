@@ -87,12 +87,12 @@ const ariaSort = (key) => props.filters.sort_by !== key ? 'none' : (props.filter
                     <caption class="sr-only">{{ t('batchExpiryReport.title') }}</caption>
                     <thead>
                         <tr class="border-b border-border-subtle">
-                            <th v-for="column in columns" :key="column.key" scope="col" :aria-sort="ariaSort(column.key)" class="px-4 py-3 text-left text-xs font-medium text-text-secondary">
+                            <th v-for="column in columns" :key="column.key" scope="col" :aria-sort="ariaSort(column.key)" class="px-4 py-3 text-start text-xs font-medium text-text-secondary">
                                 <button type="button" class="inline-flex items-center gap-1 rounded ds-focus-ring" @click="sort(column.key)">
                                     {{ t(column.label) }}<ArrowUpDown :size="12" aria-hidden="true" />
                                 </button>
                             </th>
-                            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-text-secondary">{{ t('batchExpiryReport.status') }}</th>
+                            <th scope="col" class="px-4 py-3 text-start text-xs font-medium text-text-secondary">{{ t('batchExpiryReport.status') }}</th>
                         </tr>
                     </thead>
                     <tbody>

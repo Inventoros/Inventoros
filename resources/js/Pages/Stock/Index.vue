@@ -58,7 +58,7 @@ const field = 'h-9 rounded-md border border-border-subtle bg-surface-canvas px-3
             </form>
             </TableFilters>
             <TableViewport class="overflow-x-auto">
-                <table class="w-full text-left text-sm">
+                <table class="w-full text-start text-sm">
                     <thead><tr class="border-b border-border-subtle bg-surface-sunken">
                         <th v-for="[key, label] in columns" :key="key" :aria-sort="form.sort_by === key ? form.sort_dir === 'asc' ? 'ascending' : 'descending' : 'none'" class="whitespace-nowrap px-4 py-3 text-xs font-medium text-text-secondary">
                             <button type="button" class="rounded ds-focus-ring" :aria-label="label" @click="sort(key)">{{ label }} <span v-if="form.sort_by === key" aria-hidden="true">{{ form.sort_dir === 'asc' ? '↑' : '↓' }}</span></button>
@@ -69,7 +69,7 @@ const field = 'h-9 rounded-md border border-border-subtle bg-surface-canvas px-3
                             <td class="whitespace-nowrap px-4 py-3 font-mono text-xs"><Link :href="route('products.show', row.product_id)" class="text-brand hover:underline">{{ row.sku }}</Link></td>
                             <td class="px-4 py-3">{{ row.product_name }}</td><td class="px-4 py-3">{{ row.variant_title || t('common.na') }}</td>
                             <td class="px-4 py-3">{{ row.warehouse_name || t('locations.noWarehouse') }}</td><td class="px-4 py-3">{{ row.location_name || t('common.na') }}</td>
-                            <td v-for="key in ['on_hand', 'reserved', 'available', 'in_transit']" :key="key" class="px-4 py-3 text-right tabular-nums" :class="key === 'available' && row.available === 0 ? 'font-semibold text-status-danger' : ''">{{ row[key] }}</td>
+                            <td v-for="key in ['on_hand', 'reserved', 'available', 'in_transit']" :key="key" class="px-4 py-3 text-end tabular-nums" :class="key === 'available' && row.available === 0 ? 'font-semibold text-status-danger' : ''">{{ row[key] }}</td>
                         </tr>
                         <tr v-if="!balances.data.length"><td colspan="9" class="p-8 text-center text-text-secondary">{{ t('common.noResults') }}</td></tr>
                     </tbody>

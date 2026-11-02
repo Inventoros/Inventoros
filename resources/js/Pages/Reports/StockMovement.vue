@@ -1,4 +1,6 @@
 <script setup>
+import { useId as useFieldId } from 'vue';
+const fieldIdPrefix = useFieldId();
 import TableViewport from '@/Components/ui/TableViewport.vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import PageHeader from '@/Components/ui/PageHeader.vue';
@@ -67,7 +69,7 @@ const typeVariant = (adjustmentType) =>
 const fieldClass =
     'h-9 w-full rounded-md border border-border-subtle bg-surface-canvas px-3 text-sm text-text-primary placeholder:text-text-tertiary ds-focus-ring';
 const thClass =
-    'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-text-secondary';
+    'px-4 py-2.5 text-start text-xs font-medium tracking-tight text-text-secondary';
 </script>
 
 <template>
@@ -132,16 +134,16 @@ const thClass =
             <form @submit.prevent="applyFilters" class="space-y-4">
                 <div class="grid grid-cols-1 gap-4 md:grid-cols-4">
                     <div>
-                        <label class="mb-1 block text-xs font-medium text-text-secondary">{{ t('reports.stockMovement.dateFrom') }}</label>
-                        <input v-model="dateFrom" type="date" :class="fieldClass" />
+                        <label :for="fieldIdPrefix + '-1'" class="mb-1 block text-xs font-medium text-text-secondary">{{ t('reports.stockMovement.dateFrom') }}</label>
+                        <input :id="fieldIdPrefix + '-1'" v-model="dateFrom" type="date" :class="fieldClass" />
                     </div>
                     <div>
-                        <label class="mb-1 block text-xs font-medium text-text-secondary">{{ t('reports.stockMovement.dateTo') }}</label>
-                        <input v-model="dateTo" type="date" :class="fieldClass" />
+                        <label :for="fieldIdPrefix + '-2'" class="mb-1 block text-xs font-medium text-text-secondary">{{ t('reports.stockMovement.dateTo') }}</label>
+                        <input :id="fieldIdPrefix + '-2'" v-model="dateTo" type="date" :class="fieldClass" />
                     </div>
                     <div>
-                        <label class="mb-1 block text-xs font-medium text-text-secondary">{{ t('common.product') }}</label>
-                        <select v-model="productId" :class="fieldClass">
+                        <label :for="fieldIdPrefix + '-3'" class="mb-1 block text-xs font-medium text-text-secondary">{{ t('common.product') }}</label>
+                        <select :id="fieldIdPrefix + '-3'" v-model="productId" :class="fieldClass">
                             <option value="">{{ t('reports.stockMovement.allProducts') }}</option>
                             <option v-for="product in products" :key="product.id" :value="product.id">
                                 {{ product.name }} ({{ product.sku }})
@@ -149,8 +151,8 @@ const thClass =
                         </select>
                     </div>
                     <div>
-                        <label class="mb-1 block text-xs font-medium text-text-secondary">{{ t('common.type') }}</label>
-                        <select v-model="type" :class="fieldClass">
+                        <label :for="fieldIdPrefix + '-4'" class="mb-1 block text-xs font-medium text-text-secondary">{{ t('common.type') }}</label>
+                        <select :id="fieldIdPrefix + '-4'" v-model="type" :class="fieldClass">
                             <option value="">{{ t('common.allTypes') }}</option>
                             <option value="manual">{{ t('reports.adjustmentTypes.manual') }}</option>
                             <option value="recount">{{ t('reports.adjustmentTypes.recount') }}</option>
@@ -176,9 +178,9 @@ const thClass =
                         <th :class="thClass">{{ t('common.date') }}</th>
                         <th :class="thClass">{{ t('common.product') }}</th>
                         <th :class="thClass">{{ t('common.type') }}</th>
-                        <th :class="[thClass, 'text-right']">{{ t('reports.stockMovement.before') }}</th>
-                        <th :class="[thClass, 'text-right']">{{ t('reports.stockMovement.change') }}</th>
-                        <th :class="[thClass, 'text-right']">{{ t('reports.stockMovement.after') }}</th>
+                        <th :class="[thClass, 'text-end']">{{ t('reports.stockMovement.before') }}</th>
+                        <th :class="[thClass, 'text-end']">{{ t('reports.stockMovement.change') }}</th>
+                        <th :class="[thClass, 'text-end']">{{ t('reports.stockMovement.after') }}</th>
                         <th :class="thClass">{{ t('common.user') }}</th>
                     </tr>
                 </thead>
@@ -198,16 +200,16 @@ const thClass =
                         <td class="whitespace-nowrap px-4 py-3">
                             <Badge :variant="typeVariant(adj.type)" size="sm">{{ adj.type }}</Badge>
                         </td>
-                        <td class="whitespace-nowrap px-4 py-3 text-right tabular-nums text-text-secondary">
+                        <td class="whitespace-nowrap px-4 py-3 text-end tabular-nums text-text-secondary">
                             {{ adj.quantity_before }}
                         </td>
                         <td
-                            class="whitespace-nowrap px-4 py-3 text-right font-semibold tabular-nums"
+                            class="whitespace-nowrap px-4 py-3 text-end font-semibold tabular-nums"
                             :class="adj.adjustment_quantity >= 0 ? 'text-status-success' : 'text-status-danger'"
                         >
                             {{ adj.adjustment_quantity >= 0 ? '+' : '' }}{{ adj.adjustment_quantity }}
                         </td>
-                        <td class="whitespace-nowrap px-4 py-3 text-right font-medium tabular-nums text-text-primary">
+                        <td class="whitespace-nowrap px-4 py-3 text-end font-medium tabular-nums text-text-primary">
                             {{ adj.quantity_after }}
                         </td>
                         <td class="whitespace-nowrap px-4 py-3 text-text-secondary">

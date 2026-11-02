@@ -2,6 +2,7 @@
 import { nextTick, onBeforeUnmount, ref, useId } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { Maximize2, X } from '@lucide/vue';
+import { lockPageScroll } from '@/lib/scrollLock';
 
 defineOptions({ inheritAttrs: false });
 const props = defineProps({ label: { type: String, default: null } });
@@ -13,28 +14,28 @@ const closeButton = ref(null);
 const viewport = ref(null);
 const expanded = ref(false);
 const caption = ref('');
-let previousOverflow;
+let releaseScroll;
 let scrollBefore;
 let modalObserver;
 let openedActionDialog = false;
 const restoreBody = () => {
-    if (previousOverflow !== undefined)
-        document.body.style.overflow = previousOverflow;
-    previousOverflow = undefined;
+    releaseScroll?.();
+    releaseScroll = undefined;
 };
 
 const open = async () => {
+    const existingDialogs = [...document.querySelectorAll('dialog[open], [role="dialog"], .fixed.inset-0.z-50')]
+        .filter(element => element.getClientRects().length);
     caption.value =
         props.label ||
         document.querySelector('h1')?.textContent.trim() ||
         t('common.results');
-    previousOverflow = document.body.style.overflow;
     scrollBefore = {
         top: viewport.value.scrollTop,
         left: viewport.value.scrollLeft,
     };
     openedActionDialog = false;
-    document.body.style.overflow = 'hidden';
+    releaseScroll = lockPageScroll();
     expanded.value = true;
     await nextTick();
     // The native modal provides focus containment, Escape and an inert
@@ -51,6 +52,7 @@ const open = async () => {
         ].find(
             (element) =>
                 element !== dialog.value &&
+                !existingDialogs.some(existing => existing === element || existing.contains(element)) &&
                 !dialog.value.contains(element) &&
                 element.getClientRects().length,
         );

@@ -43,7 +43,7 @@ const save = () => {
 
 const errorFor = (index, field) => form.errors[`levels.${index}.${field}`];
 
-const thClass = 'px-3 py-2 text-left text-xs font-medium text-text-secondary';
+const thClass = 'px-3 py-2 text-start text-xs font-medium text-text-secondary';
 const cellInput = 'h-8 w-24 rounded-md border border-border-subtle bg-surface-canvas px-2 text-sm tabular-nums text-text-primary placeholder:text-text-tertiary ds-focus-ring';
 </script>
 
@@ -62,7 +62,7 @@ const cellInput = 'h-8 w-24 rounded-md border border-border-subtle bg-surface-ca
                         <thead>
                             <tr class="border-b border-border-subtle">
                                 <th :class="thClass">{{ t('warehouses.stockLevels.warehouse') }}</th>
-                                <th :class="[thClass, 'text-right']">{{ t('warehouses.stockLevels.onHand') }}</th>
+                                <th :class="[thClass, 'text-end']">{{ t('warehouses.stockLevels.onHand') }}</th>
                                 <th v-for="field in fields" :key="field" :class="thClass">{{ t(`warehouses.stockLevels.${field}`) }}</th>
                             </tr>
                         </thead>
@@ -79,7 +79,7 @@ const cellInput = 'h-8 w-24 rounded-md border border-border-subtle bg-surface-ca
                                         <Badge v-if="level.needs_reorder" variant="danger" size="sm">{{ t('warehouses.stockLevels.reorder') }}</Badge>
                                     </div>
                                 </td>
-                                <td class="px-3 py-2 text-right tabular-nums text-text-primary">{{ level.on_hand }}</td>
+                                <td class="px-3 py-2 text-end tabular-nums text-text-primary">{{ level.on_hand }}</td>
                                 <td v-for="field in fields" :key="field" class="px-3 py-2">
                                     <input
                                         v-if="canEdit"

@@ -22,7 +22,7 @@ const { t } = useI18n();
 const roleVariant = (role) =>
     ({ admin: 'brand', manager: 'info', member: 'neutral' }[role] || 'neutral');
 
-const thClass = 'px-4 py-2.5 text-left text-xs font-medium text-text-secondary';
+const thClass = 'px-4 py-2.5 text-start text-xs font-medium text-text-secondary';
 </script>
 
 <template>
@@ -54,7 +54,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium text-text-secondary';
                         <th :class="thClass">{{ t('common.name') }}</th>
                         <th :class="thClass">{{ t('common.email') }}</th>
                         <th :class="thClass">{{ t('admin.users.role') }}</th>
-                        <th :class="[thClass, 'text-right']">{{ t('common.actions') }}</th>
+                        <th :class="[thClass, 'text-end']">{{ t('common.actions') }}</th>
                     </tr>
                 </thead>
                 <tbody>

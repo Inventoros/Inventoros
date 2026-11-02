@@ -109,7 +109,7 @@ defineExpose({ messages });
 <template>
     <div
         v-if="messages.length"
-        class="fixed bottom-4 right-4 z-50 flex w-[min(24rem,calc(100vw-2rem))] flex-col gap-2"
+        class="fixed bottom-4 end-4 z-50 flex w-[min(24rem,calc(100vw-2rem))] flex-col gap-2"
         data-testid="flash-messages"
     >
         <TransitionGroup
@@ -131,7 +131,7 @@ defineExpose({ messages });
                 <p class="min-w-0 flex-1 text-[13px] leading-snug">{{ message.text }}</p>
                 <button
                     type="button"
-                    class="-mr-1 -mt-0.5 shrink-0 rounded p-0.5 opacity-60 transition-opacity hover:opacity-100 motion-reduce:transition-none"
+                    class="-me-1 -mt-0.5 shrink-0 rounded p-0.5 opacity-60 transition-opacity hover:opacity-100 motion-reduce:transition-none"
                     :aria-label="t('common.dismiss')"
                     @click="dismiss(message.id)"
                 >

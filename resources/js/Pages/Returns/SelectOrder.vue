@@ -31,7 +31,7 @@ watch(search, () => {
     }, 300);
 });
 
-const thClass = 'px-4 py-2.5 text-left text-xs font-medium text-text-secondary';
+const thClass = 'px-4 py-2.5 text-start text-xs font-medium text-text-secondary';
 </script>
 
 <template>
@@ -60,14 +60,14 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium text-text-secondary';
         <Card class="mt-6">
             <label for="order-search" class="mb-1 block text-xs font-medium text-text-secondary">{{ t('returnPicker.search') }}</label>
             <div class="relative">
-                <Search :size="15" class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-text-tertiary" />
+                <Search :size="15" class="pointer-events-none absolute start-3 top-1/2 -translate-y-1/2 text-text-tertiary" />
                 <input
                     id="order-search"
                     v-model="search"
                     type="search"
                     autofocus
                     :placeholder="t('returnPicker.searchPlaceholder')"
-                    class="h-9 w-full rounded-md border border-border-subtle bg-surface-canvas pl-9 pr-3 text-sm text-text-primary placeholder:text-text-tertiary ds-focus-ring"
+                    class="h-9 w-full rounded-md border border-border-subtle bg-surface-canvas ps-9 pe-3 text-sm text-text-primary placeholder:text-text-tertiary ds-focus-ring"
                 />
             </div>
         </Card>
@@ -80,8 +80,8 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium text-text-secondary';
                         <th :class="thClass">{{ t('returnPicker.customer') }}</th>
                         <th :class="[thClass, 'hidden sm:table-cell']">{{ t('returnPicker.date') }}</th>
                         <th :class="thClass">{{ t('returnPicker.status') }}</th>
-                        <th :class="[thClass, 'hidden text-right md:table-cell']">{{ t('returnPicker.total') }}</th>
-                        <th :class="[thClass, 'text-right']"><span class="sr-only">{{ t('returnPicker.choose') }}</span></th>
+                        <th :class="[thClass, 'hidden text-end md:table-cell']">{{ t('returnPicker.total') }}</th>
+                        <th :class="[thClass, 'text-end']"><span class="sr-only">{{ t('returnPicker.choose') }}</span></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -105,8 +105,8 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium text-text-secondary';
                         <td class="px-4 py-3">
                             <Badge :variant="orderStatusVariant(order.status)" size="sm" dot>{{ orderStatusLabel(order.status, i18n) }}</Badge>
                         </td>
-                        <td class="hidden px-4 py-3 text-right tabular-nums text-text-primary md:table-cell">{{ formatMoney(order.total, order.currency) }}</td>
-                        <td class="px-4 py-3 text-right">
+                        <td class="hidden px-4 py-3 text-end tabular-nums text-text-primary md:table-cell">{{ formatMoney(order.total, order.currency) }}</td>
+                        <td class="px-4 py-3 text-end">
                             <Button variant="default" size="sm" as="Link" :href="route('returns.create', { order_id: order.id })">
                                 <RotateCcw :size="14" />
                                 {{ t('returnPicker.choose') }}

@@ -125,7 +125,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                 <div class="lg:col-span-2">
                     <label :for="`supplier-cost-${index}`" :class="fieldLabel">{{ t('productSuppliers.costPrice') }}</label>
                     <div class="relative">
-                        <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                        <div class="pointer-events-none absolute inset-y-0 start-0 flex items-center ps-3">
                             <span class="text-sm text-text-tertiary">{{ currencySymbol }}</span>
                         </div>
                         <input
@@ -134,7 +134,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                             type="number"
                             step="0.01"
                             min="0"
-                            :class="[fieldInput, 'pl-7']"
+                            :class="[fieldInput, 'ps-7']"
                             @input="setField(index, 'cost_price', $event.target.value)"
                         />
                     </div>

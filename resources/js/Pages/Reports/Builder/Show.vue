@@ -159,11 +159,11 @@ const formatValue = (value, col) => {
                     <table class="min-w-full">
                         <thead>
                             <tr class="border-b border-border-subtle">
-                                <th class="w-12 px-4 py-2.5 text-left text-xs font-medium tracking-tight text-text-secondary">#</th>
+                                <th class="w-12 px-4 py-2.5 text-start text-xs font-medium tracking-tight text-text-secondary">#</th>
                                 <th
                                     v-for="col in report.columns"
                                     :key="col"
-                                    class="whitespace-nowrap px-4 py-2.5 text-left text-xs font-medium tracking-tight text-text-secondary"
+                                    class="whitespace-nowrap px-4 py-2.5 text-start text-xs font-medium tracking-tight text-text-secondary"
                                 >
                                     {{ columnLabels[col] || col }}
                                 </th>

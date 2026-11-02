@@ -43,6 +43,11 @@ const i18n = createI18n({
 
 // Money, number and date formatting follows the UI language (lib/formatSettings).
 applyFormatSettings({ locale: i18n.global.locale.value })
+const applyDocumentLocale = (locale) => {
+    document.documentElement.lang = locale
+    document.documentElement.dir = locale === 'ar' ? 'rtl' : 'ltr'
+}
+applyDocumentLocale(i18n.global.locale.value)
 
 export const availableLocales = [
     { code: 'en', name: 'English', flag: '\uD83C\uDDFA\uD83C\uDDF8' },
@@ -68,17 +73,18 @@ export const availableLocales = [
  */
 export function applyServerLocale(locale) {
     if (!locale || !availableLocales.some((l) => l.code === locale)) return
+    applyDocumentLocale(locale)
     if (i18n.global.locale.value === locale) return
     i18n.global.locale.value = locale
     applyFormatSettings({ locale })
-    document.documentElement.lang = locale
 }
 
 export function setLocale(locale) {
+    if (!availableLocales.some((l) => l.code === locale)) return
     i18n.global.locale.value = locale
     applyFormatSettings({ locale })
     localStorage.setItem('locale', locale)
-    document.documentElement.lang = locale
+    applyDocumentLocale(locale)
     document.cookie = `locale=${locale};path=/;max-age=${60 * 60 * 24 * 365};SameSite=Lax`
 }
 

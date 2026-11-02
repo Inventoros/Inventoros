@@ -155,7 +155,7 @@ const formatFileSize = (bytes) => {
                     />
                     
                     <!-- Primary Badge -->
-                    <div v-if="index === 0" class="absolute top-2 left-2 px-2 py-1 bg-brand text-white text-xs font-semibold rounded">
+                    <div v-if="index === 0" class="absolute top-2 start-2 px-2 py-1 bg-brand text-brand-foreground text-xs font-semibold rounded">
                         {{ t('common.primary') }}
                     </div>
 

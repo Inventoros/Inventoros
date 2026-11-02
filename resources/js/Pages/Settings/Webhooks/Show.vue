@@ -1,4 +1,5 @@
 <script setup>
+import DialogSurface from '@/Components/DialogSurface.vue';
 import TableViewport from '@/Components/ui/TableViewport.vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import PageHeader from '@/Components/ui/PageHeader.vue';
@@ -190,7 +191,7 @@ const isGroupPartiallySelected = (form, group) => {
     return selectedCount > 0 && selectedCount < groupEvents.length;
 };
 
-const thClass = 'px-4 py-2.5 text-left text-xs font-medium text-text-secondary';
+const thClass = 'px-4 py-2.5 text-start text-xs font-medium text-text-secondary';
 const fieldLabel = 'mb-1 block text-sm font-medium text-text-secondary';
 const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface-canvas px-3 text-sm text-text-primary placeholder:text-text-tertiary ds-focus-ring';
 const fieldError = 'mt-1 text-xs text-status-danger';
@@ -330,7 +331,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                         <th :class="thClass">{{ t('settings.webhooks.show.attempts') }}</th>
                                         <th :class="thClass">{{ t('settings.webhooks.show.response') }}</th>
                                         <th :class="thClass">{{ t('common.createdAt') }}</th>
-                                        <th :class="[thClass, 'text-right']">{{ t('common.actions') }}</th>
+                                        <th :class="[thClass, 'text-end']">{{ t('common.actions') }}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -369,7 +370,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                             <td class="px-4 py-3 text-sm text-text-tertiary">
                                                 {{ formatDate(delivery.created_at) }}
                                             </td>
-                                            <td class="px-4 py-3 text-right">
+                                            <td class="px-4 py-3 text-end">
                                                 <div class="flex items-center justify-end gap-1">
                                                     <button
                                                         @click.stop="toggleDeliveryExpand(delivery.id)"
@@ -503,7 +504,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
         </div>
 
         <!-- Edit Modal -->
-        <Teleport to="body">
+        <DialogSurface :show="!!(showEditModal)" @close="closeEditModal">
             <div v-if="showEditModal" class="fixed inset-0 z-50 flex items-center justify-center">
                 <div class="fixed inset-0 bg-black/50" @click="closeEditModal"></div>
                 <div class="relative mx-4 my-8 max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-xl border border-border-subtle bg-surface-raised p-6 shadow-lg">
@@ -560,11 +561,11 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                             @change="selectAllInGroup(editForm, group)"
                                             class="rounded border-border-strong bg-surface-canvas text-brand focus:ring-brand"
                                         />
-                                        <label :for="`show-edit-group-${group}`" class="ml-2 text-sm font-medium text-text-primary">
+                                        <label :for="`show-edit-group-${group}`" class="ms-2 text-sm font-medium text-text-primary">
                                             {{ group }}
                                         </label>
                                     </div>
-                                    <div class="ml-6 space-y-1">
+                                    <div class="ms-6 space-y-1">
                                         <div v-for="(description, event) in events" :key="event" class="flex items-start">
                                             <input
                                                 :id="`show-edit-event-${event}`"
@@ -573,7 +574,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                                 @change="toggleEvent(editForm, event)"
                                                 class="mt-1 rounded border-border-strong bg-surface-canvas text-brand focus:ring-brand"
                                             />
-                                            <label :for="`show-edit-event-${event}`" class="ml-2">
+                                            <label :for="`show-edit-event-${event}`" class="ms-2">
                                                 <span class="font-mono text-sm text-text-primary">{{ event }}</span>
                                                 <p class="text-xs text-text-tertiary">{{ description }}</p>
                                             </label>
@@ -592,10 +593,10 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                 type="checkbox"
                                 class="rounded border-border-strong bg-surface-canvas text-brand focus:ring-brand"
                             />
-                            <label for="show-edit-active" class="ml-2 text-sm text-text-primary">
+                            <label for="show-edit-active" class="ms-2 text-sm text-text-primary">
                                 {{ t('common.active') }}
                             </label>
-                            <span class="ml-2 text-xs text-text-tertiary">
+                            <span class="ms-2 text-xs text-text-tertiary">
                                 {{ t('settings.webhooks.inactiveHint') }}
                             </span>
                         </div>
@@ -613,6 +614,6 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                     </form>
                 </div>
             </div>
-        </Teleport>
+        </DialogSurface>
     </AppLayout>
 </template>

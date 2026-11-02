@@ -594,10 +594,7 @@
         "updateQuantityFailed": "Miktar güncellenemedi",
         "confirmRemove": "Bu bileşen ürün ağacından kaldırılsın mı?",
         "removeFailed": "Bileşen kaldırılamadı"
-      },
-      "prepareTransfer": "Stoku hazırla",
-      "shipTransfer": "Transferi gönder",
-      "receiveTransfer": "Transferi teslim al"
+      }
     },
     "quickAddCategory": {
       "title": "Hızlı Kategori Ekle",
@@ -665,7 +662,7 @@
     }
   },
   "orders": {
-      "channelOrderNumber": "Kanal sipariş numarası",
+    "channelOrderNumber": "Kanal sipariş numarası",
     "itemsCol": "Ürünler",
     "sources": {
       "manual": "Manuel",
@@ -1536,12 +1533,12 @@
       "download": "İndir",
       "availableUntil": "{date} tarihine kadar kullanılabilir",
       "statuses": {
+        "prepared": "Hazırlandı",
         "pending": "Beklemede",
         "processing": "İşleniyor",
         "completed": "Tamamlandı",
         "failed": "Başarısız",
-        "expired": "Süresi doldu",
-        "prepared": "Hazırlandı"
+        "expired": "Süresi doldu"
       }
     }
   },
@@ -3919,7 +3916,8 @@
       "pending": "Beklemede",
       "in_transit": "Yolda",
       "completed": "Tamamlandı",
-      "cancelled": "İptal Edildi"
+      "cancelled": "İptal Edildi",
+      "prepared": "Hazırlandı"
     },
     "create": {
       "title": "Stok Transferi Oluştur",
@@ -3958,7 +3956,10 @@
       "cancelTransfer": "Transferi İptal Et",
       "completeHint": "Transferi tamamlamak, stoku kaynak konumdan düşer ve hedef konuma ekler.",
       "confirmComplete": "Bu transferi tamamlamak istediğinize emin misiniz? Stok seviyeleri düzeltilecektir.",
-      "confirmCancel": "Bu transferi iptal etmek istediğinize emin misiniz?"
+      "confirmCancel": "Bu transferi iptal etmek istediğinize emin misiniz?",
+      "prepareTransfer": "Stoku hazırla",
+      "shipTransfer": "Transferi gönder",
+      "receiveTransfer": "Transferi teslim al"
     }
   },
   "tax": {
@@ -3970,39 +3971,39 @@
     "title": "Depoya göre stok",
     "includeZero": "Sıfır bakiyeleri dahil et"
   },
-    "storage": {
-        "title": "Dosya depolama",
-        "description": "Yüklenen dosyalar için yerel ve harici depolama.",
-        "configure": "INVENTOROS_UPLOADS_DISK ve AWS kimlik bilgilerini .env veya config/filesystems.php içinde yapılandırın, yapılandırma önbelleğini yenileyin ve kuyruk çalışanlarını yeniden başlatın.",
-        "existingFiles": "Mevcut dosyalar kayıtlı disklerini korur. Depolamayı değiştirirken eski disk tanımlarını saklayın.",
-        "probe": "Bağlantı testi küçük, geçici ve özel bir dosya yazar, okur ve siler.",
-        "driver": "Sürücü",
-        "notConfigured": "Yapılandırılmadı",
-        "usedFor": "Kullanım",
-        "bucket": "Kova",
-        "region": "Bölge",
-        "connected": "Bağlantı doğrulandı: yazma, okuma ve silme başarılı.",
-        "failed": "{step} sırasında bağlantı başarısız. Sunucu yapılandırmasını ve izinleri kontrol edin.",
-        "unchecked": "Yakın zamanda bağlantı testi yapılmadı.",
-        "checkedAt": "Kontrol zamanı: {time}",
-        "cleanupFailed": "Test dosyası kaldırılamadı. İzinleri düzelttikten sonra connection-checks önekini kontrol edin.",
-        "requestFailed": "Test çalıştırılamadı. Kısa süre sonra tekrar deneyin.",
-        "checking": "Kontrol ediliyor…",
-        "check": "Bağlantıyı kontrol et",
-        "purposes": {
-            "products": "Ürün görselleri",
-            "logos": "Kuruluş logoları",
-            "labels": "Kargo etiketleri",
-            "imports": "Kuyruktaki içe aktarmalar",
-            "exports": "Oluşturulan dışa aktarmalar"
-        },
-        "steps": {
-            "connect": "bağlanma",
-            "write": "yazma",
-            "read": "okuma",
-            "delete": "silme"
-        }
+  "storage": {
+    "title": "Dosya depolama",
+    "description": "Yüklenen dosyalar için yerel ve harici depolama.",
+    "configure": "INVENTOROS_UPLOADS_DISK ve AWS kimlik bilgilerini .env veya config/filesystems.php içinde yapılandırın, yapılandırma önbelleğini yenileyin ve kuyruk çalışanlarını yeniden başlatın.",
+    "existingFiles": "Mevcut dosyalar kayıtlı disklerini korur. Depolamayı değiştirirken eski disk tanımlarını saklayın.",
+    "probe": "Bağlantı testi küçük, geçici ve özel bir dosya yazar, okur ve siler.",
+    "driver": "Sürücü",
+    "notConfigured": "Yapılandırılmadı",
+    "usedFor": "Kullanım",
+    "bucket": "Kova",
+    "region": "Bölge",
+    "connected": "Bağlantı doğrulandı: yazma, okuma ve silme başarılı.",
+    "failed": "{step} sırasında bağlantı başarısız. Sunucu yapılandırmasını ve izinleri kontrol edin.",
+    "unchecked": "Yakın zamanda bağlantı testi yapılmadı.",
+    "checkedAt": "Kontrol zamanı: {time}",
+    "cleanupFailed": "Test dosyası kaldırılamadı. İzinleri düzelttikten sonra connection-checks önekini kontrol edin.",
+    "requestFailed": "Test çalıştırılamadı. Kısa süre sonra tekrar deneyin.",
+    "checking": "Kontrol ediliyor…",
+    "check": "Bağlantıyı kontrol et",
+    "purposes": {
+      "products": "Ürün görselleri",
+      "logos": "Kuruluş logoları",
+      "labels": "Kargo etiketleri",
+      "imports": "Kuyruktaki içe aktarmalar",
+      "exports": "Oluşturulan dışa aktarmalar"
     },
+    "steps": {
+      "connect": "bağlanma",
+      "write": "yazma",
+      "read": "okuma",
+      "delete": "silme"
+    }
+  },
   "batchExpiryReport": {
     "title": "Parti son kullanma tarihleri",
     "description": "Süresi dolmuş partileri bulun ve yaklaşan tarihleri planlayın.",

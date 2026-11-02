@@ -1,4 +1,5 @@
 <script setup>
+import DialogSurface from '@/Components/DialogSurface.vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import PageHeader from '@/Components/ui/PageHeader.vue';
 import Card from '@/Components/ui/Card.vue';
@@ -252,7 +253,7 @@ const deleteRole = () => {
         </div>
 
         <!-- Delete Confirmation Modal -->
-        <Teleport to="body">
+        <DialogSurface :show="!!(showDeleteModal)" @close="showDeleteModal = false">
             <div v-if="showDeleteModal" class="fixed inset-0 z-50 flex items-center justify-center" @click="showDeleteModal = false">
                 <div class="fixed inset-0 bg-black/50"></div>
 
@@ -292,6 +293,6 @@ const deleteRole = () => {
                     </div>
                 </div>
             </div>
-        </Teleport>
+        </DialogSurface>
     </AppLayout>
 </template>

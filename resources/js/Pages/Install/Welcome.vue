@@ -39,7 +39,7 @@ const { t } = useI18n();
                         <div class="shrink-0 w-8 h-8 bg-brand-soft rounded-full flex items-center justify-center text-brand font-semibold">
                             1
                         </div>
-                        <div class="ml-4">
+                        <div class="ms-4">
                             <h3 class="font-semibold text-text-primary">{{ t('install.welcome.step1') }}</h3>
                             <p class="text-sm text-text-secondary">{{ t('install.welcome.step1Desc') }}</p>
                         </div>
@@ -49,7 +49,7 @@ const { t } = useI18n();
                         <div class="shrink-0 w-8 h-8 bg-brand-soft rounded-full flex items-center justify-center text-brand font-semibold">
                             2
                         </div>
-                        <div class="ml-4">
+                        <div class="ms-4">
                             <h3 class="font-semibold text-text-primary">{{ t('install.welcome.step2') }}</h3>
                             <p class="text-sm text-text-secondary">{{ t('install.welcome.step2Desc') }}</p>
                         </div>
@@ -59,7 +59,7 @@ const { t } = useI18n();
                         <div class="shrink-0 w-8 h-8 bg-brand-soft rounded-full flex items-center justify-center text-brand font-semibold">
                             3
                         </div>
-                        <div class="ml-4">
+                        <div class="ms-4">
                             <h3 class="font-semibold text-text-primary">{{ t('install.welcome.step3') }}</h3>
                             <p class="text-sm text-text-secondary">{{ t('install.welcome.step3Desc') }}</p>
                         </div>
@@ -69,7 +69,7 @@ const { t } = useI18n();
                         <div class="shrink-0 w-8 h-8 bg-brand-soft rounded-full flex items-center justify-center text-brand font-semibold">
                             4
                         </div>
-                        <div class="ml-4">
+                        <div class="ms-4">
                             <h3 class="font-semibold text-text-primary">{{ t('install.welcome.step4') }}</h3>
                             <p class="text-sm text-text-secondary">{{ t('install.welcome.step4Desc') }}</p>
                         </div>
@@ -82,7 +82,7 @@ const { t } = useI18n();
                         <svg class="w-5 h-5 text-status-info mt-0.5" fill="currentColor" viewBox="0 0 20 20">
                             <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
                         </svg>
-                        <div class="ml-3">
+                        <div class="ms-3">
                             <h3 class="text-sm font-semibold text-text-primary">{{ t('install.welcome.beforeBegin') }}</h3>
                             <p class="text-sm text-text-secondary mt-1">
                                 {{ t('install.welcome.beforeBeginDesc') }}
@@ -98,7 +98,7 @@ const { t } = useI18n();
                         class="inline-flex items-center px-6 py-3 bg-brand text-brand-foreground font-semibold rounded-lg hover:bg-brand-hover transition"
                     >
                         {{ t('install.welcome.startInstallation') }}
-                        <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="w-5 h-5 ms-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
                         </svg>
                     </Link>

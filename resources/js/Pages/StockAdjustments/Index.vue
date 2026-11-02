@@ -75,7 +75,7 @@ const typeLabel = (value, label) => (te(`stockAdjustments.types.${value}`) ? t(`
 const selectClass =
     'h-9 w-full rounded-md border border-border-subtle bg-surface-canvas px-3 text-sm text-text-primary ds-focus-ring';
 const thClass =
-    'px-4 py-2.5 text-left text-xs font-medium text-text-secondary';
+    'px-4 py-2.5 text-start text-xs font-medium text-text-secondary';
 </script>
 
 <template>
@@ -165,11 +165,11 @@ const thClass =
                         <th :class="thClass">{{ t('common.date') }}</th>
                         <th :class="thClass">{{ t('common.product') }}</th>
                         <th :class="thClass">{{ t('common.type') }}</th>
-                        <th :class="[thClass, 'text-right']">{{ t('stockAdjustments.index.before') }}</th>
-                        <th :class="[thClass, 'text-right']">{{ t('stockAdjustments.index.change') }}</th>
-                        <th :class="[thClass, 'text-right']">{{ t('stockAdjustments.index.after') }}</th>
+                        <th :class="[thClass, 'text-end']">{{ t('stockAdjustments.index.before') }}</th>
+                        <th :class="[thClass, 'text-end']">{{ t('stockAdjustments.index.change') }}</th>
+                        <th :class="[thClass, 'text-end']">{{ t('stockAdjustments.index.after') }}</th>
                         <th :class="thClass">{{ t('common.user') }}</th>
-                        <th :class="[thClass, 'text-right']">{{ t('common.actions') }}</th>
+                        <th :class="[thClass, 'text-end']">{{ t('common.actions') }}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -206,13 +206,13 @@ const thClass =
                                 {{ typeLabel(adjustment.type, types[adjustment.type] || adjustment.type) }}
                             </Badge>
                         </td>
-                        <td class="px-4 py-3 whitespace-nowrap text-right tabular-nums text-text-secondary">
+                        <td class="px-4 py-3 whitespace-nowrap text-end tabular-nums text-text-secondary">
                             {{ adjustment.quantity_before }}
                         </td>
-                        <td :class="['px-4 py-3 whitespace-nowrap text-right font-semibold tabular-nums', adjustmentClass(adjustment.adjustment_quantity)]">
+                        <td :class="['px-4 py-3 whitespace-nowrap text-end font-semibold tabular-nums', adjustmentClass(adjustment.adjustment_quantity)]">
                             {{ adjustment.adjustment_quantity > 0 ? '+' : '' }}{{ adjustment.adjustment_quantity }}
                         </td>
-                        <td class="px-4 py-3 whitespace-nowrap text-right font-medium tabular-nums text-text-primary">
+                        <td class="px-4 py-3 whitespace-nowrap text-end font-medium tabular-nums text-text-primary">
                             {{ adjustment.quantity_after }}
                         </td>
                         <td class="px-4 py-3 whitespace-nowrap text-text-secondary">

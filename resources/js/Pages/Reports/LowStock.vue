@@ -39,8 +39,8 @@ const quickReorder = useQuickReorder(computed(() => props.products || []));
 
 const statusVariant = (status) => (status === 'out_of_stock' ? 'danger' : 'warning');
 
-const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-text-secondary';
-const thClassRight = 'px-4 py-2.5 text-right text-xs font-medium tracking-tight text-text-secondary';
+const thClass = 'px-4 py-2.5 text-start text-xs font-medium tracking-tight text-text-secondary';
+const thClassRight = 'px-4 py-2.5 text-end text-xs font-medium tracking-tight text-text-secondary';
 </script>
 
 <template>
@@ -179,7 +179,7 @@ const thClassRight = 'px-4 py-2.5 text-right text-xs font-medium tracking-tight 
                             <td class="px-4 py-3 text-text-secondary">
                                 {{ product.category || t('reports.inventoryValuation.uncategorized') }}
                             </td>
-                            <td class="px-4 py-3 text-right">
+                            <td class="px-4 py-3 text-end">
                                 <div class="flex items-center justify-end gap-1">
                                     <span :class="['font-medium tabular-nums', product.current_stock === 0 ? 'text-status-danger' : 'text-status-warning']">
                                         {{ product.current_stock }}
@@ -187,10 +187,10 @@ const thClassRight = 'px-4 py-2.5 text-right text-xs font-medium tracking-tight 
                                     <AlertTriangle :size="14" class="text-status-danger" />
                                 </div>
                             </td>
-                            <td class="px-4 py-3 text-right tabular-nums text-text-secondary">{{ product.min_stock }}</td>
-                            <td class="px-4 py-3 text-right tabular-nums text-text-secondary">{{ product.max_stock || '-' }}</td>
-                            <td class="px-4 py-3 text-right font-medium tabular-nums text-status-danger">-{{ product.deficit }}</td>
-                            <td class="px-4 py-3 text-right font-medium tabular-nums text-text-primary">{{ formatCurrency(product.reorder_cost) }}</td>
+                            <td class="px-4 py-3 text-end tabular-nums text-text-secondary">{{ product.min_stock }}</td>
+                            <td class="px-4 py-3 text-end tabular-nums text-text-secondary">{{ product.max_stock || '-' }}</td>
+                            <td class="px-4 py-3 text-end font-medium tabular-nums text-status-danger">-{{ product.deficit }}</td>
+                            <td class="px-4 py-3 text-end font-medium tabular-nums text-text-primary">{{ formatCurrency(product.reorder_cost) }}</td>
                             <td class="px-4 py-3">
                                 <span v-if="product.supplier" class="text-text-secondary">{{ product.supplier }}</span>
                                 <span v-else class="flex flex-col">
@@ -198,8 +198,8 @@ const thClassRight = 'px-4 py-2.5 text-right text-xs font-medium tracking-tight 
                                     <Link v-if="canVisit('products.edit')" :href="route('products.edit', product.id)" class="text-xs font-medium text-brand hover:underline">{{ t('quickReorder.addSupplier') }}</Link>
                                 </span>
                             </td>
-                            <td class="px-4 py-3 text-right font-medium tabular-nums text-text-primary">{{ product.suggested_quantity }}</td>
-                            <td v-if="quickReorder.canCreatePo.value" class="px-4 py-3 text-right">
+                            <td class="px-4 py-3 text-end font-medium tabular-nums text-text-primary">{{ product.suggested_quantity }}</td>
+                            <td v-if="quickReorder.canCreatePo.value" class="px-4 py-3 text-end">
                                 <Button
                                     v-if="product.supplier_id && product.can_quick_reorder !== false"
                                     variant="ghost"

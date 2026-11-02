@@ -1,4 +1,7 @@
 <script setup>
+import { useId as useFieldId } from 'vue';
+const fieldIdPrefix = useFieldId();
+import DialogSurface from '@/Components/DialogSurface.vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import PluginSlot from '@/Components/PluginSlot.vue';
 import PageHeader from '@/Components/ui/PageHeader.vue';
@@ -130,13 +133,13 @@ const labelClass = 'mb-1 block text-xs font-medium text-text-secondary';
                 <div>
                     <label for="search" :class="labelClass">{{ t('common.search') }}</label>
                     <div class="relative">
-                        <Search :size="15" class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-text-tertiary" />
+                        <Search :size="15" class="pointer-events-none absolute start-3 top-1/2 -translate-y-1/2 text-text-tertiary" />
                         <input
                             id="search"
                             v-model="search"
                             type="text"
                             :placeholder="t('locations.searchPlaceholder')"
-                            class="h-9 w-full rounded-md border border-border-subtle bg-surface-canvas pl-9 pr-3 text-sm text-text-primary placeholder:text-text-tertiary ds-focus-ring"
+                            class="h-9 w-full rounded-md border border-border-subtle bg-surface-canvas ps-9 pe-3 text-sm text-text-primary placeholder:text-text-tertiary ds-focus-ring"
                         />
                     </div>
                 </div>
@@ -177,7 +180,7 @@ const labelClass = 'mb-1 block text-xs font-medium text-text-secondary';
                             {{ t('locations.capacityValue', { capacity: location.capacity }) }}
                         </p>
                     </div>
-                    <Badge variant="warning" size="sm">{{ t('locations.productsCount', { count: location.products_count }, location.products_count) }}</Badge>
+                    <Badge variant="neutral" size="sm">{{ t('locations.productsCount', { count: location.products_count }, location.products_count) }}</Badge>
                 </div>
 
                 <div class="mt-4 flex items-center gap-1 border-t border-border-subtle pt-4">
@@ -252,7 +255,7 @@ const labelClass = 'mb-1 block text-xs font-medium text-text-secondary';
         <PluginSlot slot="footer" :components="pluginComponents?.footer" />
 
         <!-- Create Location Modal -->
-        <Teleport to="body">
+        <DialogSurface :show="!!(showCreateModal)" @close="showCreateModal = false">
             <div v-if="showCreateModal" class="fixed inset-0 z-50 flex items-center justify-center">
                 <div class="fixed inset-0 bg-black/50" @click="showCreateModal = false"></div>
                 <div class="relative mx-4 w-full max-w-md rounded-xl border border-border-subtle bg-surface-raised p-6 shadow-lg">
@@ -271,10 +274,10 @@ const labelClass = 'mb-1 block text-xs font-medium text-text-secondary';
 
                     <form @submit.prevent="createLocation" class="space-y-4">
                         <div>
-                            <label :class="labelClass">
+                            <label :for="fieldIdPrefix + '-1'" :class="labelClass">
                                 {{ t('locations.locationName') }} <span class="text-status-danger">*</span>
                             </label>
-                            <input
+                            <input :id="fieldIdPrefix + '-1'"
                                 v-model="locationForm.name"
                                 type="text"
                                 :class="inputClass"
@@ -284,10 +287,10 @@ const labelClass = 'mb-1 block text-xs font-medium text-text-secondary';
                         </div>
 
                         <div>
-                            <label :class="labelClass">
+                            <label :for="fieldIdPrefix + '-2'" :class="labelClass">
                                 {{ t('locations.locationCode') }} <span class="text-status-danger">*</span>
                             </label>
-                            <input
+                            <input :id="fieldIdPrefix + '-2'"
                                 v-model="locationForm.code"
                                 type="text"
                                 :class="inputClass"
@@ -297,10 +300,10 @@ const labelClass = 'mb-1 block text-xs font-medium text-text-secondary';
                         </div>
 
                         <div>
-                            <label :class="labelClass">
+                            <label :for="fieldIdPrefix + '-3'" :class="labelClass">
                                 {{ t('common.description') }}
                             </label>
-                            <textarea
+                            <textarea :id="fieldIdPrefix + '-3'"
                                 v-model="locationForm.description"
                                 rows="3"
                                 class="w-full rounded-md border border-border-subtle bg-surface-canvas px-3 py-2 text-sm text-text-primary placeholder:text-text-tertiary ds-focus-ring"
@@ -337,10 +340,10 @@ const labelClass = 'mb-1 block text-xs font-medium text-text-secondary';
                     </form>
                 </div>
             </div>
-        </Teleport>
+        </DialogSurface>
 
         <!-- Edit Location Modal -->
-        <Teleport to="body">
+        <DialogSurface :show="!!(showEditModal)" @close="showEditModal = false">
             <div v-if="showEditModal" class="fixed inset-0 z-50 flex items-center justify-center">
                 <div class="fixed inset-0 bg-black/50" @click="showEditModal = false"></div>
                 <div class="relative mx-4 w-full max-w-md rounded-xl border border-border-subtle bg-surface-raised p-6 shadow-lg">
@@ -359,10 +362,10 @@ const labelClass = 'mb-1 block text-xs font-medium text-text-secondary';
 
                     <form @submit.prevent="updateLocation" class="space-y-4">
                         <div>
-                            <label :class="labelClass">
+                            <label :for="fieldIdPrefix + '-4'" :class="labelClass">
                                 {{ t('locations.locationName') }} <span class="text-status-danger">*</span>
                             </label>
-                            <input
+                            <input :id="fieldIdPrefix + '-4'"
                                 v-model="locationForm.name"
                                 type="text"
                                 :class="inputClass"
@@ -371,10 +374,10 @@ const labelClass = 'mb-1 block text-xs font-medium text-text-secondary';
                         </div>
 
                         <div>
-                            <label :class="labelClass">
+                            <label :for="fieldIdPrefix + '-5'" :class="labelClass">
                                 {{ t('locations.locationCode') }} <span class="text-status-danger">*</span>
                             </label>
-                            <input
+                            <input :id="fieldIdPrefix + '-5'"
                                 v-model="locationForm.code"
                                 type="text"
                                 :class="inputClass"
@@ -383,10 +386,10 @@ const labelClass = 'mb-1 block text-xs font-medium text-text-secondary';
                         </div>
 
                         <div>
-                            <label :class="labelClass">
+                            <label :for="fieldIdPrefix + '-6'" :class="labelClass">
                                 {{ t('common.description') }}
                             </label>
-                            <textarea
+                            <textarea :id="fieldIdPrefix + '-6'"
                                 v-model="locationForm.description"
                                 rows="3"
                                 class="w-full rounded-md border border-border-subtle bg-surface-canvas px-3 py-2 text-sm text-text-primary placeholder:text-text-tertiary ds-focus-ring"
@@ -422,6 +425,6 @@ const labelClass = 'mb-1 block text-xs font-medium text-text-secondary';
                     </form>
                 </div>
             </div>
-        </Teleport>
+        </DialogSurface>
     </AppLayout>
 </template>

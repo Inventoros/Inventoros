@@ -1,4 +1,7 @@
 <script setup>
+import { useId as useFieldId } from 'vue';
+const fieldIdPrefix = useFieldId();
+import DialogSurface from '@/Components/DialogSurface.vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import PluginSlot from '@/Components/PluginSlot.vue';
 import PageHeader from '@/Components/ui/PageHeader.vue';
@@ -110,13 +113,13 @@ const inputClass =
                 <div class="flex-1">
                     <label for="search" class="mb-1 block text-xs font-medium text-text-secondary">{{ t('common.search') }}</label>
                     <div class="relative">
-                        <Search :size="15" class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-text-tertiary" />
+                        <Search :size="15" class="pointer-events-none absolute start-3 top-1/2 -translate-y-1/2 text-text-tertiary" />
                         <input
                             id="search"
                             v-model="search"
                             type="text"
                             :placeholder="t('categories.searchPlaceholder')"
-                            class="h-9 w-full rounded-md border border-border-subtle bg-surface-canvas pl-9 pr-3 text-sm text-text-primary placeholder:text-text-tertiary ds-focus-ring"
+                            class="h-9 w-full rounded-md border border-border-subtle bg-surface-canvas ps-9 pe-3 text-sm text-text-primary placeholder:text-text-tertiary ds-focus-ring"
                         />
                     </div>
                 </div>
@@ -209,7 +212,7 @@ const inputClass =
         <PluginSlot slot="footer" :components="pluginComponents?.footer" />
 
         <!-- Create Category Modal -->
-        <Teleport to="body">
+        <DialogSurface :show="!!(showCreateModal)" @close="showCreateModal = false">
             <div v-if="showCreateModal" class="fixed inset-0 z-50 flex items-center justify-center">
                 <div class="fixed inset-0 bg-black/50" @click="showCreateModal = false"></div>
                 <div class="relative mx-4 w-full max-w-md rounded-xl border border-border-subtle bg-surface-raised p-6 shadow-lg">
@@ -229,10 +232,10 @@ const inputClass =
 
                     <form @submit.prevent="createCategory" class="space-y-4">
                         <div>
-                            <label class="mb-1 block text-xs font-medium text-text-secondary">
+                            <label :for="fieldIdPrefix + '-1'" class="mb-1 block text-xs font-medium text-text-secondary">
                                 {{ t('categories.categoryName') }} <span class="text-status-danger">*</span>
                             </label>
-                            <input
+                            <input :id="fieldIdPrefix + '-1'"
                                 v-model="categoryForm.name"
                                 type="text"
                                 :class="inputClass"
@@ -242,10 +245,10 @@ const inputClass =
                         </div>
 
                         <div>
-                            <label class="mb-1 block text-xs font-medium text-text-secondary">
+                            <label :for="fieldIdPrefix + '-2'" class="mb-1 block text-xs font-medium text-text-secondary">
                                 {{ t('common.description') }}
                             </label>
-                            <textarea
+                            <textarea :id="fieldIdPrefix + '-2'"
                                 v-model="categoryForm.description"
                                 rows="3"
                                 class="w-full rounded-md border border-border-subtle bg-surface-canvas px-3 py-2 text-sm text-text-primary placeholder:text-text-tertiary ds-focus-ring"
@@ -260,10 +263,10 @@ const inputClass =
                     </form>
                 </div>
             </div>
-        </Teleport>
+        </DialogSurface>
 
         <!-- Edit Category Modal -->
-        <Teleport to="body">
+        <DialogSurface :show="!!(showEditModal)" @close="showEditModal = false">
             <div v-if="showEditModal" class="fixed inset-0 z-50 flex items-center justify-center">
                 <div class="fixed inset-0 bg-black/50" @click="showEditModal = false"></div>
                 <div class="relative mx-4 w-full max-w-md rounded-xl border border-border-subtle bg-surface-raised p-6 shadow-lg">
@@ -283,10 +286,10 @@ const inputClass =
 
                     <form @submit.prevent="updateCategory" class="space-y-4">
                         <div>
-                            <label class="mb-1 block text-xs font-medium text-text-secondary">
+                            <label :for="fieldIdPrefix + '-3'" class="mb-1 block text-xs font-medium text-text-secondary">
                                 {{ t('categories.categoryName') }} <span class="text-status-danger">*</span>
                             </label>
-                            <input
+                            <input :id="fieldIdPrefix + '-3'"
                                 v-model="categoryForm.name"
                                 type="text"
                                 :class="inputClass"
@@ -295,10 +298,10 @@ const inputClass =
                         </div>
 
                         <div>
-                            <label class="mb-1 block text-xs font-medium text-text-secondary">
+                            <label :for="fieldIdPrefix + '-4'" class="mb-1 block text-xs font-medium text-text-secondary">
                                 {{ t('common.description') }}
                             </label>
-                            <textarea
+                            <textarea :id="fieldIdPrefix + '-4'"
                                 v-model="categoryForm.description"
                                 rows="3"
                                 class="w-full rounded-md border border-border-subtle bg-surface-canvas px-3 py-2 text-sm text-text-primary placeholder:text-text-tertiary ds-focus-ring"
@@ -312,6 +315,6 @@ const inputClass =
                     </form>
                 </div>
             </div>
-        </Teleport>
+        </DialogSurface>
     </AppLayout>
 </template>

@@ -29,7 +29,7 @@ const props = defineProps({
                         <svg class="w-6 h-6 text-status-success" fill="currentColor" viewBox="0 0 20 20">
                             <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
                         </svg>
-                        <div class="ml-3">
+                        <div class="ms-3">
                             <h3 class="text-sm font-semibold text-text-primary">{{ t('install.requirements.allMet') }}</h3>
                             <p class="text-sm text-text-secondary mt-1">{{ t('install.requirements.allMetDesc') }}</p>
                         </div>
@@ -41,7 +41,7 @@ const props = defineProps({
                         <svg class="w-6 h-6 text-status-danger" fill="currentColor" viewBox="0 0 20 20">
                             <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
                         </svg>
-                        <div class="ml-3">
+                        <div class="ms-3">
                             <h3 class="text-sm font-semibold text-text-primary">{{ t('install.requirements.notMet') }}</h3>
                             <p class="text-sm text-text-secondary mt-1">{{ t('install.requirements.notMetDesc') }}</p>
                         </div>
@@ -78,7 +78,7 @@ const props = defineProps({
                                     <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
                                 </svg>
                             </div>
-                            <div class="ml-4">
+                            <div class="ms-4">
                                 <h3 class="font-semibold" :class="requirement.met ? 'text-status-success' : 'text-status-danger'">
                                     {{ requirement.name }}
                                 </h3>
@@ -102,7 +102,7 @@ const props = defineProps({
                         :href="route('install.index')"
                         class="inline-flex items-center px-4 py-2 text-text-secondary bg-surface-base border border-border-subtle rounded-lg hover:bg-surface-overlay transition"
                     >
-                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="w-5 h-5 me-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
                         </svg>
                         {{ t('common.back') }}
@@ -114,7 +114,7 @@ const props = defineProps({
                         class="inline-flex items-center px-6 py-2 bg-brand text-brand-foreground font-semibold rounded-lg hover:bg-brand-hover transition"
                     >
                         {{ t('install.requirements.continue') }}
-                        <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="w-5 h-5 ms-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
                         </svg>
                     </Link>

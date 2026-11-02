@@ -39,9 +39,9 @@ const plusOthers = (rows, field = 'amount') => {
 };
 
 const thClass =
-    'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-text-secondary';
+    'px-4 py-2.5 text-start text-xs font-medium tracking-tight text-text-secondary';
 const thRightClass =
-    'px-4 py-2.5 text-right text-xs font-medium tracking-tight text-text-secondary';
+    'px-4 py-2.5 text-end text-xs font-medium tracking-tight text-text-secondary';
 </script>
 
 <template>
@@ -137,7 +137,7 @@ const thRightClass =
                                 <span class="text-text-tertiary">{{ t('reports.inventoryValuation.stockValue') }}</span>
                                 <span class="font-semibold tabular-nums text-status-success">{{ money(cat.value) }}</span>
                             </div>
-                            <p v-if="plusOthers(cat.values)" class="text-right text-xs tabular-nums text-text-tertiary">{{ plusOthers(cat.values) }}</p>
+                            <p v-if="plusOthers(cat.values)" class="text-end text-xs tabular-nums text-text-tertiary">{{ plusOthers(cat.values) }}</p>
                         </div>
                     </div>
                 </div>
@@ -177,10 +177,10 @@ const thRightClass =
                                     <p v-if="!loc.location_id" class="text-xs text-text-tertiary">{{ t('reports.valuationByLocation.unallocatedHint') }}</p>
                                 </td>
                                 <td class="px-4 py-3 text-text-secondary">{{ loc.warehouse || '-' }}</td>
-                                <td class="px-4 py-3 text-right tabular-nums text-text-secondary">{{ loc.products }}</td>
-                                <td class="px-4 py-3 text-right tabular-nums text-text-primary">{{ loc.quantity }}</td>
-                                <td class="px-4 py-3 text-right tabular-nums text-text-secondary">{{ money(loc.cost_value) }}</td>
-                                <td class="px-4 py-3 text-right font-semibold tabular-nums text-status-success">
+                                <td class="px-4 py-3 text-end tabular-nums text-text-secondary">{{ loc.products }}</td>
+                                <td class="px-4 py-3 text-end tabular-nums text-text-primary">{{ loc.quantity }}</td>
+                                <td class="px-4 py-3 text-end tabular-nums text-text-secondary">{{ money(loc.cost_value) }}</td>
+                                <td class="px-4 py-3 text-end font-semibold tabular-nums text-status-success">
                                     {{ money(loc.retail_value) }}
                                     <p v-if="plusOthers(loc.values, 'retail_value')" class="text-xs font-normal text-text-tertiary">{{ plusOthers(loc.values, 'retail_value') }}</p>
                                 </td>
@@ -227,16 +227,16 @@ const thRightClass =
                                     <td class="px-4 py-3 text-text-secondary">
                                         {{ product.category || t('reports.inventoryValuation.uncategorized') }}
                                     </td>
-                                    <td class="px-4 py-3 text-right font-medium tabular-nums text-text-primary">
+                                    <td class="px-4 py-3 text-end font-medium tabular-nums text-text-primary">
                                         {{ product.stock }}
                                     </td>
-                                    <td class="px-4 py-3 text-right tabular-nums text-text-secondary">
+                                    <td class="px-4 py-3 text-end tabular-nums text-text-secondary">
                                         {{ formatCurrency(product.price, product.currency) }}
                                     </td>
-                                    <td class="px-4 py-3 text-right font-semibold tabular-nums text-status-success">
+                                    <td class="px-4 py-3 text-end font-semibold tabular-nums text-status-success">
                                         {{ formatCurrency(product.stock_value, product.currency) }}
                                     </td>
-                                    <td class="px-4 py-3 text-right font-semibold tabular-nums text-status-success">
+                                    <td class="px-4 py-3 text-end font-semibold tabular-nums text-status-success">
                                         {{ formatCurrency(product.profit_potential, product.currency) }}
                                     </td>
                                 </tr>

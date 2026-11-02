@@ -63,7 +63,7 @@ const totalItems = (returnOrder) => {
 };
 
 const thClass =
-    'px-4 py-2.5 text-left text-xs font-medium text-text-secondary';
+    'px-4 py-2.5 text-start text-xs font-medium text-text-secondary';
 
 const selectClass =
     'h-9 w-full rounded-md border border-border-subtle bg-surface-canvas px-3 text-sm text-text-primary ds-focus-ring';
@@ -139,7 +139,7 @@ const selectClass =
                         <th :class="thClass">{{ t('returns.index.items') }}</th>
                         <th :class="thClass">{{ t('returns.index.refund') }}</th>
                         <th :class="thClass">{{ t('common.date') }}</th>
-                        <th :class="[thClass, 'text-right']">{{ t('common.actions') }}</th>
+                        <th :class="[thClass, 'text-end']">{{ t('common.actions') }}</th>
                     </tr>
                 </thead>
                 <tbody>

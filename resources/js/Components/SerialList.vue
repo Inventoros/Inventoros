@@ -1,4 +1,6 @@
 <script setup>
+import { useId as useFieldId } from 'vue';
+const fieldIdPrefix = useFieldId();
 import TableViewport from '@/Components/ui/TableViewport.vue';
 import { ref, computed } from 'vue';
 import axios from 'axios';
@@ -112,9 +114,9 @@ const statusBadgeClass = (status) => {
             </h3>
             <button
                 @click="showForm = !showForm"
-                class="inline-flex items-center px-3 py-1.5 bg-brand text-white text-sm font-medium rounded-md hover:bg-brand-hover transition"
+                class="inline-flex items-center px-3 py-1.5 bg-brand text-brand-foreground text-sm font-medium rounded-md hover:bg-brand-hover transition"
             >
-                <svg v-if="!showForm" class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg v-if="!showForm" class="w-4 h-4 me-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                 </svg>
                 {{ showForm ? t('common.cancel') : t('components.serialList.addSerial') }}
@@ -156,8 +158,8 @@ const statusBadgeClass = (status) => {
             </div>
             <div class="grid grid-cols-2 gap-3 mb-3">
                 <div>
-                    <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">{{ t('components.serialList.serialNumber') }} *</label>
-                    <input
+                    <label :for="fieldIdPrefix + '-1'" class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">{{ t('components.serialList.serialNumber') }} *</label>
+                    <input :id="fieldIdPrefix + '-1'"
                         v-model="form.serial_number"
                         type="text"
                         required
@@ -166,8 +168,8 @@ const statusBadgeClass = (status) => {
                     />
                 </div>
                 <div>
-                    <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">{{ t('common.status') }}</label>
-                    <select
+                    <label :for="fieldIdPrefix + '-2'" class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">{{ t('common.status') }}</label>
+                    <select :id="fieldIdPrefix + '-2'"
                         v-model="form.status"
                         class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-border-subtle rounded-md bg-white dark:bg-surface-raised text-gray-900 dark:text-gray-100 focus:ring-brand focus:border-brand"
                     >
@@ -179,8 +181,8 @@ const statusBadgeClass = (status) => {
                 </div>
             </div>
             <div class="mb-3">
-                <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">{{ t('common.notes') }}</label>
-                <textarea
+                <label :for="fieldIdPrefix + '-3'" class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">{{ t('common.notes') }}</label>
+                <textarea :id="fieldIdPrefix + '-3'"
                     v-model="form.notes"
                     rows="2"
                     class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-border-subtle rounded-md bg-white dark:bg-surface-raised text-gray-900 dark:text-gray-100 focus:ring-brand focus:border-brand"
@@ -189,7 +191,7 @@ const statusBadgeClass = (status) => {
             <button
                 @click="createSerial"
                 :disabled="loading || !form.serial_number"
-                class="px-4 py-2 bg-brand text-white text-sm font-medium rounded-md hover:bg-brand-hover transition disabled:opacity-50"
+                class="px-4 py-2 bg-brand text-brand-foreground text-sm font-medium rounded-md hover:bg-brand-hover transition disabled:opacity-50"
             >
                 {{ loading ? t('common.creating') : t('components.serialList.createSerial') }}
             </button>
@@ -200,10 +202,10 @@ const statusBadgeClass = (status) => {
             <table class="w-full text-sm">
                 <thead>
                     <tr class="border-b border-gray-200 dark:border-border-subtle">
-                        <th class="text-left py-2 px-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">{{ t('components.serialList.columns.serialNumber') }}</th>
-                        <th class="text-left py-2 px-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">{{ t('common.status') }}</th>
-                        <th class="text-left py-2 px-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">{{ t('common.notes') }}</th>
-                        <th class="text-left py-2 px-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">{{ t('common.actions') }}</th>
+                        <th class="text-start py-2 px-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">{{ t('components.serialList.columns.serialNumber') }}</th>
+                        <th class="text-start py-2 px-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">{{ t('common.status') }}</th>
+                        <th class="text-start py-2 px-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">{{ t('common.notes') }}</th>
+                        <th class="text-start py-2 px-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">{{ t('common.actions') }}</th>
                     </tr>
                 </thead>
                 <tbody>

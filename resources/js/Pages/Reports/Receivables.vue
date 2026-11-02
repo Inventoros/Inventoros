@@ -62,7 +62,7 @@ const share = (amount) => {
     return total > 0 ? Math.round(((parseFloat(amount) || 0) / total) * 100) : 0;
 };
 
-const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-text-secondary';
+const thClass = 'px-4 py-2.5 text-start text-xs font-medium tracking-tight text-text-secondary';
 </script>
 
 <template>
@@ -159,9 +159,9 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                         <thead>
                             <tr class="border-b border-border-subtle">
                                 <th :class="thClass">{{ t('receivables.customer') }}</th>
-                                <th :class="[thClass, 'text-right']">{{ t('receivables.orders') }}</th>
-                                <th v-for="key in bucketKeys" :key="key" :class="[thClass, 'text-right whitespace-nowrap']">{{ bucketLabel(key) }}</th>
-                                <th :class="[thClass, 'text-right']">{{ t('receivables.total') }}</th>
+                                <th :class="[thClass, 'text-end']">{{ t('receivables.orders') }}</th>
+                                <th v-for="key in bucketKeys" :key="key" :class="[thClass, 'text-end whitespace-nowrap']">{{ bucketLabel(key) }}</th>
+                                <th :class="[thClass, 'text-end']">{{ t('receivables.total') }}</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -170,11 +170,11 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                                     <Link v-if="row.customer_id && canVisit('customers.show')" :href="route('customers.show', row.customer_id)" class="hover:text-brand">{{ row.customer }}</Link>
                                     <span v-else>{{ row.customer }}</span>
                                 </td>
-                                <td class="px-4 py-3 text-right tabular-nums text-text-secondary">{{ row.orders }}</td>
-                                <td v-for="key in bucketKeys" :key="key" :class="['px-4 py-3 text-right tabular-nums', parseFloat(row[key]) > 0 ? bucketTone(key) : 'text-text-tertiary']">
+                                <td class="px-4 py-3 text-end tabular-nums text-text-secondary">{{ row.orders }}</td>
+                                <td v-for="key in bucketKeys" :key="key" :class="['px-4 py-3 text-end tabular-nums', parseFloat(row[key]) > 0 ? bucketTone(key) : 'text-text-tertiary']">
                                     {{ parseFloat(row[key]) > 0 ? formatCurrency(row[key]) : '-' }}
                                 </td>
-                                <td class="px-4 py-3 text-right font-semibold tabular-nums text-text-primary">{{ formatCurrency(row.total) }}</td>
+                                <td class="px-4 py-3 text-end font-semibold tabular-nums text-text-primary">{{ formatCurrency(row.total) }}</td>
                             </tr>
                         </tbody>
                     </table>
@@ -198,9 +198,9 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                                 <th :class="thClass">{{ t('receivables.customer') }}</th>
                                 <th :class="thClass">{{ t('receivables.orderDate') }}</th>
                                 <th :class="thClass">{{ t('receivables.age') }}</th>
-                                <th :class="[thClass, 'text-right']">{{ t('receivables.orderTotal') }}</th>
-                                <th :class="[thClass, 'text-right']">{{ t('receivables.paid') }}</th>
-                                <th :class="[thClass, 'text-right']">{{ t('receivables.balance') }}</th>
+                                <th :class="[thClass, 'text-end']">{{ t('receivables.orderTotal') }}</th>
+                                <th :class="[thClass, 'text-end']">{{ t('receivables.paid') }}</th>
+                                <th :class="[thClass, 'text-end']">{{ t('receivables.balance') }}</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -214,9 +214,9 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                                 <td class="px-4 py-3 whitespace-nowrap">
                                     <Badge :variant="bucketVariant(order.bucket)" size="sm">{{ t('receivables.days', order.age_days) }}</Badge>
                                 </td>
-                                <td class="px-4 py-3 text-right tabular-nums text-text-secondary">{{ formatCurrency(order.total) }}</td>
-                                <td class="px-4 py-3 text-right tabular-nums text-text-secondary">{{ formatCurrency(order.amount_paid) }}</td>
-                                <td class="px-4 py-3 text-right font-semibold tabular-nums text-text-primary">{{ formatCurrency(order.balance_due) }}</td>
+                                <td class="px-4 py-3 text-end tabular-nums text-text-secondary">{{ formatCurrency(order.total) }}</td>
+                                <td class="px-4 py-3 text-end tabular-nums text-text-secondary">{{ formatCurrency(order.amount_paid) }}</td>
+                                <td class="px-4 py-3 text-end font-semibold tabular-nums text-text-primary">{{ formatCurrency(order.balance_due) }}</td>
                             </tr>
                         </tbody>
                     </table>

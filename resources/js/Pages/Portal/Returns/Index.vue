@@ -17,7 +17,7 @@ const { t, te } = useI18n();
 
 const typeLabel = (type) => (te(`portal.returns.types.${type}`) ? t(`portal.returns.types.${type}`) : type);
 
-const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-text-secondary';
+const thClass = 'px-4 py-2.5 text-start text-xs font-medium tracking-tight text-text-secondary';
 </script>
 
 <template>
@@ -36,7 +36,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                             <th :class="thClass">{{ t('portal.returns.type') }}</th>
                             <th :class="thClass">{{ t('portal.returns.requested') }}</th>
                             <th :class="thClass">{{ t('portal.returns.status') }}</th>
-                            <th :class="[thClass, 'text-right']">{{ t('portal.returns.refund') }}</th>
+                            <th :class="[thClass, 'text-end']">{{ t('portal.returns.refund') }}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -62,7 +62,7 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                             <td class="px-4 py-3 text-text-secondary">{{ typeLabel(ret.type) }}</td>
                             <td class="px-4 py-3 text-text-tertiary">{{ formatDate(ret.created_at) }}</td>
                             <td class="px-4 py-3"><PortalStatusBadge :status="ret.status" /></td>
-                            <td class="px-4 py-3 text-right tabular-nums text-text-primary">
+                            <td class="px-4 py-3 text-end tabular-nums text-text-primary">
                                 {{ formatMoney(ret.refund_amount, ret.order?.currency) }}
                             </td>
                         </tr>

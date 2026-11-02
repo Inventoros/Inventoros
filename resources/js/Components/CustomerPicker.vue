@@ -83,7 +83,7 @@ const onKeydown = (event) => {
     }
 };
 
-const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface-canvas pl-9 pr-3 text-sm text-text-primary placeholder:text-text-tertiary ds-focus-ring';
+const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface-canvas ps-9 pe-3 text-sm text-text-primary placeholder:text-text-tertiary ds-focus-ring';
 </script>
 
 <template>
@@ -108,7 +108,7 @@ const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface
         </div>
 
         <div v-else class="relative">
-            <Search :size="14" class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-text-tertiary" />
+            <Search :size="14" class="pointer-events-none absolute start-3 top-1/2 -translate-y-1/2 text-text-tertiary" />
             <input
                 id="customer_search"
                 v-model="query"

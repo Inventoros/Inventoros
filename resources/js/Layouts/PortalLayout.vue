@@ -58,7 +58,7 @@ const initials = computed(() =>
                     </span>
                 </Link>
 
-                <nav v-if="contact" class="ml-4 hidden items-center gap-1 md:flex">
+                <nav v-if="contact" class="ms-4 hidden items-center gap-1 md:flex">
                     <Link
                         v-for="item in nav"
                         :key="item.name"
@@ -75,17 +75,17 @@ const initials = computed(() =>
                     </Link>
                 </nav>
 
-                <div class="ml-auto flex items-center gap-1">
+                <div class="ms-auto flex items-center gap-1">
                     <LanguageSwitcher />
                     <ThemeToggle />
                     <template v-if="contact">
-                        <div class="ml-2 hidden text-right lg:block">
+                        <div class="ms-2 hidden text-end lg:block">
                             <p class="max-w-48 truncate text-xs font-medium text-text-primary">{{ contact.name }}</p>
                             <p v-if="contact.customer" class="max-w-48 truncate text-[11px] text-text-tertiary">{{ contact.customer }}</p>
                         </div>
                         <button
                             type="button"
-                            class="ml-1 hidden h-8 items-center gap-1.5 whitespace-nowrap rounded-md px-2.5 text-sm text-text-secondary hover:bg-surface-overlay hover:text-text-primary ds-focus-ring md:inline-flex"
+                            class="ms-1 hidden h-8 items-center gap-1.5 whitespace-nowrap rounded-md px-2.5 text-sm text-text-secondary hover:bg-surface-overlay hover:text-text-primary ds-focus-ring md:inline-flex"
                             :aria-label="t('portal.nav.signOut')"
                             :title="t('portal.nav.signOut')"
                             @click="signOut"

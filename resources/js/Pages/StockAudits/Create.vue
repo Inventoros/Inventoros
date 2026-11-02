@@ -1,4 +1,6 @@
 <script setup>
+import { useId as useFieldId } from 'vue';
+const fieldIdPrefix = useFieldId();
 import AppLayout from '@/Layouts/AppLayout.vue';
 import PageHeader from '@/Components/ui/PageHeader.vue';
 import Card from '@/Components/ui/Card.vue';
@@ -103,10 +105,10 @@ const fieldCheckbox = 'rounded border-border-subtle bg-surface-canvas text-brand
                 <div class="space-y-4 p-5">
                     <!-- Name -->
                     <div>
-                        <label :class="fieldLabel">
+                        <label :for="fieldIdPrefix + '-1'" :class="fieldLabel">
                             {{ t('stockAudits.fields.name') }} <span class="text-status-danger">*</span>
                         </label>
-                        <input
+                        <input :id="fieldIdPrefix + '-1'"
                             v-model="form.name"
                             type="text"
                             required
@@ -121,10 +123,10 @@ const fieldCheckbox = 'rounded border-border-subtle bg-surface-canvas text-brand
 
                     <!-- Description -->
                     <div>
-                        <label :class="fieldLabel">
+                        <label :for="fieldIdPrefix + '-2'" :class="fieldLabel">
                             {{ t('common.description') }}
                         </label>
-                        <textarea
+                        <textarea :id="fieldIdPrefix + '-2'"
                             v-model="form.description"
                             rows="3"
                             maxlength="1000"
@@ -139,10 +141,10 @@ const fieldCheckbox = 'rounded border-border-subtle bg-surface-canvas text-brand
                     <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
                         <!-- Audit Type -->
                         <div>
-                            <label :class="fieldLabel">
+                            <label :for="fieldIdPrefix + '-3'" :class="fieldLabel">
                                 {{ t('stockAudits.fields.auditType') }} <span class="text-status-danger">*</span>
                             </label>
-                            <select
+                            <select :id="fieldIdPrefix + '-3'"
                                 v-model="form.audit_type"
                                 required
                                 :class="fieldInput"
@@ -169,10 +171,10 @@ const fieldCheckbox = 'rounded border-border-subtle bg-surface-canvas text-brand
                         </div>
                         <!-- Location -->
                         <div>
-                            <label :class="fieldLabel">
+                            <label :for="fieldIdPrefix + '-4'" :class="fieldLabel">
                                 {{ t('stockAudits.fields.location') }}
                             </label>
-                            <select
+                            <select :id="fieldIdPrefix + '-4'"
                                 v-model="form.warehouse_location_id"
                                 :class="fieldInput"
                             >
@@ -193,10 +195,10 @@ const fieldCheckbox = 'rounded border-border-subtle bg-surface-canvas text-brand
 
                     <!-- Notes -->
                     <div>
-                        <label :class="fieldLabel">
+                        <label :for="fieldIdPrefix + '-5'" :class="fieldLabel">
                             {{ t('common.notes') }}
                         </label>
-                        <textarea
+                        <textarea :id="fieldIdPrefix + '-5'"
                             v-model="form.notes"
                             rows="2"
                             maxlength="2000"
@@ -266,7 +268,7 @@ const fieldCheckbox = 'rounded border-border-subtle bg-surface-canvas text-brand
                                 <p class="text-sm font-medium text-text-primary truncate">{{ product.name }}</p>
                                 <p class="text-xs text-text-tertiary">SKU: {{ product.sku }}</p>
                             </div>
-                            <div class="text-right">
+                            <div class="text-end">
                                 <p class="text-sm font-medium text-text-primary">{{ product.stock }}</p>
                                 <p class="text-xs text-text-tertiary">{{ t('stockAudits.create.inStock') }}</p>
                             </div>

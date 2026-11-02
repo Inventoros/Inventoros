@@ -186,7 +186,7 @@ const submitUserImport = () => {
 const fieldLabel = 'mb-1 block text-sm font-medium text-text-secondary';
 const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface-canvas px-3 text-sm text-text-primary placeholder:text-text-tertiary ds-focus-ring';
 const checkbox = 'h-4 w-4 rounded border-border-subtle bg-surface-canvas text-brand ds-focus-ring';
-const thClass = 'px-4 py-2.5 text-left text-xs font-medium text-text-secondary';
+const thClass = 'px-4 py-2.5 text-start text-xs font-medium text-text-secondary';
 const code = 'rounded bg-surface-overlay px-1 py-0.5 font-mono text-xs text-text-primary';
 </script>
 
@@ -289,7 +289,7 @@ const code = 'rounded bg-surface-overlay px-1 py-0.5 font-mono text-xs text-text
 
                                 <div class="flex items-center">
                                     <input id="low_stock" v-model="exportFilters.low_stock" type="checkbox" :class="checkbox" />
-                                    <label for="low_stock" class="ml-2 text-sm font-medium text-text-secondary">{{ t('importExport.export.lowStockOnly') }}</label>
+                                    <label for="low_stock" class="ms-2 text-sm font-medium text-text-secondary">{{ t('importExport.export.lowStockOnly') }}</label>
                                 </div>
 
                                 <Button
@@ -428,7 +428,7 @@ const code = 'rounded bg-surface-overlay px-1 py-0.5 font-mono text-xs text-text
                                         {{ t('importExport.products.currencyNote') }}
                                         <template v-if="currencyColumns.length">
                                             {{ t('importExport.products.currencyColumnsInUse') }}
-                                            <code v-for="column in currencyColumns" :key="column" :class="[code, 'mr-1']">{{ column }}</code>
+                                            <code v-for="column in currencyColumns" :key="column" :class="[code, 'me-1']">{{ column }}</code>
                                         </template>
                                     </span>
                                 </li>
@@ -692,7 +692,7 @@ const code = 'rounded bg-surface-overlay px-1 py-0.5 font-mono text-xs text-text
                                 <th :class="thClass">{{ t('common.type') }}</th>
                                 <th :class="thClass">{{ t('importExport.exports.rows') }}</th>
                                 <th :class="thClass">{{ t('common.status') }}</th>
-                                <th :class="[thClass, 'text-right']">{{ t('importExport.exports.action') }}</th>
+                                <th :class="[thClass, 'text-end']">{{ t('importExport.exports.action') }}</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -718,7 +718,7 @@ const code = 'rounded bg-surface-overlay px-1 py-0.5 font-mono text-xs text-text
                                         {{ t(`importExport.exports.statuses.${e.expired ? 'expired' : e.status}`) }}
                                     </Badge>
                                 </td>
-                                <td class="px-4 py-3 text-right">
+                                <td class="px-4 py-3 text-end">
                                     <a
                                         v-if="e.status === 'completed' && !e.expired"
                                         :href="route('import-export.download', e.id)"

@@ -39,7 +39,7 @@ const submit = () => form.post(route('products.stock-reset.store'), { onFinish: 
             <p class="text-sm text-text-secondary">{{ t('stockReset.hint') }}</p>
             <dl class="my-5 grid grid-cols-2 gap-3 text-sm">
                 <template v-for="[label, count] in rows" :key="label">
-                    <dt class="text-text-secondary">{{ t(`stockReset.${label}`) }}</dt><dd class="text-right font-semibold tabular-nums">{{ count }}</dd>
+                    <dt class="text-text-secondary">{{ t(`stockReset.${label}`) }}</dt><dd class="text-end font-semibold tabular-nums">{{ count }}</dd>
                 </template>
             </dl>
             <div v-if="preview.blocked" role="alert" class="space-y-3 text-sm text-status-danger">

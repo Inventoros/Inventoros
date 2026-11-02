@@ -69,7 +69,7 @@ onUnmounted(() => {
         <!-- Dropdown -->
         <div
             v-show="isOpen"
-            class="absolute inset-x-4 top-full mt-1 sm:inset-x-auto sm:right-0 sm:top-auto sm:mt-2 sm:w-64 bg-white dark:bg-surface-raised border border-gray-200 dark:border-border-subtle rounded-lg shadow-xl z-50 overflow-hidden"
+            class="absolute inset-x-4 top-full mt-1 sm:inset-x-auto sm:end-0 sm:top-auto sm:mt-2 sm:w-64 bg-white dark:bg-surface-raised border border-gray-200 dark:border-border-subtle rounded-lg shadow-xl z-50 overflow-hidden"
         >
             <div class="py-1">
                 <!-- All Warehouses option -->
@@ -86,7 +86,7 @@ onUnmounted(() => {
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
                     </svg>
                     <span class="font-medium">{{ $t('warehouses.allWarehouses') }}</span>
-                    <svg v-if="!activeWarehouseId" class="w-4 h-4 ml-auto text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg v-if="!activeWarehouseId" class="w-4 h-4 ms-auto text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                     </svg>
                 </button>
@@ -108,11 +108,11 @@ onUnmounted(() => {
                     <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z" />
                     </svg>
-                    <div class="flex-1 text-left min-w-0">
+                    <div class="flex-1 text-start min-w-0">
                         <div class="font-medium truncate">{{ warehouse.name }}</div>
                         <div class="text-xs text-gray-500 dark:text-gray-400">{{ warehouse.code }}</div>
                     </div>
-                    <svg v-if="activeWarehouseId === warehouse.id" class="w-4 h-4 ml-auto text-brand shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg v-if="activeWarehouseId === warehouse.id" class="w-4 h-4 ms-auto text-brand shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                     </svg>
                 </button>

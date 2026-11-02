@@ -1,4 +1,6 @@
 <script setup>
+import { useId as useFieldId } from 'vue';
+const fieldIdPrefix = useFieldId();
 import TableViewport from '@/Components/ui/TableViewport.vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import PageHeader from '@/Components/ui/PageHeader.vue';
@@ -201,8 +203,8 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                 <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">{{ t('reportBuilder.sections.info') }}</h3></div>
                 <div class="space-y-4 p-5">
                     <div>
-                        <label :class="fieldLabel">{{ t('reportBuilder.fields.name') }} <span class="text-status-danger">*</span></label>
-                        <input
+                        <label :for="fieldIdPrefix + '-1'" :class="fieldLabel">{{ t('reportBuilder.fields.name') }} <span class="text-status-danger">*</span></label>
+                        <input :id="fieldIdPrefix + '-1'"
                             v-model="form.name"
                             type="text"
                             maxlength="255"
@@ -212,8 +214,8 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                         <p v-if="form.errors.name" :class="fieldError">{{ form.errors.name }}</p>
                     </div>
                     <div>
-                        <label :class="fieldLabel">{{ t('reportBuilder.fields.description') }}</label>
-                        <textarea
+                        <label :for="fieldIdPrefix + '-2'" :class="fieldLabel">{{ t('reportBuilder.fields.description') }}</label>
+                        <textarea :id="fieldIdPrefix + '-2'"
                             v-model="form.description"
                             rows="2"
                             maxlength="1000"
@@ -376,8 +378,8 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                 <div class="p-5">
                     <div class="flex flex-wrap gap-4">
                         <div class="min-w-[200px] flex-1">
-                            <label :class="fieldLabel">{{ t('reportBuilder.fields.chartType') }}</label>
-                            <select
+                            <label :for="fieldIdPrefix + '-3'" :class="fieldLabel">{{ t('reportBuilder.fields.chartType') }}</label>
+                            <select :id="fieldIdPrefix + '-3'"
                                 v-model="form.chart_type"
                                 :class="fieldInput"
                             >
@@ -385,8 +387,8 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                             </select>
                         </div>
                         <div v-if="form.chart_type" class="min-w-[200px] flex-1">
-                            <label :class="fieldLabel">{{ t('reportBuilder.fields.chartField') }}</label>
-                            <select
+                            <label :for="fieldIdPrefix + '-4'" :class="fieldLabel">{{ t('reportBuilder.fields.chartField') }}</label>
+                            <select :id="fieldIdPrefix + '-4'"
                                 v-model="form.chart_field"
                                 :class="fieldInput"
                             >
@@ -421,7 +423,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                     <th
                                         v-for="col in form.columns"
                                         :key="col"
-                                        class="px-4 py-2 text-left text-[11px] font-medium uppercase tracking-wider text-text-tertiary"
+                                        class="px-4 py-2 text-start text-[11px] font-medium uppercase tracking-wider text-text-tertiary"
                                     >
                                         {{ previewData.columnLabels?.[col] || columnLabel(col) }}
                                     </th>

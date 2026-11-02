@@ -258,7 +258,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                     v-model="form.is_active"
                                     class="rounded border-border-subtle bg-surface-canvas text-brand ds-focus-ring"
                             />
-                                <span class="ml-2 text-sm text-text-secondary">{{ t('warehouses.fields.isActive') }}</span>
+                                <span class="ms-2 text-sm text-text-secondary">{{ t('warehouses.fields.isActive') }}</span>
                             </label>
                         </div>
                     </div>

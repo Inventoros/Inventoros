@@ -465,10 +465,7 @@
         "updateQuantityFailed": "Failed to update quantity",
         "confirmRemove": "Remove this component from the bill of materials?",
         "removeFailed": "Failed to remove component"
-      },
-      "prepareTransfer": "Prepare stock",
-      "shipTransfer": "Ship transfer",
-      "receiveTransfer": "Receive transfer"
+      }
     },
     "quickAddCategory": {
       "title": "Quick Add Category",
@@ -536,7 +533,7 @@
     }
   },
   "orders": {
-      "channelOrderNumber": "Channel order number",
+    "channelOrderNumber": "Channel order number",
     "title": "Orders",
     "createOrder": "Create Order",
     "searchOrders": "Search Orders",
@@ -1407,12 +1404,12 @@
       "download": "Download",
       "availableUntil": "Available until {date}",
       "statuses": {
+        "prepared": "Prepared",
         "pending": "Pending",
         "processing": "Processing",
         "completed": "Completed",
         "failed": "Failed",
-        "expired": "Expired",
-        "prepared": "Prepared"
+        "expired": "Expired"
       }
     }
   },
@@ -3919,7 +3916,8 @@
       "pending": "Pending",
       "in_transit": "In Transit",
       "completed": "Completed",
-      "cancelled": "Cancelled"
+      "cancelled": "Cancelled",
+      "prepared": "Prepared"
     },
     "create": {
       "title": "Create Stock Transfer",
@@ -3958,7 +3956,10 @@
       "cancelTransfer": "Cancel Transfer",
       "completeHint": "Completing the transfer will deduct stock from the source location and add it to the destination location.",
       "confirmComplete": "Are you sure you want to complete this transfer? Stock levels will be adjusted.",
-      "confirmCancel": "Are you sure you want to cancel this transfer?"
+      "confirmCancel": "Are you sure you want to cancel this transfer?",
+      "prepareTransfer": "Prepare stock",
+      "shipTransfer": "Ship transfer",
+      "receiveTransfer": "Receive transfer"
     }
   },
   "tax": {
@@ -3970,39 +3971,39 @@
     "title": "Stock by warehouse",
     "includeZero": "Include zero balances"
   },
-    "storage": {
-        "title": "File storage",
-        "description": "Local and external storage for uploaded files.",
-        "configure": "Configure INVENTOROS_UPLOADS_DISK and AWS credentials in .env or config/filesystems.php, then refresh the configuration cache and restart queue workers.",
-        "existingFiles": "Existing files keep their recorded disk. Keep old disk definitions available when changing storage.",
-        "probe": "The connection check writes, reads and deletes a small temporary private file.",
-        "driver": "Driver",
-        "notConfigured": "Not configured",
-        "usedFor": "Used for",
-        "bucket": "Bucket",
-        "region": "Region",
-        "connected": "Connection confirmed: write, read and delete passed.",
-        "failed": "Connection failed during {step}. Check server configuration and permissions.",
-        "unchecked": "No recent connection check.",
-        "checkedAt": "Checked: {time}",
-        "cleanupFailed": "The temporary test file could not be removed. Check the connection-checks prefix after fixing permissions.",
-        "requestFailed": "Unable to run the check. Try again shortly.",
-        "checking": "Checking…",
-        "check": "Check connection",
-        "purposes": {
-            "products": "Product images",
-            "logos": "Organization logos",
-            "labels": "Shipping labels",
-            "imports": "Queued imports",
-            "exports": "Generated exports"
-        },
-        "steps": {
-            "connect": "connecting",
-            "write": "writing",
-            "read": "reading",
-            "delete": "deleting"
-        }
+  "storage": {
+    "title": "File storage",
+    "description": "Local and external storage for uploaded files.",
+    "configure": "Configure INVENTOROS_UPLOADS_DISK and AWS credentials in .env or config/filesystems.php, then refresh the configuration cache and restart queue workers.",
+    "existingFiles": "Existing files keep their recorded disk. Keep old disk definitions available when changing storage.",
+    "probe": "The connection check writes, reads and deletes a small temporary private file.",
+    "driver": "Driver",
+    "notConfigured": "Not configured",
+    "usedFor": "Used for",
+    "bucket": "Bucket",
+    "region": "Region",
+    "connected": "Connection confirmed: write, read and delete passed.",
+    "failed": "Connection failed during {step}. Check server configuration and permissions.",
+    "unchecked": "No recent connection check.",
+    "checkedAt": "Checked: {time}",
+    "cleanupFailed": "The temporary test file could not be removed. Check the connection-checks prefix after fixing permissions.",
+    "requestFailed": "Unable to run the check. Try again shortly.",
+    "checking": "Checking…",
+    "check": "Check connection",
+    "purposes": {
+      "products": "Product images",
+      "logos": "Organization logos",
+      "labels": "Shipping labels",
+      "imports": "Queued imports",
+      "exports": "Generated exports"
     },
+    "steps": {
+      "connect": "connecting",
+      "write": "writing",
+      "read": "reading",
+      "delete": "deleting"
+    }
+  },
   "batchExpiryReport": {
     "title": "Batch expiry",
     "description": "Find expired lots and plan for approaching expiry dates.",

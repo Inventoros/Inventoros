@@ -7,7 +7,7 @@
  * language preference, because SetLocale prefers the saved preference over
  * the cookie: without saving, the next page load would switch back.
  */
-import { computed, ref, onMounted, onUnmounted } from 'vue';
+import { computed, nextTick, ref, onMounted, onUnmounted, useId } from 'vue';
 import { router, usePage } from '@inertiajs/vue3';
 import { useI18n } from 'vue-i18n';
 import { Languages, Check } from '@lucide/vue';
@@ -17,11 +17,37 @@ const { locale, t } = useI18n();
 const page = usePage();
 const isOpen = ref(false);
 const dropdownRef = ref(null);
+const triggerRef = ref(null);
+const listId = `languages-${useId().replace(/[^a-zA-Z0-9_-]/g, '')}`;
+
+const close = (restoreFocus = false) => {
+    isOpen.value = false;
+    if (restoreFocus) triggerRef.value?.focus();
+};
+const openWithKeyboard = async () => {
+    isOpen.value = true;
+    await nextTick();
+    dropdownRef.value?.querySelector('[aria-selected="true"]')?.focus();
+};
+const handleKeydown = (event) => {
+    if (event.key === 'Escape' && isOpen.value) {
+        event.preventDefault();
+        event.stopPropagation();
+        close(true);
+    } else if (['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key)) {
+        event.preventDefault();
+        if (!isOpen.value) return openWithKeyboard();
+        const options = [...dropdownRef.value.querySelectorAll('[role="option"]')];
+        const index = options.indexOf(document.activeElement);
+        const next = event.key === 'Home' ? 0 : event.key === 'End' ? options.length - 1 : (index + (event.key === 'ArrowUp' ? -1 : 1) + options.length) % options.length;
+        options[next]?.focus();
+    }
+};
 
 const current = computed(() => availableLocales.find((l) => l.code === locale.value) || availableLocales[0]);
 
 const switchLocale = (code) => {
-    isOpen.value = false;
+    close(true);
     if (code === locale.value) return;
 
     setLocale(code);
@@ -45,13 +71,16 @@ onUnmounted(() => document.removeEventListener('click', handleClickOutside));
 </script>
 
 <template>
-    <div ref="dropdownRef" class="relative">
+    <div ref="dropdownRef" class="relative" @keydown="handleKeydown" @focusout="event => { if (!dropdownRef.contains(event.relatedTarget)) close(); }">
         <button
+            ref="triggerRef"
+            :id="`${listId}-trigger`"
             type="button"
             @click="isOpen = !isOpen"
             class="flex items-center gap-1.5 h-8 px-2 rounded-md text-xs text-text-secondary hover:text-text-primary hover:bg-surface-overlay transition-colors ds-focus-ring"
             :aria-expanded="isOpen"
             aria-haspopup="listbox"
+            :aria-controls="isOpen ? listId : undefined"
             :aria-label="t('components.languageSwitcher.ariaLabel', { name: current.name })"
         >
             <Languages :size="15" />
@@ -69,7 +98,9 @@ onUnmounted(() => document.removeEventListener('click', handleClickOutside));
             <div
                 v-if="isOpen"
                 role="listbox"
-                class="absolute right-0 top-full mt-2 w-48 bg-surface-raised border border-border-subtle rounded-lg shadow-xl overflow-hidden z-50 max-h-80 overflow-y-auto ds-scroll"
+                :id="listId"
+                :aria-labelledby="`${listId}-trigger`"
+                class="absolute end-0 top-full mt-2 w-48 bg-surface-raised border border-border-subtle rounded-lg shadow-xl overflow-hidden z-50 max-h-80 overflow-y-auto ds-scroll"
             >
                 <button
                     v-for="loc in availableLocales"
@@ -86,7 +117,7 @@ onUnmounted(() => document.removeEventListener('click', handleClickOutside));
                             : 'text-text-secondary hover:text-text-primary hover:bg-surface-overlay'
                     ]"
                 >
-                    <span class="flex-1 text-left">{{ loc.name }}</span>
+                    <span class="flex-1 text-start">{{ loc.name }}</span>
                     <Check v-if="locale === loc.code" :size="14" />
                 </button>
             </div>

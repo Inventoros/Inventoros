@@ -58,7 +58,7 @@ const formatDate = (dateStr) => displayDate(dateStr);
 const selectClass =
     'h-9 w-full rounded-md border border-border-subtle bg-surface-canvas px-3 text-sm text-text-primary ds-focus-ring';
 const thClass =
-    'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-text-secondary';
+    'px-4 py-2.5 text-start text-xs font-medium tracking-tight text-text-secondary';
 </script>
 
 <template>
@@ -136,10 +136,10 @@ const thClass =
                         <th :class="thClass">{{ t('common.type') }}</th>
                         <th :class="thClass">{{ t('common.status') }}</th>
                         <th :class="thClass">{{ t('stockAudits.columns.location') }}</th>
-                        <th :class="[thClass, 'text-right']">{{ t('stockAudits.columns.items') }}</th>
+                        <th :class="[thClass, 'text-end']">{{ t('stockAudits.columns.items') }}</th>
                         <th :class="thClass">{{ t('stockAudits.columns.createdBy') }}</th>
                         <th :class="thClass">{{ t('common.date') }}</th>
-                        <th :class="[thClass, 'text-right']">{{ t('common.actions') }}</th>
+                        <th :class="[thClass, 'text-end']">{{ t('common.actions') }}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -176,7 +176,7 @@ const thClass =
                         <td class="px-4 py-3 text-text-secondary">
                             {{ audit.warehouse_location?.name || t('products.allLocations') }}
                         </td>
-                        <td class="px-4 py-3 text-right tabular-nums text-text-secondary">
+                        <td class="px-4 py-3 text-end tabular-nums text-text-secondary">
                             {{ audit.items_count || 0 }}
                         </td>
                         <td class="px-4 py-3 text-text-secondary">

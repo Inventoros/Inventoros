@@ -1,4 +1,6 @@
 <script setup>
+import { useId as useFieldId } from 'vue';
+const fieldIdPrefix = useFieldId();
 import AppLayout from '@/Layouts/AppLayout.vue';
 import PageHeader from '@/Components/ui/PageHeader.vue';
 import Card from '@/Components/ui/Card.vue';
@@ -358,8 +360,8 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                         <p v-if="variantError" :class="fieldError">{{ variantError }}</p>
                                     </div>
                                     <div class="md:col-span-3">
-                                        <label :class="fieldLabel">{{ t('common.quantity') }}</label>
-                                        <input v-model.number="quantity" type="number" min="1" :class="fieldInput" />
+                                        <label :for="fieldIdPrefix + '-1'" :class="fieldLabel">{{ t('common.quantity') }}</label>
+                                        <input :id="fieldIdPrefix + '-1'" v-model.number="quantity" type="number" min="1" :class="fieldInput" />
                                     </div>
                                     <div class="flex items-end md:col-span-2">
                                         <Button type="button" variant="default" class="w-full" @click="addItem">
@@ -388,7 +390,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                         <label class="mb-1 block text-[11px] text-text-tertiary">{{ t('orders.show.unitPrice') }}</label>
                                         <input :value="item.unit_price" @input="updateItemPrice(index, $event.target.value)" type="number" step="0.01" min="0" :class="fieldInput" />
                                     </div>
-                                    <div class="w-24 text-right">
+                                    <div class="w-24 text-end">
                                         <label class="mb-1 block text-[11px] text-text-tertiary">{{ t('common.total') }}</label>
                                         <p class="font-semibold tabular-nums text-text-primary">{{ money(lineNetCents(item) / 100) }}</p>
                                     </div>

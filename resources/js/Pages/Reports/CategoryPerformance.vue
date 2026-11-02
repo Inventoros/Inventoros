@@ -46,7 +46,7 @@ const barWidth = (value) => {
     return `${Math.max(4, (Number(value) / maxValue.value) * 100)}%`;
 };
 
-const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-text-secondary';
+const thClass = 'px-4 py-2.5 text-start text-xs font-medium tracking-tight text-text-secondary';
 </script>
 
 <template>
@@ -160,11 +160,11 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                         <thead>
                             <tr class="border-b border-border-subtle">
                                 <th :class="thClass">{{ t('reports.categoryPerformance.title') }}</th>
-                                <th :class="[thClass, 'text-right']">{{ t('common.products') }}</th>
-                                <th :class="[thClass, 'text-right']">{{ t('reports.categoryPerformance.totalStock') }}</th>
-                                <th :class="[thClass, 'text-right']">{{ t('reports.categoryPerformance.totalValue') }}</th>
-                                <th :class="[thClass, 'text-right']">{{ t('reports.categoryPerformance.avgPerProduct') }}</th>
-                                <th :class="[thClass, 'text-right']">{{ t('reports.categoryPerformance.low') }}</th>
+                                <th :class="[thClass, 'text-end']">{{ t('common.products') }}</th>
+                                <th :class="[thClass, 'text-end']">{{ t('reports.categoryPerformance.totalStock') }}</th>
+                                <th :class="[thClass, 'text-end']">{{ t('reports.categoryPerformance.totalValue') }}</th>
+                                <th :class="[thClass, 'text-end']">{{ t('reports.categoryPerformance.avgPerProduct') }}</th>
+                                <th :class="[thClass, 'text-end']">{{ t('reports.categoryPerformance.low') }}</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -174,14 +174,14 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                                 class="border-b border-border-subtle transition-colors last:border-b-0 hover:bg-surface-overlay"
                             >
                                 <td class="px-4 py-3 font-medium text-text-primary">{{ category.category_name }}</td>
-                                <td class="px-4 py-3 text-right tabular-nums text-text-secondary">{{ category.product_count }}</td>
-                                <td class="px-4 py-3 text-right tabular-nums text-text-secondary">{{ category.total_stock }}</td>
-                                <td class="px-4 py-3 text-right font-medium tabular-nums text-text-primary">
+                                <td class="px-4 py-3 text-end tabular-nums text-text-secondary">{{ category.product_count }}</td>
+                                <td class="px-4 py-3 text-end tabular-nums text-text-secondary">{{ category.total_stock }}</td>
+                                <td class="px-4 py-3 text-end font-medium tabular-nums text-text-primary">
                                     {{ formatCurrency(category.total_value) }}
                                     <p v-if="plusOthers(category.values)" class="text-xs font-normal text-text-tertiary">{{ plusOthers(category.values) }}</p>
                                 </td>
-                                <td class="px-4 py-3 text-right tabular-nums text-text-secondary">{{ average(category) }}</td>
-                                <td class="px-4 py-3 text-right">
+                                <td class="px-4 py-3 text-end tabular-nums text-text-secondary">{{ average(category) }}</td>
+                                <td class="px-4 py-3 text-end">
                                     <Badge v-if="category.low_stock_items > 0" variant="danger" size="sm">{{ category.low_stock_items }}</Badge>
                                     <span v-else class="text-xs tabular-nums text-text-tertiary">0</span>
                                 </td>

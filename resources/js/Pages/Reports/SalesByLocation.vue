@@ -26,8 +26,8 @@ const deltaClass = (value) => {
     return Number(value) > 0 ? 'text-status-success' : 'text-status-danger';
 };
 
-const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-text-secondary';
-const thRightClass = 'px-4 py-2.5 text-right text-xs font-medium tracking-tight text-text-secondary';
+const thClass = 'px-4 py-2.5 text-start text-xs font-medium tracking-tight text-text-secondary';
+const thRightClass = 'px-4 py-2.5 text-end text-xs font-medium tracking-tight text-text-secondary';
 </script>
 
 <template>
@@ -87,10 +87,10 @@ const thRightClass = 'px-4 py-2.5 text-right text-xs font-medium tracking-tight 
                                 class="border-b border-border-subtle transition-colors last:border-b-0 hover:bg-surface-overlay"
                             >
                                 <td class="px-4 py-3 font-medium text-text-primary">{{ row.name || t('reports.salesByLocation.noWarehouse') }}</td>
-                                <td class="px-4 py-3 text-right tabular-nums text-text-secondary">{{ formatNumber(row.orders) }}</td>
-                                <td class="px-4 py-3 text-right font-semibold tabular-nums text-text-primary">{{ formatCurrency(row.revenue) }}</td>
-                                <td class="px-4 py-3 text-right tabular-nums text-text-secondary">{{ formatCurrency(row.previous_revenue) }}</td>
-                                <td class="px-4 py-3 text-right tabular-nums" :class="deltaClass(row.delta_pct)">{{ formatDelta(row.delta_pct) }}</td>
+                                <td class="px-4 py-3 text-end tabular-nums text-text-secondary">{{ formatNumber(row.orders) }}</td>
+                                <td class="px-4 py-3 text-end font-semibold tabular-nums text-text-primary">{{ formatCurrency(row.revenue) }}</td>
+                                <td class="px-4 py-3 text-end tabular-nums text-text-secondary">{{ formatCurrency(row.previous_revenue) }}</td>
+                                <td class="px-4 py-3 text-end tabular-nums" :class="deltaClass(row.delta_pct)">{{ formatDelta(row.delta_pct) }}</td>
                             </tr>
                             <tr v-if="byWarehouse.length === 0">
                                 <td colspan="5" class="px-4 py-8 text-center text-sm text-text-tertiary">{{ t('reports.common.noData') }}</td>
@@ -130,10 +130,10 @@ const thRightClass = 'px-4 py-2.5 text-right text-xs font-medium tracking-tight 
                             >
                                 <td class="px-4 py-3 font-medium text-text-primary">{{ row.name || t('reports.salesByLocation.noLocation') }}</td>
                                 <td class="px-4 py-3 text-text-secondary">{{ row.warehouse || '-' }}</td>
-                                <td class="px-4 py-3 text-right tabular-nums text-text-secondary">{{ formatNumber(row.units) }}</td>
-                                <td class="px-4 py-3 text-right font-semibold tabular-nums text-text-primary">{{ formatCurrency(row.revenue) }}</td>
-                                <td class="px-4 py-3 text-right tabular-nums text-text-secondary">{{ formatCurrency(row.previous_revenue) }}</td>
-                                <td class="px-4 py-3 text-right tabular-nums" :class="deltaClass(row.delta_pct)">{{ formatDelta(row.delta_pct) }}</td>
+                                <td class="px-4 py-3 text-end tabular-nums text-text-secondary">{{ formatNumber(row.units) }}</td>
+                                <td class="px-4 py-3 text-end font-semibold tabular-nums text-text-primary">{{ formatCurrency(row.revenue) }}</td>
+                                <td class="px-4 py-3 text-end tabular-nums text-text-secondary">{{ formatCurrency(row.previous_revenue) }}</td>
+                                <td class="px-4 py-3 text-end tabular-nums" :class="deltaClass(row.delta_pct)">{{ formatDelta(row.delta_pct) }}</td>
                             </tr>
                             <tr v-if="byLocation.length === 0">
                                 <td colspan="6" class="px-4 py-8 text-center text-sm text-text-tertiary">{{ t('reports.common.noData') }}</td>

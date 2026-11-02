@@ -230,9 +230,9 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                             <table class="min-w-full divide-y divide-border-subtle">
                                 <thead class="bg-surface-canvas">
                                     <tr>
-                                        <th class="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider text-text-tertiary">{{ t('workOrders.components.component') }}</th>
-                                        <th class="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider text-text-tertiary">{{ t('workOrders.components.sku') }}</th>
-                                        <th class="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider text-text-tertiary">{{ t('workOrders.components.variant') }}</th>
+                                        <th class="px-4 py-2 text-start text-xs font-medium uppercase tracking-wider text-text-tertiary">{{ t('workOrders.components.component') }}</th>
+                                        <th class="px-4 py-2 text-start text-xs font-medium uppercase tracking-wider text-text-tertiary">{{ t('workOrders.components.sku') }}</th>
+                                        <th class="px-4 py-2 text-start text-xs font-medium uppercase tracking-wider text-text-tertiary">{{ t('workOrders.components.variant') }}</th>
                                         <th class="px-4 py-2 text-center text-xs font-medium uppercase tracking-wider text-text-tertiary">{{ t('workOrders.components.required') }}</th>
                                         <th class="px-4 py-2 text-center text-xs font-medium uppercase tracking-wider text-text-tertiary">{{ t('workOrders.components.available') }}</th>
                                         <th class="px-4 py-2 text-center text-xs font-medium uppercase tracking-wider text-text-tertiary">{{ t('workOrders.components.status') }}</th>
@@ -295,7 +295,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                         <!-- Insufficient Stock Warning -->
                         <div v-if="!allComponentsSufficient" class="border-t border-border-subtle bg-status-danger/10 px-4 py-3">
                             <p class="flex items-center text-sm text-status-danger">
-                                <AlertTriangle :size="16" class="mr-2 shrink-0" />
+                                <AlertTriangle :size="16" class="me-2 shrink-0" />
                                 {{ t('workOrders.components.insufficientWarning') }}
                             </p>
                         </div>
@@ -304,7 +304,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                     <!-- No components warning -->
                     <div v-if="selectedProduct && requiredComponents.length === 0" class="rounded-lg border border-status-warning/40 bg-status-warning/10 p-4">
                         <p class="flex items-center text-sm text-status-warning">
-                            <AlertTriangle :size="16" class="mr-2" />
+                            <AlertTriangle :size="16" class="me-2" />
                             {{ t('workOrders.components.noComponentsDefined') }}
                         </p>
                     </div>

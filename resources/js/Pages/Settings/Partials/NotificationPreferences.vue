@@ -48,7 +48,7 @@ const checkbox = 'h-4 w-4 rounded border-border-subtle bg-surface-canvas text-br
                             :class="checkbox"
                         />
                     </div>
-                    <div class="ml-3">
+                    <div class="ms-3">
                         <label for="email_notifications" class="font-medium text-text-primary">
                             {{ t('settings.notificationPreferences.enableEmail') }}
                         </label>
@@ -68,7 +68,7 @@ const checkbox = 'h-4 w-4 rounded border-border-subtle bg-surface-canvas text-br
                     </h4>
 
                     <!-- Low Stock Alerts -->
-                    <div class="flex items-start pl-4">
+                    <div class="flex items-start ps-4">
                         <div class="flex h-5 items-center">
                             <input
                                 v-model="form.email_low_stock"
@@ -78,7 +78,7 @@ const checkbox = 'h-4 w-4 rounded border-border-subtle bg-surface-canvas text-br
                                 :class="checkbox"
                             />
                         </div>
-                        <div class="ml-3">
+                        <div class="ms-3">
                             <label for="email_low_stock" class="text-sm font-medium text-text-primary">
                                 {{ t('settings.notificationPreferences.lowStock') }}
                             </label>
@@ -89,7 +89,7 @@ const checkbox = 'h-4 w-4 rounded border-border-subtle bg-surface-canvas text-br
                     </div>
 
                     <!-- Order Notifications -->
-                    <div class="flex items-start pl-4">
+                    <div class="flex items-start ps-4">
                         <div class="flex h-5 items-center">
                             <input
                                 v-model="form.email_orders"
@@ -99,7 +99,7 @@ const checkbox = 'h-4 w-4 rounded border-border-subtle bg-surface-canvas text-br
                                 :class="checkbox"
                             />
                         </div>
-                        <div class="ml-3">
+                        <div class="ms-3">
                             <label for="email_orders" class="text-sm font-medium text-text-primary">
                                 {{ t('settings.notificationPreferences.orders') }}
                             </label>
@@ -110,7 +110,7 @@ const checkbox = 'h-4 w-4 rounded border-border-subtle bg-surface-canvas text-br
                     </div>
 
                     <!-- Approval Notifications -->
-                    <div class="flex items-start pl-4">
+                    <div class="flex items-start ps-4">
                         <div class="flex h-5 items-center">
                             <input
                                 v-model="form.email_approvals"
@@ -120,7 +120,7 @@ const checkbox = 'h-4 w-4 rounded border-border-subtle bg-surface-canvas text-br
                                 :class="checkbox"
                             />
                         </div>
-                        <div class="ml-3">
+                        <div class="ms-3">
                             <label for="email_approvals" class="text-sm font-medium text-text-primary">
                                 {{ t('settings.notificationPreferences.approvals') }}
                             </label>

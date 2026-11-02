@@ -417,6 +417,7 @@
     --color-status-warning: hsl(var(--status-warning));
     --color-status-warning-soft: hsl(var(--status-warning-soft));
     --color-status-danger: hsl(var(--status-danger));
+    --color-action-danger: hsl(var(--action-danger));
     --color-status-danger-soft: hsl(var(--status-danger-soft));
     --color-status-info: hsl(var(--status-info));
     --color-status-info-soft: hsl(var(--status-info-soft));

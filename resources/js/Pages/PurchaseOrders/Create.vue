@@ -332,7 +332,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                 <label class="mb-1 block text-[11px] text-text-tertiary">{{ t('purchaseOrders.create.unitCost') }}</label>
                                 <input :value="item.unit_cost" @input="updateItemCost(index, $event.target.value)" type="number" step="0.01" min="0" :class="fieldInput" />
                             </div>
-                            <div class="w-28 text-right">
+                            <div class="w-28 text-end">
                                 <label class="mb-1 block text-[11px] text-text-tertiary">{{ t('common.subtotal') }}</label>
                                 <p class="font-semibold tabular-nums text-text-primary">{{ formatCurrency(item.quantity * item.unit_cost) }}</p>
                             </div>
@@ -350,7 +350,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                             <TaxInput v-model="form.tax" :base="subtotal" :error="form.errors.tax" />
                             <div class="flex items-center justify-between text-sm">
                                 <label for="shipping" class="text-text-secondary">{{ t('common.shipping') }}</label>
-                                <input id="shipping" v-model.number="form.shipping" type="number" step="0.01" min="0" class="h-9 w-28 rounded-md border border-border-subtle bg-surface-canvas px-3 text-right text-sm text-text-primary placeholder:text-text-tertiary ds-focus-ring" />
+                                <input id="shipping" v-model.number="form.shipping" type="number" step="0.01" min="0" class="h-9 w-28 rounded-md border border-border-subtle bg-surface-canvas px-3 text-end text-sm text-text-primary placeholder:text-text-tertiary ds-focus-ring" />
                             </div>
                             <div class="flex items-center justify-between border-t border-border-subtle pt-3">
                                 <span class="text-sm font-semibold text-text-primary">{{ t('common.total') }}</span>

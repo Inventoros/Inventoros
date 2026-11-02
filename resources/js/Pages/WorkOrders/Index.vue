@@ -65,7 +65,7 @@ const selectClass =
     'h-9 w-full rounded-md border border-border-subtle bg-surface-canvas px-3 text-sm text-text-primary ds-focus-ring';
 
 const thClass =
-    'px-4 py-2.5 text-left text-xs font-medium text-text-secondary';
+    'px-4 py-2.5 text-start text-xs font-medium text-text-secondary';
 </script>
 
 <template>
@@ -138,7 +138,7 @@ const thClass =
                         <th :class="thClass">{{ t('workOrders.columns.status') }}</th>
                         <th :class="thClass">{{ t('workOrders.columns.createdBy') }}</th>
                         <th :class="thClass">{{ t('workOrders.columns.date') }}</th>
-                        <th :class="[thClass, 'text-right']">{{ t('workOrders.columns.actions') }}</th>
+                        <th :class="[thClass, 'text-end']">{{ t('workOrders.columns.actions') }}</th>
                     </tr>
                 </thead>
                 <tbody>

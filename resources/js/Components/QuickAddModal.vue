@@ -1,4 +1,5 @@
 <script setup>
+import DialogSurface from '@/Components/DialogSurface.vue';
 import { useI18n } from 'vue-i18n';
 
 defineProps({
@@ -38,7 +39,7 @@ const maxWidthClass = {
 </script>
 
 <template>
-    <Teleport to="body">
+    <DialogSurface :show="!!(show)" @close="close">
         <div
             v-if="show"
             class="fixed inset-0 z-50 overflow-y-auto"
@@ -57,6 +58,8 @@ const maxWidthClass = {
                             {{ title }}
                         </h3>
                         <button
+                            type="button"
+                            :aria-label="t('common.dismiss')"
                             @click="close"
                             class="text-gray-500 dark:text-gray-400 hover:text-gray-200"
                         >
@@ -94,5 +97,5 @@ const maxWidthClass = {
                 </div>
             </div>
         </div>
-    </Teleport>
+    </DialogSurface>
 </template>

@@ -1,4 +1,6 @@
 <script setup>
+import { useId as useFieldId } from 'vue';
+const fieldIdPrefix = useFieldId();
 import AppLayout from '@/Layouts/AppLayout.vue';
 import PageHeader from '@/Components/ui/PageHeader.vue';
 import Card from '@/Components/ui/Card.vue';
@@ -337,10 +339,10 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                         <div>
                             <label for="purchase_price" :class="fieldLabel">{{ t('products.create.purchasePrice') }}</label>
                             <div class="relative">
-                                <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                                <div class="pointer-events-none absolute inset-y-0 start-0 flex items-center ps-3">
                                     <span class="text-sm text-text-tertiary">$</span>
                                 </div>
-                                <input id="purchase_price" v-model="form.purchase_price" type="number" step="0.01" min="0" :class="[fieldInput, 'pl-7']" />
+                                <input id="purchase_price" v-model="form.purchase_price" type="number" step="0.01" min="0" :class="[fieldInput, 'ps-7']" />
                             </div>
                             <p class="mt-1 text-xs text-text-tertiary">{{ t('products.create.purchasePriceHint') }}</p>
                             <p v-if="form.errors.purchase_price" :class="fieldError">{{ form.errors.purchase_price }}</p>
@@ -352,10 +354,10 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                 {{ t('products.create.sellingPrice') }} <span class="text-status-danger">*</span>
                             </label>
                             <div class="relative">
-                                <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                                <div class="pointer-events-none absolute inset-y-0 start-0 flex items-center ps-3">
                                     <span class="text-sm text-text-tertiary">$</span>
                                 </div>
-                                <input id="price" v-model="form.price" type="number" step="0.01" min="0" :class="[fieldInput, 'pl-7']" required />
+                                <input id="price" v-model="form.price" type="number" step="0.01" min="0" :class="[fieldInput, 'ps-7']" required />
                             </div>
                             <p class="mt-1 text-xs text-text-tertiary">{{ t('products.create.sellingPriceHint') }}</p>
                             <p v-if="form.errors.price" :class="fieldError">{{ form.errors.price }}</p>
@@ -602,10 +604,10 @@ const fieldError = 'mt-1 text-xs text-status-danger';
 
                     <div class="space-y-4">
                         <div>
-                            <label :class="fieldLabel">
+                            <label :for="fieldIdPrefix + '-1'" :class="fieldLabel">
                                 {{ t('products.quickAddCategory.categoryName') }} <span class="text-status-danger">*</span>
                             </label>
-                            <input
+                            <input :id="fieldIdPrefix + '-1'"
                                 v-model="categoryForm.name"
                                 type="text"
                                 :class="fieldInput"
@@ -615,8 +617,8 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                         </div>
 
                         <div>
-                            <label :class="fieldLabel">{{ t('common.description') }}</label>
-                            <textarea
+                            <label :for="fieldIdPrefix + '-2'" :class="fieldLabel">{{ t('common.description') }}</label>
+                            <textarea :id="fieldIdPrefix + '-2'"
                                 v-model="categoryForm.description"
                                 rows="3"
                                 :class="fieldArea"
@@ -671,10 +673,10 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                         </div>
                         <p v-for="(errors, field) in locationErrors" :key="field" :class="fieldError" role="alert">{{ errors[0] }}</p>
                         <div>
-                            <label :class="fieldLabel">
+                            <label :for="fieldIdPrefix + '-3'" :class="fieldLabel">
                                 {{ t('products.quickAddLocation.locationName') }} <span class="text-status-danger">*</span>
                             </label>
-                            <input
+                            <input :id="fieldIdPrefix + '-3'"
                                 v-model="locationForm.name"
                                 type="text"
                                 :class="fieldInput"
@@ -684,10 +686,10 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                         </div>
 
                         <div>
-                            <label :class="fieldLabel">
+                            <label :for="fieldIdPrefix + '-4'" :class="fieldLabel">
                                 {{ t('products.quickAddLocation.locationCode') }} <span class="text-status-danger">*</span>
                             </label>
-                            <input
+                            <input :id="fieldIdPrefix + '-4'"
                                 v-model="locationForm.code"
                                 type="text"
                                 :class="fieldInput"
@@ -697,8 +699,8 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                         </div>
 
                         <div>
-                            <label :class="fieldLabel">{{ t('common.description') }}</label>
-                            <textarea
+                            <label :for="fieldIdPrefix + '-5'" :class="fieldLabel">{{ t('common.description') }}</label>
+                            <textarea :id="fieldIdPrefix + '-5'"
                                 v-model="locationForm.description"
                                 rows="3"
                                 :class="fieldArea"

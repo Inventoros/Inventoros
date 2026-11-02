@@ -1,4 +1,6 @@
 <script setup>
+import { useId as useFieldId } from 'vue';
+const fieldIdPrefix = useFieldId();
 import TableViewport from '@/Components/ui/TableViewport.vue';
 import { ref, computed, watch } from 'vue';
 
@@ -251,7 +253,7 @@ const getEffectivePurchasePrice = (variant) => {
                                 type="button"
                                 @click="removeValueFromOption(optIndex, valIndex)"
                                 :disabled="disabled"
-                                class="ml-1 hover:text-red-400 disabled:opacity-50"
+                                class="ms-1 hover:text-red-400 disabled:opacity-50"
                             >
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -275,10 +277,10 @@ const getEffectivePurchasePrice = (variant) => {
             <div v-if="showAddOption && canAddOption" class="p-4 bg-gray-50 dark:bg-surface-canvas rounded-lg border border-gray-200 dark:border-border-subtle border-dashed">
                 <div class="space-y-3">
                     <div>
-                        <label class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">
+                        <label :for="fieldIdPrefix + '-1'" class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">
                             {{ t('components.variantManager.optionName') }}
                         </label>
-                        <input
+                        <input :id="fieldIdPrefix + '-1'"
                             v-model="newOptionName"
                             type="text"
                             :placeholder="t('components.variantManager.optionNamePlaceholder')"
@@ -287,10 +289,10 @@ const getEffectivePurchasePrice = (variant) => {
                         />
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">
+                        <label :for="fieldIdPrefix + '-2'" class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">
                             {{ t('components.variantManager.optionValues') }}
                         </label>
-                        <input
+                        <input :id="fieldIdPrefix + '-2'"
                             v-model="newOptionValues"
                             type="text"
                             :placeholder="t('components.variantManager.optionValuesPlaceholder')"
@@ -303,7 +305,7 @@ const getEffectivePurchasePrice = (variant) => {
                             type="button"
                             @click="addOption"
                             :disabled="disabled || !newOptionName || !newOptionValues"
-                            class="px-4 py-2 bg-brand text-white rounded-md hover:bg-brand-hover disabled:opacity-50"
+                            class="px-4 py-2 bg-brand text-brand-foreground rounded-md hover:bg-brand-hover disabled:opacity-50"
                         >
                             {{ t('components.variantManager.addOption') }}
                         </button>
@@ -354,19 +356,19 @@ const getEffectivePurchasePrice = (variant) => {
                 <table class="min-w-full divide-y divide-gray-200 dark:divide-border-subtle">
                     <thead class="bg-gray-50 dark:bg-surface-canvas">
                         <tr>
-                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+                            <th class="px-4 py-3 text-start text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
                                 {{ t('components.variantsTable.variant') }}
                             </th>
-                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+                            <th class="px-4 py-3 text-start text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
                                 SKU
                             </th>
-                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+                            <th class="px-4 py-3 text-start text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
                                 {{ t('components.variantsTable.price') }}
                             </th>
-                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+                            <th class="px-4 py-3 text-start text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
                                 {{ t('components.variantsTable.stock') }}
                             </th>
-                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+                            <th class="px-4 py-3 text-start text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
                                 {{ t('common.active') }}
                             </th>
                         </tr>
@@ -390,7 +392,7 @@ const getEffectivePurchasePrice = (variant) => {
                             </td>
                             <td class="px-4 py-3">
                                 <div class="relative w-28">
-                                    <span class="absolute inset-y-0 left-0 pl-2 flex items-center text-gray-500 text-sm">
+                                    <span class="absolute inset-y-0 start-0 ps-2 flex items-center text-gray-500 text-sm">
                                         {{ currencySymbol }}
                                     </span>
                                     <input
@@ -399,7 +401,7 @@ const getEffectivePurchasePrice = (variant) => {
                                         type="number"
                                         step="0.01"
                                         :placeholder="productPrice?.toString() || '0.00'"
-                                        class="pl-6 w-full text-sm rounded-md bg-gray-50 dark:bg-surface-canvas border-gray-200 dark:border-border-subtle text-gray-900 dark:text-gray-100"
+                                        class="ps-6 w-full text-sm rounded-md bg-gray-50 dark:bg-surface-canvas border-gray-200 dark:border-border-subtle text-gray-900 dark:text-gray-100"
                                         :disabled="disabled"
                                     />
                                 </div>
@@ -425,7 +427,7 @@ const getEffectivePurchasePrice = (variant) => {
                                         class="sr-only peer"
                                         :disabled="disabled"
                                     />
-                                    <div class="w-9 h-5 bg-gray-200 peer-focus:outline-hidden peer-focus:ring-4 peer-focus:ring-brand/25 rounded-full peer dark:bg-border-subtle peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-gray-600 peer-checked:bg-brand"></div>
+                                    <div class="w-9 h-5 bg-gray-200 peer-focus:outline-hidden peer-focus:ring-4 peer-focus:ring-brand/25 rounded-full peer dark:bg-border-subtle peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-gray-600 peer-checked:bg-brand"></div>
                                 </label>
                             </td>
                         </tr>

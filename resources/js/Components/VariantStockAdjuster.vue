@@ -1,4 +1,7 @@
 <script setup>
+import { useId as useFieldId } from 'vue';
+const fieldIdPrefix = useFieldId();
+import DialogSurface from '@/Components/DialogSurface.vue';
 import { ref, computed } from 'vue';
 import axios from 'axios';
 
@@ -134,7 +137,7 @@ const adjustStock = async () => {
         </span>
 
         <!-- Adjust Buttons -->
-        <div class="flex gap-0.5 ml-1">
+        <div class="flex gap-0.5 ms-1">
             <button
                 type="button"
                 @click="openPopover('increase')"
@@ -158,7 +161,7 @@ const adjustStock = async () => {
         </div>
 
         <!-- Popover -->
-        <Teleport to="body">
+        <DialogSurface :show="!!(showPopover)" @close="closePopover">
             <div
                 v-if="showPopover"
                 class="fixed inset-0 z-50"
@@ -174,10 +177,10 @@ const adjustStock = async () => {
 
                     <!-- Type Selection -->
                     <div class="mb-3">
-                        <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+                        <label :for="fieldIdPrefix + '-1'" class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
                             {{ t('components.stockAdjuster.adjustmentType') }}
                         </label>
-                        <select
+                        <select :id="fieldIdPrefix + '-1'"
                             v-model="adjustType"
                             class="w-full text-sm rounded-md bg-gray-50 dark:bg-surface-canvas border-gray-200 dark:border-border-subtle text-gray-900 dark:text-gray-100"
                         >
@@ -189,10 +192,10 @@ const adjustStock = async () => {
 
                     <!-- Quantity -->
                     <div class="mb-3">
-                        <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+                        <label :for="fieldIdPrefix + '-2'" class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
                             {{ adjustType === 'recount' ? t('components.stockAdjuster.countedQuantity') : t('components.stockAdjuster.quantity') }}
                         </label>
-                        <input
+                        <input :id="fieldIdPrefix + '-2'"
                             v-model.number="quantity"
                             type="number"
                             :min="adjustType === 'recount' ? 0 : 1"
@@ -202,10 +205,10 @@ const adjustStock = async () => {
 
                     <!-- Reason -->
                     <div class="mb-3">
-                        <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+                        <label :for="fieldIdPrefix + '-3'" class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
                             {{ t('components.stockAdjuster.reasonOptional') }}
                         </label>
-                        <input
+                        <input :id="fieldIdPrefix + '-3'"
                             v-model="reason"
                             type="text"
                             :placeholder="t('components.stockAdjuster.reasonPlaceholder')"
@@ -229,7 +232,7 @@ const adjustStock = async () => {
                             type="button"
                             @click="adjustStock"
                             :disabled="loading"
-                            class="flex-1 px-3 py-1.5 text-sm bg-brand text-white rounded-md hover:bg-brand-hover disabled:opacity-50"
+                            class="flex-1 px-3 py-1.5 text-sm bg-brand text-brand-foreground rounded-md hover:bg-brand-hover disabled:opacity-50"
                         >
                             <span v-if="loading">...</span>
                             <span v-else>{{ t('components.stockAdjuster.apply') }}</span>
@@ -237,6 +240,6 @@ const adjustStock = async () => {
                     </div>
                 </div>
             </div>
-        </Teleport>
+        </DialogSurface>
     </div>
 </template>

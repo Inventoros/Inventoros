@@ -1,4 +1,7 @@
 <script setup>
+import { useId as useFieldId } from 'vue';
+const fieldIdPrefix = useFieldId();
+import DialogSurface from '@/Components/DialogSurface.vue';
 import { ref, watch } from 'vue';
 import BarcodeScanner from '@/Components/BarcodeScanner.vue';
 import axios from 'axios';
@@ -123,7 +126,7 @@ const selectProduct = () => {
 </script>
 
 <template>
-    <Teleport to="body">
+    <DialogSurface :show="!!(show)" @close="close">
         <Transition name="modal">
             <div v-if="show" class="fixed inset-0 z-50 flex items-center justify-center">
                 <!-- Backdrop -->
@@ -156,7 +159,7 @@ const selectProduct = () => {
                                         : 'bg-gray-100 dark:bg-surface-canvas text-gray-700 dark:text-gray-300'
                                 ]"
                             >
-                                <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg class="w-4 h-4 inline me-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
                                 </svg>
@@ -171,7 +174,7 @@ const selectProduct = () => {
                                         : 'bg-gray-100 dark:bg-surface-canvas text-gray-700 dark:text-gray-300'
                                 ]"
                             >
-                                <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg class="w-4 h-4 inline me-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                                 </svg>
                                 {{ t('components.barcodeScanner.manualEntry') }}
@@ -191,10 +194,10 @@ const selectProduct = () => {
 
                         <!-- Manual Entry -->
                         <div v-else class="space-y-3">
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                            <label :for="fieldIdPrefix + '-1'" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
                                 {{ t('components.barcodeScanner.inputLabel') }}
                             </label>
-                            <input
+                            <input :id="fieldIdPrefix + '-1'"
                                 v-model="manualCode"
                                 type="text"
                                 :placeholder="t('components.barcodeScanner.inputPlaceholder')"
@@ -204,9 +207,9 @@ const selectProduct = () => {
                             <button
                                 @click="submitManualCode"
                                 :disabled="!manualCode.trim() || isLoading"
-                                class="w-full inline-flex justify-center items-center px-4 py-2 bg-brand border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-brand-hover disabled:opacity-50"
+                                class="w-full inline-flex justify-center items-center px-4 py-2 bg-brand border border-transparent rounded-md font-semibold text-xs text-brand-foreground uppercase tracking-widest hover:bg-brand-hover disabled:opacity-50"
                             >
-                                <svg v-if="isLoading" class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                                <svg v-if="isLoading" class="animate-spin -ms-1 me-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
                                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                 </svg>
@@ -282,7 +285,7 @@ const selectProduct = () => {
                 </div>
             </div>
         </Transition>
-    </Teleport>
+    </DialogSurface>
 </template>
 
 <style scoped>

@@ -100,7 +100,7 @@ const deletePO = () => {
     }
 };
 
-const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-text-secondary';
+const thClass = 'px-4 py-2.5 text-start text-xs font-medium tracking-tight text-text-secondary';
 </script>
 
 <template>
@@ -351,19 +351,19 @@ const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-t
                                 </tbody>
                                 <tfoot>
                                     <tr class="border-t border-border-subtle">
-                                        <td colspan="5" class="px-4 py-3 text-right text-sm font-medium text-text-secondary">{{ t('common.subtotal') }}:</td>
+                                        <td colspan="5" class="px-4 py-3 text-end text-sm font-medium text-text-secondary">{{ t('common.subtotal') }}:</td>
                                         <td class="px-4 py-3 text-sm font-medium tabular-nums text-text-primary">{{ formatCurrency(purchaseOrder.subtotal) }}</td>
                                     </tr>
                                     <tr v-if="purchaseOrder.tax > 0">
-                                        <td colspan="5" class="px-4 py-3 text-right text-sm font-medium text-text-secondary">{{ t('common.tax') }}:</td>
+                                        <td colspan="5" class="px-4 py-3 text-end text-sm font-medium text-text-secondary">{{ t('common.tax') }}:</td>
                                         <td class="px-4 py-3 text-sm tabular-nums text-text-primary">{{ formatCurrency(purchaseOrder.tax) }}</td>
                                     </tr>
                                     <tr v-if="purchaseOrder.shipping > 0">
-                                        <td colspan="5" class="px-4 py-3 text-right text-sm font-medium text-text-secondary">{{ t('common.shipping') }}:</td>
+                                        <td colspan="5" class="px-4 py-3 text-end text-sm font-medium text-text-secondary">{{ t('common.shipping') }}:</td>
                                         <td class="px-4 py-3 text-sm tabular-nums text-text-primary">{{ formatCurrency(purchaseOrder.shipping) }}</td>
                                     </tr>
                                     <tr class="border-t border-border-subtle">
-                                        <td colspan="5" class="px-4 py-3 text-right text-sm font-bold text-text-primary">{{ t('common.total') }}:</td>
+                                        <td colspan="5" class="px-4 py-3 text-end text-sm font-bold text-text-primary">{{ t('common.total') }}:</td>
                                         <td class="px-4 py-3 text-sm font-bold tabular-nums text-brand">{{ formatCurrency(purchaseOrder.total) }}</td>
                                     </tr>
                                 </tfoot>

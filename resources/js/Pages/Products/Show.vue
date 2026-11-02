@@ -1,4 +1,6 @@
 <script setup>
+import { useId as useFieldId } from 'vue';
+const fieldIdPrefix = useFieldId();
 import TableViewport from '@/Components/ui/TableViewport.vue';
 import { useCurrency } from '@/composables/useCurrency';
 
@@ -107,7 +109,7 @@ const productSuppliers = computed(() =>
 
 const formatDate = (iso) => displayDate(iso);
 
-const supplierThClass = 'px-4 py-2.5 text-left text-xs font-medium text-text-secondary';
+const supplierThClass = 'px-4 py-2.5 text-start text-xs font-medium text-text-secondary';
 
 // Load barcode on mount if product has barcode or SKU
 onMounted(() => {
@@ -286,7 +288,7 @@ const duplicateProduct = () => {
     router.post(route('products.duplicate', props.product.id));
 };
 
-const thClass = 'px-4 py-2.5 text-left text-xs font-medium tracking-tight text-text-secondary';
+const thClass = 'px-4 py-2.5 text-start text-xs font-medium tracking-tight text-text-secondary';
 const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface-canvas px-3 text-sm text-text-primary placeholder:text-text-tertiary ds-focus-ring';
 </script>
 
@@ -487,18 +489,18 @@ const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface
                     <Card v-if="product.has_variants && variantLocationBreakdown.length">
                         <h3 class="mb-3 text-sm font-semibold text-text-primary">{{ t('products.show.stockByLocation') }}</h3>
                         <TableViewport class="overflow-x-auto">
-                            <table class="w-full text-left text-sm">
+                            <table class="w-full text-start text-sm">
                                 <thead><tr class="border-b border-border-subtle text-text-secondary">
-                                    <th class="p-2">{{ t('products.sku') }}</th>
+                                    <th class="p-2">{{ t('products.show.sku') }}</th>
                                     <th class="p-2">{{ t('locations.warehouse') }}</th>
                                     <th class="p-2">{{ t('products.location') }}</th>
-                                    <th class="p-2 text-right">{{ t('products.stock') }}</th>
+                                    <th class="p-2 text-end">{{ t('products.stock') }}</th>
                                 </tr></thead>
                                 <tbody><tr v-for="bin in variantLocationBreakdown" :key="bin.id" class="border-b border-border-subtle last:border-0">
                                     <td class="p-2">{{ bin.variant?.sku || bin.variant?.title }}</td>
                                     <td class="p-2">{{ bin.location?.warehouse?.name || t('locations.noWarehouse') }}</td>
                                     <td class="p-2">{{ bin.location?.name }}</td>
-                                    <td class="p-2 text-right tabular-nums">{{ bin.quantity }}</td>
+                                    <td class="p-2 text-end tabular-nums">{{ bin.quantity }}</td>
                                 </tr></tbody>
                             </table>
                         </TableViewport>
@@ -534,9 +536,9 @@ const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface
                                         <tr class="border-b border-border-subtle">
                                             <th :class="supplierThClass">{{ t('productSuppliers.supplier') }}</th>
                                             <th :class="supplierThClass">{{ t('productSuppliers.supplierSku') }}</th>
-                                            <th :class="[supplierThClass, 'text-right']">{{ t('productSuppliers.costPrice') }}</th>
-                                            <th :class="[supplierThClass, 'text-right']">{{ t('productSuppliers.leadTimeDays') }}</th>
-                                            <th :class="[supplierThClass, 'text-right']">{{ t('productSuppliers.minimumOrderQuantity') }}</th>
+                                            <th :class="[supplierThClass, 'text-end']">{{ t('productSuppliers.costPrice') }}</th>
+                                            <th :class="[supplierThClass, 'text-end']">{{ t('productSuppliers.leadTimeDays') }}</th>
+                                            <th :class="[supplierThClass, 'text-end']">{{ t('productSuppliers.minimumOrderQuantity') }}</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -549,9 +551,9 @@ const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface
                                                 </div>
                                             </td>
                                             <td class="px-4 py-3 font-mono text-xs text-text-secondary">{{ supplier.pivot?.supplier_sku || '-' }}</td>
-                                            <td class="px-4 py-3 text-right tabular-nums text-text-primary">{{ supplier.pivot?.cost_price != null ? formatCurrency(supplier.pivot.cost_price) : '-' }}</td>
-                                            <td class="px-4 py-3 text-right tabular-nums text-text-secondary">{{ supplier.pivot?.lead_time_days ?? '-' }}</td>
-                                            <td class="px-4 py-3 text-right tabular-nums text-text-secondary">{{ supplier.pivot?.minimum_order_quantity ?? '-' }}</td>
+                                            <td class="px-4 py-3 text-end tabular-nums text-text-primary">{{ supplier.pivot?.cost_price != null ? formatCurrency(supplier.pivot.cost_price) : '-' }}</td>
+                                            <td class="px-4 py-3 text-end tabular-nums text-text-secondary">{{ supplier.pivot?.lead_time_days ?? '-' }}</td>
+                                            <td class="px-4 py-3 text-end tabular-nums text-text-secondary">{{ supplier.pivot?.minimum_order_quantity ?? '-' }}</td>
                                         </tr>
                                     </tbody>
                                 </table>
@@ -576,7 +578,7 @@ const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface
                                         <tr class="border-b border-border-subtle">
                                             <th :class="supplierThClass">{{ t('productSuppliers.recordedAt') }}</th>
                                             <th :class="supplierThClass">{{ t('productSuppliers.supplier') }}</th>
-                                            <th :class="[supplierThClass, 'text-right']">{{ t('productSuppliers.costPrice') }}</th>
+                                            <th :class="[supplierThClass, 'text-end']">{{ t('productSuppliers.costPrice') }}</th>
                                             <th :class="supplierThClass">{{ t('productSuppliers.source') }}</th>
                                             <th :class="supplierThClass">{{ t('productSuppliers.recordedBy') }}</th>
                                         </tr>
@@ -588,7 +590,7 @@ const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface
                                                 {{ entry.supplier_name || '-' }}
                                                 <span v-if="entry.variant_title" class="block text-xs text-text-tertiary">{{ entry.variant_title }}</span>
                                             </td>
-                                            <td class="px-4 py-2.5 text-right tabular-nums text-text-primary">{{ formatCurrency(entry.cost_price) }}</td>
+                                            <td class="px-4 py-2.5 text-end tabular-nums text-text-primary">{{ formatCurrency(entry.cost_price) }}</td>
                                             <td class="px-4 py-2.5 text-text-secondary">
                                                 <Link
                                                     v-if="entry.source === 'purchase_order' && entry.purchase_order_id && canVisit('purchase-orders.show')"
@@ -672,8 +674,8 @@ const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface
                                 <h4 class="mb-3 text-sm font-medium text-text-primary">{{ t('products.show.bom.addComponent') }}</h4>
                                 <div class="flex items-end gap-3">
                                     <div class="relative flex-1">
-                                        <label class="mb-1 block text-xs text-text-tertiary">{{ t('products.show.bom.searchProduct') }}</label>
-                                        <input
+                                        <label :for="fieldIdPrefix + '-1'" class="mb-1 block text-xs text-text-tertiary">{{ t('products.show.bom.searchProduct') }}</label>
+                                        <input :id="fieldIdPrefix + '-1'"
                                             v-model="componentSearch"
                                             type="text"
                                             :placeholder="t('products.show.bom.searchPlaceholder')"
@@ -687,11 +689,11 @@ const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface
                                                 :key="result.id"
                                                 type="button"
                                                 @click="selectComponent(result)"
-                                                class="w-full px-3 py-2 text-left text-sm transition-colors hover:bg-surface-overlay"
+                                                class="w-full px-3 py-2 text-start text-sm transition-colors hover:bg-surface-overlay"
                                             >
                                                 <span class="text-text-primary">{{ result.name }}</span>
-                                                <span class="ml-2 text-text-tertiary">{{ result.sku }}</span>
-                                                <span class="ml-2 text-text-tertiary">{{ t('products.show.bom.stockInline', { count: result.stock }) }}</span>
+                                                <span class="ms-2 text-text-tertiary">{{ result.sku }}</span>
+                                                <span class="ms-2 text-text-tertiary">{{ t('products.show.bom.stockInline', { count: result.stock }) }}</span>
                                             </button>
                                         </div>
                                         <div v-if="componentSearching" class="absolute z-10 mt-1 w-full rounded-lg border border-border-subtle bg-surface-raised p-3 text-center shadow-lg">
@@ -699,8 +701,8 @@ const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface
                                         </div>
                                     </div>
                                     <div class="w-28">
-                                        <label class="mb-1 block text-xs text-text-tertiary">{{ t('common.quantity') }}</label>
-                                        <input
+                                        <label :for="fieldIdPrefix + '-2'" class="mb-1 block text-xs text-text-tertiary">{{ t('common.quantity') }}</label>
+                                        <input :id="fieldIdPrefix + '-2'"
                                             v-model.number="newComponentQty"
                                             type="number"
                                             min="1"
@@ -725,7 +727,7 @@ const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface
                                             <th :class="thClass">{{ t('products.show.sku') }}</th>
                                             <th :class="[thClass, 'text-center']">{{ t('products.show.bom.qtyRequired') }}</th>
                                             <th :class="[thClass, 'text-center']">{{ t('products.show.bom.availableStock') }}</th>
-                                            <th :class="[thClass, 'text-right']">{{ t('common.actions') }}</th>
+                                            <th :class="[thClass, 'text-end']">{{ t('common.actions') }}</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -759,7 +761,7 @@ const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface
                                                     {{ comp.component?.stock || 0 }}
                                                 </span>
                                             </td>
-                                            <td class="px-4 py-3 text-right">
+                                            <td class="px-4 py-3 text-end">
                                                 <div class="flex justify-end gap-2">
                                                     <template v-if="editingComponentId === comp.id">
                                                         <button @click="saveComponentQty(comp)" class="text-sm text-status-success hover:underline">{{ t('common.save') }}</button>

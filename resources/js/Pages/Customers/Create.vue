@@ -179,7 +179,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                     <h3 class="text-sm font-semibold text-text-primary">{{ t('customers.create.shippingAddress') }}</h3>
                     <label class="flex items-center">
                         <input type="checkbox" v-model="sameAsShipping" class="rounded border-border-subtle bg-surface-canvas text-brand ds-focus-ring" />
-                        <span class="ml-2 text-sm text-text-secondary">{{ t('customers.create.sameAsBilling') }}</span>
+                        <span class="ms-2 text-sm text-text-secondary">{{ t('customers.create.sameAsBilling') }}</span>
                     </label>
                 </div>
                 <div class="p-5">
@@ -255,7 +255,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                         <div>
                             <label class="flex items-center">
                                 <input type="checkbox" v-model="form.is_active" class="rounded border-border-subtle bg-surface-canvas text-brand ds-focus-ring" />
-                                <span class="ml-2 text-sm text-text-secondary">{{ t('common.active') }}</span>
+                                <span class="ms-2 text-sm text-text-secondary">{{ t('common.active') }}</span>
                             </label>
                         </div>
                     </div>

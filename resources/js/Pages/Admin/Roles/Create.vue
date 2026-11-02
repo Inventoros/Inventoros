@@ -165,7 +165,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                             type="button"
                             @click="togglePermissionSet(set.id)"
                             :class="[
-                                'rounded-lg border p-4 text-left transition-colors',
+                                'rounded-lg border p-4 text-start transition-colors',
                                 form.permission_set_ids.includes(set.id)
                                     ? 'border-brand bg-brand-soft'
                                     : 'border-border-subtle bg-surface-canvas hover:border-border-strong'

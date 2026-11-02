@@ -1,4 +1,6 @@
 <script setup>
+import { useId as useFieldId } from 'vue';
+const fieldIdPrefix = useFieldId();
 import AppLayout from '@/Layouts/AppLayout.vue';
 import PageHeader from '@/Components/ui/PageHeader.vue';
 import Card from '@/Components/ui/Card.vue';
@@ -141,8 +143,8 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                 <div class="space-y-4 p-5">
                     <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
                         <div>
-                            <label :class="fieldLabel">{{ t('common.type') }}</label>
-                            <select v-model="form.type" :class="fieldInput">
+                            <label :for="fieldIdPrefix + '-1'" :class="fieldLabel">{{ t('common.type') }}</label>
+                            <select :id="fieldIdPrefix + '-1'" v-model="form.type" :class="fieldInput">
                                 <option value="return">{{ t('returns.create.typeReturn') }}</option>
                                 <option value="exchange">{{ t('portal.returns.types.exchange') }}</option>
                             </select>
@@ -151,8 +153,8 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                     </div>
 
                     <div>
-                        <label :class="fieldLabel">{{ t('returns.create.reasonRequired') }}</label>
-                        <textarea
+                        <label :for="fieldIdPrefix + '-2'" :class="fieldLabel">{{ t('returns.create.reasonRequired') }}</label>
+                        <textarea :id="fieldIdPrefix + '-2'"
                             v-model="form.reason"
                             rows="2"
                             :class="fieldArea"
@@ -162,8 +164,8 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                     </div>
 
                     <div>
-                        <label :class="fieldLabel">{{ t('returns.create.notesOptional') }}</label>
-                        <textarea
+                        <label :for="fieldIdPrefix + '-3'" :class="fieldLabel">{{ t('returns.create.notesOptional') }}</label>
+                        <textarea :id="fieldIdPrefix + '-3'"
                             v-model="form.notes"
                             rows="2"
                             :class="fieldArea"

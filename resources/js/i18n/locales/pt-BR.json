@@ -594,10 +594,7 @@
         "updateQuantityFailed": "Falha ao atualizar a quantidade",
         "confirmRemove": "Remover este componente da lista de materiais?",
         "removeFailed": "Falha ao remover o componente"
-      },
-      "prepareTransfer": "Preparar estoque",
-      "shipTransfer": "Enviar transferência",
-      "receiveTransfer": "Receber transferência"
+      }
     },
     "quickAddCategory": {
       "title": "Adição Rápida de Categoria",
@@ -665,7 +662,7 @@
     }
   },
   "orders": {
-      "channelOrderNumber": "Número do pedido no canal",
+    "channelOrderNumber": "Número do pedido no canal",
     "itemsCol": "Itens",
     "sources": {
       "manual": "Manual",
@@ -1536,12 +1533,12 @@
       "download": "Baixar",
       "availableUntil": "Disponível até {date}",
       "statuses": {
+        "prepared": "Preparado",
         "pending": "Pendente",
         "processing": "Processando",
         "completed": "Concluída",
         "failed": "Falhou",
-        "expired": "Expirada",
-        "prepared": "Preparado"
+        "expired": "Expirada"
       }
     }
   },
@@ -3919,7 +3916,8 @@
       "pending": "Pendente",
       "in_transit": "Em Trânsito",
       "completed": "Concluída",
-      "cancelled": "Cancelada"
+      "cancelled": "Cancelada",
+      "prepared": "Preparado"
     },
     "create": {
       "title": "Criar Transferência de Estoque",
@@ -3958,7 +3956,10 @@
       "cancelTransfer": "Cancelar Transferência",
       "completeHint": "Ao concluir a transferência, o estoque será baixado da localização de origem e adicionado à localização de destino.",
       "confirmComplete": "Tem certeza de que deseja concluir esta transferência? Os níveis de estoque serão ajustados.",
-      "confirmCancel": "Tem certeza de que deseja cancelar esta transferência?"
+      "confirmCancel": "Tem certeza de que deseja cancelar esta transferência?",
+      "prepareTransfer": "Preparar estoque",
+      "shipTransfer": "Enviar transferência",
+      "receiveTransfer": "Receber transferência"
     }
   },
   "tax": {
@@ -3970,39 +3971,39 @@
     "title": "Estoque por depósito",
     "includeZero": "Incluir saldos zerados"
   },
-    "storage": {
-        "title": "Armazenamento de arquivos",
-        "description": "Armazenamento local e externo para arquivos enviados.",
-        "configure": "Configure INVENTOROS_UPLOADS_DISK e as credenciais AWS em .env ou config/filesystems.php, atualize o cache de configuração e reinicie os processos de fila.",
-        "existingFiles": "Os arquivos existentes mantêm seu disco registrado. Preserve as definições antigas ao mudar o armazenamento.",
-        "probe": "O teste grava, lê e exclui um pequeno arquivo privado temporário.",
-        "driver": "Driver",
-        "notConfigured": "Não configurado",
-        "usedFor": "Usado para",
-        "bucket": "Bucket",
-        "region": "Região",
-        "connected": "Conexão confirmada: gravação, leitura e exclusão bem-sucedidas.",
-        "failed": "Falha de conexão durante {step}. Verifique a configuração do servidor e as permissões.",
-        "unchecked": "Nenhum teste recente.",
-        "checkedAt": "Verificado: {time}",
-        "cleanupFailed": "Não foi possível remover o arquivo de teste. Verifique o prefixo connection-checks após corrigir as permissões.",
-        "requestFailed": "Não foi possível executar o teste. Tente novamente em breve.",
-        "checking": "Verificando…",
-        "check": "Testar conexão",
-        "purposes": {
-            "products": "Imagens de produtos",
-            "logos": "Logotipos das organizações",
-            "labels": "Etiquetas de envio",
-            "imports": "Importações em fila",
-            "exports": "Exportações geradas"
-        },
-        "steps": {
-            "connect": "conexão",
-            "write": "gravação",
-            "read": "leitura",
-            "delete": "exclusão"
-        }
+  "storage": {
+    "title": "Armazenamento de arquivos",
+    "description": "Armazenamento local e externo para arquivos enviados.",
+    "configure": "Configure INVENTOROS_UPLOADS_DISK e as credenciais AWS em .env ou config/filesystems.php, atualize o cache de configuração e reinicie os processos de fila.",
+    "existingFiles": "Os arquivos existentes mantêm seu disco registrado. Preserve as definições antigas ao mudar o armazenamento.",
+    "probe": "O teste grava, lê e exclui um pequeno arquivo privado temporário.",
+    "driver": "Driver",
+    "notConfigured": "Não configurado",
+    "usedFor": "Usado para",
+    "bucket": "Bucket",
+    "region": "Região",
+    "connected": "Conexão confirmada: gravação, leitura e exclusão bem-sucedidas.",
+    "failed": "Falha de conexão durante {step}. Verifique a configuração do servidor e as permissões.",
+    "unchecked": "Nenhum teste recente.",
+    "checkedAt": "Verificado: {time}",
+    "cleanupFailed": "Não foi possível remover o arquivo de teste. Verifique o prefixo connection-checks após corrigir as permissões.",
+    "requestFailed": "Não foi possível executar o teste. Tente novamente em breve.",
+    "checking": "Verificando…",
+    "check": "Testar conexão",
+    "purposes": {
+      "products": "Imagens de produtos",
+      "logos": "Logotipos das organizações",
+      "labels": "Etiquetas de envio",
+      "imports": "Importações em fila",
+      "exports": "Exportações geradas"
     },
+    "steps": {
+      "connect": "conexão",
+      "write": "gravação",
+      "read": "leitura",
+      "delete": "exclusão"
+    }
+  },
   "batchExpiryReport": {
     "title": "Validade dos lotes",
     "description": "Encontre lotes vencidos e planeje os próximos vencimentos.",

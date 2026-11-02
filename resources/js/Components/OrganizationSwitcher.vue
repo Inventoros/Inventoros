@@ -66,7 +66,7 @@ onUnmounted(() => document.removeEventListener('click', handleClickOutside));
                 v-if="isOpen"
                 role="listbox"
                 :aria-label="t('components.organizationSwitcher.listLabel')"
-                class="absolute inset-x-4 top-full mt-1 sm:inset-x-auto sm:right-0 sm:mt-2 sm:w-64 bg-surface-raised border border-border-subtle rounded-lg shadow-xl overflow-hidden z-50 max-h-80 overflow-y-auto ds-scroll"
+                class="absolute inset-x-4 top-full mt-1 sm:inset-x-auto sm:end-0 sm:mt-2 sm:w-64 bg-surface-raised border border-border-subtle rounded-lg shadow-xl overflow-hidden z-50 max-h-80 overflow-y-auto ds-scroll"
             >
                 <p class="px-3 pt-2.5 pb-1.5 text-[11px] font-medium uppercase tracking-wide text-text-tertiary">
                     {{ t('components.organizationSwitcher.heading') }}
@@ -85,7 +85,7 @@ onUnmounted(() => document.removeEventListener('click', handleClickOutside));
                             : 'text-text-secondary hover:text-text-primary hover:bg-surface-overlay'
                     ]"
                 >
-                    <span class="flex-1 min-w-0 text-left truncate">{{ organization.name }}</span>
+                    <span class="flex-1 min-w-0 text-start truncate">{{ organization.name }}</span>
                     <Check v-if="active?.id === organization.id" :size="14" class="shrink-0" />
                 </button>
             </div>

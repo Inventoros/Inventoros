@@ -1,6 +1,7 @@
 <script setup>
 import { computed } from 'vue';
 import { cn } from '@/lib/utils';
+defineOptions({ inheritAttrs: false });
 
 const props = defineProps({
     modelValue: { type: [String, Number], default: '' },
@@ -26,10 +27,12 @@ const sizeClass = computed(() => ({
 
 <template>
     <div class="relative">
-        <span v-if="$slots.prefix" class="absolute left-3 top-1/2 -translate-y-1/2 text-text-tertiary">
+        <span v-if="$slots.prefix" class="absolute start-3 top-1/2 -translate-y-1/2 text-text-tertiary">
             <slot name="prefix" />
         </span>
         <input
+            v-bind="$attrs"
+            :aria-invalid="invalid || undefined"
             :value="modelValue"
             :type="type"
             :placeholder="placeholder"
@@ -42,13 +45,13 @@ const sizeClass = computed(() => ({
                 'hover:border-border-strong',
                 'disabled:opacity-50 disabled:cursor-not-allowed',
                 invalid && 'border-status-danger focus-visible:ring-status-danger/40',
-                $slots.prefix && 'pl-9',
-                $slots.suffix && 'pr-9',
+                $slots.prefix && 'ps-9',
+                $slots.suffix && 'pe-9',
                 sizeClass,
                 $attrs.class,
             )"
         />
-        <span v-if="$slots.suffix" class="absolute right-3 top-1/2 -translate-y-1/2 text-text-tertiary">
+        <span v-if="$slots.suffix" class="absolute end-3 top-1/2 -translate-y-1/2 text-text-tertiary">
             <slot name="suffix" />
         </span>
     </div>
