@@ -7,8 +7,10 @@ for (const [url, trigger] of [
     test(`${url} dialog traps focus, closes with Escape and restores its trigger`, async ({ page }) => {
         await page.setViewportSize({ width: 320, height: 568 });
         await page.goto(url);
+        await expect(page.locator('h1')).toBeVisible();
         const actions = page.getByRole('button', { name: 'Actions', exact: true });
-        if (await actions.isVisible()) await actions.click();
+        const compactActions = await actions.isVisible();
+        if (compactActions) await actions.click();
         const button = page.getByRole('button', { name: trigger, exact: true });
         await button.click();
         const dialog = page.locator('dialog[open]');
@@ -20,7 +22,7 @@ for (const [url, trigger] of [
         expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBeLessThanOrEqual(0);
         await page.keyboard.press('Escape');
         await expect(dialog).toHaveCount(0);
-        await expect(button).toBeFocused();
+        await expect(compactActions ? actions : button).toBeFocused();
         expect(await page.evaluate(() => document.body.style.overflow)).toBe('');
     });
 }

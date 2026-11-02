@@ -15,6 +15,13 @@ const closeActions = () => {
     actionsOpen.value = false;
     actionsToggle.value?.focus();
 };
+const selectAction = () => {
+    actionsOpen.value = false;
+    // The selected item becomes hidden on a phone. Give dialogs a visible,
+    // stable return target before their post-render opening watcher runs.
+    if (actionsToggle.value?.getClientRects().length)
+        actionsToggle.value.focus({ preventScroll: true });
+};
 onMounted(() => document.addEventListener('pointerdown', outside));
 onBeforeUnmount(() => document.removeEventListener('pointerdown', outside));
 
@@ -71,7 +78,7 @@ defineProps({
             <div
                 class="page-header-action-items"
                 :class="{ 'is-open': actionsOpen }"
-                @click="actionsOpen = false"
+                @click="selectAction"
             >
                 <slot name="actions" />
             </div>
