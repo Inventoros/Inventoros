@@ -1,0 +1,50 @@
+name: ui-ux-audit
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      APP_URL: http://127.0.0.1:8000
+      UI_UX_AUDIT: '1'
+      CI: true
+      MAIL_MAILER: log
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          tools: composer:v2
+          extensions: sqlite3, gd, bcmath
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: composer install --no-interaction --prefer-dist --optimize-autoloader
+      - run: npm ci
+      - name: Prepare disposable application
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+          touch database/database.sqlite
+          php artisan migrate --force
+          npm run build
+          npx playwright install --with-deps chromium
+      - name: Audit rendered routes
+        run: |
+          php artisan serve --host=127.0.0.1 --port=8000 > /tmp/inventoros-server.log 2>&1 &
+          npx playwright test e2e/tests/ui-ux-audit.spec.ts --project=setup --project=chromium
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ui-ux-audit
+          path: |
+            audit-artifacts/
+            playwright-report/
+            e2e/.auth/ui-audit.json
+          retention-days: 30

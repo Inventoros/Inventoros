@@ -1,0 +1,1690 @@
+{
+  "page_templates": [
+    "Admin/ActivityLog/Index",
+    "Admin/Roles/Create",
+    "Admin/Roles/Edit",
+    "Admin/Roles/Index",
+    "Admin/Roles/Show",
+    "Admin/Update/Index",
+    "Admin/Users/Create",
+    "Admin/Users/Edit",
+    "Admin/Users/Index",
+    "Admin/Users/Show",
+    "Approvals/Index",
+    "Auth/ConfirmPassword",
+    "Auth/ForgotPassword",
+    "Auth/Login",
+    "Auth/Register",
+    "Auth/ResetPassword",
+    "Auth/TwoFactorChallenge",
+    "Auth/TwoFactorSetup",
+    "Auth/VerifyEmail",
+    "Categories/Index",
+    "Customers/Create",
+    "Customers/Edit",
+    "Customers/Index",
+    "Customers/Show",
+    "Dashboard",
+    "Errors/403",
+    "ImportExport/Index",
+    "Install/Admin",
+    "Install/Complete",
+    "Install/Database",
+    "Install/Requirements",
+    "Install/Welcome",
+    "Inventory/VariantReplenishment",
+    "Locations/Index",
+    "Notifications/Index",
+    "Orders/Create",
+    "Orders/Edit",
+    "Orders/Index",
+    "Orders/Show",
+    "Plugins/Index",
+    "Portal/Auth/AcceptInvitation",
+    "Portal/Auth/ForgotPassword",
+    "Portal/Auth/Login",
+    "Portal/Auth/ResetPassword",
+    "Portal/Dashboard",
+    "Portal/Orders/Index",
+    "Portal/Orders/Show",
+    "Portal/Returns/Create",
+    "Portal/Returns/Index",
+    "Portal/Returns/Show",
+    "Products/Create",
+    "Products/Edit",
+    "Products/Index",
+    "Products/ResetStock",
+    "Products/ResetStockStatus",
+    "Products/Show",
+    "Profile/Edit",
+    "Profile/Partials/DeleteUserForm",
+    "Profile/Partials/UpdatePasswordForm",
+    "Profile/Partials/UpdateProfileInformationForm",
+    "PurchaseOrders/Create",
+    "PurchaseOrders/Edit",
+    "PurchaseOrders/Index",
+    "PurchaseOrders/Receive",
+    "PurchaseOrders/Show",
+    "Reports/AbcAnalysis",
+    "Reports/BatchExpiry",
+    "Reports/Builder/Create",
+    "Reports/Builder/Edit",
+    "Reports/Builder/Index",
+    "Reports/Builder/Show",
+    "Reports/CategoryPerformance",
+    "Reports/DeadStock",
+    "Reports/Index",
+    "Reports/InventoryTurnover",
+    "Reports/InventoryValuation",
+    "Reports/LowStock",
+    "Reports/ProfitMargin",
+    "Reports/Receivables",
+    "Reports/SalesAnalysis",
+    "Reports/SalesByLocation",
+    "Reports/StockMovement",
+    "Reservations/Index",
+    "Returns/Create",
+    "Returns/Index",
+    "Returns/SelectOrder",
+    "Returns/Show",
+    "Settings/Account/Index",
+    "Settings/ApiTokens/Index",
+    "Settings/Email",
+    "Settings/Index",
+    "Settings/Organization/Index",
+    "Settings/Partials/EmailConfiguration",
+    "Settings/Partials/NotificationPreferences",
+    "Settings/Shipping",
+    "Settings/Storage",
+    "Settings/Webhooks/Index",
+    "Settings/Webhooks/Show",
+    "Stock/Index",
+    "StockAdjustments/Create",
+    "StockAdjustments/Index",
+    "StockAdjustments/Show",
+    "StockAudits/CountHistory",
+    "StockAudits/Create",
+    "StockAudits/CycleCounts/Form",
+    "StockAudits/CycleCounts/Index",
+    "StockAudits/Edit",
+    "StockAudits/Index",
+    "StockAudits/Show",
+    "StockTransfers/Create",
+    "StockTransfers/Index",
+    "StockTransfers/Show",
+    "Suppliers/Create",
+    "Suppliers/Edit",
+    "Suppliers/Index",
+    "Suppliers/Show",
+    "Warehouses/Create",
+    "Warehouses/Edit",
+    "Warehouses/Index",
+    "Warehouses/Show",
+    "WorkOrders/Create",
+    "WorkOrders/Index",
+    "WorkOrders/Show"
+  ],
+  "components": 64,
+  "mapped_routes": [
+    {
+      "name": "activity-log.index",
+      "uri": "activity-log",
+      "pages": [
+        "Admin/ActivityLog/Index"
+      ],
+      "middleware": [
+        "web",
+        "Illuminate\\Auth\\Middleware\\Authenticate",
+        "App\\Http\\Middleware\\CheckPermission:view_activity_log"
+      ]
+    },
+    {
+      "name": "admin.update.index",
+      "uri": "admin/update",
+      "pages": [
+        "Admin/Update/Index"
+      ],
+      "middleware": [
+        "web",
+        "Illuminate\\Auth\\Middleware\\Authenticate",
+        "App\\Http\\Middleware\\CheckPermission:manage_organization",
+        "App\\Http\\Middleware\\EnsureUpdateAdministrator"
+      ]
+    },
+    {
+      "name": "api.variant-replenishment.index",
+      "uri": "api/v1/variant-replenishment",
+      "pages": [
+        "Inventory/VariantReplenishment"
+      ],
+      "middleware": [
+        "api",
+        "Illuminate\\Auth\\Middleware\\Authenticate:sanctum",
+        "Illuminate\\Routing\\Middleware\\ThrottleRequests:api",
+        "App\\Http\\Middleware\\CheckApiPermission:view_products"
+      ]
+    },
+    {
+      "name": "approvals.index",
+      "uri": "approvals",
+      "pages": [
+        "Approvals/Index"
+      ],
+      "middleware": [
+        "web",
+        "Illuminate\\Auth\\Middleware\\Authenticate"
+      ]
+    },
+    {
+      "name": "categories.index",
+      "uri": "categories",
+      "pages": [
+        "Categories/Index"
+      ],
+      "middleware": [
+        "web",
+        "Illuminate\\Auth\\Middleware\\Authenticate",
+        "App\\Http\\Middleware\\CheckPermission:manage_categories"
+      ]
+    },
+    {
+      "name": "password.confirm",
+      "uri": "confirm-password",
+      "pages": [
+        "Auth/ConfirmPassword"
+      ],
+      "middleware": [
+        "web",
+        "Illuminate\\Auth\\Middleware\\Authenticate"
+      ]
+    },
+    {
+      "name": "customers.index",
+      "uri": "customers",
+      "pages": [
+        "Customers/Index"
+      ],
+      "middleware": [
+        "web",
+        "Illuminate\\Auth\\Middleware\\Authenticate",
+        "App\\Http\\Middleware\\CheckPermission:view_customers"
+      ]
+    },
+    {
+      "name": "customers.create",
+      "uri": "customers/create",
+      "pages": [
+        "Customers/Create"
+      ],
+      "middleware": [
+        "web",
+        "Illuminate\\Auth\\Middleware\\Authenticate",
+        "App\\Http\\Middleware\\CheckPermission:create_customers"
+      ]
+    },
+    {
+      "name": "customers.show",
+      "uri": "customers/{customer}",
+      "pages": [
+        "Customers/Show"
+      ],
+      "middleware": [
+        "web",
+        "Illuminate\\Auth\\Middleware\\Authenticate",
+        "App\\Http\\Middleware\\CheckPermission:view_customers"
+      ]
+    },
+    {
+      "name": "customers.edit",
+      "uri": "customers/{customer}/edit",
+      "pages": [
+        "Customers/Edit"
+      ],
+      "middleware": [
+        "web",
+        "Illuminate\\Auth\\Middleware\\Authenticate",
+        "App\\Http\\Middleware\\CheckPermission:edit_customers"
+      ]
+    },
+    {
+      "name": "cycle-counts.index",
+      "uri": "cycle-counts",
+      "pages": [
+        "StockAudits/CycleCounts/Index"
+      ],
+      "middleware": [
+        "web",
+        "Illuminate\\Auth\\Middleware\\Authenticate",
+        "App\\Http\\Middleware\\CheckPermission:view_stock_audits"
+      ]
+    },
+    {
+      "name": "cycle-counts.create",
+      "uri": "cycle-counts/create",
+      "pages": [
+        "StockAudits/CycleCounts/Form"
+      ],
+      "middleware": [
+        "web",
+        "Illuminate\\Auth\\Middleware\\Authenticate",
+        "App\\Http\\Middleware\\CheckPermission:manage_stock_audits"
+      ]
+    },
+    {
+      "name": "cycle-counts.edit",
+      "uri": "cycle-counts/{cycleCount}/edit",
+      "pages": [
+        "StockAudits/CycleCounts/Form"
+      ],
+      "middleware": [
+        "web",
+        "Illuminate\\Auth\\Middleware\\Authenticate",
+        "App\\Http\\Middleware\\CheckPermission:manage_stock_audits"
+      ]
+    },
+    {
+      "name": "dashboard",
+      "uri": "dashboard",
+      "pages": [
+        "Dashboard"
+      ],
+      "middleware": [
+        "web",
+        "Illuminate\\Auth\\Middleware\\Authenticate",
+        "Illuminate\\Auth\\Middleware\\EnsureEmailIsVerified"
+      ]
+    },
+    {
+      "name": "password.request",
+      "uri": "forgot-password",
+      "pages": [
+        "Auth/ForgotPassword"
+      ],
+      "middleware": [
+        "web",
+        "Illuminate\\Auth\\Middleware\\RedirectIfAuthenticated"
+      ]
+    },
+    {
+      "name": "import-export.index",
+      "uri": "import-export",
+      "pages": [
+        "ImportExport/Index"
+      ],
+      "middleware": [
+        "web",
+        "Illuminate\\Auth\\Middleware\\Authenticate",
+        "App\\Http\\Middleware\\CheckPermission:export_data|import_data"
+      ]
+    },
+    {
+      "name": "install.index",
+      "uri": "install",
+      "pages": [
+        "Install/Welcome"
+      ],
+      "middleware": [
+        "web"
+      ]
+    },
+    {
+      "name": "install.admin",
+      "uri": "install/admin",
+      "pages": [
+        "Install/Admin"
+      ],
+      "middleware": [
+        "web"
+      ]
+    },
+    {
+      "name": "install.complete",
+      "uri": "install/complete",
+      "pages": [
+        "Install/Complete"
+      ],
+      "middleware": [
+        "web"
+      ]
+    },
+    {
+      "name": "install.database",
+      "uri": "install/database",
+      "pages": [
+        "Install/Database"
+      ],
+      "middleware": [
+        "web"
+      ]
+    },
+    {
+      "name": "install.requirements",
+      "uri": "install/requirements",
+      "pages": [
+        "Install/Requirements"
+      ],
+      "middleware": [
+        "web"
+      ]
+    },
+    {
+      "name": "locations.index",
+      "uri": "locations",
+      "pages": [
+        "Locations/Index"
+      ],
+      "middleware": [
+        "web",
+        "Illuminate\\Auth\\Middleware\\Authenticate",
+        "App\\Http\\Middleware\\CheckPermission:manage_locations"
+      ]
+    },
+    {
+      "name": "login",
+      "uri": "login",
+      "pages": [
+        "Auth/Login"
+      ],
+      "middleware": [
+        "web",
+        "Illuminate\\Auth\\Middleware\\RedirectIfAuthenticated"
+      ]
+    },
+    {
+      "name": "notifications.index",
+      "uri": "notifications",
+      "pages": [
+        "Notifications/Index"
+      ],
+      "middleware": [
+        "web",
+        "Illuminate\\Auth\\Middleware\\Authenticate"
+      ]
+    },
+    {
+      "name": "orders.index",
+      "uri": "orders",
+      "pages": [
+        "Orders/Index"
+      ],
+      "middleware": [
+        "web",
+        "Illuminate\\Auth\\Middleware\\Authenticate",
+        "App\\Http\\Middleware\\CheckPermission:view_orders"
+      ]
+    },
+    {
+      "name": "orders.create",
+      "uri": "orders/create",
+      "pages": [
+        "Orders/Create"
+      ],
+      "middleware": [
+        "web",
+        "Illuminate\\Auth\\Middleware\\Authenticate",
+        "App\\Http\\Middleware\\CheckPermission:create_orders"
+      ]
+    },
+    {
+      "name": "orders.show",
+      "uri": "orders/{order}",
+      "pages": [
+        "Orders/Show"
+      ],
+      "middleware": [
+        "web",
+        "Illuminate\\Auth\\Middleware\\Authenticate",
+        "App\\Http\\Middleware\\CheckPermission:view_orders"
+      ]
+    },
+    {
+      "name": "orders.edit",
+      "uri": "orders/{order}/edit",
+      "pages": [
+        "Orders/Edit"
+      ],
+      "middleware": [
+        "web",
+        "Illuminate\\Auth\\Middleware\\Authenticate",
+        "App\\Http\\Middleware\\CheckPermission:edit_orders"
+      ]
+    },
+    {
+      "name": "plugins.index",
+      "uri": "plugins",
+      "pages": [
+        "Plugins/Index"
+      ],
+      "middleware": [
+        "web",
+        "Illuminate\\Auth\\Middleware\\Authenticate",
+        "App\\Http\\Middleware\\CheckPermission:view_plugins"
+      ]
+    },
+    {
+      "name": "plugins.marketplace",
+      "uri": "plugins/marketplace",
+      "pages": [
+        "Plugins/Index"
+      ],
+      "middleware": [
+        "web",
+        "Illuminate\\Auth\\Middleware\\Authenticate",
+        "App\\Http\\Middleware\\CheckPermission:view_plugins"
+      ]
+    },
+    {
+      "name": "portal.password.request",
+      "uri": "portal/{organization}/forgot-password",
+      "pages": [
+        "Portal/Auth/ForgotPassword"
+      ],
+      "middleware": [
+        "portal",
+        "App\\Http\\Middleware\\Portal\\RedirectIfPortalAuthenticated"
+      ]
+    },
+    {
+      "name": "portal.invitation.show",
+      "uri": "portal/{organization}/invitation/{contact}",
+      "pages": [
+        "Portal/Auth/AcceptInvitation"
+      ],
+      "middleware": [
+        "portal",
+        "Illuminate\\Routing\\Middleware\\ThrottleRequests:30,1"
+      ]
+    },
+    {
+      "name": "portal.login",
+      "uri": "portal/{organization}/login",
+      "pages": [
+        "Portal/Auth/Login"
+      ],
+      "middleware": [
+        "portal",
+        "App\\Http\\Middleware\\Portal\\RedirectIfPortalAuthenticated"
+      ]
+    },
+    {
+      "name": "portal.orders.index",
+      "uri": "portal/{organization}/orders",
+      "pages": [
+        "Portal/Orders/Index"
+      ],
+      "middleware": [
+        "portal",
+        "App\\Http\\Middleware\\Portal\\AuthenticatePortalContact"
+      ]
+    },
+    {
+      "name": "portal.orders.show",
+      "uri": "portal/{organization}/orders/{order}",
+      "pages": [
+        "Portal/Orders/Show"
+      ],
+      "middleware": [
+        "portal",
+        "App\\Http\\Middleware\\Portal\\AuthenticatePortalContact"
+      ]
+    },
+    {
+      "name": "portal.returns.create",
+      "uri": "portal/{organization}/orders/{order}/return",
+      "pages": [
+        "Portal/Returns/Create"
+      ],
+      "middleware": [
+        "portal",
+        "App\\Http\\Middleware\\Portal\\AuthenticatePortalContact"
+      ]
+    },
+    {
+      "name": "portal.password.reset",
+      "uri": "portal/{organization}/reset-password/{token}",
+      "pages": [
+        "Portal/Auth/ResetPassword"
+      ],
+      "middleware": [
+        "portal",
+        "App\\Http\\Middleware\\Portal\\RedirectIfPortalAuthenticated"
+      ]
+    },
+    {
+      "name": "portal.returns.index",
+      "uri": "portal/{organization}/returns",
+      "pages": [
+        "Portal/Returns/Index"
+      ],
+      "middleware": [
+        "portal",
+        "App\\Http\\Middleware\\Portal\\AuthenticatePortalContact"
+      ]
+    },
+    {
+      "name": "portal.returns.show",
+      "uri": "portal/{organization}/returns/{returnOrder}",
+      "pages": [
+        "Portal/Returns/Show"
+      ],
+      "middleware": [
+        "portal",
+        "App\\Http\\Middleware\\Portal\\AuthenticatePortalContact"
+      ]
+    },
+    {
+      "name": "products.index",
+      "uri": "products",
+      "pages": [
+        "Products/Index"
+      ],
+      "middleware": [
+        "web",
+        "Illuminate\\Auth\\Middleware\\Authenticate",
+        "App\\Http\\Middleware\\CheckPermission:view_products"
+      ]
+    },
+    {
+      "name": "products.create",
+      "uri": "products/create",
+      "pages": [
+        "Products/Create"
+      ],
+      "middleware": [
+        "web",
+        "Illuminate\\Auth\\Middleware\\Authenticate",
+        "App\\Http\\Middleware\\CheckPermission:create_products"
+      ]
+    },
+    {
+      "name": "products.stock-reset.preview",
+      "uri": "products/stock-reset",
+      "pages": [
+        "Products/ResetStock"
+      ],
+      "middleware": [
+        "web",
+        "Illuminate\\Auth\\Middleware\\Authenticate",
+        "App\\Http\\Middleware\\EnsureUserIsAdmin",
+        "App\\Http\\Middleware\\CheckPermission:manage_stock"
+      ]
+    },
+    {
+      "name": "products.stock-reset.show",
+      "uri": "products/stock-reset/status/{resetRun:public_id}",
+      "pages": [
+        "Products/ResetStockStatus"
+      ],
+      "middleware": [
+        "web",
+        "Illuminate\\Auth\\Middleware\\Authenticate",
+        "App\\Http\\Middleware\\EnsureUserIsAdmin",
+        "App\\Http\\Middleware\\CheckPermission:manage_stock"
+      ]
+    },
+    {
+      "name": "products.show",
+      "uri": "products/{product}",
+      "pages": [
+        "Products/Show"
+      ],
+      "middleware": [
+        "web",
+        "Illuminate\\Auth\\Middleware\\Authenticate",
+        "App\\Http\\Middleware\\CheckPermission:view_products"
+      ]
+    },
+    {
+      "name": "products.edit",
+      "uri": "products/{product}/edit",
+      "pages": [
+        "Products/Edit"
+      ],
+      "middleware": [
+        "web",
+        "Illuminate\\Auth\\Middleware\\Authenticate",
+        "App\\Http\\Middleware\\CheckPermission:edit_products"
+      ]
+    },
+    {
+      "name": "profile.edit",
+      "uri": "profile",
+      "pages": [
+        "Profile/Edit"
+      ],
+      "middleware": [
+        "web",
+        "Illuminate\\Auth\\Middleware\\Authenticate"
+      ]
+    },
+    {
+      "name": "purchase-orders.index",
+      "uri": "purchase-orders",
+      "pages": [
+        "PurchaseOrders/Index"
+      ],
+      "middleware": [
+        "web",
+        "Illuminate\\Auth\\Middleware\\Authenticate",
+        "App\\Http\\Middleware\\CheckPermission:view_purchase_orders"
+      ]
+    },
+    {
+      "name": "purchase-orders.create",
+      "uri": "purchase-orders/create",
+      "pages": [
+        "PurchaseOrders/Create"
+      ],
+      "middleware": [
+        "web",
+        "Illuminate\\Auth\\Middleware\\Authenticate",
+        "App\\Http\\Middleware\\CheckPermission:create_purchase_orders"
+      ]
+    },
+    {
+      "name": "purchase-orders.show",
+      "uri": "purchase-orders/{purchaseOrder}",
+      "pages": [
+        "PurchaseOrders/Show"
+      ],
+      "middleware": [
+        "web",
+        "Illuminate\\Auth\\Middleware\\Authenticate",
+        "App\\Http\\Middleware\\CheckPermission:view_purchase_orders"
+      ]
+    },
+    {
+      "name": "purchase-orders.edit",
+      "uri": "purchase-orders/{purchaseOrder}/edit",
+      "pages": [
+        "PurchaseOrders/Edit"
+      ],
+      "middleware": [
+        "web",
+        "Illuminate\\Auth\\Middleware\\Authenticate",
+        "App\\Http\\Middleware\\CheckPermission:edit_purchase_orders"
+      ]
+    },
+    {
+      "name": "purchase-orders.receive",
+      "uri": "purchase-orders/{purchaseOrder}/receive",
+      "pages": [
+        "PurchaseOrders/Receive"
+      ],
+      "middleware": [
+        "web",
+        "Illuminate\\Auth\\Middleware\\Authenticate",
+        "App\\Http\\Middleware\\CheckPermission:receive_purchase_orders"
+      ]
+    },
+    {
+      "name": "register",
+      "uri": "register",
+      "pages": [
+        "Auth/Register"
+      ],
+      "middleware": [
+        "web",
+        "Illuminate\\Auth\\Middleware\\RedirectIfAuthenticated"
+      ]
+    },
+    {
+      "name": "reports.index",
+      "uri": "reports",
+      "pages": [
+        "Reports/Index"
+      ],
+      "middleware": [
+        "web",
+        "Illuminate\\Auth\\Middleware\\Authenticate",
+        "App\\Http\\Middleware\\CheckPermission:view_reports"
+      ]
+    },
+    {
+      "name": "reports.abc-analysis",
+      "uri": "reports/abc-analysis",
+      "pages": [
+        "Reports/AbcAnalysis"
+      ],
+      "middleware": [
+        "web",
+        "Illuminate\\Auth\\Middleware\\Authenticate",
+        "App\\Http\\Middleware\\CheckPermission:view_reports",
+        "App\\Http\\Middleware\\CheckPermission:view_orders"
+      ]
+    },
+    {
+      "name": "reports.builder.index",
+      "uri": "reports/builder",
+      "pages": [
+        "Reports/Builder/Index"
+      ],
+      "middleware": [
+        "web",
+        "Illuminate\\Auth\\Middleware\\Authenticate",
+        "App\\Http\\Middleware\\CheckPermission:view_reports"
+      ]
+    },
+    {
+      "name": "reports.builder.create",
+      "uri": "reports/builder/create",
+      "pages": [
+        "Reports/Builder/Create"
+      ],
+      "middleware": [
+        "web",
+        "Illuminate\\Auth\\Middleware\\Authenticate",
+        "App\\Http\\Middleware\\CheckPermission:view_reports"
+      ]
+    },
+    {
+      "name": "reports.builder.show",
+      "uri": "reports/builder/{saved_report}",
+      "pages": [
+        "Reports/Builder/Show"
+      ],
+      "middleware": [
+        "web",
+        "Illuminate\\Auth\\Middleware\\Authenticate",
+        "App\\Http\\Middleware\\CheckPermission:view_reports"
+      ]
+    },
+    {
+      "name": "reports.builder.edit",
+      "uri": "reports/builder/{saved_report}/edit",
+      "pages": [
+        "Reports/Builder/Edit"
+      ],
+      "middleware": [
+        "web",
+        "Illuminate\\Auth\\Middleware\\Authenticate",
+        "App\\Http\\Middleware\\CheckPermission:view_reports"
+      ]
+    },
+    {
+      "name": "reports.category-performance",
+      "uri": "reports/category-performance",
+      "pages": [
+        "Reports/CategoryPerformance"
+      ],
+      "middleware": [
+        "web",
+        "Illuminate\\Auth\\Middleware\\Authenticate",
+        "App\\Http\\Middleware\\CheckPermission:view_reports",
+        "App\\Http\\Middleware\\CheckPermission:view_products"
+      ]
+    },
+    {
+      "name": "reports.dead-stock",
+      "uri": "reports/dead-stock",
+      "pages": [
+        "Reports/DeadStock"
+      ],
+      "middleware": [
+        "web",
+        "Illuminate\\Auth\\Middleware\\Authenticate",
+        "App\\Http\\Middleware\\CheckPermission:view_reports",
+        "App\\Http\\Middleware\\CheckPermission:view_products|view_orders,all"
+      ]
+    },
+    {
+      "name": "reports.inventory-turnover",
+      "uri": "reports/inventory-turnover",
+      "pages": [
+        "Reports/InventoryTurnover"
+      ],
+      "middleware": [
+        "web",
+        "Illuminate\\Auth\\Middleware\\Authenticate",
+        "App\\Http\\Middleware\\CheckPermission:view_reports",
+        "App\\Http\\Middleware\\CheckPermission:view_products|view_orders,all"
+      ]
+    },
+    {
+      "name": "reports.inventory-valuation",
+      "uri": "reports/inventory-valuation",
+      "pages": [
+        "Reports/InventoryValuation"
+      ],
+      "middleware": [
+        "web",
+        "Illuminate\\Auth\\Middleware\\Authenticate",
+        "App\\Http\\Middleware\\CheckPermission:view_reports",
+        "App\\Http\\Middleware\\CheckPermission:view_products"
+      ]
+    },
+    {
+      "name": "reports.low-stock",
+      "uri": "reports/low-stock",
+      "pages": [
+        "Reports/LowStock"
+      ],
+      "middleware": [
+        "web",
+        "Illuminate\\Auth\\Middleware\\Authenticate",
+        "App\\Http\\Middleware\\CheckPermission:view_reports",
+        "App\\Http\\Middleware\\CheckPermission:view_products"
+      ]
+    },
+    {
+      "name": "reports.profit-margin",
+      "uri": "reports/profit-margin",
+      "pages": [
+        "Reports/ProfitMargin"
+      ],
+      "middleware": [
+        "web",
+        "Illuminate\\Auth\\Middleware\\Authenticate",
+        "App\\Http\\Middleware\\CheckPermission:view_reports",
+        "App\\Http\\Middleware\\CheckPermission:view_products|view_orders,all"
+      ]
+    },
+    {
+      "name": "reports.receivables",
+      "uri": "reports/receivables",
+      "pages": [
+        "Reports/Receivables"
+      ],
+      "middleware": [
+        "web",
+        "Illuminate\\Auth\\Middleware\\Authenticate",
+        "App\\Http\\Middleware\\CheckPermission:view_reports",
+        "App\\Http\\Middleware\\CheckPermission:view_payments"
+      ]
+    },
+    {
+      "name": "reports.sales-analysis",
+      "uri": "reports/sales-analysis",
+      "pages": [
+        "Reports/SalesAnalysis"
+      ],
+      "middleware": [
+        "web",
+        "Illuminate\\Auth\\Middleware\\Authenticate",
+        "App\\Http\\Middleware\\CheckPermission:view_reports",
+        "App\\Http\\Middleware\\CheckPermission:view_orders"
+      ]
+    },
+    {
+      "name": "reports.sales-by-location",
+      "uri": "reports/sales-by-location",
+      "pages": [
+        "Reports/SalesByLocation"
+      ],
+      "middleware": [
+        "web",
+        "Illuminate\\Auth\\Middleware\\Authenticate",
+        "App\\Http\\Middleware\\CheckPermission:view_reports",
+        "App\\Http\\Middleware\\CheckPermission:view_orders"
+      ]
+    },
+    {
+      "name": "reports.stock-movement",
+      "uri": "reports/stock-movement",
+      "pages": [
+        "Reports/StockMovement"
+      ],
+      "middleware": [
+        "web",
+        "Illuminate\\Auth\\Middleware\\Authenticate",
+        "App\\Http\\Middleware\\CheckPermission:view_reports"
+      ]
+    },
+    {
+      "name": "reservations.index",
+      "uri": "reservations",
+      "pages": [
+        "Reservations/Index"
+      ],
+      "middleware": [
+        "web",
+        "Illuminate\\Auth\\Middleware\\Authenticate",
+        "App\\Http\\Middleware\\CheckPermission:view_products"
+      ]
+    },
+    {
+      "name": "password.reset",
+      "uri": "reset-password/{token}",
+      "pages": [
+        "Auth/ResetPassword"
+      ],
+      "middleware": [
+        "web",
+        "Illuminate\\Auth\\Middleware\\RedirectIfAuthenticated"
+      ]
+    },
+    {
+      "name": "returns.index",
+      "uri": "returns",
+      "pages": [
+        "Returns/Index"
+      ],
+      "middleware": [
+        "web",
+        "Illuminate\\Auth\\Middleware\\Authenticate",
+        "App\\Http\\Middleware\\CheckPermission:manage_returns"
+      ]
+    },
+    {
+      "name": "returns.create",
+      "uri": "returns/create",
+      "pages": [
+        "Returns/Create"
+      ],
+      "middleware": [
+        "web",
+        "Illuminate\\Auth\\Middleware\\Authenticate",
+        "App\\Http\\Middleware\\CheckPermission:manage_returns"
+      ]
+    },
+    {
+      "name": "returns.show",
+      "uri": "returns/{returnOrder}",
+      "pages": [
+        "Returns/Show"
+      ],
+      "middleware": [
+        "web",
+        "Illuminate\\Auth\\Middleware\\Authenticate",
+        "App\\Http\\Middleware\\CheckPermission:manage_returns"
+      ]
+    },
+    {
+      "name": "roles.index",
+      "uri": "roles",
+      "pages": [
+        "Admin/Roles/Index"
+      ],
+      "middleware": [
+        "web",
+        "Illuminate\\Auth\\Middleware\\Authenticate",
+        "App\\Http\\Middleware\\CheckPermission:view_roles"
+      ]
+    },
+    {
+      "name": "roles.create",
+      "uri": "roles/create",
+      "pages": [
+        "Admin/Roles/Create"
+      ],
+      "middleware": [
+        "web",
+        "Illuminate\\Auth\\Middleware\\Authenticate",
+        "App\\Http\\Middleware\\CheckPermission:create_roles"
+      ]
+    },
+    {
+      "name": "roles.show",
+      "uri": "roles/{role}",
+      "pages": [
+        "Admin/Roles/Show"
+      ],
+      "middleware": [
+        "web",
+        "Illuminate\\Auth\\Middleware\\Authenticate",
+        "App\\Http\\Middleware\\CheckPermission:view_roles"
+      ]
+    },
+    {
+      "name": "roles.edit",
+      "uri": "roles/{role}/edit",
+      "pages": [
+        "Admin/Roles/Edit"
+      ],
+      "middleware": [
+        "web",
+        "Illuminate\\Auth\\Middleware\\Authenticate",
+        "App\\Http\\Middleware\\CheckPermission:edit_roles"
+      ]
+    },
+    {
+      "name": "settings.index",
+      "uri": "settings",
+      "pages": [
+        "Settings/Index"
+      ],
+      "middleware": [
+        "web",
+        "Illuminate\\Auth\\Middleware\\Authenticate"
+      ]
+    },
+    {
+      "name": "settings.account.index",
+      "uri": "settings/account",
+      "pages": [
+        "Settings/Account/Index"
+      ],
+      "middleware": [
+        "web",
+        "Illuminate\\Auth\\Middleware\\Authenticate"
+      ]
+    },
+    {
+      "name": "settings.api-tokens.index",
+      "uri": "settings/api-tokens",
+      "pages": [
+        "Settings/ApiTokens/Index"
+      ],
+      "middleware": [
+        "web",
+        "Illuminate\\Auth\\Middleware\\Authenticate"
+      ]
+    },
+    {
+      "name": "settings.email.index",
+      "uri": "settings/email",
+      "pages": [
+        "Settings/Email"
+      ],
+      "middleware": [
+        "web",
+        "Illuminate\\Auth\\Middleware\\Authenticate",
+        "App\\Http\\Middleware\\CheckPermission:manage_organization"
+      ]
+    },
+    {
+      "name": "settings.organization.index",
+      "uri": "settings/organization",
+      "pages": [
+        "Settings/Organization/Index"
+      ],
+      "middleware": [
+        "web",
+        "Illuminate\\Auth\\Middleware\\Authenticate",
+        "App\\Http\\Middleware\\CheckPermission:view_settings"
+      ]
+    },
+    {
+      "name": "settings.shipping.index",
+      "uri": "settings/shipping",
+      "pages": [
+        "Settings/Shipping"
+      ],
+      "middleware": [
+        "web",
+        "Illuminate\\Auth\\Middleware\\Authenticate",
+        "App\\Http\\Middleware\\CheckPermission:manage_organization"
+      ]
+    },
+    {
+      "name": "settings.storage.index",
+      "uri": "settings/storage",
+      "pages": [
+        "Settings/Storage"
+      ],
+      "middleware": [
+        "web",
+        "Illuminate\\Auth\\Middleware\\Authenticate"
+      ]
+    },
+    {
+      "name": "two-factor.setup",
+      "uri": "settings/two-factor/setup",
+      "pages": [
+        "Auth/TwoFactorSetup",
+        "Auth/TwoFactorSetup"
+      ],
+      "middleware": [
+        "web",
+        "Illuminate\\Auth\\Middleware\\Authenticate"
+      ]
+    },
+    {
+      "name": "stock.index",
+      "uri": "stock",
+      "pages": [
+        "Stock/Index"
+      ],
+      "middleware": [
+        "web",
+        "Illuminate\\Auth\\Middleware\\Authenticate",
+        "App\\Http\\Middleware\\CheckPermission:view_products"
+      ]
+    },
+    {
+      "name": "stock-adjustments.index",
+      "uri": "stock-adjustments",
+      "pages": [
+        "StockAdjustments/Index"
+      ],
+      "middleware": [
+        "web",
+        "Illuminate\\Auth\\Middleware\\Authenticate",
+        "App\\Http\\Middleware\\CheckPermission:manage_stock"
+      ]
+    },
+    {
+      "name": "stock-adjustments.create",
+      "uri": "stock-adjustments/create",
+      "pages": [
+        "StockAdjustments/Create"
+      ],
+      "middleware": [
+        "web",
+        "Illuminate\\Auth\\Middleware\\Authenticate",
+        "App\\Http\\Middleware\\CheckPermission:manage_stock"
+      ]
+    },
+    {
+      "name": "stock-adjustments.show",
+      "uri": "stock-adjustments/{stockAdjustment}",
+      "pages": [
+        "StockAdjustments/Show"
+      ],
+      "middleware": [
+        "web",
+        "Illuminate\\Auth\\Middleware\\Authenticate",
+        "App\\Http\\Middleware\\CheckPermission:manage_stock"
+      ]
+    },
+    {
+      "name": "stock-audits.index",
+      "uri": "stock-audits",
+      "pages": [
+        "StockAudits/Index"
+      ],
+      "middleware": [
+        "web",
+        "Illuminate\\Auth\\Middleware\\Authenticate",
+        "App\\Http\\Middleware\\CheckPermission:view_stock_audits"
+      ]
+    },
+    {
+      "name": "stock-audits.create",
+      "uri": "stock-audits/create",
+      "pages": [
+        "StockAudits/Create"
+      ],
+      "middleware": [
+        "web",
+        "Illuminate\\Auth\\Middleware\\Authenticate",
+        "App\\Http\\Middleware\\CheckPermission:create_stock_audits"
+      ]
+    },
+    {
+      "name": "stock-audits.show",
+      "uri": "stock-audits/{stockAudit}",
+      "pages": [
+        "StockAudits/Show"
+      ],
+      "middleware": [
+        "web",
+        "Illuminate\\Auth\\Middleware\\Authenticate",
+        "App\\Http\\Middleware\\CheckPermission:view_stock_audits"
+      ]
+    },
+    {
+      "name": "stock-audits.edit",
+      "uri": "stock-audits/{stockAudit}/edit",
+      "pages": [
+        "StockAudits/Edit"
+      ],
+      "middleware": [
+        "web",
+        "Illuminate\\Auth\\Middleware\\Authenticate",
+        "App\\Http\\Middleware\\CheckPermission:manage_stock_audits"
+      ]
+    },
+    {
+      "name": "stock-audits.items.counts",
+      "uri": "stock-audits/{stockAudit}/items/{item}/counts",
+      "pages": [
+        "StockAudits/CountHistory"
+      ],
+      "middleware": [
+        "web",
+        "Illuminate\\Auth\\Middleware\\Authenticate",
+        "App\\Http\\Middleware\\CheckPermission:view_stock_audits"
+      ]
+    },
+    {
+      "name": "stock-transfers.index",
+      "uri": "stock-transfers",
+      "pages": [
+        "StockTransfers/Index"
+      ],
+      "middleware": [
+        "web",
+        "Illuminate\\Auth\\Middleware\\Authenticate",
+        "App\\Http\\Middleware\\CheckPermission:transfer_stock"
+      ]
+    },
+    {
+      "name": "stock-transfers.create",
+      "uri": "stock-transfers/create",
+      "pages": [
+        "StockTransfers/Create"
+      ],
+      "middleware": [
+        "web",
+        "Illuminate\\Auth\\Middleware\\Authenticate",
+        "App\\Http\\Middleware\\CheckPermission:transfer_stock"
+      ]
+    },
+    {
+      "name": "stock-transfers.show",
+      "uri": "stock-transfers/{stockTransfer}",
+      "pages": [
+        "StockTransfers/Show"
+      ],
+      "middleware": [
+        "web",
+        "Illuminate\\Auth\\Middleware\\Authenticate",
+        "App\\Http\\Middleware\\CheckPermission:transfer_stock"
+      ]
+    },
+    {
+      "name": "suppliers.index",
+      "uri": "suppliers",
+      "pages": [
+        "Suppliers/Index"
+      ],
+      "middleware": [
+        "web",
+        "Illuminate\\Auth\\Middleware\\Authenticate",
+        "App\\Http\\Middleware\\CheckPermission:view_suppliers"
+      ]
+    },
+    {
+      "name": "suppliers.create",
+      "uri": "suppliers/create",
+      "pages": [
+        "Suppliers/Create"
+      ],
+      "middleware": [
+        "web",
+        "Illuminate\\Auth\\Middleware\\Authenticate",
+        "App\\Http\\Middleware\\CheckPermission:create_suppliers"
+      ]
+    },
+    {
+      "name": "suppliers.show",
+      "uri": "suppliers/{supplier}",
+      "pages": [
+        "Suppliers/Show"
+      ],
+      "middleware": [
+        "web",
+        "Illuminate\\Auth\\Middleware\\Authenticate",
+        "App\\Http\\Middleware\\CheckPermission:view_suppliers"
+      ]
+    },
+    {
+      "name": "suppliers.edit",
+      "uri": "suppliers/{supplier}/edit",
+      "pages": [
+        "Suppliers/Edit"
+      ],
+      "middleware": [
+        "web",
+        "Illuminate\\Auth\\Middleware\\Authenticate",
+        "App\\Http\\Middleware\\CheckPermission:edit_suppliers"
+      ]
+    },
+    {
+      "name": "two-factor.challenge",
+      "uri": "two-factor-challenge",
+      "pages": [
+        "Auth/TwoFactorChallenge"
+      ],
+      "middleware": [
+        "web",
+        "Illuminate\\Auth\\Middleware\\Authenticate"
+      ]
+    },
+    {
+      "name": "users.index",
+      "uri": "users",
+      "pages": [
+        "Admin/Users/Index"
+      ],
+      "middleware": [
+        "web",
+        "Illuminate\\Auth\\Middleware\\Authenticate",
+        "App\\Http\\Middleware\\CheckPermission:view_users"
+      ]
+    },
+    {
+      "name": "users.create",
+      "uri": "users/create",
+      "pages": [
+        "Admin/Users/Create"
+      ],
+      "middleware": [
+        "web",
+        "Illuminate\\Auth\\Middleware\\Authenticate",
+        "App\\Http\\Middleware\\CheckPermission:create_users"
+      ]
+    },
+    {
+      "name": "users.show",
+      "uri": "users/{user}",
+      "pages": [
+        "Admin/Users/Show"
+      ],
+      "middleware": [
+        "web",
+        "Illuminate\\Auth\\Middleware\\Authenticate",
+        "App\\Http\\Middleware\\CheckPermission:view_users"
+      ]
+    },
+    {
+      "name": "users.edit",
+      "uri": "users/{user}/edit",
+      "pages": [
+        "Admin/Users/Edit"
+      ],
+      "middleware": [
+        "web",
+        "Illuminate\\Auth\\Middleware\\Authenticate",
+        "App\\Http\\Middleware\\CheckPermission:edit_users"
+      ]
+    },
+    {
+      "name": "variant-replenishment.index",
+      "uri": "variant-replenishment",
+      "pages": [
+        "Inventory/VariantReplenishment"
+      ],
+      "middleware": [
+        "web",
+        "Illuminate\\Auth\\Middleware\\Authenticate",
+        "App\\Http\\Middleware\\CheckPermission:view_products"
+      ]
+    },
+    {
+      "name": "warehouses.index",
+      "uri": "warehouses",
+      "pages": [
+        "Warehouses/Index"
+      ],
+      "middleware": [
+        "web",
+        "Illuminate\\Auth\\Middleware\\Authenticate",
+        "App\\Http\\Middleware\\CheckPermission:view_warehouses"
+      ]
+    },
+    {
+      "name": "warehouses.create",
+      "uri": "warehouses/create",
+      "pages": [
+        "Warehouses/Create"
+      ],
+      "middleware": [
+        "web",
+        "Illuminate\\Auth\\Middleware\\Authenticate",
+        "App\\Http\\Middleware\\CheckPermission:create_warehouses"
+      ]
+    },
+    {
+      "name": "warehouses.show",
+      "uri": "warehouses/{warehouse}",
+      "pages": [
+        "Warehouses/Show"
+      ],
+      "middleware": [
+        "web",
+        "Illuminate\\Auth\\Middleware\\Authenticate",
+        "App\\Http\\Middleware\\CheckPermission:view_warehouses"
+      ]
+    },
+    {
+      "name": "warehouses.edit",
+      "uri": "warehouses/{warehouse}/edit",
+      "pages": [
+        "Warehouses/Edit"
+      ],
+      "middleware": [
+        "web",
+        "Illuminate\\Auth\\Middleware\\Authenticate",
+        "App\\Http\\Middleware\\CheckPermission:edit_warehouses|manage_warehouse_users"
+      ]
+    },
+    {
+      "name": "webhooks.index",
+      "uri": "webhooks",
+      "pages": [
+        "Settings/Webhooks/Index"
+      ],
+      "middleware": [
+        "web",
+        "Illuminate\\Auth\\Middleware\\Authenticate",
+        "App\\Http\\Middleware\\CheckPermission:manage_organization"
+      ]
+    },
+    {
+      "name": "webhooks.show",
+      "uri": "webhooks/{webhook}",
+      "pages": [
+        "Settings/Webhooks/Show"
+      ],
+      "middleware": [
+        "web",
+        "Illuminate\\Auth\\Middleware\\Authenticate",
+        "App\\Http\\Middleware\\CheckPermission:manage_organization"
+      ]
+    },
+    {
+      "name": "work-orders.index",
+      "uri": "work-orders",
+      "pages": [
+        "WorkOrders/Index"
+      ],
+      "middleware": [
+        "web",
+        "Illuminate\\Auth\\Middleware\\Authenticate",
+        "App\\Http\\Middleware\\CheckPermission:manage_stock"
+      ]
+    },
+    {
+      "name": "work-orders.create",
+      "uri": "work-orders/create",
+      "pages": [
+        "WorkOrders/Create"
+      ],
+      "middleware": [
+        "web",
+        "Illuminate\\Auth\\Middleware\\Authenticate",
+        "App\\Http\\Middleware\\CheckPermission:manage_stock"
+      ]
+    },
+    {
+      "name": "work-orders.show",
+      "uri": "work-orders/{work_order}",
+      "pages": [
+        "WorkOrders/Show"
+      ],
+      "middleware": [
+        "web",
+        "Illuminate\\Auth\\Middleware\\Authenticate",
+        "App\\Http\\Middleware\\CheckPermission:manage_stock"
+      ]
+    }
+  ],
+  "unmapped_templates": [
+    "Auth/VerifyEmail",
+    "Errors/403",
+    "Portal/Dashboard",
+    "Profile/Partials/DeleteUserForm",
+    "Profile/Partials/UpdatePasswordForm",
+    "Profile/Partials/UpdateProfileInformationForm",
+    "Reports/BatchExpiry",
+    "Returns/SelectOrder",
+    "Settings/Partials/EmailConfiguration",
+    "Settings/Partials/NotificationPreferences"
+  ],
+  "dialog_sources": [
+    "resources/js/Components/BarcodeScannerModal.vue",
+    "resources/js/Components/ImageGallery.vue",
+    "resources/js/Components/Modal.vue",
+    "resources/js/Components/QuickAddModal.vue",
+    "resources/js/Components/SendDocumentModal.vue",
+    "resources/js/Components/VariantStockAdjuster.vue",
+    "resources/js/Pages/Dashboard.vue",
+    "resources/js/Components/Layout/GlobalSearch.vue",
+    "resources/js/Components/Shipping/ShipOrderModal.vue",
+    "resources/js/Components/ui/TableViewport.vue",
+    "resources/js/Pages/Categories/Index.vue",
+    "resources/js/Pages/Inventory/VariantReplenishment.vue",
+    "resources/js/Pages/Locations/Index.vue",
+    "resources/js/Pages/Orders/Index.vue",
+    "resources/js/Pages/Orders/Show.vue",
+    "resources/js/Pages/Products/Index.vue",
+    "resources/js/Pages/Returns/Show.vue",
+    "resources/js/Pages/StockAudits/Show.vue",
+    "resources/js/Pages/Admin/Roles/Show.vue",
+    "resources/js/Pages/Admin/Users/Show.vue",
+    "resources/js/Pages/Profile/Partials/DeleteUserForm.vue",
+    "resources/js/Pages/Settings/ApiTokens/Index.vue",
+    "resources/js/Pages/Settings/Webhooks/Index.vue",
+    "resources/js/Pages/Settings/Webhooks/Show.vue"
+  ],
+  "form_sources": [
+    "resources/js/Components/ApprovalPanel.vue",
+    "resources/js/Components/SendDocumentModal.vue",
+    "resources/js/Components/WarehouseStockLevels.vue",
+    "resources/js/Components/Reports/PeriodFilter.vue",
+    "resources/js/Components/Reports/ReportSchedules.vue",
+    "resources/js/Components/Shipping/ShipOrderModal.vue",
+    "resources/js/Pages/Approvals/Index.vue",
+    "resources/js/Pages/Auth/ConfirmPassword.vue",
+    "resources/js/Pages/Auth/ForgotPassword.vue",
+    "resources/js/Pages/Auth/Login.vue",
+    "resources/js/Pages/Auth/Register.vue",
+    "resources/js/Pages/Auth/ResetPassword.vue",
+    "resources/js/Pages/Auth/TwoFactorChallenge.vue",
+    "resources/js/Pages/Auth/TwoFactorSetup.vue",
+    "resources/js/Pages/Auth/VerifyEmail.vue",
+    "resources/js/Pages/Categories/Index.vue",
+    "resources/js/Pages/Customers/Create.vue",
+    "resources/js/Pages/Customers/Edit.vue",
+    "resources/js/Pages/Customers/Index.vue",
+    "resources/js/Pages/Customers/Show.vue",
+    "resources/js/Pages/ImportExport/Index.vue",
+    "resources/js/Pages/Install/Admin.vue",
+    "resources/js/Pages/Install/Database.vue",
+    "resources/js/Pages/Inventory/VariantReplenishment.vue",
+    "resources/js/Pages/Locations/Index.vue",
+    "resources/js/Pages/Orders/Create.vue",
+    "resources/js/Pages/Orders/Edit.vue",
+    "resources/js/Pages/Orders/Index.vue",
+    "resources/js/Pages/Orders/Show.vue",
+    "resources/js/Pages/Plugins/Index.vue",
+    "resources/js/Pages/Products/Create.vue",
+    "resources/js/Pages/Products/Edit.vue",
+    "resources/js/Pages/Products/Index.vue",
+    "resources/js/Pages/Products/ResetStock.vue",
+    "resources/js/Pages/PurchaseOrders/Create.vue",
+    "resources/js/Pages/PurchaseOrders/Edit.vue",
+    "resources/js/Pages/PurchaseOrders/Index.vue",
+    "resources/js/Pages/PurchaseOrders/Receive.vue",
+    "resources/js/Pages/Reports/BatchExpiry.vue",
+    "resources/js/Pages/Reports/DeadStock.vue",
+    "resources/js/Pages/Reports/SalesAnalysis.vue",
+    "resources/js/Pages/Reports/StockMovement.vue",
+    "resources/js/Pages/Reservations/Index.vue",
+    "resources/js/Pages/Returns/Create.vue",
+    "resources/js/Pages/Returns/Index.vue",
+    "resources/js/Pages/Settings/Shipping.vue",
+    "resources/js/Pages/Stock/Index.vue",
+    "resources/js/Pages/StockAdjustments/Create.vue",
+    "resources/js/Pages/StockAdjustments/Index.vue",
+    "resources/js/Pages/StockAudits/Create.vue",
+    "resources/js/Pages/StockAudits/Edit.vue",
+    "resources/js/Pages/StockAudits/Index.vue",
+    "resources/js/Pages/StockAudits/Show.vue",
+    "resources/js/Pages/StockTransfers/Create.vue",
+    "resources/js/Pages/StockTransfers/Index.vue",
+    "resources/js/Pages/Suppliers/Create.vue",
+    "resources/js/Pages/Suppliers/Edit.vue",
+    "resources/js/Pages/Suppliers/Index.vue",
+    "resources/js/Pages/Warehouses/Create.vue",
+    "resources/js/Pages/Warehouses/Edit.vue",
+    "resources/js/Pages/Warehouses/Index.vue",
+    "resources/js/Pages/WorkOrders/Create.vue",
+    "resources/js/Pages/WorkOrders/Index.vue",
+    "resources/js/Pages/Admin/ActivityLog/Index.vue",
+    "resources/js/Pages/Admin/Roles/Create.vue",
+    "resources/js/Pages/Admin/Roles/Edit.vue",
+    "resources/js/Pages/Admin/Users/Create.vue",
+    "resources/js/Pages/Admin/Users/Edit.vue",
+    "resources/js/Pages/Portal/Auth/AcceptInvitation.vue",
+    "resources/js/Pages/Portal/Auth/ForgotPassword.vue",
+    "resources/js/Pages/Portal/Auth/Login.vue",
+    "resources/js/Pages/Portal/Auth/ResetPassword.vue",
+    "resources/js/Pages/Portal/Returns/Create.vue",
+    "resources/js/Pages/Profile/Partials/UpdatePasswordForm.vue",
+    "resources/js/Pages/Profile/Partials/UpdateProfileInformationForm.vue",
+    "resources/js/Pages/Settings/Account/Index.vue",
+    "resources/js/Pages/Settings/ApiTokens/Index.vue",
+    "resources/js/Pages/Settings/Organization/Index.vue",
+    "resources/js/Pages/Settings/Partials/EmailConfiguration.vue",
+    "resources/js/Pages/Settings/Partials/NotificationPreferences.vue",
+    "resources/js/Pages/Settings/Webhooks/Index.vue",
+    "resources/js/Pages/Settings/Webhooks/Show.vue",
+    "resources/js/Pages/StockAudits/CycleCounts/Form.vue"
+  ],
+  "table_sources": [
+    "resources/js/Components/BatchList.vue",
+    "resources/js/Components/ProductVariantManager.vue",
+    "resources/js/Components/SerialList.vue",
+    "resources/js/Components/VariantsTable.vue",
+    "resources/js/Components/WarehouseStockLevels.vue",
+    "resources/js/Pages/Dashboard.vue",
+    "resources/js/Components/ui/DataTable.vue",
+    "resources/js/Pages/Customers/Index.vue",
+    "resources/js/Pages/Customers/Show.vue",
+    "resources/js/Pages/ImportExport/Index.vue",
+    "resources/js/Pages/Portal/Dashboard.vue",
+    "resources/js/Pages/Products/Index.vue",
+    "resources/js/Pages/Products/Show.vue",
+    "resources/js/Pages/PurchaseOrders/Receive.vue",
+    "resources/js/Pages/PurchaseOrders/Show.vue",
+    "resources/js/Pages/Reports/AbcAnalysis.vue",
+    "resources/js/Pages/Reports/BatchExpiry.vue",
+    "resources/js/Pages/Reports/CategoryPerformance.vue",
+    "resources/js/Pages/Reports/DeadStock.vue",
+    "resources/js/Pages/Reports/Index.vue",
+    "resources/js/Pages/Reports/InventoryTurnover.vue",
+    "resources/js/Pages/Reports/InventoryValuation.vue",
+    "resources/js/Pages/Reports/LowStock.vue",
+    "resources/js/Pages/Reports/ProfitMargin.vue",
+    "resources/js/Pages/Reports/Receivables.vue",
+    "resources/js/Pages/Reports/SalesAnalysis.vue",
+    "resources/js/Pages/Reports/SalesByLocation.vue",
+    "resources/js/Pages/Reports/StockMovement.vue",
+    "resources/js/Pages/Reservations/Index.vue",
+    "resources/js/Pages/Returns/Index.vue",
+    "resources/js/Pages/Returns/SelectOrder.vue",
+    "resources/js/Pages/Returns/Show.vue",
+    "resources/js/Pages/Stock/Index.vue",
+    "resources/js/Pages/StockAdjustments/Index.vue",
+    "resources/js/Pages/StockAudits/CountHistory.vue",
+    "resources/js/Pages/StockAudits/Index.vue",
+    "resources/js/Pages/StockAudits/Show.vue",
+    "resources/js/Pages/StockTransfers/Index.vue",
+    "resources/js/Pages/StockTransfers/Show.vue",
+    "resources/js/Pages/Suppliers/Index.vue",
+    "resources/js/Pages/Suppliers/Show.vue",
+    "resources/js/Pages/Warehouses/Index.vue",
+    "resources/js/Pages/Warehouses/Show.vue",
+    "resources/js/Pages/WorkOrders/Create.vue",
+    "resources/js/Pages/WorkOrders/Index.vue",
+    "resources/js/Pages/WorkOrders/Show.vue",
+    "resources/js/Pages/Admin/ActivityLog/Index.vue",
+    "resources/js/Pages/Admin/Update/Index.vue",
+    "resources/js/Pages/Admin/Users/Index.vue",
+    "resources/js/Pages/Portal/Orders/Index.vue",
+    "resources/js/Pages/Portal/Orders/Show.vue",
+    "resources/js/Pages/Portal/Returns/Create.vue",
+    "resources/js/Pages/Portal/Returns/Index.vue",
+    "resources/js/Pages/Portal/Returns/Show.vue",
+    "resources/js/Pages/Reports/Builder/Create.vue",
+    "resources/js/Pages/Reports/Builder/Edit.vue",
+    "resources/js/Pages/Reports/Builder/Index.vue",
+    "resources/js/Pages/Reports/Builder/Show.vue",
+    "resources/js/Pages/Settings/ApiTokens/Index.vue",
+    "resources/js/Pages/Settings/Webhooks/Index.vue",
+    "resources/js/Pages/Settings/Webhooks/Show.vue"
+  ]
+}

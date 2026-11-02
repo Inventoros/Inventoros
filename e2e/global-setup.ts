@@ -12,7 +12,8 @@ async function globalSetup(config: FullConfig): Promise<void> {
         // Seed every fixture before auth.setup saves the shared login. Layout
         // seeding also refreshes the staff password, revoking older sessions.
         console.log('📦 Running E2E fixture seeders...');
-        execSync('php artisan db:seed --class=E2ELayoutSeeder --force', {
+        const seeder = process.env.UI_UX_AUDIT ? 'E2EUiAuditSeeder' : 'E2ELayoutSeeder';
+        execSync(`php artisan db:seed --class=${seeder} --force`, {
             cwd: process.cwd(),
             stdio: 'inherit',
             env: {
