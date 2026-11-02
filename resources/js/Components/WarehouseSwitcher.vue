@@ -73,7 +73,7 @@ onUnmounted(() => {
             </svg>
         </button>
 
-        <div v-if="isOpen" class="fixed inset-0 z-40" aria-hidden="true" @click="isOpen = false; triggerRef?.focus()" />
+        <button v-if="isOpen" type="button" tabindex="-1" :aria-label="t('common.dismiss')" class="fixed inset-0 z-40 cursor-default" @click="isOpen = false; triggerRef?.focus()" />
 
         <!-- Dropdown -->
         <div

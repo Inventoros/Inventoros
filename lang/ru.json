@@ -134,5 +134,17 @@
     "Invalid data source.": "Недопустимый источник данных.",
     "Invalid columns: :columns": "Недопустимые столбцы: :columns",
     "Recipients must be members of your organization: :recipients": "Получатели должны быть участниками вашей организации: :recipients",
-    "Recipients must be able to view this report (:permissions): :recipients": "Получатели должны иметь доступ к этому отчёту (:permissions): :recipients"
+    "Recipients must be able to view this report (:permissions): :recipients": "Получатели должны иметь доступ к этому отчёту (:permissions): :recipients",
+    "Give a reason for rejecting this request.": "Укажите причину отклонения этого запроса.",
+    "This email already has portal access for a customer in your organization.": "Этот адрес электронной почты уже имеет доступ к порталу клиента вашей организации.",
+    "You can only grant permissions you hold.": "Вы можете предоставлять только те разрешения, которые есть у вас.",
+    "Test email sent successfully! Check your inbox.": "Тестовое письмо отправлено! Проверьте входящие.",
+    "Failed to send test email: ": "Не удалось отправить тестовое письмо: ",
+    "This export has expired. Run the export again to get a fresh file.": "Срок действия этого экспорта истёк. Запустите его снова, чтобы получить новый файл.",
+    "Stock audit completed.": "Инвентаризация завершена.",
+    "Refund recorded.": "Возврат средств зарегистрирован.",
+    "Payment recorded.": "Платёж зарегистрирован.",
+    "Cannot delete a supplier with open purchase orders.": "Нельзя удалить поставщика с открытыми заказами на закупку.",
+    "Stock adjustments created for discrepancies: :count.": "Корректировки запасов, созданные для расхождений: :count.",
+    "No discrepancies found.": "Расхождений не найдено."
 }

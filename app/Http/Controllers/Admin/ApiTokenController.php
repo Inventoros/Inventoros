@@ -58,7 +58,7 @@ class ApiTokenController extends Controller
             'abilities' => ['required', 'array', 'min:1'],
             'abilities.*' => ['string', 'distinct', Rule::in($held)],
         ], [
-            'abilities.*.in' => 'You can only grant permissions you hold.',
+            'abilities.*.in' => __('You can only grant permissions you hold.'),
         ]);
 
         $token = $request->user()->createToken($validated['name'], array_values($validated['abilities']));

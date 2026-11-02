@@ -134,5 +134,17 @@
     "Invalid data source.": "Ungültige Datenquelle.",
     "Invalid columns: :columns": "Ungültige Spalten: :columns",
     "Recipients must be members of your organization: :recipients": "Empfänger müssen Mitglieder Ihrer Organisation sein: :recipients",
-    "Recipients must be able to view this report (:permissions): :recipients": "Empfänger müssen diesen Bericht anzeigen können (:permissions): :recipients"
+    "Recipients must be able to view this report (:permissions): :recipients": "Empfänger müssen diesen Bericht anzeigen können (:permissions): :recipients",
+    "Give a reason for rejecting this request.": "Geben Sie einen Grund für die Ablehnung dieser Anfrage an.",
+    "This email already has portal access for a customer in your organization.": "Diese E-Mail-Adresse hat bereits Portalzugriff für einen Kunden Ihrer Organisation.",
+    "You can only grant permissions you hold.": "Sie können nur Berechtigungen vergeben, die Sie selbst besitzen.",
+    "Test email sent successfully! Check your inbox.": "Test-E-Mail erfolgreich gesendet! Prüfen Sie Ihren Posteingang.",
+    "Failed to send test email: ": "Test-E-Mail konnte nicht gesendet werden: ",
+    "This export has expired. Run the export again to get a fresh file.": "Dieser Export ist abgelaufen. Starten Sie ihn erneut, um eine neue Datei zu erhalten.",
+    "Stock audit completed.": "Inventur abgeschlossen.",
+    "Refund recorded.": "Erstattung erfasst.",
+    "Payment recorded.": "Zahlung erfasst.",
+    "Cannot delete a supplier with open purchase orders.": "Ein Lieferant mit offenen Bestellungen kann nicht gelöscht werden.",
+    "Stock adjustments created for discrepancies: :count.": "Für Abweichungen erstellte Bestandskorrekturen: :count.",
+    "No discrepancies found.": "Keine Abweichungen gefunden."
 }

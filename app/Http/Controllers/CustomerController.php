@@ -194,7 +194,7 @@ class CustomerController extends Controller
         if ($customer->orders()->count() > 0) {
             if ($request->wantsJson()) {
                 return response()->json([
-                    'message' => 'Cannot delete customer with associated orders.',
+                    'message' => __('Cannot delete customer with associated orders.'),
                 ], 422);
             }
 

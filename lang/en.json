@@ -134,5 +134,17 @@
     "Invalid data source.": "Invalid data source.",
     "Invalid columns: :columns": "Invalid columns: :columns",
     "Recipients must be members of your organization: :recipients": "Recipients must be members of your organization: :recipients",
-    "Recipients must be able to view this report (:permissions): :recipients": "Recipients must be able to view this report (:permissions): :recipients"
+    "Recipients must be able to view this report (:permissions): :recipients": "Recipients must be able to view this report (:permissions): :recipients",
+    "Give a reason for rejecting this request.": "Give a reason for rejecting this request.",
+    "This email already has portal access for a customer in your organization.": "This email already has portal access for a customer in your organization.",
+    "You can only grant permissions you hold.": "You can only grant permissions you hold.",
+    "Test email sent successfully! Check your inbox.": "Test email sent successfully! Check your inbox.",
+    "Failed to send test email: ": "Failed to send test email: ",
+    "This export has expired. Run the export again to get a fresh file.": "This export has expired. Run the export again to get a fresh file.",
+    "Stock audit completed.": "Stock audit completed.",
+    "Refund recorded.": "Refund recorded.",
+    "Payment recorded.": "Payment recorded.",
+    "Cannot delete a supplier with open purchase orders.": "Cannot delete a supplier with open purchase orders.",
+    "Stock adjustments created for discrepancies: :count.": "Stock adjustments created for discrepancies: :count.",
+    "No discrepancies found.": "No discrepancies found."
 }

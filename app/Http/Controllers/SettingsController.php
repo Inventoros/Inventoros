@@ -140,7 +140,7 @@ class SettingsController extends Controller
                 'tested_by' => auth()->user()->name,
             ]));
 
-            $message = 'Test email sent successfully! Check your inbox.';
+            $message = __('Test email sent successfully! Check your inbox.');
 
             return $request->expectsJson()
                 ? response()->json(['message' => $message])
@@ -152,7 +152,7 @@ class SettingsController extends Controller
                 'organization_id' => auth()->user()->organization_id,
             ]);
 
-            $message = 'Failed to send test email: ' . $e->getMessage();
+            $message = __('Failed to send test email: ') . $e->getMessage();
 
             return $request->expectsJson()
                 ? response()->json(['message' => $message], 422)

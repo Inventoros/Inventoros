@@ -37,7 +37,7 @@ Widths: **320, 375, 430, 768, 1024, 1440, 1920**. Height is 812 below tablet and
 
 All **14 languages** are covered by source/catalog checks: ar, de, en, es, fr, it, ja, ko, nl, pl, pt-BR, ru, tr, zh-CN. Each frontend catalog has **3,324 leaf keys**. Key/interpolation/plural parity and message compilation pass across all 14. The language browser sweep visits dashboard, product index/create, orders, account settings and reports at 320/1440. Arabic has an additional real browser assertion for RTL persistence and mirrored sidebar placement. French headings were manually verified to update and return to English without navigation.
 
-Backend JSON catalogs contain **136 shared feedback/validation entries per locale**, with placeholder and encoding checks. Standard Laravel auth/password/pagination/validation catalogs remain in use. Internal protocol values, CSV/API identifiers, user data and technical diagnostics are preserved. Optional plugin-owned English copy is a separate outstanding gap.
+Backend JSON catalogs contain **148 shared feedback/validation entries per locale**, with placeholder and encoding checks. Standard Laravel auth/password/pagination/validation catalogs remain in use. Internal protocol values, CSV/API identifiers and user data are preserved. Optional plugin-owned copy and exception/provider diagnostics outside these catalogs remain a translation gap; this is not a claim that every possible backend exception has been translated.
 
 ## Issues discovered and fixes implemented
 
@@ -73,7 +73,7 @@ Implemented rows require final regression sign-off. References name the main sha
 | 26 | P2 | Fresh-install titles said Laravel; auth heading semantics were missing. | Inventoros defaults and localized auth headings; existing configured APP_NAME is preserved. |
 | 27 | P2 | Demo order/PO totals lacked supporting lines and customer links. | Deterministic linked fixtures, exact totals/cost snapshots and consistency regression. |
 | 28 | P1 | Workspace menus/drawer lacked consistent keyboard dismissal/focus; open menus left partially covered targets clickable. | Shared disclosure keys, selection semantics, click-away layers, drawer containment/Escape restoration and regressions. |
-| 29 | P2 | Optional bundled plugins contain English copy outside core catalogs. | **Remaining:** localize plugin-owned copy/tax terminology through the existing scoped SDK. |
+| 29 | P2 | Optional plugins and exception/provider diagnostics contain English outside shared catalogs. | **Remaining:** localize plugin copy/tax terminology through scoped i18n and review user-facing diagnostic fallbacks. |
 | 30 | P2 | Eager application bundle is about 2.65MB minified / 790KB gzip. | **Remaining:** split locale/runtime payloads after measuring throttled first-interaction performance. |
 | 31 | P1 | Direct permission-denied visits showed a plain framework page without recovery navigation; refreshing could make Back loop. | Browser staff 403s use Errors/403 consistently; sanitize previous URL to a same-origin noncurrent fallback. JSON/API/portal behavior is preserved; PHP and browser regressions cover recovery. |
 
@@ -93,7 +93,7 @@ Manual browser checks include Arabic shell geometry, French headings without nav
 
 ## Remaining work and verification limits
 
-Known product work is P2: optional plugin localization and initial bundle size. No P0 defect is known. P1 closure awaits final regression evidence.
+Known product work is P2: remaining plugin/diagnostic localization and initial bundle size. No P0 defect is known. P1 closure awaits final regression evidence.
 
 Native screen readers, native-speaker review in all languages, physical iOS/Android devices, Firefox/Safari and every provider/permission combination were not tested. Catalog parity does not establish linguistic quality. Real email delivery, paid labels, marketplace transactions, invoice issuance and production installation/update flows were not exercised. Backend permission/failure tests are not claimed as visual verification.
 

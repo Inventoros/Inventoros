@@ -28,10 +28,10 @@ class OrderPaymentController extends Controller
 
         if ($request->isRefund()) {
             $this->payments->refund($order, $request->user(), $request->paymentData());
-            $message = 'Refund recorded.';
+            $message = __('Refund recorded.');
         } else {
             $this->payments->record($order, $request->user(), $request->paymentData());
-            $message = 'Payment recorded.';
+            $message = __('Payment recorded.');
         }
 
         return redirect()->route('orders.show', $order)->with('success', $message);

@@ -36,6 +36,14 @@ class ForbiddenPageTest extends TestCase
         $this->getJson('/users')->assertForbidden()->assertJson(['message' => 'You do not have the required permissions to perform this action.']);
     }
 
+    public function test_recovery_also_renders_for_an_account_without_an_organization(): void
+    {
+        \Illuminate\Support\Facades\Route::middleware(['web', 'auth'])->get('/test-forbidden', fn () => abort(403));
+        $this->actingAs(User::factory()->admin()->create(['organization_id' => null]))
+            ->get('/test-forbidden')->assertForbidden()->assertInertia(fn (Assert $page) => $page
+                ->component('Errors/403')->where('pendingApprovalsCount', 0));
+    }
+
     public function test_back_navigation_cannot_loop_or_leave_the_application(): void
     {
         foreach ([url('/users'), 'https://external.example.test/page'] as $previous) {

@@ -121,7 +121,7 @@ class HandleInertiaRequests extends Middleware
             },
             // Badge on the "Approvals" nav item: requests this user can decide.
             'pendingApprovalsCount' => function () use ($user) {
-                if (! $user) {
+                if (! $user || ! $user->organization_id) {
                     return 0;
                 }
 

@@ -223,7 +223,7 @@ class SupplierController extends Controller
         if ($supplier->products()->count() > 0) {
             if ($request->wantsJson()) {
                 return response()->json([
-                    'message' => 'Cannot delete supplier with associated products.',
+                    'message' => __('Cannot delete supplier with associated products.'),
                 ], 422);
             }
 
@@ -236,7 +236,7 @@ class SupplierController extends Controller
         // withTrashed, so deleting one with open POs would leave those POs with
         // a null supplier across the index/show and receiving flows.
         if ($supplier->hasOpenPurchaseOrders()) {
-            $message = 'Cannot delete a supplier with open purchase orders.';
+            $message = __('Cannot delete a supplier with open purchase orders.');
             if ($request->wantsJson()) {
                 return response()->json(['message' => $message], 422);
             }

@@ -6,6 +6,19 @@ use Tests\TestCase;
 
 class ServerFlashTranslationTest extends TestCase
 {
+    public function test_custom_validation_and_dynamic_controller_messages_use_translations(): void
+    {
+        $files = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator(app_path('Http/Controllers')));
+        $untranslated = [];
+        foreach ($files as $file) {
+            if (! $file->isFile() || $file->getExtension() !== 'php' || str_contains($file->getPathname(), DIRECTORY_SEPARATOR.'Api'.DIRECTORY_SEPARATOR)) continue;
+            $source = file_get_contents($file->getPathname());
+            preg_match_all("/(?:'[^'\\n]+\\.[^'\\n]+'\\s*=>|\\$(?:message|error|status)\\s*=)\\s*'([^'\\n]* [^'\\n]*)'/", $source, $messages);
+            foreach ($messages[1] as $text) $untranslated[] = $file->getFilename().': '.$text;
+        }
+        $this->assertSame([], $untranslated);
+    }
+
     public function test_custom_controller_validation_feedback_is_localized(): void
     {
         $files = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator(app_path('Http/Controllers')));

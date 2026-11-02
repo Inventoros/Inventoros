@@ -147,3 +147,15 @@ test('warehouse selection supports arrows and Escape without changing the filter
     await expect(toggle).toBeFocused();
     await expect(toggle).toHaveAttribute('aria-expanded', 'false');
 });
+
+test('a click behind an open warehouse menu dismisses it before activating the page', async ({ page }) => {
+    await page.goto('/products');
+    const add = page.getByRole('link', { name: 'Add Product', exact: true });
+    const box = (await add.boundingBox())!;
+    await page.getByRole('button', { name: 'All Warehouses', exact: true }).click();
+    await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
+    await expect(page.getByRole('menu')).toBeHidden();
+    await expect(page).toHaveURL(/\/products$/);
+    await add.click();
+    await expect(page).toHaveURL(/\/products\/create$/);
+});

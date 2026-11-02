@@ -527,7 +527,7 @@ class ImportExportController extends Controller
         // Past config('exports.retention_days') the file is no longer served,
         // even if exports:prune has not removed it yet.
         if ($dataExport->isExpired()) {
-            $message = 'This export has expired. Run the export again to get a fresh file.';
+            $message = __('This export has expired. Run the export again to get a fresh file.');
 
             if ($request->expectsJson()) {
                 return response()->json(['message' => $message, 'error' => 'export_expired'], 410);

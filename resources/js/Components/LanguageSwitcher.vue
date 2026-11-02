@@ -87,7 +87,7 @@ onUnmounted(() => document.removeEventListener('click', handleClickOutside));
             <span class="hidden sm:inline uppercase">{{ current.code }}</span>
         </button>
 
-        <div v-if="isOpen" class="fixed inset-0 z-40" aria-hidden="true" @click="close(true)" />
+        <button v-if="isOpen" type="button" tabindex="-1" :aria-label="t('common.dismiss')" class="fixed inset-0 z-40 cursor-default" @click="close(true)" />
 
         <Transition
             enter-active-class="transition ease-out duration-150"

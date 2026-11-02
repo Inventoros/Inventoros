@@ -134,5 +134,17 @@
     "Invalid data source.": "مصدر البيانات غير صالح.",
     "Invalid columns: :columns": "أعمدة غير صالحة: :columns",
     "Recipients must be members of your organization: :recipients": "يجب أن يكون المستلمون أعضاء في مؤسستك: :recipients",
-    "Recipients must be able to view this report (:permissions): :recipients": "يجب أن يتمكن المستلمون من عرض هذا التقرير (:permissions): :recipients"
+    "Recipients must be able to view this report (:permissions): :recipients": "يجب أن يتمكن المستلمون من عرض هذا التقرير (:permissions): :recipients",
+    "Give a reason for rejecting this request.": "أدخل سبباً لرفض هذا الطلب.",
+    "This email already has portal access for a customer in your organization.": "لدى هذا البريد الإلكتروني بالفعل وصول إلى بوابة عميل في مؤسستك.",
+    "You can only grant permissions you hold.": "يمكنك منح الصلاحيات التي تملكها فقط.",
+    "Test email sent successfully! Check your inbox.": "تم إرسال البريد التجريبي بنجاح! تحقق من صندوق الوارد.",
+    "Failed to send test email: ": "تعذّر إرسال البريد التجريبي: ",
+    "This export has expired. Run the export again to get a fresh file.": "انتهت صلاحية هذا التصدير. أعد تشغيله للحصول على ملف جديد.",
+    "Stock audit completed.": "اكتمل جرد المخزون.",
+    "Refund recorded.": "تم تسجيل الاسترداد.",
+    "Payment recorded.": "تم تسجيل الدفعة.",
+    "Cannot delete a supplier with open purchase orders.": "لا يمكن حذف مورد لديه أوامر شراء مفتوحة.",
+    "Stock adjustments created for discrepancies: :count.": "عدد تسويات المخزون المنشأة للفروقات: :count.",
+    "No discrepancies found.": "لم يتم العثور على فروقات."
 }

@@ -134,5 +134,17 @@
     "Invalid data source.": "数据源无效。",
     "Invalid columns: :columns": "无效的列：:columns",
     "Recipients must be members of your organization: :recipients": "收件人必须是您的组织成员：:recipients",
-    "Recipients must be able to view this report (:permissions): :recipients": "收件人必须有权查看此报告（:permissions）：:recipients"
+    "Recipients must be able to view this report (:permissions): :recipients": "收件人必须有权查看此报告（:permissions）：:recipients",
+    "Give a reason for rejecting this request.": "请说明拒绝此请求的原因。",
+    "This email already has portal access for a customer in your organization.": "此邮箱已具有您组织内某位客户的门户访问权限。",
+    "You can only grant permissions you hold.": "您只能授予自己拥有的权限。",
+    "Test email sent successfully! Check your inbox.": "测试邮件已发送！请检查收件箱。",
+    "Failed to send test email: ": "发送测试邮件失败：",
+    "This export has expired. Run the export again to get a fresh file.": "此导出已过期。请重新运行导出以获取新文件。",
+    "Stock audit completed.": "库存盘点已完成。",
+    "Refund recorded.": "退款已记录。",
+    "Payment recorded.": "付款已记录。",
+    "Cannot delete a supplier with open purchase orders.": "无法删除有未完成采购订单的供应商。",
+    "Stock adjustments created for discrepancies: :count.": "因差异而创建的库存调整数量：:count。",
+    "No discrepancies found.": "未发现差异。"
 }

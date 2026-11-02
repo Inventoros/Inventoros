@@ -39,7 +39,7 @@ class CustomerContactController extends Controller
                 Rule::unique('customer_contacts', 'email')->where('organization_id', $customer->organization_id),
             ],
         ], [
-            'email.unique' => 'This email already has portal access for a customer in your organization.',
+            'email.unique' => __('This email already has portal access for a customer in your organization.'),
         ]);
 
         $contact = $this->invitations->invite($customer, $validated['name'], $validated['email'], $request->user());

@@ -46,7 +46,7 @@ class ApprovalController extends Controller
         $validated = $request->validate([
             'notes' => 'required|string|max:1000',
         ], [
-            'notes.required' => 'Give a reason for rejecting this request.',
+            'notes.required' => __('Give a reason for rejecting this request.'),
         ]);
 
         return $this->decide(fn () => $this->approvals->reject($request->user(), $type, $id, $validated['notes']), 'Request rejected.');

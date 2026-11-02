@@ -134,5 +134,17 @@
     "Invalid data source.": "Geçersiz veri kaynağı.",
     "Invalid columns: :columns": "Geçersiz sütunlar: :columns",
     "Recipients must be members of your organization: :recipients": "Alıcılar kuruluşunuzun üyesi olmalıdır: :recipients",
-    "Recipients must be able to view this report (:permissions): :recipients": "Alıcıların bu raporu görüntüleme izni olmalıdır (:permissions): :recipients"
+    "Recipients must be able to view this report (:permissions): :recipients": "Alıcıların bu raporu görüntüleme izni olmalıdır (:permissions): :recipients",
+    "Give a reason for rejecting this request.": "Bu isteği reddetmek için bir gerekçe girin.",
+    "This email already has portal access for a customer in your organization.": "Bu e-posta adresinin kuruluşunuzdaki bir müşterinin portalına zaten erişimi var.",
+    "You can only grant permissions you hold.": "Yalnızca sahip olduğunuz izinleri verebilirsiniz.",
+    "Test email sent successfully! Check your inbox.": "Test e-postası gönderildi! Gelen kutunuzu kontrol edin.",
+    "Failed to send test email: ": "Test e-postası gönderilemedi: ",
+    "This export has expired. Run the export again to get a fresh file.": "Bu dışa aktarmanın süresi doldu. Yeni bir dosya almak için yeniden çalıştırın.",
+    "Stock audit completed.": "Stok sayımı tamamlandı.",
+    "Refund recorded.": "İade kaydedildi.",
+    "Payment recorded.": "Ödeme kaydedildi.",
+    "Cannot delete a supplier with open purchase orders.": "Açık satın alma siparişleri olan bir tedarikçi silinemez.",
+    "Stock adjustments created for discrepancies: :count.": "Farklar için oluşturulan stok düzeltmeleri: :count.",
+    "No discrepancies found.": "Fark bulunamadı."
 }

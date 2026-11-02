@@ -368,11 +368,11 @@ class StockAuditController extends Controller
                 ->with('error', $e->getMessage());
         }
 
-        $message = 'Stock audit completed.';
+        $message = __('Stock audit completed.');
         if ($adjustmentsCreated > 0) {
-            $message .= " {$adjustmentsCreated} stock adjustment(s) created for discrepancies.";
+            $message .= ' '.__('Stock adjustments created for discrepancies: :count.', ['count' => $adjustmentsCreated]);
         } else {
-            $message .= ' No discrepancies found.';
+            $message .= ' '.__('No discrepancies found.');
         }
 
         return redirect()->route('stock-audits.show', $stockAudit)
