@@ -5,6 +5,7 @@ const english = JSON.parse(readFileSync('resources/js/i18n/locales/en.json', 'ut
 const french = JSON.parse(readFileSync('resources/js/i18n/locales/fr.json', 'utf8'));
 const arabic = JSON.parse(readFileSync('resources/js/i18n/locales/ar.json', 'utf8'));
 const frenchChunk = /\/(?:build\/assets\/fr-[^/]+\.js|resources\/js\/i18n\/locales\/fr\.json)(?:\?.*)?$/;
+const additionalLocaleChunk = /\/(?:build\/assets\/(?:ar|de|es|fr|it|ja|ko|nl|pl|pt-BR|ru|tr|zh-CN)-[^/]+\.js|resources\/js\/i18n\/locales\/(?:ar|de|es|fr|it|ja|ko|nl|pl|pt-BR|ru|tr|zh-CN)\.json)(?:\?.*)?$/;
 
 // Exercise real language chunks and Inertia rendering without changing the
 // shared test user's server preference while other tests run in parallel.
@@ -28,21 +29,27 @@ test('downloads a language before changing the interface or saving the preferenc
     let release = () => {};
     const gate = new Promise<void>((resolve) => { release = resolve; });
     const requests: string[] = [];
-    await page.route(frenchChunk, async (route) => {
-        requests.push(route.request().url());
-        await gate;
-        await route.continue();
+    page.on('request', (request) => {
+        if (additionalLocaleChunk.test(request.url())) requests.push(request.url());
     });
 
     try {
         await page.goto('/dashboard', { waitUntil: 'networkidle' });
         await expect(page.locator('html')).toHaveAttribute('lang', 'en');
         const saved = await mockPreferenceSave(page);
+        // Background prefetch must not silently download all thirteen catalogs.
+        // Gate only after this check, so a regression reports the extra request
+        // instead of deadlocking the initial navigation on our own held route.
         expect(requests).toEqual([]);
+        await page.route(frenchChunk, async (route) => {
+            await gate;
+            await route.continue();
+        });
         const trigger = page.locator('button[aria-haspopup="listbox"]');
         await trigger.click();
         await page.locator('[role="option"][lang="fr"]').click();
         await expect(trigger).toHaveAttribute('aria-busy', 'true');
+        await expect(page.getByRole('status', { name: english.components.languageSwitcher.ariaLabel.replace('{name}', 'English'), exact: true })).toHaveText(english.common.loading);
         await expect(page.locator('html')).toHaveAttribute('lang', 'en');
         expect(saved).toEqual([]);
         await expect.poll(() => requests.length).toBe(1);

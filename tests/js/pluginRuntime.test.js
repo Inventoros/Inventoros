@@ -7,6 +7,8 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { computed, reactive } from 'vue';
+import { createI18n } from 'vue-i18n';
 import { createPluginI18n, createReadonlyI18n, pluginLabel, sanitizeMessages } from '../../resources/js/plugins/pluginI18n.js';
 
 const root = join(import.meta.dirname, '..', '..');
@@ -36,6 +38,8 @@ function fakeComposer(active = 'fr') {
         mergeLocaleMessage: (code, tree) => {
             messages[code] = merge(messages[code] ?? {}, tree);
         },
+        getLocaleMessage: (code) => messages[code] ?? {},
+        setLocaleMessage: (code, tree) => { messages[code] = tree; },
         te: (key, code = locale.value) => typeof get(code, key) === 'string',
         t: (key, params = {}) => {
             const text = get(locale.value, key) ?? get('en', key) ?? key;
@@ -128,4 +132,57 @@ test('a plugin label key resolves from the plugin messages and falls back to the
     assert.equal(pluginLabel(composer.t, te, null, 'Docs'), 'Docs');
     assert.equal(pluginLabel(composer.t, te, 'common.save', 'Docs'), 'Docs');
     assert.equal(pluginLabel(composer.t, te, undefined, undefined), '');
+});
+
+test('cached plugin labels update when a bundle registers messages after the first render', () => {
+    // vue-i18n uses a shallow message ref in Node. A reactive catalog gives
+    // this real composer the same nested dependency tracking as its browser ref.
+    const i18n = createI18n({
+        legacy: false,
+        locale: 'ar',
+        fallbackLocale: 'en',
+        missingWarn: false,
+        fallbackWarn: false,
+        messages: reactive({
+            en: { common: { save: 'Save' } },
+            ar: { common: { save: 'حفظ' } },
+            fr: { common: { save: 'Enregistrer' } },
+        }),
+    });
+    const composer = i18n.global;
+    const plugin = createPluginI18n(composer, 'cycle-counts', composer.locale);
+    const otherPlugin = createPluginI18n(composer, 'other-plugin', composer.locale);
+    otherPlugin.addMessages('ar', { title: 'إضافة أخرى' });
+    const label = computed(() => pluginLabel(composer.t, composer.te, 'plugins.cycle-counts.nav.counts', 'Counts'));
+    const pluginTitle = computed(() => plugin.t('nav.counts'));
+    const translated = computed(() => plugin.te('nav.counts'));
+
+    // Evaluate before either the fallback or active plugin catalog arrives,
+    // just as the app shell does while a plugin bundle is downloading.
+    assert.equal(label.value, 'Counts');
+    assert.equal(pluginTitle.value, 'plugins.cycle-counts.nav.counts');
+    assert.equal(translated.value, false);
+
+    plugin.addMessages('en', { nav: { counts: 'Cycle counts' } });
+    assert.equal(label.value, 'Cycle counts');
+    assert.equal(pluginTitle.value, 'Cycle counts');
+    assert.equal(translated.value, true);
+
+    plugin.addMessages('ar', { nav: { counts: 'الجرد الدوري' } });
+    assert.equal(label.value, 'الجرد الدوري');
+    assert.equal(pluginTitle.value, 'الجرد الدوري');
+    assert.equal(composer.t('common.save'), 'حفظ', 'core messages survive plugin registration');
+    assert.equal(otherPlugin.t('title'), 'إضافة أخرى', 'other plugins retain their messages');
+
+    // Additional message batches retain the first batch, and switching to
+    // a locale whose plugin catalog arrives later invalidates the same label.
+    plugin.addMessages('ar', { settings: { title: 'الإعدادات' } });
+    assert.equal(label.value, 'الجرد الدوري');
+    assert.equal(plugin.t('settings.title'), 'الإعدادات');
+    composer.locale.value = 'fr';
+    assert.equal(label.value, 'Cycle counts');
+    plugin.addMessages('fr', { nav: { counts: 'Inventaires tournants' } });
+    assert.equal(label.value, 'Inventaires tournants');
+    assert.equal(composer.t('common.save'), 'Enregistrer');
+    i18n.dispose();
 });

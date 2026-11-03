@@ -52,7 +52,6 @@ use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
-use Illuminate\Support\Facades\Vite;
 use Illuminate\Support\ServiceProvider;
 
 /**
@@ -94,7 +93,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        Vite::prefetch(concurrency: 3);
+        // Leave global prefetch disabled so split language catalogs and page
+        // chunks download only when the application requests them.
 
         // Markdown mail (the account invitation) interpolates names that users
         // and admins choose. Escape them so a name written as a Markdown link

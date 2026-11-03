@@ -29,11 +29,12 @@ test('an administrator can correct a password error and follow a queued stock re
     await page.getByLabel('Type ZERO STOCK to confirm', { exact: true }).fill('ZERO STOCK');
     await page.getByRole('button', { name: 'Reset stock to zero', exact: true }).click();
     await expect(page).toHaveURL(/products\/stock-reset\/status\/[\w-]+$/);
-    await expect(page.getByRole('status')).toHaveText('Queued');
+    const resetStatus = page.getByRole('main').getByRole('status');
+    await expect(resetStatus).toHaveText('Queued');
 
     execFileSync('php', ['artisan', 'queue:work', 'inventory-resets', '--queue=inventory-resets',
         '--stop-when-empty', '--max-time=30', '--timeout=900', '--tries=1'], { stdio: 'pipe' });
-    await expect(page.getByRole('status')).toHaveText('Stock reset completed', { timeout: 10000 });
+    await expect(resetStatus).toHaveText('Stock reset completed', { timeout: 10000 });
     await expect(page.getByText('Clearing a test import', { exact: true })).toBeVisible();
     await page.goto(`/products?search=${encodeURIComponent(`RESET-${id}`)}`);
     await expect(page.locator('tbody tr').filter({ hasText: `RESET-${id}` })).toHaveCount(1);

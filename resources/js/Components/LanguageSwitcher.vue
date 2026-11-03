@@ -107,7 +107,7 @@ onUnmounted(() => {
             <span class="hidden sm:inline uppercase">{{ current.code }}</span>
         </button>
 
-        <span class="sr-only" role="status">{{ isLoading ? t('common.loading') : '' }}</span>
+        <span class="sr-only" role="status" :aria-label="t('components.languageSwitcher.ariaLabel', { name: current.name })">{{ isLoading ? t('common.loading') : '' }}</span>
         <div
             v-if="failedLocale"
             role="alert"

@@ -92,6 +92,11 @@ export function createPluginI18n(composer, slug, locale) {
                 throw new TypeError('Inventoros plugin SDK: addMessages needs a locale code such as "en".');
             }
             composer.mergeLocaleMessage(localeCode, { plugins: { [slug]: sanitizeMessages(messages) } });
+            // A label may have checked te() before this bundle registered.
+            // vue-i18n merges nested messages in place, which can leave that
+            // missing-key computed cached. Publish a new locale root so all
+            // existing labels observe the newly available messages.
+            composer.setLocaleMessage(localeCode, { ...composer.getLocaleMessage(localeCode) });
         },
     });
 }
