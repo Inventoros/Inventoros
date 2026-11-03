@@ -142,9 +142,9 @@ const formatValue = (value, col) => {
 
         <!-- Results -->
         <Card :padded="false" class="mt-4">
-            <div class="flex items-center justify-between px-5 pt-5">
-                <h3 class="text-sm font-semibold text-text-primary">{{ report.name }}</h3>
-                <span class="text-xs text-text-tertiary">{{ data.length }} {{ t('reportBuilder.rowsLabel') }}</span>
+            <div class="flex min-w-0 items-start justify-between gap-3 px-5 pt-5">
+                <h3 class="min-w-0 flex-1 text-sm font-semibold text-text-primary [overflow-wrap:anywhere]">{{ report.name }}</h3>
+                <span class="shrink-0 text-xs text-text-tertiary">{{ data.length }} {{ t('reportBuilder.rowsLabel') }}</span>
             </div>
             <div class="p-5">
                 <!-- Empty state -->

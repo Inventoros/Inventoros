@@ -153,7 +153,11 @@ test('long unbroken record titles wrap completely within mobile page headers', a
     });
     await page.locator(`a[href$="${reportPath}"]`).first().click();
     const heading = page.getByRole('heading', { level: 1, name: title, exact: true });
+    const resultsHeading = page.getByRole('heading', { level: 3, name: title, exact: true });
+    const breadcrumb = page.locator('.app-breadcrumb').getByText(title, { exact: true });
     await expect(heading).toBeVisible();
+    await expect(resultsHeading).toBeVisible();
+    await expect(breadcrumb).toBeVisible();
     for (const width of [320, 375, 430]) {
         await page.setViewportSize({ width, height: 812 });
         const layout = await heading.evaluate(element => {
@@ -172,6 +176,12 @@ test('long unbroken record titles wrap completely within mobile page headers', a
         expect(layout.height, `${width}px: title wraps instead of truncating`).toBeGreaterThan(layout.lineHeight);
         expect(layout.contentOverflow, `${width}px: complete title fits its heading`).toBeLessThanOrEqual(1);
         expect(layout.pageOverflow, `${width}px: title does not widen the page`).toBeLessThanOrEqual(1);
+        const resultsBounds = (await resultsHeading.boundingBox())!;
+        expect(resultsBounds.x, `${width}px: results title starts inside the viewport`).toBeGreaterThanOrEqual(0);
+        expect(resultsBounds.x + resultsBounds.width, `${width}px: results title ends inside the viewport`).toBeLessThanOrEqual(width);
+        await expect(breadcrumb).toHaveCSS('text-overflow', 'ellipsis');
+        const breadcrumbBounds = (await breadcrumb.boundingBox())!;
+        expect(breadcrumbBounds.x + breadcrumbBounds.width, `${width}px: breadcrumb stays inside the viewport`).toBeLessThanOrEqual(width);
     }
 });
 

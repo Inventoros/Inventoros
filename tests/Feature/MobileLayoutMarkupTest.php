@@ -130,18 +130,57 @@ class MobileLayoutMarkupTest extends TestCase
 
     /**
      * Underlined tab bars scroll sideways (.ds-tabs) rather than widening the
-     * page; the settings tab bars overflowed a phone by 17-22px.
+     * page; these tab bars previously overflowed a phone by 17-22px. Account
+     * settings use a wrapping section grid, covered separately below.
      */
     public function test_tab_bars_scroll_rather_than_overflow(): void
     {
         $this->assertStringContainsString('.ds-tabs', (string) file_get_contents(base_path('resources/css/app.css')));
 
-        foreach (['Pages/Settings/Organization/Index.vue', 'Pages/Settings/Account/Index.vue', 'Pages/Settings/Email.vue', 'Pages/ImportExport/Index.vue'] as $path) {
+        foreach (['Pages/Settings/Organization/Index.vue', 'Pages/Settings/Email.vue', 'Pages/ImportExport/Index.vue'] as $path) {
             $source = $this->source($path);
 
             $this->assertStringNotContainsString('<nav class="-mb-px flex gap-8"', $source, "{$path} has a tab bar that cannot scroll.");
             $this->assertStringContainsString('<nav class="ds-tabs', $source, "{$path} has a tab bar that cannot scroll.");
         }
+    }
+
+    /**
+     * Account sections fit two equal phone columns and one desktop column.
+     * Long translated labels wrap within their track; changing the visual
+     * layout must retain named, linked tabs and keyboard selection semantics.
+     */
+    public function test_account_sections_reflow_without_losing_accessible_tab_navigation(): void
+    {
+        $page = $this->source('Pages/Settings/Account/Index.vue');
+        $styles = (string) file_get_contents(base_path('resources/css/settings.css'));
+
+        // A Vue attribute may contain an arrow function, so a quoted angle
+        // bracket must not be mistaken for the end of the opening tag.
+        foreach ([
+            ['nav', 'tablist', ['settings-section-nav', ':aria-label=', ':aria-orientation=', '@keydown=']],
+            ['button', 'tab', [':id=', ':aria-selected=', ':aria-controls=', ':tabindex=']],
+            ['div', 'tabpanel', [':id=', ':aria-labelledby=']],
+        ] as [$tag, $role, $attributes]) {
+            $this->assertSame(1, preg_match('/<'.$tag.'\b(?:[^">]|"[^"]*")*\brole="'.$role.'"(?:[^">]|"[^"]*")*>/s', $page, $element));
+
+            foreach ($attributes as $attribute) {
+                $this->assertStringContainsString($attribute, $element[0]);
+            }
+        }
+
+        $this->assertSame(1, preg_match('/\.settings-section-nav\s*\{([^}]+)\}/s', $styles, $navigation));
+        $this->assertMatchesRegularExpression('/display:\s*grid\s*;/', $navigation[1]);
+        $this->assertMatchesRegularExpression('/grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\)\s*;/', $navigation[1]);
+        $this->assertMatchesRegularExpression('/min-width:\s*0\s*;/', $navigation[1]);
+        $this->assertMatchesRegularExpression(
+            '/\.settings-section-tab\s+span\s*\{(?=[^}]*min-width:\s*0\s*;)(?=[^}]*overflow-wrap:\s*anywhere\s*;)[^}]*\}/s',
+            $styles,
+        );
+        $this->assertMatchesRegularExpression(
+            '/@media\s*\(min-width:\s*1024px\)[\s\S]*?\.settings-section-nav\s*\{[^}]*grid-template-columns:\s*minmax\(0,\s*1fr\)\s*;/',
+            $styles,
+        );
     }
 
     /**
