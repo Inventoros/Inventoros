@@ -2,6 +2,7 @@
 import { useId as useFieldId } from 'vue';
 const fieldIdPrefix = useFieldId();
 import DialogSurface from '@/Components/DialogSurface.vue';
+import ActionError from '@/Components/ActionError.vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import PluginSlot from '@/Components/PluginSlot.vue';
 import PluginTabs from '@/Components/PluginTabs.vue';
@@ -11,8 +12,8 @@ import Button from '@/Components/ui/Button.vue';
 import Badge from '@/Components/ui/Badge.vue';
 import SendDocumentModal from '@/Components/SendDocumentModal.vue';
 import ShipmentsPanel from '@/Components/Shipping/ShipmentsPanel.vue';
-import { Head, Link, router, useForm } from '@inertiajs/vue3';
-import { computed, ref } from 'vue';
+import { Head, Link, useForm } from '@inertiajs/vue3';
+import { computed, ref, watch } from 'vue';
 import { usePermissions } from '@/composables/usePermissions';
 import { displayCalendarDate, displayDateTime, todayIsoDate } from '@/lib/dates';
 import { formatMoney } from '@/lib/money';
@@ -112,43 +113,40 @@ const invoiceStatus = computed(() => ({
     sent: { label: t('documentEmail.invoiceSent'), variant: 'success' },
     issued: { label: t('documentEmail.invoiceIssued'), variant: 'info' },
 }[invoice.value.badge] ?? null));
-const deleting = ref(false);
+const deleteForm = useForm({});
+const deleting = computed(() => deleteForm.processing);
+watch(showDeleteModal, () => deleteForm.clearErrors());
 
 // Approval functionality
 const showApprovalModal = ref(false);
 const approvalAction = ref('approve');
-const approvalNotes = ref('');
-const processing = ref(false);
+const approvalForm = useForm({ notes: '' });
+const processing = computed(() => approvalForm.processing);
 
 const openApprovalModal = (action) => {
     approvalAction.value = action;
-    approvalNotes.value = '';
+    approvalForm.reset();
+    approvalForm.clearErrors();
     showApprovalModal.value = true;
 };
 
 const submitApproval = () => {
-    processing.value = true;
+    if (processing.value) return;
     const routeName = approvalAction.value === 'approve' ? 'orders.approve' : 'orders.reject';
 
-    router.post(route(routeName, props.order.id), {
-        notes: approvalNotes.value,
-    }, {
-        onFinish: () => {
-            processing.value = false;
-            showApprovalModal.value = false;
-        },
+    approvalForm.post(route(routeName, props.order.id), {
+        preserveScroll: true,
+        onSuccess: () => { showApprovalModal.value = false; },
     });
 };
 
 const statusVariant = orderStatusVariant;
 
 const deleteOrder = () => {
-    deleting.value = true;
-    router.delete(route('orders.destroy', props.order.id), {
-        onFinish: () => {
-            deleting.value = false;
-            showDeleteModal.value = false;
-        },
+    if (deleting.value) return;
+    deleteForm.delete(route('orders.destroy', props.order.id), {
+        preserveScroll: true,
+        onSuccess: () => { showDeleteModal.value = false; },
     });
 };
 
@@ -763,6 +761,8 @@ const formatOrderDate = (date, long = false) =>
                             {{ t('orders.show.deleteOrder') }}
                         </h3>
                         <button
+                            type="button"
+                            :aria-label="t('common.close')"
                             @click="showDeleteModal = false"
                             class="text-text-tertiary transition-colors hover:text-text-primary"
                         >
@@ -785,6 +785,7 @@ const formatOrderDate = (date, long = false) =>
                         </div>
                     </div>
 
+                    <ActionError :errors="deleteForm.errors" />
                     <div class="flex justify-end gap-3">
                         <Button variant="secondary" @click="showDeleteModal = false" :disabled="deleting">
                             {{ t('common.cancel') }}
@@ -809,6 +810,8 @@ const formatOrderDate = (date, long = false) =>
                             {{ approvalAction === 'approve' ? t('orders.show.approveOrder') : t('orders.show.rejectOrder') }}
                         </h3>
                         <button
+                            type="button"
+                            :aria-label="t('common.close')"
                             @click="showApprovalModal = false"
                             class="text-text-tertiary transition-colors hover:text-text-primary"
                         >
@@ -829,7 +832,8 @@ const formatOrderDate = (date, long = false) =>
                                 {{ t('common.notes') }} {{ approvalAction === 'reject' ? t('orders.show.notesRequired') : t('orders.show.notesOptional') }}
                             </label>
                             <textarea :id="fieldIdPrefix + '-1'"
-                                v-model="approvalNotes"
+                                v-model="approvalForm.notes"
+                                :aria-invalid="!!approvalForm.errors.notes"
                                 rows="3"
                                 class="w-full rounded-md border border-border-subtle bg-surface-canvas px-3 py-2 text-sm text-text-primary placeholder:text-text-tertiary ds-focus-ring"
                                 :placeholder="approvalAction === 'approve' ? t('orders.show.approvalNotesPlaceholder') : t('orders.show.rejectionNotesPlaceholder')"
@@ -838,6 +842,7 @@ const formatOrderDate = (date, long = false) =>
                         </div>
                     </div>
 
+                    <ActionError :errors="approvalForm.errors" />
                     <div class="flex justify-end gap-3">
                         <Button variant="secondary" @click="showApprovalModal = false" :disabled="processing">
                             {{ t('common.cancel') }}
@@ -845,7 +850,7 @@ const formatOrderDate = (date, long = false) =>
                         <Button
                             :variant="approvalAction === 'approve' ? 'default' : 'danger'"
                             :loading="processing"
-                            :disabled="processing || (approvalAction === 'reject' && !approvalNotes)"
+                            :disabled="processing || (approvalAction === 'reject' && !approvalForm.notes.trim())"
                             @click="submitApproval"
                         >
                             <span v-if="processing">{{ t('common.loading') }}</span>

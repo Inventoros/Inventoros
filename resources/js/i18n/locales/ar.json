@@ -320,7 +320,8 @@
     "expandTable": "عرض الجدول بالكامل",
     "selectAll": "تحديد الكل",
     "moveUp": "نقل لأعلى",
-    "moveDown": "نقل لأسفل"
+    "moveDown": "نقل لأسفل",
+    "close": "إغلاق"
   },
   "nav": {
     "dashboard": "لوحة التحكم",
@@ -1573,7 +1574,9 @@
       "normal": "عادية",
       "high": "عالية",
       "urgent": "عاجلة"
-    }
+    },
+    "loadFailed": "تعذر تحميل الإشعارات. يرجى المحاولة مرة أخرى.",
+    "actionFailed": "تعذر تحديث الإشعارات. يرجى المحاولة مرة أخرى."
   },
   "plugins": {
     "title": "الإضافات",
@@ -1901,7 +1904,8 @@
         "deleteUser": "حذف المستخدم",
         "confirmDelete": "هل أنت متأكد من حذف {name}؟",
         "cannotUndo": "لا يمكن التراجع عن هذا الإجراء.",
-        "titleWithName": "المستخدم: {name}"
+        "titleWithName": "المستخدم: {name}",
+        "ownAccountHint": "لا يمكنك حذف حسابك الخاص."
       },
       "subtitle": "أدِر المستخدمين في مؤسستك، وعيّن الأدوار والصلاحيات.",
       "noUsersTitle": "لم يتم العثور على مستخدمين.",
@@ -2780,7 +2784,8 @@
       "emptyHint": "انقر \"إضافة دفعة\" لتسجيل أول دفعة."
     },
     "languageSwitcher": {
-      "ariaLabel": "اللغة: {name}"
+      "ariaLabel": "اللغة: {name}",
+      "loadError": "تعذر تحميل هذه اللغة. يرجى المحاولة مرة أخرى."
     },
     "organizationSwitcher": {
       "ariaLabel": "المؤسسة: {name}",

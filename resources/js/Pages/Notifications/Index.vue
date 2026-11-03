@@ -5,7 +5,7 @@ import Card from '@/Components/ui/Card.vue';
 import Button from '@/Components/ui/Button.vue';
 import Badge from '@/Components/ui/Badge.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import { ref, nextTick } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { displayDateTime } from '@/lib/dates';
 import {
@@ -26,45 +26,67 @@ const props = defineProps({
 });
 
 const { t } = useI18n();
+const pendingAction = ref(null);
+const actionError = ref(null);
 
-const filterNotifications = (filter) => {
-    router.get(route('notifications.index'), { filter }, {
+const visitOptions = (action) => {
+    const activeElement = document.activeElement;
+    pendingAction.value = action;
+    actionError.value = null;
+    const showError = () => {
+        actionError.value = action.startsWith('filter:') ? 'notifications.loadFailed' : 'notifications.actionFailed';
+        return false;
+    };
+    return {
         preserveState: true,
         preserveScroll: true,
-    });
+        onError: showError,
+        onHttpException: showError,
+        onNetworkError: showError,
+        onFinish: async () => {
+            pendingAction.value = null;
+            await nextTick();
+            if (actionError.value && activeElement instanceof HTMLElement && activeElement.isConnected) activeElement.focus();
+        },
+    };
+};
+
+const filterNotifications = (filter) => {
+    if (pendingAction.value || currentFilterMatches(filter)) return;
+    router.get(route('notifications.index'), { filter }, visitOptions(`filter:${filter}`));
 };
 
 const markAsRead = (notification) => {
-    router.post(route('notifications.mark-as-read', notification.id), {}, {
-        preserveState: true,
-        preserveScroll: true,
-    });
+    if (pendingAction.value) return;
+    router.post(route('notifications.mark-as-read', notification.id), {}, visitOptions(`read:${notification.id}`));
+};
+
+const viewNotification = (notification) => {
+    if (pendingAction.value) return;
+    // The read endpoint redirects to action_url after the write succeeds.
+    // Starting a Link visit at the same time would cancel that write.
+    if (!notification.read_at) markAsRead(notification);
+    else router.visit(notification.action_url);
 };
 
 const markAllAsRead = () => {
+    if (pendingAction.value) return;
     if (confirm(t('notifications.confirmMarkAllRead'))) {
-        router.post(route('notifications.mark-all-read'), {}, {
-            preserveState: true,
-            preserveScroll: true,
-        });
+        router.post(route('notifications.mark-all-read'), {}, visitOptions('all'));
     }
 };
 
 const deleteNotification = (notification) => {
+    if (pendingAction.value) return;
     if (confirm(t('notifications.confirmDelete'))) {
-        router.delete(route('notifications.destroy', notification.id), {
-            preserveState: true,
-            preserveScroll: true,
-        });
+        router.delete(route('notifications.destroy', notification.id), visitOptions(`delete:${notification.id}`));
     }
 };
 
 const clearRead = () => {
+    if (pendingAction.value) return;
     if (confirm(t('notifications.confirmClearRead'))) {
-        router.delete(route('notifications.clear-read'), {
-            preserveState: true,
-            preserveScroll: true,
-        });
+        router.delete(route('notifications.clear-read'), visitOptions('clear'));
     }
 };
 
@@ -130,14 +152,18 @@ const currentFilterMatches = (filter) => props.currentFilter === filter;
 
         <PageHeader :title="t('nav.notifications')" :description="t('notifications.subtitle')">
             <template #actions>
-                <Button v-if="stats.unread > 0" variant="default" size="sm" @click="markAllAsRead">
+                <Button v-if="stats.unread > 0" variant="default" size="sm" :disabled="!!pendingAction" :loading="pendingAction === 'all'" @click="markAllAsRead">
                     {{ t('notifications.markAllRead') }}
                 </Button>
-                <Button v-if="stats.read > 0" variant="secondary" size="sm" @click="clearRead">
+                <Button v-if="stats.read > 0" variant="secondary" size="sm" :disabled="!!pendingAction" :loading="pendingAction === 'clear'" @click="clearRead">
                     {{ t('notifications.clearRead') }}
                 </Button>
             </template>
         </PageHeader>
+
+        <p v-if="actionError" role="alert" class="mt-4 rounded-lg border border-status-danger/20 bg-status-danger-soft px-4 py-3 text-sm text-status-danger">
+            {{ t(actionError) }}
+        </p>
 
         <!-- Stats Cards -->
         <div class="mt-6 grid grid-cols-1 gap-4 md:grid-cols-3">
@@ -156,30 +182,30 @@ const currentFilterMatches = (filter) => props.currentFilter === filter;
         </div>
 
         <!-- Filter Tabs -->
-        <div class="mt-4 inline-flex items-center gap-1 rounded-lg border border-border-subtle bg-surface-raised p-1">
-            <button type="button" :class="filterTabClass('all')" @click="filterNotifications('all')">
+        <div role="group" :aria-label="t('common.filters')" :aria-busy="pendingAction?.startsWith('filter:') || undefined" class="mt-4 inline-flex max-w-full flex-wrap items-center gap-1 rounded-lg border border-border-subtle bg-surface-raised p-1">
+            <button type="button" :class="filterTabClass('all')" :aria-pressed="currentFilterMatches('all')" :disabled="!!pendingAction" @click="filterNotifications('all')">
                 {{ t('notifications.allCount', { count: stats.total }) }}
             </button>
-            <button type="button" :class="filterTabClass('unread')" @click="filterNotifications('unread')">
+            <button type="button" :class="filterTabClass('unread')" :aria-pressed="currentFilterMatches('unread')" :disabled="!!pendingAction" @click="filterNotifications('unread')">
                 {{ t('notifications.unreadCount', { count: stats.unread }) }}
             </button>
-            <button type="button" :class="filterTabClass('read')" @click="filterNotifications('read')">
+            <button type="button" :class="filterTabClass('read')" :aria-pressed="currentFilterMatches('read')" :disabled="!!pendingAction" @click="filterNotifications('read')">
                 {{ t('notifications.readCount', { count: stats.read }) }}
             </button>
         </div>
 
         <!-- Notifications List -->
-        <Card :padded="false" class="mt-4 overflow-hidden">
+        <Card :padded="false" class="mt-4 overflow-hidden" :aria-busy="!!pendingAction">
             <div v-if="notifications.data.length > 0" class="divide-y divide-border-subtle">
-                <div
+                <article
                     v-for="notification in notifications.data"
                     :key="notification.id"
                     :class="[
                         'p-5 transition-colors hover:bg-surface-overlay',
-                        notification.read_at ? 'opacity-75' : 'bg-brand-soft/40',
+                        !notification.read_at && 'bg-brand-soft/40',
                     ]"
                 >
-                    <div class="flex items-start gap-4">
+                    <div class="flex items-start gap-3 sm:gap-4">
                         <!-- Icon -->
                         <div :class="['flex h-10 w-10 shrink-0 items-center justify-center rounded-lg', getTypeColor(notification.type)]">
                             <component :is="getTypeIcon(notification.type)" :size="18" />
@@ -187,12 +213,12 @@ const currentFilterMatches = (filter) => props.currentFilter === filter;
 
                         <!-- Content -->
                         <div class="min-w-0 flex-1">
-                            <div class="mb-2 flex items-start justify-between gap-4">
+                            <div class="mb-2 flex flex-wrap items-start justify-between gap-2">
                                 <div class="min-w-0">
-                                    <h3 class="text-sm font-semibold text-text-primary">
+                                    <h2 class="break-words text-sm font-semibold text-text-primary">
                                         {{ notification.title }}
-                                    </h3>
-                                    <p class="mt-1 text-sm text-text-secondary">
+                                    </h2>
+                                    <p class="mt-1 break-words text-sm text-text-secondary">
                                         {{ notification.message }}
                                     </p>
                                 </div>
@@ -201,7 +227,7 @@ const currentFilterMatches = (filter) => props.currentFilter === filter;
                                 </Badge>
                             </div>
 
-                            <div class="mt-3 flex items-center gap-3">
+                            <div class="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1">
                                 <p class="text-xs text-text-tertiary">
                                     {{ formatDate(notification.created_at) }}
                                 </p>
@@ -211,14 +237,14 @@ const currentFilterMatches = (filter) => props.currentFilter === filter;
                             </div>
 
                             <!-- Actions -->
-                            <div class="mt-4 flex items-center gap-2">
+                            <div class="mt-4 flex flex-wrap items-center gap-2">
                                 <Button
                                     v-if="notification.action_url"
                                     variant="link"
                                     size="sm"
-                                    as="Link"
-                                    :href="notification.action_url"
-                                    @click="markAsRead(notification)"
+                                    :disabled="!!pendingAction"
+                                    :loading="pendingAction === `read:${notification.id}`"
+                                    @click="viewNotification(notification)"
                                 >
                                     {{ t('notifications.viewDetailsLabel') }}
                                     <ArrowRight :size="14" />
@@ -227,33 +253,36 @@ const currentFilterMatches = (filter) => props.currentFilter === filter;
                                     v-if="!notification.read_at"
                                     variant="ghost"
                                     size="sm"
+                                    :disabled="!!pendingAction"
+                                    :loading="pendingAction === `read:${notification.id}`"
                                     @click="markAsRead(notification)"
                                 >
                                     {{ t('notifications.markAsRead') }}
                                 </Button>
-                                <Button variant="ghost" size="sm" @click="deleteNotification(notification)">
+                                <Button variant="ghost" size="sm" :disabled="!!pendingAction" :loading="pendingAction === `delete:${notification.id}`" @click="deleteNotification(notification)">
                                     {{ t('common.delete') }}
                                 </Button>
                             </div>
                         </div>
                     </div>
-                </div>
+                </article>
             </div>
 
             <!-- Empty State -->
             <div v-else class="flex flex-col items-center gap-3 px-6 py-16 text-center">
                 <Bell :size="28" class="text-text-tertiary" />
                 <p class="text-sm font-medium text-text-primary">{{ t('notifications.noNotifications') }}</p>
-                <p class="text-sm text-text-tertiary">{{ t('notifications.allCaughtUp') }}</p>
+                <p v-if="currentFilter !== 'read'" class="text-sm text-text-tertiary">{{ t('notifications.allCaughtUp') }}</p>
             </div>
 
             <!-- Pagination -->
             <div v-if="notifications.links && notifications.links.length > 3" class="border-t border-border-subtle px-5 py-4">
-                <nav class="inline-flex w-full items-center justify-center gap-1">
+                <nav :aria-label="t('common.pagination')" class="inline-flex w-full flex-wrap items-center justify-center gap-1">
                     <template v-for="(link, index) in notifications.links" :key="index">
                         <Link
                             v-if="link.url"
                             :href="link.url"
+                            :aria-current="link.active ? 'page' : undefined"
                             :class="[
                                 'inline-flex h-8 min-w-8 items-center justify-center rounded-md border px-2.5 text-xs font-medium transition-colors',
                                 link.active

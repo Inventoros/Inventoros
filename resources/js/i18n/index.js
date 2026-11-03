@@ -1,53 +1,23 @@
 import { createI18n } from 'vue-i18n'
 import { applyFormatSettings } from '../lib/formatSettings.js'
+import { createLocaleLoader } from './localeLoader.js'
 
 import en from './locales/en.json'
-import es from './locales/es.json'
-import fr from './locales/fr.json'
-import de from './locales/de.json'
-import ptBR from './locales/pt-BR.json'
-import it from './locales/it.json'
-import ja from './locales/ja.json'
-import ko from './locales/ko.json'
-import zhCN from './locales/zh-CN.json'
-import ar from './locales/ar.json'
-import ru from './locales/ru.json'
-import nl from './locales/nl.json'
-import tr from './locales/tr.json'
-import pl from './locales/pl.json'
 
-// The server resolves the locale (the signed-in user's saved language, then
-// the `locale` cookie, then the app default) and renders it into <html lang>,
-// so that wins. localStorage is only a fallback for a page with no lang.
+// English stays available even when a language chunk fails to download. Other
+// core catalogs are fetched only when used, including before the first mount.
+const localeModules = import.meta.glob(['./locales/*.json', '!./locales/en.json'])
 const i18n = createI18n({
     legacy: false,
-    locale: document.documentElement.lang || localStorage.getItem('locale') || 'en',
+    locale: 'en',
     fallbackLocale: 'en',
-    messages: {
-        en,
-        es,
-        fr,
-        de,
-        'pt-BR': ptBR,
-        it,
-        ja,
-        ko,
-        'zh-CN': zhCN,
-        ar,
-        ru,
-        nl,
-        tr,
-        pl,
-    },
+    messages: { en },
 })
 
-// Money, number and date formatting follows the UI language (lib/formatSettings).
-applyFormatSettings({ locale: i18n.global.locale.value })
 const applyDocumentLocale = (locale) => {
     document.documentElement.lang = locale
     document.documentElement.dir = locale === 'ar' ? 'rtl' : 'ltr'
 }
-applyDocumentLocale(i18n.global.locale.value)
 
 export const availableLocales = [
     { code: 'en', name: 'English', flag: '\uD83C\uDDFA\uD83C\uDDF8' },
@@ -66,26 +36,67 @@ export const availableLocales = [
     { code: 'pl', name: 'Polski', flag: '\uD83C\uDDF5\uD83C\uDDF1' },
 ]
 
+const isSupported = (locale) => availableLocales.some((item) => item.code === locale)
+const savedLocale = () => {
+    try {
+        return localStorage.getItem('locale')
+    } catch {
+        // Storage may be unavailable in a restricted browser context.
+        return null
+    }
+}
+
+// The server's saved-user/cookie/default resolution wins. Storage is only a
+// fallback when the server did not render a language into the document.
+const requestedLocale = document.documentElement.lang || savedLocale() || 'en'
+const initialLocale = isSupported(requestedLocale) ? requestedLocale : 'en'
+
+const loader = createLocaleLoader({
+    loaded: ['en'],
+    loaders: Object.fromEntries(availableLocales
+        .filter(({ code }) => code !== 'en')
+        .map(({ code }) => [code, localeModules[`./locales/${code}.json`]])),
+    mergeMessages: (locale, messages) => i18n.global.mergeLocaleMessage(locale, messages),
+    applyLocale: (locale, { persist = false } = {}) => {
+        applyFormatSettings({ locale })
+        applyDocumentLocale(locale)
+        i18n.global.locale.value = locale
+        if (persist) {
+            try {
+                localStorage.setItem('locale', locale)
+            } catch {
+                // The cookie/server preference still persists the selection.
+            }
+            document.cookie = `locale=${locale};path=/;max-age=${60 * 60 * 24 * 365};SameSite=Lax`
+        }
+    },
+})
+
+/** Preload before resolving an Inertia page; plugin-only messages do not count. */
+export const loadLocaleMessages = (locale) => loader.load(locale)
+
+/** Wait for the first catalog so a saved language never flashes English. */
+export async function initializeLocale(locale = initialLocale) {
+    const resolved = isSupported(locale) ? locale : initialLocale
+    try {
+        return await applyServerLocale(resolved)
+    } catch {
+        // A failed language download must not leave the application blank.
+        return applyServerLocale('en')
+    }
+}
+
 /**
  * Apply a locale resolved by the server (the shared `locale` prop) without
  * rewriting the cookie. Unknown codes are ignored so a bad value cannot blank
  * the UI.
  */
 export function applyServerLocale(locale) {
-    if (!locale || !availableLocales.some((l) => l.code === locale)) return
-    applyDocumentLocale(locale)
-    if (i18n.global.locale.value === locale) return
-    i18n.global.locale.value = locale
-    applyFormatSettings({ locale })
+    return loader.select(locale)
 }
 
 export function setLocale(locale) {
-    if (!availableLocales.some((l) => l.code === locale)) return
-    i18n.global.locale.value = locale
-    applyFormatSettings({ locale })
-    localStorage.setItem('locale', locale)
-    applyDocumentLocale(locale)
-    document.cookie = `locale=${locale};path=/;max-age=${60 * 60 * 24 * 365};SameSite=Lax`
+    return loader.select(locale, { persist: true })
 }
 
 export default i18n

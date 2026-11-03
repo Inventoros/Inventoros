@@ -320,7 +320,8 @@
     "expandTable": "Vollbildtabelle",
     "selectAll": "Alle auswählen",
     "moveUp": "Nach oben",
-    "moveDown": "Nach unten"
+    "moveDown": "Nach unten",
+    "close": "Schließen"
   },
   "nav": {
     "dashboard": "Dashboard",
@@ -1573,7 +1574,9 @@
       "normal": "Normal",
       "high": "Hoch",
       "urgent": "Dringend"
-    }
+    },
+    "loadFailed": "Benachrichtigungen konnten nicht geladen werden. Bitte versuche es erneut.",
+    "actionFailed": "Benachrichtigungen konnten nicht aktualisiert werden. Bitte versuche es erneut."
   },
   "plugins": {
     "title": "Plugins",
@@ -1901,7 +1904,8 @@
         "deleteUser": "Benutzer löschen",
         "confirmDelete": "Sind Sie sicher, dass Sie {name} löschen möchten?",
         "cannotUndo": "Diese Aktion kann nicht rückgängig gemacht werden.",
-        "titleWithName": "Benutzer: {name}"
+        "titleWithName": "Benutzer: {name}",
+        "ownAccountHint": "Sie können Ihr eigenes Konto nicht löschen."
       },
       "subtitle": "Verwalten Sie die Benutzer Ihrer Organisation und weisen Sie Rollen und Berechtigungen zu.",
       "noUsersTitle": "Keine Benutzer gefunden.",
@@ -2780,7 +2784,8 @@
       "emptyHint": "Klicken Sie auf „Charge hinzufügen“, um die erste Charge zu erfassen."
     },
     "languageSwitcher": {
-      "ariaLabel": "Sprache: {name}"
+      "ariaLabel": "Sprache: {name}",
+      "loadError": "Diese Sprache konnte nicht geladen werden. Bitte versuche es erneut."
     },
     "organizationSwitcher": {
       "ariaLabel": "Organisation: {name}",

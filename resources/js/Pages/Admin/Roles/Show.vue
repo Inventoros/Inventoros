@@ -1,19 +1,20 @@
 <script setup>
 import DialogSurface from '@/Components/DialogSurface.vue';
+import ActionError from '@/Components/ActionError.vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import PageHeader from '@/Components/ui/PageHeader.vue';
 import Card from '@/Components/ui/Card.vue';
 import Button from '@/Components/ui/Button.vue';
 import Badge from '@/Components/ui/Badge.vue';
-import { Head, Link, router } from '@inertiajs/vue3';
-import { ref, computed } from 'vue';
+import { Head, Link, useForm } from '@inertiajs/vue3';
+import { ref, computed, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { permissionCategoryLabel, permissionDescription, permissionLabel, roleDescription, roleName } from '@/lib/permissionLabels';
 import { displayDate } from '@/lib/dates';
 import { Pencil, ArrowLeft, Trash2, CheckCircle2, ShieldAlert, Info, X, AlertTriangle } from '@lucide/vue';
 import { usePermissions } from '@/composables/usePermissions';
 
-const { canVisit } = usePermissions();
+const { canVisit, hasPermission } = usePermissions();
 
 const props = defineProps({
     role: Object,
@@ -23,7 +24,9 @@ const props = defineProps({
 const { t, te } = useI18n();
 const i18n = { t, te };
 const showDeleteModal = ref(false);
-const deleting = ref(false);
+const deleteForm = useForm({});
+const deleting = computed(() => deleteForm.processing);
+watch(showDeleteModal, () => deleteForm.clearErrors());
 
 const isProtected = computed(() => props.role.is_system || props.role.slug === 'system-administrator');
 
@@ -43,12 +46,10 @@ const formatDate = (date) =>
     displayDate(date);
 
 const deleteRole = () => {
-    deleting.value = true;
-    router.delete(route('roles.destroy', props.role.id), {
-        onFinish: () => {
-            deleting.value = false;
-            showDeleteModal.value = false;
-        },
+    if (deleting.value || !hasPermission('delete_roles')) return;
+    deleteForm.delete(route('roles.destroy', props.role.id), {
+        preserveScroll: true,
+        onSuccess: () => { showDeleteModal.value = false; },
     });
 };
 </script>
@@ -218,6 +219,7 @@ const deleteRole = () => {
                             </Button>
 
                             <Button
+                                v-if="hasPermission('delete_roles')"
                                 variant="danger"
                                 class="w-full"
                                 :disabled="role.users && role.users.length > 0"
@@ -261,6 +263,8 @@ const deleteRole = () => {
                     <div class="mb-4 flex items-center justify-between">
                         <h3 class="text-base font-semibold text-text-primary">{{ t('admin.roles.show.deleteRole') }}</h3>
                         <button
+                            type="button"
+                            :aria-label="t('common.close')"
                             @click="showDeleteModal = false"
                             class="text-text-tertiary transition-colors hover:text-text-primary"
                         >
@@ -282,6 +286,7 @@ const deleteRole = () => {
                         </div>
                     </div>
 
+                    <ActionError :errors="deleteForm.errors" />
                     <div class="flex justify-end gap-3">
                         <Button variant="secondary" @click="showDeleteModal = false" :disabled="deleting">
                             {{ t('common.cancel') }}

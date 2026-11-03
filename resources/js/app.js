@@ -5,7 +5,7 @@ import { createInertiaApp, router } from '@inertiajs/vue3';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { createApp, h } from 'vue';
 import { ZiggyVue } from 'ziggy-js';
-import i18n, { applyServerLocale } from './i18n';
+import i18n, { applyServerLocale, initializeLocale, loadLocaleMessages } from './i18n';
 import { applyRegionalProp } from './lib/formatSettings';
 import { applyActiveOrganization, withOrganizationHeader } from './lib/activeOrganization';
 import { installPluginRuntime, loadPluginAssets, resolveRuntimePage } from './plugins/runtime';
@@ -23,6 +23,9 @@ const pluginPages = import.meta.glob('../../plugins/*/resources/js/Pages/**/*.vu
 createInertiaApp({
     title: (title) => title ? `${title} - ${appName}` : appName,
     resolve: async (name, page) => {
+        // Keep the current page usable while a newly selected/server-resolved
+        // catalog downloads. The navigation then renders in one language.
+        await loadLocaleMessages(page?.props?.locale).catch(() => {});
         // Check if this is a plugin page (format: Plugin::PluginName/PagePath)
         if (name.startsWith('Plugin::')) {
             // A page registered by a runtime plugin bundle.
@@ -50,11 +53,11 @@ createInertiaApp({
             pages,
         );
     },
-    setup({ el, App, props, plugin }) {
+    async setup({ el, App, props, plugin }) {
         // Keep vue-i18n on the locale the server resolved, including after a
         // visit that changed it (saving the language preference).
-        applyServerLocale(props.initialPage?.props?.locale);
-        router.on('navigate', (event) => applyServerLocale(event.detail.page.props.locale));
+        await initializeLocale(props.initialPage?.props?.locale);
+        router.on('navigate', (event) => applyServerLocale(event.detail.page.props.locale).catch(() => {}));
 
         // Money and dates follow the organization's regional settings.
         applyRegionalProp(props.initialPage?.props?.regional);

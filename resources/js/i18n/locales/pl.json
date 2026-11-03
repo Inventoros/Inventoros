@@ -320,7 +320,8 @@
     "expandTable": "Pełny widok tabeli",
     "selectAll": "Zaznacz wszystkie",
     "moveUp": "Przenieś w górę",
-    "moveDown": "Przenieś w dół"
+    "moveDown": "Przenieś w dół",
+    "close": "Zamknij"
   },
   "nav": {
     "dashboard": "Panel główny",
@@ -1573,7 +1574,9 @@
       "normal": "Normalny",
       "high": "Wysoki",
       "urgent": "Pilny"
-    }
+    },
+    "loadFailed": "Nie udało się wczytać powiadomień. Spróbuj ponownie.",
+    "actionFailed": "Nie udało się zaktualizować powiadomień. Spróbuj ponownie."
   },
   "plugins": {
     "title": "Wtyczki",
@@ -1901,7 +1904,8 @@
         "deleteUser": "Usuń użytkownika",
         "confirmDelete": "Czy na pewno chcesz usunąć użytkownika {name}?",
         "cannotUndo": "Tej operacji nie można cofnąć.",
-        "titleWithName": "Użytkownik: {name}"
+        "titleWithName": "Użytkownik: {name}",
+        "ownAccountHint": "Nie możesz usunąć własnego konta."
       },
       "subtitle": "Zarządzaj użytkownikami w organizacji, przypisuj role i uprawnienia.",
       "noUsersTitle": "Nie znaleziono użytkowników.",
@@ -2780,7 +2784,8 @@
       "emptyHint": "Kliknij \"Dodaj partię\", aby zarejestrować pierwszą partię."
     },
     "languageSwitcher": {
-      "ariaLabel": "Język: {name}"
+      "ariaLabel": "Język: {name}",
+      "loadError": "Nie udało się wczytać tego języka. Spróbuj ponownie."
     },
     "organizationSwitcher": {
       "ariaLabel": "Organizacja: {name}",

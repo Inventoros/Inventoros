@@ -123,6 +123,7 @@ function registerSlotComponent(slot, component, options = {}) {
         plugin: options.plugin ?? null,
         props: options.props ?? {},
         label: options.label ?? null,
+        label_key: options.label_key ?? null,
         position: Number.isFinite(options.position) ? options.position : DEFAULT_POSITION,
         id: `${options.plugin ?? 'runtime'}-${entries.length}`,
     });

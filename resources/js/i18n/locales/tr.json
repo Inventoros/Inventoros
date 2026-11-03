@@ -320,7 +320,8 @@
     "expandTable": "Tam tablo görünümü",
     "selectAll": "Tümünü Seç",
     "moveUp": "Yukarı taşı",
-    "moveDown": "Aşağı taşı"
+    "moveDown": "Aşağı taşı",
+    "close": "Kapat"
   },
   "nav": {
     "dashboard": "Gösterge Paneli",
@@ -1573,7 +1574,9 @@
       "normal": "Normal",
       "high": "Yüksek",
       "urgent": "Acil"
-    }
+    },
+    "loadFailed": "Bildirimler yüklenemedi. Lütfen tekrar deneyin.",
+    "actionFailed": "Bildirimler güncellenemedi. Lütfen tekrar deneyin."
   },
   "plugins": {
     "title": "Eklentiler",
@@ -1901,7 +1904,8 @@
         "deleteUser": "Kullanıcıyı Sil",
         "confirmDelete": "{name} kullanıcısını silmek istediğinize emin misiniz?",
         "cannotUndo": "Bu işlem geri alınamaz.",
-        "titleWithName": "Kullanıcı: {name}"
+        "titleWithName": "Kullanıcı: {name}",
+        "ownAccountHint": "Kendi hesabınızı silemezsiniz."
       },
       "subtitle": "Organizasyonunuzdaki kullanıcıları yönetin, rol ve izin atayın.",
       "noUsersTitle": "Kullanıcı bulunamadı.",
@@ -2780,7 +2784,8 @@
       "emptyHint": "İlk partiyi kaydetmek için \"Parti Ekle\"ye tıklayın."
     },
     "languageSwitcher": {
-      "ariaLabel": "Dil: {name}"
+      "ariaLabel": "Dil: {name}",
+      "loadError": "Bu dil yüklenemedi. Lütfen tekrar deneyin."
     },
     "organizationSwitcher": {
       "ariaLabel": "Kuruluş: {name}",

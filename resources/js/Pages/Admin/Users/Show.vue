@@ -1,19 +1,21 @@
 <script setup>
 import DialogSurface from '@/Components/DialogSurface.vue';
+import ActionError from '@/Components/ActionError.vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import PageHeader from '@/Components/ui/PageHeader.vue';
 import Card from '@/Components/ui/Card.vue';
 import Button from '@/Components/ui/Button.vue';
 import Badge from '@/Components/ui/Badge.vue';
-import { Head, Link, router } from '@inertiajs/vue3';
-import { computed, ref } from 'vue';
+import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
+import { computed, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { roleName, permissionLabel, permissionCategoryLabel } from '@/lib/permissionLabels';
 import { displayDate } from '@/lib/dates';
 import { Pencil, ArrowLeft, Trash2, X, AlertTriangle, CheckCircle2 } from '@lucide/vue';
 import { usePermissions } from '@/composables/usePermissions';
 
-const { canVisit } = usePermissions();
+const { canVisit, hasPermission } = usePermissions();
+const page = usePage();
 
 const props = defineProps({
     user: Object,
@@ -24,7 +26,10 @@ const props = defineProps({
 const { t, te } = useI18n();
 const i18n = { t, te };
 const showDeleteModal = ref(false);
-const deleting = ref(false);
+const deleteForm = useForm({});
+const deleting = computed(() => deleteForm.processing);
+const isOwnAccount = computed(() => props.user.id === page.props.auth.user.id);
+watch(showDeleteModal, () => deleteForm.clearErrors());
 const permissionSearch = ref('');
 const filteredPermissions = computed(() => Object.entries(props.permissions)
     .map(([category, permissions]) => [category, permissions.filter((permission) =>
@@ -34,12 +39,10 @@ const filteredPermissions = computed(() => Object.entries(props.permissions)
     .filter(([, permissions]) => permissions.length));
 
 const deleteUser = () => {
-    deleting.value = true;
-    router.delete(route('users.destroy', props.user.id), {
-        onFinish: () => {
-            deleting.value = false;
-            showDeleteModal.value = false;
-        },
+    if (deleting.value || isOwnAccount.value || !hasPermission('delete_users')) return;
+    deleteForm.delete(route('users.destroy', props.user.id), {
+        preserveScroll: true,
+        onSuccess: () => { showDeleteModal.value = false; },
     });
 };
 
@@ -126,7 +129,8 @@ const roleVariant = (role) =>
                     <p class="mt-2 text-sm text-text-secondary">{{ t('admin.users.show.effectivePermissionsHint') }}</p>
                     <label for="permission-search" class="mt-4 block text-sm text-text-secondary">{{ t('common.search') }}</label>
                     <input id="permission-search" v-model="permissionSearch" type="search" class="mt-1 h-9 w-full rounded-md border border-border-subtle bg-surface-canvas px-3 text-sm ds-focus-ring" />
-                        <div class="mt-4 max-h-96 overflow-y-auto space-y-4 ds-focus-ring" tabindex="0" role="region" :aria-label="t('nav.activityLog')">
+                        <div class="mt-4 max-h-96 overflow-y-auto space-y-4 ds-focus-ring" tabindex="0" role="region" :aria-label="t('admin.users.show.effectivePermissions')">
+                        <p v-if="!filteredPermissions.length" role="status" class="text-sm text-text-secondary">{{ t('common.noResults') }}</p>
                         <div v-for="[category, permissions] in filteredPermissions" :key="category">
                             <h4 class="text-xs font-medium text-text-tertiary">{{ permissionCategoryLabel(category, i18n) }}</h4>
                             <ul class="mt-2 space-y-2">
@@ -206,10 +210,11 @@ const roleVariant = (role) =>
                             <Pencil :size="16" />
                             {{ t('admin.users.show.editUser') }}
                         </Button>
-                        <Button variant="danger" class="w-full" @click="showDeleteModal = true">
+                        <Button v-if="hasPermission('delete_users')" variant="danger" class="w-full" :disabled="isOwnAccount" :aria-describedby="isOwnAccount ? 'own-account-delete-hint' : undefined" @click="showDeleteModal = true">
                             <Trash2 :size="16" />
                             {{ t('admin.users.show.deleteUser') }}
                         </Button>
+                        <p v-if="hasPermission('delete_users') && isOwnAccount" id="own-account-delete-hint" class="text-sm text-text-secondary">{{ t('admin.users.show.ownAccountHint') }}</p>
                     </div>
                 </Card>
             </div>
@@ -226,6 +231,8 @@ const roleVariant = (role) =>
                             {{ t('admin.users.show.deleteUser') }}
                         </h3>
                         <button
+                            type="button"
+                            :aria-label="t('common.close')"
                             @click="showDeleteModal = false"
                             class="text-text-tertiary transition-colors hover:text-text-primary"
                         >
@@ -247,6 +254,7 @@ const roleVariant = (role) =>
                         </div>
                     </div>
 
+                    <ActionError :errors="deleteForm.errors" />
                     <div class="flex justify-end gap-3">
                         <Button variant="secondary" @click="showDeleteModal = false" :disabled="deleting">
                             {{ t('common.cancel') }}

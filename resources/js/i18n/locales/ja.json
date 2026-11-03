@@ -320,7 +320,8 @@
     "expandTable": "テーブルを全画面表示",
     "selectAll": "すべて選択",
     "moveUp": "上に移動",
-    "moveDown": "下に移動"
+    "moveDown": "下に移動",
+    "close": "閉じる"
   },
   "nav": {
     "dashboard": "ダッシュボード",
@@ -1573,7 +1574,9 @@
       "normal": "通常",
       "high": "高",
       "urgent": "緊急"
-    }
+    },
+    "loadFailed": "通知を読み込めませんでした。もう一度お試しください。",
+    "actionFailed": "通知を更新できませんでした。もう一度お試しください。"
   },
   "plugins": {
     "title": "プラグイン",
@@ -1901,7 +1904,8 @@
         "deleteUser": "ユーザーを削除",
         "confirmDelete": "{name}を削除してもよろしいですか？",
         "cannotUndo": "この操作は元に戻せません。",
-        "titleWithName": "ユーザー: {name}"
+        "titleWithName": "ユーザー: {name}",
+        "ownAccountHint": "自分のアカウントは削除できません。"
       },
       "subtitle": "組織のユーザーを管理し、ロールと権限を割り当てます。",
       "noUsersTitle": "ユーザーが見つかりません。",
@@ -2780,7 +2784,8 @@
       "emptyHint": "「ロットを追加」をクリックして最初のロットを記録してください。"
     },
     "languageSwitcher": {
-      "ariaLabel": "言語: {name}"
+      "ariaLabel": "言語: {name}",
+      "loadError": "この言語を読み込めませんでした。もう一度お試しください。"
     },
     "organizationSwitcher": {
       "ariaLabel": "組織: {name}",

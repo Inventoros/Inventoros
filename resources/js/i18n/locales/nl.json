@@ -320,7 +320,8 @@
     "expandTable": "Volledige tabelweergave",
     "selectAll": "Alles selecteren",
     "moveUp": "Omhoog verplaatsen",
-    "moveDown": "Omlaag verplaatsen"
+    "moveDown": "Omlaag verplaatsen",
+    "close": "Sluiten"
   },
   "nav": {
     "dashboard": "Dashboard",
@@ -1573,7 +1574,9 @@
       "normal": "Normaal",
       "high": "Hoog",
       "urgent": "Dringend"
-    }
+    },
+    "loadFailed": "Meldingen konden niet worden geladen. Probeer het opnieuw.",
+    "actionFailed": "Meldingen konden niet worden bijgewerkt. Probeer het opnieuw."
   },
   "plugins": {
     "title": "Plugins",
@@ -1901,7 +1904,8 @@
         "deleteUser": "Gebruiker verwijderen",
         "confirmDelete": "Weet u zeker dat u {name} wilt verwijderen?",
         "cannotUndo": "Deze actie kan niet ongedaan worden gemaakt.",
-        "titleWithName": "Gebruiker: {name}"
+        "titleWithName": "Gebruiker: {name}",
+        "ownAccountHint": "U kunt uw eigen account niet verwijderen."
       },
       "subtitle": "Beheer gebruikers in uw organisatie en wijs rollen en machtigingen toe.",
       "noUsersTitle": "Geen gebruikers gevonden.",
@@ -2780,7 +2784,8 @@
       "emptyHint": "Klik op \"Batch toevoegen\" om de eerste batch te registreren."
     },
     "languageSwitcher": {
-      "ariaLabel": "Taal: {name}"
+      "ariaLabel": "Taal: {name}",
+      "loadError": "Deze taal kon niet worden geladen. Probeer het opnieuw."
     },
     "organizationSwitcher": {
       "ariaLabel": "Organisatie: {name}",

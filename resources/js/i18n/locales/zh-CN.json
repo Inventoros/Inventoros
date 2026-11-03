@@ -320,7 +320,8 @@
     "expandTable": "全屏表格",
     "selectAll": "全选",
     "moveUp": "上移",
-    "moveDown": "下移"
+    "moveDown": "下移",
+    "close": "关闭"
   },
   "nav": {
     "dashboard": "仪表盘",
@@ -1573,7 +1574,9 @@
       "normal": "普通",
       "high": "高",
       "urgent": "紧急"
-    }
+    },
+    "loadFailed": "无法加载通知。请重试。",
+    "actionFailed": "无法更新通知。请重试。"
   },
   "plugins": {
     "title": "插件",
@@ -1901,7 +1904,8 @@
         "deleteUser": "删除用户",
         "confirmDelete": "确定要删除 {name} 吗？",
         "cannotUndo": "此操作无法撤销。",
-        "titleWithName": "用户：{name}"
+        "titleWithName": "用户：{name}",
+        "ownAccountHint": "您无法删除自己的账户。"
       },
       "subtitle": "管理组织中的用户，分配角色和权限。",
       "noUsersTitle": "未找到用户。",
@@ -2780,7 +2784,8 @@
       "emptyHint": "点击“添加批次”记录第一个批次。"
     },
     "languageSwitcher": {
-      "ariaLabel": "语言：{name}"
+      "ariaLabel": "语言：{name}",
+      "loadError": "无法加载此语言。请重试。"
     },
     "organizationSwitcher": {
       "ariaLabel": "组织：{name}",

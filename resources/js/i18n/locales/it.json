@@ -320,7 +320,8 @@
     "expandTable": "Vista tabella completa",
     "selectAll": "Seleziona tutto",
     "moveUp": "Sposta in alto",
-    "moveDown": "Sposta in basso"
+    "moveDown": "Sposta in basso",
+    "close": "Chiudi"
   },
   "nav": {
     "dashboard": "Dashboard",
@@ -1573,7 +1574,9 @@
       "normal": "Normale",
       "high": "Alta",
       "urgent": "Urgente"
-    }
+    },
+    "loadFailed": "Impossibile caricare le notifiche. Riprova.",
+    "actionFailed": "Impossibile aggiornare le notifiche. Riprova."
   },
   "plugins": {
     "title": "Plugin",
@@ -1901,7 +1904,8 @@
         "deleteUser": "Elimina utente",
         "confirmDelete": "Sei sicuro di voler eliminare {name}?",
         "cannotUndo": "Questa azione non può essere annullata.",
-        "titleWithName": "Utente: {name}"
+        "titleWithName": "Utente: {name}",
+        "ownAccountHint": "Non è possibile eliminare il proprio account."
       },
       "subtitle": "Gestisci gli utenti della tua organizzazione e assegna ruoli e permessi.",
       "noUsersTitle": "Nessun utente trovato.",
@@ -2780,7 +2784,8 @@
       "emptyHint": "Clicca su \"Aggiungi lotto\" per registrare il primo lotto."
     },
     "languageSwitcher": {
-      "ariaLabel": "Lingua: {name}"
+      "ariaLabel": "Lingua: {name}",
+      "loadError": "Impossibile caricare questa lingua. Riprova."
     },
     "organizationSwitcher": {
       "ariaLabel": "Organizzazione: {name}",

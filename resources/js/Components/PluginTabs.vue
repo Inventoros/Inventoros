@@ -2,6 +2,7 @@
 import { computed, ref, watch } from 'vue';
 import { usePage } from '@inertiajs/vue3';
 import { useI18n } from 'vue-i18n';
+import { pluginLabel } from '@/plugins/pluginI18n';
 import { pageIdFromComponent, resolvePluginComponent, runtimeSlotComponents } from '@/plugins/runtime';
 
 /**
@@ -27,7 +28,7 @@ const props = defineProps({
     },
 });
 
-const { t } = useI18n();
+const { t, te } = useI18n();
 const inertiaPage = usePage();
 const pageId = computed(() => props.page ?? pageIdFromComponent(inertiaPage.component));
 
@@ -37,7 +38,7 @@ const tabs = computed(() => {
     const placed = (props.components ?? [])
         .map((entry, index) => ({
             key: `server-${entry.plugin}-${entry.component}-${index}`,
-            label: entry.label || entry.component,
+            label: pluginLabel(t, te, entry.label_key, entry.label || entry.component),
             is: resolvePluginComponent(entry.plugin, entry.component),
             props: entry.data || {},
             position: entry.position ?? 100,
@@ -46,7 +47,7 @@ const tabs = computed(() => {
 
     const registered = runtimeSlotComponents(pageId.value, 'tabs').map((entry) => ({
         key: `runtime-${entry.id}`,
-        label: entry.label || entry.component?.name || 'Plugin',
+        label: pluginLabel(t, te, entry.label_key, entry.label || entry.component?.name || 'Plugin'),
         is: entry.component,
         props: entry.props,
         position: entry.position,

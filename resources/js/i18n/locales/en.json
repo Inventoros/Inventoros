@@ -191,7 +191,8 @@
     "expandTable": "Full table view",
     "selectAll": "Select All",
     "moveUp": "Move up",
-    "moveDown": "Move down"
+    "moveDown": "Move down",
+    "close": "Close"
   },
   "nav": {
     "dashboard": "Dashboard",
@@ -1444,7 +1445,9 @@
       "normal": "Normal",
       "high": "High",
       "urgent": "Urgent"
-    }
+    },
+    "loadFailed": "Could not load notifications. Please try again.",
+    "actionFailed": "Could not update notifications. Please try again."
   },
   "plugins": {
     "title": "Plugins",
@@ -1772,7 +1775,8 @@
         "deleteUser": "Delete User",
         "confirmDelete": "Are you sure you want to delete {name}?",
         "cannotUndo": "This action cannot be undone.",
-        "titleWithName": "User: {name}"
+        "titleWithName": "User: {name}",
+        "ownAccountHint": "You cannot delete your own account."
       },
       "subtitle": "Manage users in your organization, assign roles and permissions.",
       "noUsersTitle": "No users found.",
@@ -2651,7 +2655,8 @@
       "emptyHint": "Click \"Add Batch\" to record the first batch."
     },
     "languageSwitcher": {
-      "ariaLabel": "Language: {name}"
+      "ariaLabel": "Language: {name}",
+      "loadError": "Could not load this language. Please try again."
     },
     "organizationSwitcher": {
       "ariaLabel": "Organization: {name}",

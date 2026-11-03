@@ -320,7 +320,8 @@
     "expandTable": "표 전체 보기",
     "selectAll": "모두 선택",
     "moveUp": "위로 이동",
-    "moveDown": "아래로 이동"
+    "moveDown": "아래로 이동",
+    "close": "닫기"
   },
   "nav": {
     "dashboard": "대시보드",
@@ -1573,7 +1574,9 @@
       "normal": "보통",
       "high": "높음",
       "urgent": "긴급"
-    }
+    },
+    "loadFailed": "알림을 불러오지 못했습니다. 다시 시도해 주세요.",
+    "actionFailed": "알림을 업데이트하지 못했습니다. 다시 시도해 주세요."
   },
   "plugins": {
     "title": "플러그인",
@@ -1901,7 +1904,8 @@
         "deleteUser": "사용자 삭제",
         "confirmDelete": "{name}을(를) 정말 삭제하시겠습니까?",
         "cannotUndo": "이 작업은 되돌릴 수 없습니다.",
-        "titleWithName": "사용자: {name}"
+        "titleWithName": "사용자: {name}",
+        "ownAccountHint": "자신의 계정은 삭제할 수 없습니다."
       },
       "subtitle": "조직의 사용자를 관리하고 역할과 권한을 할당합니다.",
       "noUsersTitle": "사용자를 찾을 수 없습니다.",
@@ -2780,7 +2784,8 @@
       "emptyHint": "\"배치 추가\"를 클릭하여 첫 배치를 기록하세요."
     },
     "languageSwitcher": {
-      "ariaLabel": "언어: {name}"
+      "ariaLabel": "언어: {name}",
+      "loadError": "이 언어를 불러오지 못했습니다. 다시 시도해 주세요."
     },
     "organizationSwitcher": {
       "ariaLabel": "조직: {name}",
