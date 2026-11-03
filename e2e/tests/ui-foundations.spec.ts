@@ -122,6 +122,22 @@ test('numeric product headings and cells align to the end of their columns', asy
     await expect(page.locator('tbody tr').first().locator('td').nth(6)).toHaveCSS('text-align', 'end');
 });
 
+test('multiword payment badges enclose their text in compact order columns', async ({ page }) => {
+    await page.setViewportSize({ width: 1024, height: 900 });
+    await page.goto('/orders');
+    const badge = page.locator('tbody span.inline-flex').filter({ hasText: /^Partially paid$/ }).first();
+    await expect(badge).toBeVisible();
+    const layout = await badge.evaluate(element => {
+        const range = document.createRange();
+        range.selectNodeContents(element);
+        const text = range.getBoundingClientRect();
+        const bounds = element.getBoundingClientRect();
+        return { top: text.top - bounds.top, bottom: text.bottom - bounds.bottom };
+    });
+    expect(layout.top, 'wrapped badge text starts inside its background').toBeGreaterThanOrEqual(0);
+    expect(layout.bottom, 'wrapped badge text ends inside its background').toBeLessThanOrEqual(0);
+});
+
 test('long unbroken record titles wrap completely within mobile page headers', async ({ page }) => {
     const { report } = JSON.parse(readFileSync('e2e/.auth/layout-fixtures.json', 'utf8'));
     const reportPath = `/reports/builder/${report}`;
