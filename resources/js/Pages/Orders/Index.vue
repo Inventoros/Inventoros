@@ -113,7 +113,7 @@ const selectClass =
 
         <PluginSlot slot="header" :components="pluginComponents?.header" />
 
-        <PageHeader :title="t('orders.title')" :description="t('orders.index.description')">
+        <PageHeader :title="t('orders.title')" :description="t('orders.index.description')" :icon="ShoppingCart" :count="orders.total">
             <template #actions>
                 <Button
                     v-if="canRecordPayments && untrackedOrderCount > 0"

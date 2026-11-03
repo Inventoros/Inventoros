@@ -1,0 +1,54 @@
+/* Shared presentation for a quiet, record-focused workspace. */
+.workspace-shell { --workspace-sidebar-width: 232px; }
+.workspace-sidebar { width: var(--workspace-sidebar-width); }
+.workspace-brand { height: 48px; letter-spacing: -0.035em; }
+.workspace-context { border-bottom: 1px solid hsl(var(--border-subtle)); padding-block-end: 8px; }
+.workspace-search kbd { border: 0; background: hsl(var(--surface-raised)); }
+.workspace-section-label { letter-spacing: 0; padding-block: 2px; }
+.workspace-nav > div { margin-bottom: 15px; }
+.workspace-nav-item { border: 1px solid transparent; font-weight: 450; }
+.workspace-nav-item.is-active {
+    background: hsl(var(--surface-raised));
+    border-color: hsl(var(--border-subtle));
+    box-shadow: 0 1px 2px hsl(var(--text-primary) / 0.03);
+    font-weight: 550;
+}
+.workspace-topbar { height: 48px; }
+.workspace-topbar .app-breadcrumb { font-size: 12px; }
+.workspace-global-controls { gap: 4px; }
+.workspace-main > main:not(.app-table-page) { padding-block: 28px; }
+.workspace-main .page-header h1 { font-size: 22px; font-weight: 600; letter-spacing: -0.035em; }
+.workspace-main .app-table-page .page-header h1 { font-size: 18px; }
+.record-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 24px;
+    height: 21px;
+    padding-inline: 6px;
+    border-radius: 5px;
+    background: hsl(var(--surface-overlay));
+    color: hsl(var(--text-secondary));
+    font-size: 11px;
+    line-height: 1;
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+}
+.record-relation {
+    display: inline-flex;
+    max-width: 100%;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: hsl(var(--surface-overlay) / 0.7);
+    color: hsl(var(--text-secondary));
+    font-size: 11px;
+    line-height: 16px;
+}
+@media (min-width: 768px) {
+    .workspace-main { padding-inline-start: var(--workspace-sidebar-width); }
+    .workspace-main > main:not(.app-table-page) { padding-inline: 32px; }
+}
+@media (max-width: 767px) {
+    .workspace-main > main:not(.app-table-page) { padding-block: 20px; }
+    .workspace-main .page-header h1 { font-size: 20px; }
+}

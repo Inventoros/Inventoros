@@ -122,6 +122,69 @@ test('numeric product headings and cells align to the end of their columns', asy
     await expect(page.locator('tbody tr').first().locator('td').nth(6)).toHaveCSS('text-align', 'end');
 });
 
+test('multiword payment badges enclose their text in compact order columns', async ({ page }) => {
+    await page.setViewportSize({ width: 1024, height: 900 });
+    await page.goto('/orders');
+    const badge = page.locator('tbody span.inline-flex').filter({ hasText: /^Partially paid$/ }).first();
+    await expect(badge).toBeVisible();
+    const layout = await badge.evaluate(element => {
+        const range = document.createRange();
+        range.selectNodeContents(element);
+        const text = range.getBoundingClientRect();
+        const bounds = element.getBoundingClientRect();
+        return { top: text.top - bounds.top, bottom: text.bottom - bounds.bottom };
+    });
+    expect(layout.top, 'wrapped badge text starts inside its background').toBeGreaterThanOrEqual(0);
+    expect(layout.bottom, 'wrapped badge text ends inside its background').toBeLessThanOrEqual(0);
+});
+
+test('long unbroken record titles wrap completely within mobile page headers', async ({ page }) => {
+    const { report } = JSON.parse(readFileSync('e2e/.auth/layout-fixtures.json', 'utf8'));
+    const reportPath = `/reports/builder/${report}`;
+    const title = 'WarehouseInventory'.repeat(12);
+    await page.setViewportSize({ width: 320, height: 812 });
+    await page.goto('/reports/builder');
+    // Change only this browser's response so the shared fixture remains intact.
+    await page.route(`**${reportPath}`, async route => {
+        const response = await route.fetch();
+        const data = await response.json();
+        data.props.report.name = title;
+        await route.fulfill({ response, json: data });
+    });
+    await page.locator(`a[href$="${reportPath}"]`).first().click();
+    const heading = page.getByRole('heading', { level: 1, name: title, exact: true });
+    const resultsHeading = page.getByRole('heading', { level: 3, name: title, exact: true });
+    const breadcrumb = page.locator('.app-breadcrumb').getByText(title, { exact: true });
+    await expect(heading).toBeVisible();
+    await expect(resultsHeading).toBeVisible();
+    await expect(breadcrumb).toBeVisible();
+    for (const width of [320, 375, 430]) {
+        await page.setViewportSize({ width, height: 812 });
+        const layout = await heading.evaluate(element => {
+            const bounds = element.getBoundingClientRect();
+            return {
+                left: bounds.left,
+                right: bounds.right,
+                height: bounds.height,
+                lineHeight: parseFloat(getComputedStyle(element).lineHeight),
+                contentOverflow: element.scrollWidth - element.clientWidth,
+                pageOverflow: document.documentElement.scrollWidth - innerWidth,
+            };
+        });
+        expect(layout.left, `${width}px: heading starts inside the viewport`).toBeGreaterThanOrEqual(0);
+        expect(layout.right, `${width}px: heading ends inside the viewport`).toBeLessThanOrEqual(width);
+        expect(layout.height, `${width}px: title wraps instead of truncating`).toBeGreaterThan(layout.lineHeight);
+        expect(layout.contentOverflow, `${width}px: complete title fits its heading`).toBeLessThanOrEqual(1);
+        expect(layout.pageOverflow, `${width}px: title does not widen the page`).toBeLessThanOrEqual(1);
+        const resultsBounds = (await resultsHeading.boundingBox())!;
+        expect(resultsBounds.x, `${width}px: results title starts inside the viewport`).toBeGreaterThanOrEqual(0);
+        expect(resultsBounds.x + resultsBounds.width, `${width}px: results title ends inside the viewport`).toBeLessThanOrEqual(width);
+        await expect(breadcrumb).toHaveCSS('text-overflow', 'ellipsis');
+        const breadcrumbBounds = (await breadcrumb.boundingBox())!;
+        expect(breadcrumbBounds.x + breadcrumbBounds.width, `${width}px: breadcrumb stays inside the viewport`).toBeLessThanOrEqual(width);
+    }
+});
+
 test('mobile navigation contains keyboard focus and returns it after Escape', async ({ page }) => {
     await page.setViewportSize({ width: 320, height: 812 });
     await page.goto('/products');

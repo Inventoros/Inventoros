@@ -8,7 +8,6 @@ import TableViewport from '@/Components/ui/TableViewport.vue';
 import PluginSlot from '@/Components/PluginSlot.vue';
 import PageHeader from '@/Components/ui/PageHeader.vue';
 import Button from '@/Components/ui/Button.vue';
-import Badge from '@/Components/ui/Badge.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { defineAsyncComponent, ref, onMounted, onUnmounted, watch, computed } from 'vue';
 import {
@@ -232,7 +231,7 @@ const thClass =
 
         <PluginSlot slot="header" :components="pluginComponents?.header" />
 
-        <PageHeader :title="t('products.title')" :description="t('products.subtitle')">
+        <PageHeader :title="t('products.title')" :description="t('products.subtitle')" :icon="Boxes" :count="products.total">
             <template #actions>
                 <Button v-if="canVisit('variant-replenishment.index')" variant="secondary" size="sm" as="Link" :href="route('variant-replenishment.index')">{{ t('variantReplenishment.title') }}</Button>
                 <Button v-if="canResetStock" variant="secondary" size="sm" as="Link" :href="route('products.stock-reset.preview')">{{ t('stockReset.title') }}</Button>
@@ -328,24 +327,24 @@ const thClass =
                         </td>
                         <td class="px-4 py-3">
                             <Link :href="route('products.show', product.id)" class="font-medium text-text-primary hover:text-brand"><bdi>{{ product.display_name ?? product.name }}</bdi></Link>
-                            <p v-if="product.description" class="max-w-xs truncate text-xs text-text-tertiary">{{ product.description }}</p>
+                            <p v-if="product.description" class="record-secondary max-w-xs truncate text-xs text-text-tertiary">{{ product.description }}</p>
                         </td>
                         <td class="px-4 py-3">
                             <p class="font-mono text-xs text-text-secondary">{{ product.sku }}</p>
                             <p v-if="product.barcode" class="font-mono text-xs text-text-tertiary">{{ product.barcode }}</p>
                         </td>
-                        <td class="px-4 py-3"><Badge variant="brand" size="sm">{{ product.category?.name || t('common.na') }}</Badge></td>
-                        <td class="px-4 py-3"><Badge variant="neutral" size="sm">{{ product.location?.name || t('common.na') }}</Badge></td>
+                        <td class="px-4 py-3"><span class="record-relation">{{ product.category?.name || t('common.na') }}</span></td>
+                        <td class="px-4 py-3"><span class="record-relation">{{ product.location?.name || t('common.na') }}</span></td>
                         <td class="px-4 py-3 text-end">
                             <div class="flex items-center justify-end gap-1">
                                 <span :class="['font-medium tabular-nums', isLowStock(product) ? 'text-status-danger' : 'text-text-primary']">{{ onHand(product) }}</span>
                                 <AlertTriangle v-if="isLowStock(product)" :size="14" class="text-status-danger" />
                             </div>
-                            <p class="text-[11px] text-text-tertiary">{{ t('products.min', { count: product.min_stock }) }}</p>
+                            <p class="whitespace-nowrap text-[11px] text-text-tertiary">{{ t('products.min', { count: product.min_stock }) }}</p>
                         </td>
                         <td class="px-4 py-3 text-end font-medium tabular-nums text-text-primary">{{ formatCurrency(product.display_price ?? product.price, product.currency) }}</td>
                         <td class="px-4 py-3">
-                            <div class="flex items-center justify-end gap-1">
+                            <div class="record-row-actions flex items-center justify-end gap-1">
                                 <Link :href="route('products.show', product.id)" class="rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-surface-sunken hover:text-brand" :title="t('common.view')"><Eye :size="16" /></Link>
                                 <button v-if="product.barcode || product.sku" @click="printBarcode(product.id)" class="rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-surface-sunken hover:text-text-primary" :title="t('products.printBarcode')"><Barcode :size="16" /></button>
                                 <button @click="duplicateProduct(product)" class="rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-surface-sunken hover:text-status-warning" :title="t('products.duplicate')"><Copy :size="16" /></button>

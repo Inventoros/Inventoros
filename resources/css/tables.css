@@ -28,8 +28,8 @@
 }
 .app-layout-table .app-topbar {
     flex-shrink: 0;
-    height: 44px;
-    padding-inline: 16px;
+    height: 48px;
+    padding-inline: 20px;
 }
 .table-legal-footer {
     flex-shrink: 0;
@@ -60,7 +60,7 @@
 .app-table-page .page-header {
     align-items: center;
     gap: 8px 16px;
-    padding: 10px 16px;
+    padding: 12px 20px;
 }
 .app-table-page .page-header > div:first-child {
     flex-basis: auto;
@@ -134,7 +134,10 @@
     position: sticky;
     top: 0;
     z-index: 10;
-    background: hsl(var(--surface-raised));
+    background: hsl(var(--surface-canvas));
+    border-inline-end: 1px solid hsl(var(--border-subtle));
+    font-size: 11px;
+    font-weight: 500;
     box-shadow: inset 0 -1px 0 hsl(var(--border-subtle));
 }
 /* Explicit column alignment wins over a shared text-start header class. */
@@ -149,11 +152,18 @@
 }
 .table-viewport > table > thead > tr > th,
 .app-table-page .table-viewport > table > tbody > tr > td:not([colspan]) {
-    padding-block: 8px;
+    padding-block: 7px;
 }
 .app-table-page .table-viewport > table > tbody > tr > td:not([colspan]) {
+    height: 40px;
     padding-inline: 16px;
+    border-inline-end: 1px solid hsl(var(--border-subtle) / 0.55);
+    font-size: 13px;
+    line-height: 18px;
 }
+.table-viewport > table > thead > tr > th:last-child,
+.app-table-page .table-viewport > table > tbody > tr > td:last-child { border-inline-end: 0; }
+.app-table-page .table-viewport .record-secondary { font-size: 11px; line-height: 15px; }
 .table-view-button {
     display: inline-flex;
     align-items: center;
@@ -232,7 +242,7 @@
     flex-wrap: wrap;
     gap: 8px 16px;
     margin: 0;
-    padding: 6px 16px;
+    padding: 7px 20px;
     border-top: 1px solid hsl(var(--border-subtle));
     background: hsl(var(--surface-raised));
 }
@@ -246,9 +256,9 @@
     z-index: 20;
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 8px;
     min-width: 0;
-    padding: 6px 16px;
+    padding: 8px 20px;
     border-bottom: 1px solid hsl(var(--border-subtle));
     background: hsl(var(--surface-raised));
 }
@@ -259,7 +269,7 @@
     min-height: 32px;
     padding: 4px 8px;
     border: 1px solid hsl(var(--border-subtle));
-    border-radius: 4px;
+    border-radius: 6px;
     list-style: none;
     cursor: pointer;
     color: hsl(var(--text-secondary));
@@ -307,7 +317,7 @@
     height: 32px;
     padding-inline-start: 10px;
     border: 1px solid hsl(var(--border-subtle));
-    border-radius: 4px;
+    border-radius: 6px;
     color: hsl(var(--text-tertiary));
 }
 .table-quick-search:focus-within {

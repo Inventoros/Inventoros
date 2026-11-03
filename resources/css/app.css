@@ -2,6 +2,7 @@
 @import './design-tokens.css';
 @import './dashboard.css';
 @import './tables.css';
+@import './workspace.css';
 
 /* The files Tailwind scans for class names (the same set as Tailwind 3). */
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';

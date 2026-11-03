@@ -30,8 +30,8 @@ const badge = cva(
                 info: 'bg-status-info-soft text-status-info border-status-info/20',
             },
             size: {
-                sm: 'h-5 px-1.5 text-[10px]',
-                md: 'h-6 px-2 text-xs',
+                sm: 'min-h-5 px-1.5 py-px text-[10px]',
+                md: 'min-h-6 px-2 py-0.5 text-xs',
             },
         },
     }
@@ -49,7 +49,7 @@ const dotColor = computed(() => ({
 
 <template>
     <span :class="cn(badge({ variant, size }))">
-        <span v-if="dot" :class="['h-1.5 w-1.5 rounded-full', dotColor]" />
+        <span v-if="dot" :class="['h-1.5 w-1.5 shrink-0 rounded-full', dotColor]" />
         <slot />
     </span>
 </template>

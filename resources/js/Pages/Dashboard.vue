@@ -1,7 +1,8 @@
 <script setup>
 import TableViewport from '@/Components/ui/TableViewport.vue';
-/** Approved design: overview, replenishment, orders/category breakdown,
- * finance and shortcuts. Existing plugin slots and widget keys stay intact.
+/** Workspace overview: a divided metric strip and operational record panels.
+ * Secondary financial facts and shortcuts share a compact surface on wide
+ * screens. Existing plugin slots and widget keys stay intact.
  * Values and freshness come from the server; no synthetic trends. */
 import AppLayout from '@/Layouts/AppLayout.vue';
 import PluginSlot from '@/Components/PluginSlot.vue';
@@ -250,7 +251,10 @@ const ordersStatusIcon = (status) => (status === 'delivered' ? Check : status ==
             <section
                 v-if="headlineMetrics.length"
                 class="dashboard-metrics"
-                :class="{ 'dashboard-metrics-single': headlineMetrics.length === 1 }"
+                :class="{
+                    'dashboard-metrics-single': headlineMetrics.length === 1,
+                    'dashboard-metrics-odd': headlineMetrics.length > 1 && headlineMetrics.length % 2 !== 0,
+                }"
                 :style="{ '--metric-count': headlineMetrics.length }"
                 :aria-label="t('dashboard.widgets.statsOverview')"
             >
@@ -345,156 +349,165 @@ const ordersStatusIcon = (status) => (status === 'delivered' ? Check : status ==
             </section>
 
             <div
-                v-if="widgets.recent_orders || widgets.stock_by_category"
-                class="dashboard-main-grid"
-                :class="{ 'dashboard-one-column': !widgets.recent_orders || !widgets.stock_by_category }"
+                v-if="widgets.recent_orders || widgets.stock_by_category || financialStats.length || quickActions.length"
+                class="dashboard-content-grid"
+                :class="{
+                    'dashboard-content-single':
+                        (!widgets.recent_orders && !widgets.stock_by_category) || (!financialStats.length && !quickActions.length),
+                }"
             >
-                <section v-if="widgets.recent_orders" class="dashboard-panel dashboard-orders" aria-labelledby="orders-title">
-                    <div class="dashboard-panel-heading">
-                        <div class="dashboard-panel-title">
-                            <h2 id="orders-title">{{ t('dashboard.recentOrders') }}</h2>
-                            <span class="dashboard-count">{{ formatNumber(recentOrders.length) }}</span>
+                <div
+                    v-if="widgets.recent_orders || widgets.stock_by_category"
+                    class="dashboard-main-grid"
+                    :class="{ 'dashboard-one-column': !widgets.recent_orders || !widgets.stock_by_category }"
+                >
+                    <section v-if="widgets.recent_orders" class="dashboard-panel dashboard-orders" aria-labelledby="orders-title">
+                        <div class="dashboard-panel-heading">
+                            <div class="dashboard-panel-title">
+                                <h2 id="orders-title">{{ t('dashboard.recentOrders') }}</h2>
+                                <span class="dashboard-count">{{ formatNumber(recentOrders.length) }}</span>
+                            </div>
+                            <Link :href="route('orders.index')" class="dashboard-text-link ds-focus-ring"
+                                >{{ t('dashboard.allOrders') }}<ArrowUpRight :size="14" aria-hidden="true"
+                            /></Link>
                         </div>
-                        <Link :href="route('orders.index')" class="dashboard-text-link ds-focus-ring"
-                            >{{ t('dashboard.allOrders') }}<ArrowUpRight :size="14" aria-hidden="true"
-                        /></Link>
-                    </div>
-                    <div v-if="!recentOrders.length" class="dashboard-empty">
-                        <ShoppingCart :size="22" aria-hidden="true" />
-                        <p>{{ t('dashboard.noOrdersYet') }}</p>
-                        <Link v-if="canVisit('orders.create')" :href="route('orders.create')" class="dashboard-text-link"
-                            >{{ t('dashboard.createFirstOrder') }}<ArrowRight :size="14"
-                        /></Link>
-                    </div>
-                    <TableViewport v-else class="dashboard-order-table">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>{{ t('nav.orders') }} / {{ t('nav.customers') }}</th>
-                                    <th>{{ t('common.status') }}</th>
-                                    <th class="dashboard-date-column">{{ t('common.date') }}</th>
-                                    <th class="dashboard-amount">{{ t('common.total') }}</th>
-                                    <th class="dashboard-order-arrow">
-                                        <span class="sr-only">{{ t('common.actions') }}</span>
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr v-for="order in recentOrders" :key="order.id">
-                                    <td>
-                                        <Link :href="route('orders.show', order.id)" class="dashboard-order-number ds-focus-ring">{{
-                                            order.order_number
-                                        }}</Link
-                                        ><span class="dashboard-customer">{{ order.customer_name }}</span>
-                                    </td>
-                                    <td>
-                                        <span
-                                            class="dashboard-order-status"
-                                            :class="{ 'dashboard-order-pending': order.status === 'pending' }"
-                                            ><component :is="ordersStatusIcon(order.status)" :size="11" aria-hidden="true" />{{
-                                                orderStatusLabel(order.status, { t, te })
-                                            }}</span
-                                        >
-                                    </td>
-                                    <td class="dashboard-date-column">{{ displayCalendarDate(order.order_date) }}</td>
-                                    <td class="dashboard-amount">{{ formatCurrency(order.total, order.currency) }}</td>
-                                    <td class="dashboard-order-arrow">
-                                        <Link
-                                            :href="route('orders.show', order.id)"
-                                            :aria-label="order.order_number"
-                                            class="dashboard-icon-button ds-focus-ring"
-                                            ><ChevronRight :size="14" aria-hidden="true"
-                                        /></Link>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </TableViewport>
-                    <div class="dashboard-panel-footer">
-                        <span>{{ formatNumber(recentOrders.length) }} / {{ formatNumber(stats.totalOrders) }} {{ t('nav.orders') }}</span>
-                    </div>
-                </section>
-                <section v-if="widgets.stock_by_category" class="dashboard-panel dashboard-categories" aria-labelledby="categories-title">
-                    <div class="dashboard-panel-heading">
-                        <h2 id="categories-title">{{ t('dashboard.stockValueByCategory') }}</h2>
-                    </div>
-                    <div v-if="!categories.length" class="dashboard-empty">
-                        <Package :size="22" aria-hidden="true" />
-                        <p>{{ t('dashboard.noProductsYet') }}</p>
-                    </div>
-                    <template v-else
-                        ><div class="dashboard-category-caption">
-                            <span>{{ t('dashboard.atSellingPrice') }}</span
-                            ><span>{{ currency }} / {{ t('dashboard.design.share') }}</span>
+                        <div v-if="!recentOrders.length" class="dashboard-empty">
+                            <ShoppingCart :size="22" aria-hidden="true" />
+                            <p>{{ t('dashboard.noOrdersYet') }}</p>
+                            <Link v-if="canVisit('orders.create')" :href="route('orders.create')" class="dashboard-text-link"
+                                >{{ t('dashboard.createFirstOrder') }}<ArrowRight :size="14"
+                            /></Link>
                         </div>
-                        <ul class="dashboard-category-list">
-                            <li
-                                v-for="category in categories"
-                                :key="category.id ?? 'uncategorized'"
-                                class="dashboard-category-row"
-                                tabindex="0"
-                                :title="`${categoryName(category)}: ${formatCurrency(category.value)} · ${formatShare(category.share)}`"
-                            >
-                                <div class="dashboard-category-facts">
-                                    <span class="dashboard-category-name">{{ categoryName(category) }}</span
-                                    ><strong>{{ formatCurrency(category.value) }}</strong
-                                    ><span class="dashboard-category-share">{{ formatShare(category.share) }}</span>
-                                </div>
-                                <p v-if="plusOthers(category.values)" class="dashboard-other-currencies">
-                                    {{ plusOthers(category.values) }}
-                                </p>
-                                <div v-if="category.share !== null" class="dashboard-share-track" aria-hidden="true">
-                                    <span :style="{ width: `${category.share}%` }"></span>
-                                </div>
-                            </li>
-                        </ul>
+                        <TableViewport v-else class="dashboard-order-table">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>{{ t('nav.orders') }} / {{ t('nav.customers') }}</th>
+                                        <th>{{ t('common.status') }}</th>
+                                        <th class="dashboard-date-column">{{ t('common.date') }}</th>
+                                        <th class="dashboard-amount">{{ t('common.total') }}</th>
+                                        <th class="dashboard-order-arrow">
+                                            <span class="sr-only">{{ t('common.actions') }}</span>
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr v-for="order in recentOrders" :key="order.id">
+                                        <td>
+                                            <Link :href="route('orders.show', order.id)" class="dashboard-order-number ds-focus-ring">{{
+                                                order.order_number
+                                            }}</Link
+                                            ><span class="dashboard-customer">{{ order.customer_name }}</span>
+                                        </td>
+                                        <td>
+                                            <span
+                                                class="dashboard-order-status"
+                                                :class="{ 'dashboard-order-pending': order.status === 'pending' }"
+                                                ><component :is="ordersStatusIcon(order.status)" :size="11" aria-hidden="true" />{{
+                                                    orderStatusLabel(order.status, { t, te })
+                                                }}</span
+                                            >
+                                        </td>
+                                        <td class="dashboard-date-column">{{ displayCalendarDate(order.order_date) }}</td>
+                                        <td class="dashboard-amount">{{ formatCurrency(order.total, order.currency) }}</td>
+                                        <td class="dashboard-order-arrow">
+                                            <Link
+                                                :href="route('orders.show', order.id)"
+                                                :aria-label="order.order_number"
+                                                class="dashboard-icon-button ds-focus-ring"
+                                                ><ChevronRight :size="14" aria-hidden="true"
+                                            /></Link>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </TableViewport>
                         <div class="dashboard-panel-footer">
-                            <span>{{ formatNumber(categoryProductCount) }} {{ t('common.products') }} · {{ currency }}</span
-                            ><strong :title="formatCurrency(stats.totalValue)" data-testid="dashboard-category-total">{{
-                                formatCurrency(stats.totalValue)
-                            }}</strong>
-                        </div></template
-                    >
-                </section>
-            </div>
-            <div
-                v-if="financialStats.length || quickActions.length"
-                class="dashboard-bottom-grid"
-                :class="{ 'dashboard-one-column': !financialStats.length || !quickActions.length }"
-            >
-                <section v-if="financialStats.length" class="dashboard-panel" aria-labelledby="financial-title">
-                    <div class="dashboard-panel-heading">
-                        <h2 id="financial-title">{{ t('dashboard.design.financialWatch') }}</h2>
-                        <Link v-if="canVisit('reports.index')" :href="route('reports.index')" class="dashboard-text-link"
-                            >{{ t('nav.reports') }}<ArrowUpRight :size="14" aria-hidden="true"
-                        /></Link>
-                    </div>
-                    <div class="dashboard-financial-items">
-                        <component
-                            :is="stat.href ? Link : 'div'"
-                            v-for="stat in financialStats"
-                            :key="stat.key"
-                            :href="stat.href || undefined"
-                            class="dashboard-financial-item ds-focus-ring"
-                            :title="formatCurrency(stats[stat.key])"
-                            ><span>{{ stat.label }}<ArrowUpRight v-if="stat.href" :size="12" aria-hidden="true" /></span
-                            ><strong>{{ formatCompactCurrency(stats[stat.key]) }}</strong
-                            ><small>{{ stat.context }} · {{ currency }}</small
-                            ><small v-if="otherCurrencies(stat.key)">{{ otherCurrencies(stat.key) }}</small></component
+                            <span>{{ formatNumber(recentOrders.length) }} / {{ formatNumber(stats.totalOrders) }} {{ t('nav.orders') }}</span>
+                        </div>
+                    </section>
+                    <section v-if="widgets.stock_by_category" class="dashboard-panel dashboard-categories" aria-labelledby="categories-title">
+                        <div class="dashboard-panel-heading">
+                            <h2 id="categories-title">{{ t('dashboard.stockValueByCategory') }}</h2>
+                        </div>
+                        <div v-if="!categories.length" class="dashboard-empty">
+                            <Package :size="22" aria-hidden="true" />
+                            <p>{{ t('dashboard.noProductsYet') }}</p>
+                        </div>
+                        <template v-else
+                            ><div class="dashboard-category-caption">
+                                <span>{{ t('dashboard.atSellingPrice') }}</span
+                                ><span>{{ currency }} / {{ t('dashboard.design.share') }}</span>
+                            </div>
+                            <ul class="dashboard-category-list">
+                                <li
+                                    v-for="category in categories"
+                                    :key="category.id ?? 'uncategorized'"
+                                    class="dashboard-category-row"
+                                    tabindex="0"
+                                    :title="`${categoryName(category)}: ${formatCurrency(category.value)} · ${formatShare(category.share)}`"
+                                >
+                                    <div class="dashboard-category-facts">
+                                        <span class="dashboard-category-name">{{ categoryName(category) }}</span
+                                        ><strong>{{ formatCurrency(category.value) }}</strong
+                                        ><span class="dashboard-category-share">{{ formatShare(category.share) }}</span>
+                                    </div>
+                                    <p v-if="plusOthers(category.values)" class="dashboard-other-currencies">
+                                        {{ plusOthers(category.values) }}
+                                    </p>
+                                    <div v-if="category.share !== null" class="dashboard-share-track" aria-hidden="true">
+                                        <span :style="{ width: `${category.share}%` }"></span>
+                                    </div>
+                                </li>
+                            </ul>
+                            <div class="dashboard-panel-footer">
+                                <span>{{ formatNumber(categoryProductCount) }} {{ t('common.products') }} · {{ currency }}</span
+                                ><strong :title="formatCurrency(stats.totalValue)" data-testid="dashboard-category-total">{{
+                                    formatCurrency(stats.totalValue)
+                                }}</strong>
+                            </div></template
                         >
-                    </div>
-                </section>
-                <section v-if="quickActions.length" class="dashboard-panel" aria-labelledby="actions-title">
-                    <div class="dashboard-panel-heading">
-                        <h2 id="actions-title">{{ t('dashboard.quickActions') }}</h2>
-                    </div>
-                    <div class="dashboard-shortcuts">
-                        <Link v-for="action in quickActions" :key="action.route" :href="route(action.route)" class="ds-focus-ring"
-                            ><component :is="action.icon" :size="15" aria-hidden="true" /><span>{{ action.label }}</span
-                            ><ArrowUpRight :size="13" aria-hidden="true"
-                        /></Link>
-                    </div>
-                </section>
+                    </section>
+                </div>
+                <div
+                    v-if="financialStats.length || quickActions.length"
+                    class="dashboard-bottom-grid"
+                    :class="{ 'dashboard-one-column': !financialStats.length || !quickActions.length }"
+                >
+                    <section v-if="financialStats.length" class="dashboard-panel" aria-labelledby="financial-title">
+                        <div class="dashboard-panel-heading">
+                            <h2 id="financial-title">{{ t('dashboard.design.financialWatch') }}</h2>
+                            <Link v-if="canVisit('reports.index')" :href="route('reports.index')" class="dashboard-text-link"
+                                >{{ t('nav.reports') }}<ArrowUpRight :size="14" aria-hidden="true"
+                            /></Link>
+                        </div>
+                        <div class="dashboard-financial-items">
+                            <component
+                                :is="stat.href ? Link : 'div'"
+                                v-for="stat in financialStats"
+                                :key="stat.key"
+                                :href="stat.href || undefined"
+                                class="dashboard-financial-item ds-focus-ring"
+                                :title="formatCurrency(stats[stat.key])"
+                                ><span>{{ stat.label }}<ArrowUpRight v-if="stat.href" :size="12" aria-hidden="true" /></span
+                                ><strong>{{ formatCompactCurrency(stats[stat.key]) }}</strong
+                                ><small>{{ stat.context }} · {{ currency }}</small
+                                ><small v-if="otherCurrencies(stat.key)">{{ otherCurrencies(stat.key) }}</small></component
+                            >
+                        </div>
+                    </section>
+                    <section v-if="quickActions.length" class="dashboard-panel" aria-labelledby="actions-title">
+                        <div class="dashboard-panel-heading">
+                            <h2 id="actions-title">{{ t('dashboard.quickActions') }}</h2>
+                        </div>
+                        <div class="dashboard-shortcuts">
+                            <Link v-for="action in quickActions" :key="action.route" :href="route(action.route)" class="ds-focus-ring"
+                                ><component :is="action.icon" :size="15" aria-hidden="true" /><span>{{ action.label }}</span
+                                ><ArrowUpRight :size="13" aria-hidden="true"
+                            /></Link>
+                        </div>
+                    </section>
+                </div>
             </div>
             <details v-if="widgets.recent_products" class="dashboard-panel dashboard-detail-widget">
                 <summary>

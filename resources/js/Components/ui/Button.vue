@@ -36,10 +36,10 @@ const button = cva(
             variant: {
                 default:
                     'bg-brand text-brand-foreground hover:bg-brand-hover ' +
-                    'shadow-xs',
+                    'shadow-none',
                 secondary:
-                    'bg-surface-overlay text-text-primary hover:bg-surface-sunken ' +
-                    'border border-border-subtle',
+                    'bg-surface-raised text-text-primary hover:bg-surface-overlay ' +
+                    'border border-border-strong/70',
                 ghost:
                     'text-text-secondary hover:bg-surface-overlay hover:text-text-primary',
                 outline:
