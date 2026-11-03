@@ -36,6 +36,7 @@ return [
         'PHP' => ['symbol' => '₱', 'name' => 'Philippine Peso'],
         'AED' => ['symbol' => 'د.إ', 'name' => 'UAE Dirham'],
         'SAR' => ['symbol' => '﷼', 'name' => 'Saudi Riyal'],
+        'RUB' => ['symbol' => '₽', 'name' => 'Российский рубль'],
     ],
 
     /*
