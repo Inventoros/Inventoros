@@ -8,9 +8,11 @@ use App\Models\Auth\Organization;
 use App\Models\Plugin;
 use App\Models\System\SystemSetting;
 use App\Models\User;
-use App\Services\PluginService;
 use App\Services\Plugins\PluginAssetPublisher;
+use App\Services\Plugins\PluginMainFile;
 use App\Services\Plugins\PluginRequirements;
+use App\Services\PluginService;
+use App\Services\PluginUIService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\File;
 use Tests\Feature\Concerns\InteractsWithFixturePlugins;
@@ -234,6 +236,17 @@ final class PluginRuntimeAssetsTest extends TestCase
         $this->assertDoesNotMatchRegularExpression('/from\s*["\']vue["\']/', $bundle);
         $this->assertStringContainsString('window.Inventoros.Vue', $bundle);
         $this->assertStringContainsString('HelloWorldBanner', $bundle);
+    }
+
+    public function test_the_shipped_hello_world_banner_uses_its_manifest_version(): void
+    {
+        $manifest = json_decode(File::get(base_path('plugins/hello-world/plugin.json')), true);
+        PluginMainFile::load($this->app, 'hello-world', base_path('plugins/hello-world/Plugin.php'), $manifest);
+        $banner = collect(app(PluginUIService::class)->getPageComponents('dashboard', 'header'))
+            ->firstWhere('component', 'HelloWorldBanner');
+
+        $this->assertNotNull($banner);
+        $this->assertSame($manifest['version'], $banner['data']['version']);
     }
 
     public function test_csp_lets_the_browser_import_same_origin_plugin_modules(): void

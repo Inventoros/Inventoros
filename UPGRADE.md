@@ -27,6 +27,10 @@ Review the [release notes](docs/releases/2.1.0.md) and
    disabled; automatic variant replenishment is also disabled until configured.
 
 New migrations add inventory, audit evidence and replenishment structures.
+The in-app core updater preserves installed plugin files. Update those plugins
+separately after checking compatibility; the attached Hello World example ZIP
+is version 1.3.2. Existing core updates do not replace an installed plugin bundle.
+
 Keep the pre-upgrade database and file backup together. If rollback is needed,
 restore that pair and the previous application artifact while writers and
 workers remain stopped; do not use blanket migration rollback as a substitute

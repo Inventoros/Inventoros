@@ -28,7 +28,7 @@ add_page_component('dashboard', 'header', [
     'component' => 'HelloWorldBanner',
     'position' => 1,
     'data' => [
-        'version' => '1.3.0',
+        'version' => $manifest['version'] ?? '',
     ],
 ]);
 
