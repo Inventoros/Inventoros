@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\Log;
 final class PluginUIService
 {
     public const DEFAULT_POSITION = 100;
+
     /**
      * @var array<int, array> Registered menu items
      */
@@ -115,8 +116,7 @@ final class PluginUIService
      * `label_key` names a translation under plugins.{slug}. that the browser
      * shows instead of `label` once the plugin's bundle has added it.
      *
-     * @param array $item Menu item configuration (label, label_key, route, url, icon, permission, position, parent, badge, active_routes, submenu)
-     * @return void
+     * @param  array  $item  Menu item configuration (label, label_key, route, url, icon, permission, position, parent, badge, active_routes, submenu)
      */
     public function addMenuItem(array $item): void
     {
@@ -147,8 +147,7 @@ final class PluginUIService
     /**
      * Register multiple menu items at once.
      *
-     * @param array $items Array of menu item configurations
-     * @return void
+     * @param  array  $items  Array of menu item configurations
      */
     public function addMenuItems(array $items): void
     {
@@ -160,9 +159,8 @@ final class PluginUIService
     /**
      * Add a submenu item to an existing menu item.
      *
-     * @param string $parentLabel The label of the parent menu item
-     * @param array $submenuItem Submenu item configuration
-     * @return void
+     * @param  string  $parentLabel  The label of the parent menu item
+     * @param  array  $submenuItem  Submenu item configuration
      */
     public function addSubmenuItem(string $parentLabel, array $submenuItem): void
     {
@@ -171,7 +169,7 @@ final class PluginUIService
         // Find the parent menu item and add the submenu item
         foreach ($this->menuItems as &$menuItem) {
             if ($menuItem['label'] === $parentLabel) {
-                if (!isset($menuItem['submenu'])) {
+                if (! isset($menuItem['submenu'])) {
                     $menuItem['submenu'] = [];
                 }
                 $menuItem['submenu'][] = $submenuItem;
@@ -188,7 +186,8 @@ final class PluginUIService
     public function getMenuItems(): array
     {
         // Sort by position
-        usort($this->menuItems, fn($a, $b) => $a['position'] <=> $b['position']);
+        usort($this->menuItems, fn ($a, $b) => $a['position'] <=> $b['position']);
+
         return $this->menuItems;
     }
 
@@ -198,10 +197,9 @@ final class PluginUIService
      * The route itself is added by routes/web.php (App\Support\PluginPageRoutes)
      * and served by App\Http\Controllers\PluginPageController.
      *
-     * @param string $route Route name
-     * @param string $component Inertia component name
-     * @param array $options uri, permission, props (array or callable($request, $user)), title, middleware
-     * @return void
+     * @param  string  $route  Route name
+     * @param  string  $component  Inertia component name
+     * @param  array  $options  uri, permission, props (array or callable($request, $user)), title, middleware
      */
     public function registerPage(string $route, string $component, array $options = []): void
     {
@@ -239,8 +237,7 @@ final class PluginUIService
      * `title_key` names a translation under plugins.{slug}. shown instead of
      * `title` once the plugin's bundle has added it.
      *
-     * @param array $widget Widget configuration (id, title, title_key, component, data, position, width, permission)
-     * @return void
+     * @param  array  $widget  Widget configuration (id, title, title_key, component, data, position, width, permission)
      */
     public function addDashboardWidget(array $widget): void
     {
@@ -269,17 +266,17 @@ final class PluginUIService
     public function getDashboardWidgets(): array
     {
         // Sort by position
-        usort($this->dashboardWidgets, fn($a, $b) => $a['position'] <=> $b['position']);
+        usort($this->dashboardWidgets, fn ($a, $b) => $a['position'] <=> $b['position']);
+
         return $this->dashboardWidgets;
     }
 
     /**
      * Register a component to be injected into an existing page.
      *
-     * @param string $page Page identifier (e.g., 'product.show', 'dashboard')
-     * @param string $slot Slot name (e.g., 'sidebar', 'header', 'footer', 'tabs')
-     * @param array $component Component configuration (component, data, position, permission)
-     * @return void
+     * @param  string  $page  Page identifier (e.g., 'product.show', 'dashboard')
+     * @param  string  $slot  Slot name (e.g., 'sidebar', 'header', 'footer', 'tabs')
+     * @param  array  $component  Component configuration (component, data, position, permission)
      */
     public function addPageComponent(string $page, string $slot, array $component): void
     {
@@ -288,13 +285,16 @@ final class PluginUIService
             'data' => [],
             'position' => 100,
             'permission' => null,
+            'label_key' => null,
         ];
 
-        if (!isset($this->pageComponents[$page])) {
+        $component['label_key'] = $this->labelKey($component['label_key'] ?? null);
+
+        if (! isset($this->pageComponents[$page])) {
             $this->pageComponents[$page] = [];
         }
 
-        if (!isset($this->pageComponents[$page][$slot])) {
+        if (! isset($this->pageComponents[$page][$slot])) {
             $this->pageComponents[$page][$slot] = [];
         }
 
@@ -304,20 +304,20 @@ final class PluginUIService
     /**
      * Get components registered for a specific page and slot.
      *
-     * @param string $page Page identifier
-     * @param string $slot Slot name
+     * @param  string  $page  Page identifier
+     * @param  string  $slot  Slot name
      * @return array<int, array> Components sorted by position
      */
     public function getPageComponents(string $page, string $slot): array
     {
-        if (!isset($this->pageComponents[$page][$slot])) {
+        if (! isset($this->pageComponents[$page][$slot])) {
             return [];
         }
 
         $components = $this->pageComponents[$page][$slot];
 
         // Sort by position
-        usort($components, fn($a, $b) => $a['position'] <=> $b['position']);
+        usort($components, fn ($a, $b) => $a['position'] <=> $b['position']);
 
         return $components;
     }
@@ -325,7 +325,7 @@ final class PluginUIService
     /**
      * Get all components for a specific page.
      *
-     * @param string $page Page identifier
+     * @param  string  $page  Page identifier
      * @return array<string, array<int, array>> Components keyed by slot name
      */
     public function getAllPageComponents(string $page): array
@@ -479,8 +479,6 @@ final class PluginUIService
      * Clear all registered UI elements.
      *
      * Useful for testing or resetting the UI state.
-     *
-     * @return void
      */
     public function clear(): void
     {

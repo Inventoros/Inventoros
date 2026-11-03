@@ -1,0 +1,22 @@
+{
+    "title": "مرحبًا بالعالم",
+    "tabLabel": "مرحبًا",
+    "plugins": "الإضافات",
+    "bannerTitle": "مرحبًا من إضافة مرحبًا بالعالم",
+    "pluginActive": "الإضافة نشطة",
+    "bannerDescription": "يُحمّل هذا التنبيه من حزمة الإضافة المبنية مسبقًا، لذا يعمل دون تشغيل npm.",
+    "managePlugins": "الإدارة من صفحة الإضافات.",
+    "version": "الإصدار {version}",
+    "dismiss": "تجاهل",
+    "greeting": "مرحبًا، {name}",
+    "productGreeting": "مرحبًا بالمنتج",
+    "tabDescription": "تأتي علامة التبويب هذه من إضافة مرحبًا بالعالم، التي وضعت مكوّنًا في موضع {slot} بصفحة المنتج؛ وتبقى تفاصيل المنتج في علامة نظرة عامة.",
+    "widgetLabel": "المنتج يرحب بك | المنتجات ترحب بك",
+    "openPage": "فتح صفحة مرحبًا بالعالم",
+    "pageDescription": "صفحة تُعرض من حزمة إضافة مرحبًا بالعالم.",
+    "pageGreeting": "مرحبًا، {name}.",
+    "anonymousGreeting": "مرحبًا بك.",
+    "registrationDescription": "سُجّل هذا المسار باستخدام {phpRegistration} في شيفرة PHP للإضافة، وسُجّلت الصفحة باستخدام {bundleRegistration} في الحزمة المبنية مسبقًا.",
+    "organizationProducts": "عدد منتجات مؤسستك: {total}. | عدد منتجات مؤسستك: {total}.",
+    "backToDashboard": "العودة إلى لوحة التحكم"
+}

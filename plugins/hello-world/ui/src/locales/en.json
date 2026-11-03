@@ -1,0 +1,22 @@
+{
+    "title": "Hello World",
+    "tabLabel": "Hello",
+    "plugins": "Plugins",
+    "bannerTitle": "Hello from the Hello World plugin",
+    "pluginActive": "Plugin active",
+    "bannerDescription": "This banner was loaded at runtime from the plugin's own pre-built bundle, so it works on installs that never run npm.",
+    "managePlugins": "Manage on the Plugins page.",
+    "version": "Version {version}",
+    "dismiss": "Dismiss",
+    "greeting": "Hello, {name}",
+    "productGreeting": "Hello, product",
+    "tabDescription": "This tab comes from the Hello World plugin. It appears because the plugin placed a component in the product page's {slot} slot; the product details stay on the Overview tab.",
+    "widgetLabel": "product says hello | products say hello",
+    "openPage": "Open the Hello World page",
+    "pageDescription": "A page rendered from the Hello World plugin's runtime bundle.",
+    "pageGreeting": "Hello, {name}.",
+    "anonymousGreeting": "Hello, there.",
+    "registrationDescription": "This route was registered with {phpRegistration} in the plugin's PHP, and this page was registered with {bundleRegistration} in its pre-built bundle.",
+    "organizationProducts": "Your organization has {total} product. | Your organization has {total} products.",
+    "backToDashboard": "Back to the dashboard"
+}

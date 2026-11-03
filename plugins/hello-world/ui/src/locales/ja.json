@@ -1,0 +1,22 @@
+{
+    "title": "ハローワールド",
+    "tabLabel": "こんにちは",
+    "plugins": "プラグイン",
+    "bannerTitle": "ハローワールドプラグインからこんにちは",
+    "pluginActive": "プラグイン有効",
+    "bannerDescription": "このバナーはプラグインのビルド済みパッケージから読み込まれるため、npmを実行しない環境でも動作します。",
+    "managePlugins": "プラグインページで管理。",
+    "version": "バージョン {version}",
+    "dismiss": "閉じる",
+    "greeting": "こんにちは、{name}",
+    "productGreeting": "こんにちは、商品",
+    "tabDescription": "このタブはハローワールドプラグインが追加したものです。商品ページの {slot} スロットにコンポーネントを配置しています。商品情報は概要タブにあります。",
+    "widgetLabel": "商品からこんにちは | 商品からこんにちは",
+    "openPage": "ハローワールドページを開く",
+    "pageDescription": "ハローワールドプラグインのパッケージから表示されるページです。",
+    "pageGreeting": "こんにちは、{name}。",
+    "anonymousGreeting": "こんにちは。",
+    "registrationDescription": "このルートはプラグインのPHPで {phpRegistration} を使い、このページはビルド済みパッケージで {bundleRegistration} を使って登録されています。",
+    "organizationProducts": "組織の商品数は{total}件です。 | 組織の商品数は{total}件です。",
+    "backToDashboard": "ダッシュボードに戻る"
+}

@@ -1,0 +1,22 @@
+{
+    "title": "Hallo Welt",
+    "tabLabel": "Hallo",
+    "plugins": "Plugins",
+    "bannerTitle": "Hallo vom Hallo-Welt-Plugin",
+    "pluginActive": "Plugin aktiv",
+    "bannerDescription": "Dieser Hinweis wird aus dem vorgefertigten Plugin-Paket geladen und funktioniert auch ohne npm.",
+    "managePlugins": "Auf der Plugin-Seite verwalten.",
+    "version": "Version {version}",
+    "dismiss": "Schließen",
+    "greeting": "Hallo, {name}",
+    "productGreeting": "Hallo, Produkt",
+    "tabDescription": "Dieser Tab stammt vom Hallo-Welt-Plugin. Das Plugin hat eine Komponente im Bereich {slot} der Produktseite platziert; die Produktdetails bleiben im Tab Übersicht.",
+    "widgetLabel": "ein Produkt sagt Hallo | Produkte sagen Hallo",
+    "openPage": "Hallo-Welt-Seite öffnen",
+    "pageDescription": "Eine Seite aus dem Laufzeitpaket des Hallo-Welt-Plugins.",
+    "pageGreeting": "Hallo, {name}.",
+    "anonymousGreeting": "Hallo.",
+    "registrationDescription": "Diese Route wurde mit {phpRegistration} im PHP-Code des Plugins registriert und diese Seite mit {bundleRegistration} im vorgefertigten Paket.",
+    "organizationProducts": "Ihre Organisation hat {total} Produkt. | Ihre Organisation hat {total} Produkte.",
+    "backToDashboard": "Zurück zum Dashboard"
+}

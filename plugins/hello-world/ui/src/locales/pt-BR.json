@@ -1,0 +1,22 @@
+{
+    "title": "Olá Mundo",
+    "tabLabel": "Olá",
+    "plugins": "Plugins",
+    "bannerTitle": "Olá do plugin Olá Mundo",
+    "pluginActive": "Plugin ativo",
+    "bannerDescription": "Este aviso é carregado do pacote pré-compilado do plugin e funciona sem executar npm.",
+    "managePlugins": "Gerenciar na página de plugins.",
+    "version": "Versão {version}",
+    "dismiss": "Dispensar",
+    "greeting": "Olá, {name}",
+    "productGreeting": "Olá, produto",
+    "tabDescription": "Esta aba vem do plugin Olá Mundo. Ela aparece porque o plugin adicionou um componente ao espaço {slot} da página do produto; os detalhes ficam na aba Visão geral.",
+    "widgetLabel": "um produto manda um olá | os produtos mandam um olá",
+    "openPage": "Abrir a página Olá Mundo",
+    "pageDescription": "Uma página renderizada pelo pacote do plugin Olá Mundo.",
+    "pageGreeting": "Olá, {name}.",
+    "anonymousGreeting": "Olá.",
+    "registrationDescription": "Esta rota foi registrada com {phpRegistration} no PHP do plugin, e esta página com {bundleRegistration} no pacote pré-compilado.",
+    "organizationProducts": "Sua organização tem {total} produto. | Sua organização tem {total} produtos.",
+    "backToDashboard": "Voltar ao painel"
+}

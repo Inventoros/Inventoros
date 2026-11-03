@@ -1,0 +1,22 @@
+{
+    "title": "Hallo wereld",
+    "tabLabel": "Hallo",
+    "plugins": "Plugins",
+    "bannerTitle": "Hallo van de plug-in Hallo wereld",
+    "pluginActive": "Plug-in actief",
+    "bannerDescription": "Deze melding wordt geladen uit het vooraf gebouwde pakket van de plug-in en werkt zonder npm uit te voeren.",
+    "managePlugins": "Beheren op de pagina Plug-ins.",
+    "version": "Versie {version}",
+    "dismiss": "Sluiten",
+    "greeting": "Hallo, {name}",
+    "productGreeting": "Hallo, product",
+    "tabDescription": "Dit tabblad komt van de plug-in Hallo wereld. De plug-in heeft een onderdeel in de {slot}-positie van de productpagina geplaatst; de productgegevens blijven op Overzicht staan.",
+    "widgetLabel": "een product zegt hallo | producten zeggen hallo",
+    "openPage": "De pagina Hallo wereld openen",
+    "pageDescription": "Een pagina uit het runtimepakket van de plug-in Hallo wereld.",
+    "pageGreeting": "Hallo, {name}.",
+    "anonymousGreeting": "Hallo.",
+    "registrationDescription": "Deze route is geregistreerd met {phpRegistration} in de PHP-code van de plug-in en deze pagina met {bundleRegistration} in het vooraf gebouwde pakket.",
+    "organizationProducts": "Uw organisatie heeft {total} product. | Uw organisatie heeft {total} producten.",
+    "backToDashboard": "Terug naar het dashboard"
+}

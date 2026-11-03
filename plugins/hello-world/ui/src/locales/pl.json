@@ -1,0 +1,22 @@
+{
+    "title": "Witaj, świecie",
+    "tabLabel": "Witaj",
+    "plugins": "Wtyczki",
+    "bannerTitle": "Witaj z wtyczki „Witaj, świecie”",
+    "pluginActive": "Wtyczka aktywna",
+    "bannerDescription": "Ten baner jest ładowany z gotowego pakietu wtyczki i działa bez uruchamiania npm.",
+    "managePlugins": "Zarządzaj na stronie wtyczek.",
+    "version": "Wersja {version}",
+    "dismiss": "Zamknij",
+    "greeting": "Witaj, {name}",
+    "productGreeting": "Witaj, produkcie",
+    "tabDescription": "Ta karta pochodzi z wtyczki „Witaj, świecie”. Wtyczka umieściła komponent w slocie {slot} strony produktu; dane produktu pozostają na karcie Przegląd.",
+    "widgetLabel": "produkt mówi cześć | produkty mówią cześć",
+    "openPage": "Otwórz stronę „Witaj, świecie”",
+    "pageDescription": "Strona wyświetlana z pakietu wtyczki „Witaj, świecie”.",
+    "pageGreeting": "Witaj, {name}.",
+    "anonymousGreeting": "Witaj.",
+    "registrationDescription": "Ta trasa została zarejestrowana przez {phpRegistration} w kodzie PHP wtyczki, a strona przez {bundleRegistration} w gotowym pakiecie.",
+    "organizationProducts": "Liczba produktów w organizacji: {total}. | Liczba produktów w organizacji: {total}.",
+    "backToDashboard": "Wróć do pulpitu"
+}

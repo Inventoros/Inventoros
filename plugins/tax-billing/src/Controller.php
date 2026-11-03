@@ -22,7 +22,7 @@ final class Controller extends BaseController
         $profile = Profile::validate($request->all());
         SettingsService::set(Profile::KEY, json_encode($profile, JSON_THROW_ON_ERROR));
 
-        return back()->with('success', 'Tax billing profile saved.');
+        return back()->with('success', __('tax-billing::messages.profileSaved'));
     }
 
     public static function order(Request $request): Order
@@ -60,11 +60,13 @@ final class Controller extends BaseController
             'supply_country' => ['required', 'regex:/^[A-Z]{2}$/'],
             'items' => ['required', 'array'], 'items.*.hsn_code' => ['nullable', 'string', 'max:20'],
             'items.*.unit' => ['required', 'string', 'max:10', 'regex:/^[A-Za-z0-9]+$/'],
-        ]);
+        ], [], array_replace(__('tax-billing::messages.attributes'), [
+            'region_code' => __('tax-billing::messages.supplyRegionCode'),
+        ]));
         $order = self::order($request);
         app(Invoices::class)->issue($order, $input, (int) $request->user()->id);
 
-        return back()->with('success', 'Tax invoice issued. Its details are retained for future downloads.');
+        return back()->with('success', __('tax-billing::messages.invoiceIssued'));
     }
 
     public function download(Request $request): Response

@@ -1,0 +1,22 @@
+{
+    "title": "Hola Mundo",
+    "tabLabel": "Hola",
+    "plugins": "Plugins",
+    "bannerTitle": "Hola desde el complemento Hola Mundo",
+    "pluginActive": "Complemento activo",
+    "bannerDescription": "Este aviso se carga desde el paquete precompilado del complemento, por lo que funciona sin ejecutar npm.",
+    "managePlugins": "Gestionar en la página de complementos.",
+    "version": "Versión {version}",
+    "dismiss": "Descartar",
+    "greeting": "Hola, {name}",
+    "productGreeting": "Hola, producto",
+    "tabDescription": "Esta pestaña pertenece al complemento Hola Mundo. Aparece porque el complemento colocó un componente en el espacio {slot} de la página del producto; los detalles siguen en la pestaña Resumen.",
+    "widgetLabel": "un producto te saluda | los productos te saludan",
+    "openPage": "Abrir la página de Hola Mundo",
+    "pageDescription": "Una página renderizada desde el paquete del complemento Hola Mundo.",
+    "pageGreeting": "Hola, {name}.",
+    "anonymousGreeting": "Hola.",
+    "registrationDescription": "Esta ruta se registró con {phpRegistration} en el PHP del complemento y esta página con {bundleRegistration} en su paquete precompilado.",
+    "organizationProducts": "Tu organización tiene {total} producto. | Tu organización tiene {total} productos.",
+    "backToDashboard": "Volver al panel"
+}

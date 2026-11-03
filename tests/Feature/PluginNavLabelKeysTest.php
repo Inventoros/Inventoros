@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use App\Services\PluginService;
+use App\Services\PluginUIService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\Feature\Concerns\CreatesPluginUiUsers;
 use Tests\Feature\Concerns\InteractsWithFixturePlugins;
@@ -88,5 +89,21 @@ final class PluginNavLabelKeysTest extends TestCase
             ->assertInertia(fn ($page) => $page
                 ->where('pluginWidgets.0.title', 'Widget')
                 ->where('pluginWidgets.0.title_key', "plugins.{$slug}.widget.title"));
+    }
+
+    public function test_page_tab_label_keys_are_scoped_and_keep_the_plain_label(): void
+    {
+        $ui = app(PluginUIService::class);
+        $ui->whileLoading('fixture', function () use ($ui): void {
+            foreach (['plugins.fixture.tabs.notes', 'plugins.someone-else.tabs.notes', 'nav.settings'] as $key) {
+                $ui->addPageComponent('products.show', 'tabs', [
+                    'plugin' => 'fixture', 'component' => 'Notes', 'label' => 'Notes', 'label_key' => $key,
+                ]);
+            }
+        });
+
+        $tabs = $ui->getVisiblePageComponents($this->staff, 'products.show', 'tabs');
+        $this->assertSame(['plugins.fixture.tabs.notes', null, null], array_column($tabs, 'label_key'));
+        $this->assertSame(['Notes', 'Notes', 'Notes'], array_column($tabs, 'label'));
     }
 }

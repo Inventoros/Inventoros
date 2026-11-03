@@ -1,4 +1,5 @@
 <script setup>
+import { t } from './i18n.js';
 // A tab on the product detail page. Its props are the placement's `data`.
 defineProps({
     sku: { type: String, default: '' },
@@ -7,10 +8,9 @@ defineProps({
 
 <template>
     <div class="hw-tab">
-        <p class="hw-tab__title">Hello, {{ sku || 'product' }}</p>
+        <p class="hw-tab__title">{{ sku ? t('greeting', { name: sku }) : t('productGreeting') }}</p>
         <p class="hw-tab__text">
-            This tab comes from the Hello World plugin. It appears because the plugin placed a component in the
-            product page's <code>tabs</code> slot; the product details stay on the Overview tab.
+            {{ t('tabDescription', { slot: 'tabs' }) }}
         </p>
     </div>
 </template>

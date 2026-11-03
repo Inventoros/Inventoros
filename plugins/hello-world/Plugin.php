@@ -38,6 +38,7 @@ add_page_component('products.show', 'tabs', [
     'plugin' => 'hello-world',
     'component' => 'HelloWorldTab',
     'label' => 'Hello',
+    'label_key' => 'plugins.hello-world.tabLabel',
     'permission' => 'view_products',
     'data' => fn ($user) => ['sku' => request()->route('product')?->sku],
 ]);
@@ -60,6 +61,7 @@ register_page('plg.hello-world.index', 'Plugin::hello-world/Hello', [
 // A sidebar link to that page.
 register_menu_item([
     'label' => 'Hello World',
+    'label_key' => 'plugins.hello-world.title',
     'route' => 'plg.hello-world.index',
     'position' => 999,
 ]);
@@ -69,6 +71,7 @@ register_menu_item([
 register_dashboard_widget([
     'id' => 'hello-world-products',
     'title' => 'Hello World',
+    'title_key' => 'plugins.hello-world.title',
     'plugin' => 'hello-world',
     'component' => 'HelloWorldWidget',
     'width' => 'quarter',
@@ -117,4 +120,3 @@ add_action('plugin_loaded', function ($slug, $manifest) {
 //     $stats['hello_world_greetings'] = 1;
 //     return $stats;
 // });
-

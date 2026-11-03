@@ -1,0 +1,22 @@
+{
+    "title": "你好世界",
+    "tabLabel": "你好",
+    "plugins": "插件",
+    "bannerTitle": "你好世界插件向你问好",
+    "pluginActive": "插件已启用",
+    "bannerDescription": "此横幅从插件的预构建包加载，因此无需运行 npm 即可使用。",
+    "managePlugins": "在插件页面中管理。",
+    "version": "版本 {version}",
+    "dismiss": "关闭",
+    "greeting": "你好，{name}",
+    "productGreeting": "你好，商品",
+    "tabDescription": "此标签页由你好世界插件提供。插件在商品页面的 {slot} 插槽放置了组件；商品详情仍在概览标签页中。",
+    "widgetLabel": "商品向你问好 | 商品向你问好",
+    "openPage": "打开你好世界页面",
+    "pageDescription": "从你好世界插件包呈现的页面。",
+    "pageGreeting": "你好，{name}。",
+    "anonymousGreeting": "你好。",
+    "registrationDescription": "此路由通过插件 PHP 中的 {phpRegistration} 注册，此页面通过预构建包中的 {bundleRegistration} 注册。",
+    "organizationProducts": "你的组织有 {total} 件商品。 | 你的组织有 {total} 件商品。",
+    "backToDashboard": "返回仪表盘"
+}

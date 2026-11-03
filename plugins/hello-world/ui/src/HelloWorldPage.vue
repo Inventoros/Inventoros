@@ -1,4 +1,6 @@
 <script setup>
+import { t, formatNumber } from './i18n.js';
+import { computed } from 'vue';
 // A full page supplied by the plugin bundle. Layout, UI building blocks and
 // Inertia helpers come from the app (window.Inventoros), so the page matches
 // core pages and shares the current Inertia page state.
@@ -8,39 +10,39 @@ const {
     Inertia: { Head, Link },
 } = window.Inventoros;
 
-defineProps({
+const props = defineProps({
     title: { type: String, default: 'Hello World' },
     name: { type: String, default: '' },
     productCount: { type: Number, default: null },
 });
+const pageTitle = computed(() => props.title === 'Hello World' ? t('title') : props.title);
 </script>
 
 <template>
-    <Head :title="title" />
+    <Head :title="pageTitle" />
 
     <AppLayout>
         <template #header>
             <div class="hw-crumbs">
-                <span>Plugins</span>
+                <span>{{ t('plugins') }}</span>
                 <span>/</span>
-                <strong>{{ title }}</strong>
+                <strong>{{ pageTitle }}</strong>
             </div>
         </template>
 
         <div>
-            <PageHeader :title="title" description="A page rendered from the Hello World plugin's runtime bundle." />
+            <PageHeader :title="pageTitle" :description="t('pageDescription')" />
 
             <Card class="hw-page-card">
-                <p class="hw-page-lead">Hello, {{ name || 'there' }}.</p>
+                <p class="hw-page-lead">{{ name ? t('pageGreeting', { name }) : t('anonymousGreeting') }}</p>
                 <p class="hw-page-text">
-                    This route was registered with <code>register_page()</code> in the plugin's PHP, and this page was
-                    registered with <code>plugin.registerPage()</code> in its pre-built bundle.
+                    {{ t('registrationDescription', { phpRegistration: 'register_page()', bundleRegistration: 'plugin.registerPage()' }) }}
                 </p>
                 <p v-if="productCount !== null" class="hw-page-text">
-                    Your organization has {{ productCount }} products.
+                    {{ t('organizationProducts', { count: productCount, total: formatNumber(productCount) }) }}
                 </p>
                 <p class="hw-page-text">
-                    <Link href="/dashboard">Back to the dashboard</Link>
+                    <Link href="/dashboard">{{ t('backToDashboard') }}</Link>
                 </p>
             </Card>
         </div>

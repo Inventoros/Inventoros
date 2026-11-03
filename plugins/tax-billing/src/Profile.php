@@ -44,16 +44,16 @@ final class Profile
             'components' => ['required', 'array', 'min:1', 'max:10'],
             'components.*.label' => ['required', 'string', 'max:50', 'distinct'],
             'components.*.rate' => ['required', 'numeric', 'decimal:0,4', 'between:0,100'],
-        ])->validate();
+        ], [], __('tax-billing::messages.attributes'))->validate();
 
         if ($validated['mode'] === 'india_gst') {
             Validator::make($validated, [
                 'country' => ['in:IN'],
                 'region_code' => ['required', 'regex:/^[0-9]{2}$/'],
                 'issuer_tax_id' => ['required', 'regex:/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][1-9A-Z]Z[0-9A-Z]$/'],
-            ])->after(function ($validator) use ($validated) {
+            ], [], __('tax-billing::messages.attributes'))->after(function ($validator) use ($validated) {
                 if (substr((string) $validated['issuer_tax_id'], 0, 2) !== $validated['region_code']) {
-                    $validator->errors()->add('issuer_tax_id', 'The GSTIN state code must match the supplier region.');
+                    $validator->errors()->add('issuer_tax_id', __('tax-billing::messages.gstinRegionMismatch'));
                 }
             })->validate();
             $validated['tax_id_label'] = 'GSTIN';

@@ -7,8 +7,10 @@ import HelloWorldBanner from './HelloWorldBanner.vue';
 import HelloWorldPage from './HelloWorldPage.vue';
 import HelloWorldTab from './HelloWorldTab.vue';
 import HelloWorldWidget from './HelloWorldWidget.vue';
+import { installMessages } from './i18n.js';
 
 export default function setup(plugin) {
+    installMessages(plugin);
     // Implements add_page_component('dashboard', 'header', [... 'component' => 'HelloWorldBanner']).
     plugin.registerComponent('HelloWorldBanner', HelloWorldBanner);
 

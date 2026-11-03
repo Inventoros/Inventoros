@@ -1,0 +1,22 @@
+{
+    "title": "Bonjour le monde",
+    "tabLabel": "Bonjour",
+    "plugins": "Plugins",
+    "bannerTitle": "Bonjour depuis l’extension Bonjour le monde",
+    "pluginActive": "Extension active",
+    "bannerDescription": "Cette bannière est chargée depuis le paquet précompilé de l’extension et fonctionne sans exécuter npm.",
+    "managePlugins": "Gérer dans la page Extensions.",
+    "version": "Version {version}",
+    "dismiss": "Fermer",
+    "greeting": "Bonjour, {name}",
+    "productGreeting": "Bonjour, produit",
+    "tabDescription": "Cet onglet provient de l’extension Bonjour le monde. L’extension a placé un composant dans l’emplacement {slot} de la page produit ; les détails restent dans l’onglet Vue d’ensemble.",
+    "widgetLabel": "un produit vous salue | les produits vous saluent",
+    "openPage": "Ouvrir la page Bonjour le monde",
+    "pageDescription": "Une page affichée depuis le paquet de l’extension Bonjour le monde.",
+    "pageGreeting": "Bonjour, {name}.",
+    "anonymousGreeting": "Bonjour.",
+    "registrationDescription": "Cette route a été enregistrée avec {phpRegistration} dans le PHP de l’extension, et cette page avec {bundleRegistration} dans son paquet précompilé.",
+    "organizationProducts": "Votre organisation possède {total} produit. | Votre organisation possède {total} produits.",
+    "backToDashboard": "Retour au tableau de bord"
+}

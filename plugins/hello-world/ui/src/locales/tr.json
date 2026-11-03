@@ -1,0 +1,22 @@
+{
+    "title": "Merhaba Dünya",
+    "tabLabel": "Merhaba",
+    "plugins": "Eklentiler",
+    "bannerTitle": "Merhaba Dünya eklentisinden merhaba",
+    "pluginActive": "Eklenti etkin",
+    "bannerDescription": "Bu bildirim eklentinin önceden derlenmiş paketinden yüklenir ve npm çalıştırmadan kullanılabilir.",
+    "managePlugins": "Eklentiler sayfasında yönetin.",
+    "version": "Sürüm {version}",
+    "dismiss": "Kapat",
+    "greeting": "Merhaba, {name}",
+    "productGreeting": "Merhaba, ürün",
+    "tabDescription": "Bu sekme Merhaba Dünya eklentisinden gelir. Eklenti, ürün sayfasının {slot} alanına bir bileşen yerleştirmiştir; ürün bilgileri Genel Bakış sekmesinde kalır.",
+    "widgetLabel": "ürün merhaba diyor | ürünler merhaba diyor",
+    "openPage": "Merhaba Dünya sayfasını aç",
+    "pageDescription": "Merhaba Dünya eklentisinin paketinden oluşturulan bir sayfa.",
+    "pageGreeting": "Merhaba, {name}.",
+    "anonymousGreeting": "Merhaba.",
+    "registrationDescription": "Bu rota eklentinin PHP kodunda {phpRegistration} ile, bu sayfa ise önceden derlenmiş paketinde {bundleRegistration} ile kaydedildi.",
+    "organizationProducts": "Kuruluşunuzda {total} ürün var. | Kuruluşunuzda {total} ürün var.",
+    "backToDashboard": "Panoya dön"
+}

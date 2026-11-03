@@ -1,0 +1,22 @@
+{
+    "title": "헬로 월드",
+    "tabLabel": "안녕하세요",
+    "plugins": "플러그인",
+    "bannerTitle": "헬로 월드 플러그인에서 인사합니다",
+    "pluginActive": "플러그인 활성화됨",
+    "bannerDescription": "이 배너는 플러그인의 사전 빌드 패키지에서 로드되므로 npm을 실행하지 않는 환경에서도 작동합니다.",
+    "managePlugins": "플러그인 페이지에서 관리하세요.",
+    "version": "버전 {version}",
+    "dismiss": "닫기",
+    "greeting": "안녕하세요, {name}",
+    "productGreeting": "안녕하세요, 상품",
+    "tabDescription": "이 탭은 헬로 월드 플러그인이 상품 페이지의 {slot} 슬롯에 구성 요소를 배치하여 표시됩니다. 상품 정보는 개요 탭에 있습니다.",
+    "widgetLabel": "상품이 인사합니다 | 상품들이 인사합니다",
+    "openPage": "헬로 월드 페이지 열기",
+    "pageDescription": "헬로 월드 플러그인 패키지에서 표시되는 페이지입니다.",
+    "pageGreeting": "안녕하세요, {name}.",
+    "anonymousGreeting": "안녕하세요.",
+    "registrationDescription": "이 경로는 플러그인의 PHP에서 {phpRegistration}으로, 이 페이지는 사전 빌드 패키지에서 {bundleRegistration}으로 등록되었습니다.",
+    "organizationProducts": "조직에 상품이 {total}개 있습니다. | 조직에 상품이 {total}개 있습니다.",
+    "backToDashboard": "대시보드로 돌아가기"
+}

@@ -13,6 +13,7 @@ require_once __DIR__.'/src/Controller.php';
 
 return function (): void {
     app('view')->addNamespace('tax-billing', __DIR__.'/views');
+    app('translator')->addNamespace('tax-billing', __DIR__.'/lang');
     foreach (['issue' => 'Issue tax invoices', 'manage' => 'Manage tax billing profiles'] as $ability => $label) {
         register_permission('tax-billing.'.$ability, $label, 'Tax billing');
     }
@@ -30,7 +31,7 @@ return function (): void {
         'props' => fn ($request, $user) => ['profile' => Profile::get((int) $user->organization_id), 'saveUrl' => route('plg.tax-billing.save')],
     ]);
 
-    register_menu_item(['label' => 'Tax billing', 'route' => 'plg.tax-billing.settings', 'icon' => 'FileText', 'permission' => 'tax-billing.manage', 'group' => 'settings']);
+    register_menu_item(['label' => 'Tax billing', 'label_key' => 'plugins.tax-billing.title', 'route' => 'plg.tax-billing.settings', 'icon' => 'FileText', 'permission' => 'tax-billing.manage', 'group' => 'settings']);
     add_page_component('orders.show', 'actions', [
         'plugin' => 'tax-billing', 'component' => 'InvoiceLink', 'permission' => 'view_orders',
         'data' => fn ($user) => ['url' => route('plg.tax-billing.invoice', ['orderId' => request()->route('order')?->id])],

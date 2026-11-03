@@ -1,5 +1,6 @@
 <script setup>
 import { ref } from 'vue';
+import { t } from './i18n.js';
 
 defineProps({
     version: {
@@ -15,16 +16,15 @@ const dismissed = ref(false);
     <div v-if="!dismissed" class="hw-banner" role="status">
         <div class="hw-banner__body">
             <p class="hw-banner__title">
-                Hello from the Hello World plugin
-                <span class="hw-banner__badge">Plugin active</span>
+                {{ t('bannerTitle') }}
+                <span class="hw-banner__badge">{{ t('pluginActive') }}</span>
             </p>
             <p class="hw-banner__text">
-                This banner was loaded at runtime from the plugin's own pre-built bundle, so it works on
-                installs that never run npm. Turn it off on the <a href="/plugins">Plugins page</a>.
+                {{ t('bannerDescription') }} <a href="/plugins">{{ t('managePlugins') }}</a>
             </p>
-            <p v-if="version" class="hw-banner__meta">Version {{ version }}</p>
+            <p v-if="version" class="hw-banner__meta">{{ t('version', { version }) }}</p>
         </div>
-        <button type="button" class="hw-banner__dismiss" aria-label="Dismiss" @click="dismissed = true">
+        <button type="button" class="hw-banner__dismiss" :aria-label="t('dismiss')" @click="dismissed = true">
             <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
             </svg>
@@ -42,7 +42,7 @@ const dismissed = ref(false);
     margin-bottom: 1.5rem;
     padding: 1rem 1.25rem;
     border: 1px solid hsl(var(--border-subtle));
-    border-left: 3px solid hsl(var(--accent));
+    border-inline-start: 3px solid hsl(var(--accent));
     border-radius: 0.5rem;
     background: hsl(var(--surface-raised));
     color: hsl(var(--text-primary));

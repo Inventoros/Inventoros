@@ -22,12 +22,12 @@ final class Invoices
                 return $locked->metadata[self::SNAPSHOT];
             }
             if ($locked->status->value === 'cancelled' || in_array($locked->getRawOriginal('approval_status'), ['pending', 'rejected'], true)) {
-                throw ValidationException::withMessages(['invoice' => 'Cancelled orders and orders awaiting approval cannot be invoiced.']);
+                throw ValidationException::withMessages(['invoice' => __('tax-billing::messages.cancelledOrder')]);
             }
             $profile = Profile::validate(Profile::get((int) $locked->organization_id));
             $locked->load(['items.variant' => fn ($query) => $query->withTrashed(), 'customer' => fn ($query) => $query->withTrashed()]);
             if ($locked->items->isEmpty()) {
-                throw ValidationException::withMessages(['invoice' => 'An invoice needs at least one order line.']);
+                throw ValidationException::withMessages(['invoice' => __('tax-billing::messages.noLines')]);
             }
             $rows = $this->rows($locked, $profile, $input);
             $region = trim((string) ($input['region_code'] ?? ''));
@@ -42,21 +42,21 @@ final class Invoices
             if (Money::isNegative($base) || Money::isNegative($locked->tax) || Money::isNegative($locked->shipping)
                 || Money::compare(Money::add(Money::subtract($locked->subtotal, $locked->discount_amount), $locked->tax, $locked->shipping), $locked->total) !== 0
                 || Money::compare(Money::add(...array_column($rows, 'amount')), Money::subtract($locked->subtotal, $locked->discount_amount)) !== 0) {
-                throw ValidationException::withMessages(['invoice' => 'The recorded order totals do not reconcile with its lines. Correct the order before issuing.']);
+                throw ValidationException::withMessages(['invoice' => __('tax-billing::messages.totalsMismatch')]);
             }
             $components = $profile['components'];
             if ($profile['mode'] === 'india_gst') {
                 if (blank($billingAddress)) {
-                    throw ValidationException::withMessages(['invoice' => 'Add the customer address before issuing an India GST invoice.']);
+                    throw ValidationException::withMessages(['invoice' => __('tax-billing::messages.customerAddress')]);
                 }
                 if (($input['supply_country'] ?? '') !== 'IN') {
-                    throw ValidationException::withMessages(['supply_country' => 'The India GST profile supports domestic supplies. Exports and special supplies need a dedicated profile.']);
+                    throw ValidationException::withMessages(['supply_country' => __('tax-billing::messages.domesticOnly')]);
                 }
                 if (! preg_match('/^[0-9]{2}$/', $region)) {
-                    throw ValidationException::withMessages(['region_code' => 'Enter the two-digit place-of-supply state code.']);
+                    throw ValidationException::withMessages(['region_code' => __('tax-billing::messages.stateCode')]);
                 }
                 if ($customerTaxId !== '' && ! preg_match('/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][1-9A-Z]Z[0-9A-Z]$/', $customerTaxId)) {
-                    throw ValidationException::withMessages(['invoice' => 'Correct the customer GSTIN in Business Details before issuing.']);
+                    throw ValidationException::withMessages(['invoice' => __('tax-billing::messages.customerGstin')]);
                 }
                 $half = bcdiv((string) $profile['gst_rate'], '2', 5);
                 $components = $region === $profile['region_code']
@@ -70,12 +70,12 @@ final class Invoices
             $expected = Money::percentOf($base, $rate);
             if (Money::compare(Money::subtract($locked->tax, $expected), '0.01') > 0
                 || Money::compare(Money::subtract($expected, $locked->tax), '0.01') > 0) {
-                throw ValidationException::withMessages(['invoice' => 'The recorded order tax does not match this profile. Correct the order or choose the applicable tax profile before issuing.']);
+                throw ValidationException::withMessages(['invoice' => __('tax-billing::messages.taxMismatch')]);
             }
             $components = $this->allocateTax($components, Money::of($locked->tax), $rate);
             $number = app(OrderInvoiceNumberService::class)->ensureAssigned($locked);
             if ($profile['mode'] === 'india_gst' && ! preg_match('/^[A-Za-z0-9\/-]{1,16}$/', $number)) {
-                throw ValidationException::withMessages(['invoice' => 'The invoice number must use at most 16 letters, numbers, slashes or hyphens for India GST.']);
+                throw ValidationException::withMessages(['invoice' => __('tax-billing::messages.invoiceNumber')]);
             }
             $snapshot = [
                 'number' => $number, 'issued_at' => now()->toIso8601String(), 'issued_by' => $userId,
@@ -103,12 +103,12 @@ final class Invoices
             $details = $input['items'][$item->id] ?? [];
             $hsn = trim((string) ($details['hsn_code'] ?? ''));
             if ($profile['mode'] === 'india_gst' && ! preg_match('/^(?:[0-9]{4}|[0-9]{6}|[0-9]{8})$/', $hsn)) {
-                throw ValidationException::withMessages(["items.{$item->id}.hsn_code" => 'Enter a 4, 6 or 8-digit HSN/SAC code.']);
+                throw ValidationException::withMessages(["items.{$item->id}.hsn_code" => __('tax-billing::messages.hsnCode')]);
             }
             if ($item->quantity < 1 || Money::isNegative($item->unit_price) || Money::isNegative($item->discount_amount)
                 || Money::compare($item->discount_amount, $item->subtotal) > 0
                 || Money::compare(Money::multiply($item->unit_price, $item->quantity), $item->subtotal) !== 0) {
-                throw ValidationException::withMessages(['invoice' => 'The recorded invoice lines contain inconsistent quantities or amounts.']);
+                throw ValidationException::withMessages(['invoice' => __('tax-billing::messages.inconsistentLines')]);
             }
             $unit = trim((string) ($details['unit'] ?? 'NOS'));
             $size = '';
@@ -138,7 +138,7 @@ final class Invoices
         if (! Money::isZero($discount)) {
             $net = Money::add(...array_column($rows, 'amount'));
             if (Money::compare($discount, $net) > 0 || Money::isNegative($discount)) {
-                throw ValidationException::withMessages(['invoice' => 'The order discount exceeds the invoice lines.']);
+                throw ValidationException::withMessages(['invoice' => __('tax-billing::messages.discountExceeded')]);
             }
             $allocations = $this->allocateTax(array_map(fn ($row) => ['rate' => $row['amount']], $rows), $discount, $net);
             foreach ($rows as $index => &$row) {
@@ -152,7 +152,7 @@ final class Invoices
     private function allocateTax(array $components, string $tax, string $rate): array
     {
         if (bccomp($rate, '0', 5) === 0 && ! Money::isZero($tax)) {
-            throw ValidationException::withMessages(['invoice' => 'A zero-rate profile requires zero recorded tax.']);
+            throw ValidationException::withMessages(['invoice' => __('tax-billing::messages.zeroRate')]);
         }
         $remaining = (int) bcmul($tax, '100', 0);
         $shares = [];

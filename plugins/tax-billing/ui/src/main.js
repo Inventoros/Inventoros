@@ -4,7 +4,9 @@ import CustomerFields from './CustomerFields.vue';
 import CustomerTaxDetails from './CustomerTaxDetails.vue';
 import InvoiceLink from './InvoiceLink.vue';
 import './style.css';
+import { installMessages } from './i18n.js';
 export default function setup(plugin) {
+    installMessages(plugin);
     plugin.registerPage('Settings', Settings);
     plugin.registerPage('Invoice', Invoice);
     plugin.registerComponent('CustomerFields', CustomerFields);

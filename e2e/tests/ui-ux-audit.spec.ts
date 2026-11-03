@@ -125,11 +125,24 @@ test('dialogs, table full view and navigation disclosures', async ({ page }) => 
 });
 
 test('runtime plugin pages and embedded components', async ({ page }) => {
-    test.setTimeout(5 * 60_000);
+    test.setTimeout(20 * 60_000);
     const plugin = (action: string, slug: string) => execFileSync('php', ['artisan', `plugin:${action}`, slug]);
+    const selectLanguage = async (locale: string) => {
+        if (await page.locator('html').getAttribute('lang') !== locale) {
+            const saved = page.waitForResponse(response => response.request().method() === 'PATCH' && new URL(response.url()).pathname === '/settings/account/locale');
+            await page.locator('button[aria-haspopup="listbox"]').first().click();
+            await page.locator(`[role="option"][lang="${locale}"]`).click();
+            expect((await saved).status(), `${locale}: saved language preference`).toBeLessThan(400);
+            await page.waitForLoadState('networkidle');
+        }
+        await expect(page.locator('html')).toHaveAttribute('lang', locale);
+        await expect(page.locator('html')).toHaveAttribute('dir', locale === 'ar' ? 'rtl' : 'ltr');
+    };
     try {
         plugin('activate', 'hello-world');
         plugin('activate', 'tax-billing');
+        await page.goto('/dashboard', { waitUntil: 'networkidle' });
+        await selectLanguage('en');
         for (const width of widths) {
             await page.setViewportSize({ width, height: width < 768 ? 812 : 1080 });
             for (const [name, url] of [['hello-world', '/p/hello-world'], ['tax-settings', '/p/tax-billing/settings'], ['tax-invoice', `/p/tax-billing/orders/${manifest().layout.order}`]]) {
@@ -142,7 +155,98 @@ test('runtime plugin pages and embedded components', async ({ page }) => {
                 await inspect(page, `plugin-embedded-${url.slice(1).replaceAll('/', '-')}`, url, width, true);
             }
         }
-    } finally { plugin('deactivate', 'hello-world'); plugin('deactivate', 'tax-billing'); }
+
+        const inventory = manifest();
+        const productUrl = inventory.routes.find((entry: { name: string }) => entry.name === 'products.show')?.url;
+        expect(productUrl, 'The audit fixture includes a product for the runtime plugin tab').toBeTruthy();
+        const orderUrl = `/orders/${inventory.layout.order}`;
+        const invoiceUrl = `/p/tax-billing/orders/${inventory.layout.order}`;
+        const localizedRoutes = [
+            ['hello-world', '/p/hello-world'],
+            ['tax-settings', '/p/tax-billing/settings'],
+            ['tax-invoice', invoiceUrl],
+            ['dashboard', '/dashboard'],
+            ['product-tab', productUrl],
+            ['order-action', orderUrl],
+            ['customer-fields', '/customers/create'],
+        ];
+        for (const locale of locales) {
+            const hello = JSON.parse(readFileSync(`plugins/hello-world/ui/src/locales/${locale}.json`, 'utf8'));
+            const tax = JSON.parse(readFileSync(`plugins/tax-billing/ui/src/locales/${locale}.json`, 'utf8'));
+            const core = JSON.parse(readFileSync(`resources/js/i18n/locales/${locale}.json`, 'utf8'));
+            await selectLanguage(locale);
+            for (const width of [320, 1440]) {
+                await page.setViewportSize({ width, height: width < 768 ? 812 : 1080 });
+                for (const [name, url] of localizedRoutes) {
+                    await page.goto(url, { waitUntil: 'networkidle' });
+                    await expect(page.locator('html'), `${locale}: ${url}`).toHaveAttribute('lang', locale);
+                    await expect(page.locator('html'), `${locale}: ${url}`).toHaveAttribute('dir', locale === 'ar' ? 'rtl' : 'ltr');
+                    if (name === 'hello-world') {
+                        await expect(page.getByRole('heading', { name: hello.title, exact: true })).toBeVisible();
+                        await expect(page.getByText(hello.pageDescription, { exact: true })).toBeVisible();
+                        await expect(page.locator('.hw-page-card').getByRole('link')).toHaveText(hello.backToDashboard);
+                    } else if (name === 'tax-settings') {
+                        await expect(page.getByRole('heading', { name: tax.title, exact: true })).toBeVisible();
+                        await expect(page.getByLabel(tax.supplierName, { exact: true })).toBeVisible();
+                        await expect(page.getByRole('button', { name: tax.saveProfile, exact: true })).toBeVisible();
+                    } else if (name === 'tax-invoice') {
+                        const state = JSON.parse((await page.locator('script[data-page="app"]').textContent())!);
+                        await expect(page.getByRole('heading', { name: tax.invoiceTitle.replace('{number}', state.props.order.order_number), exact: true })).toBeVisible();
+                    } else if (name === 'dashboard') {
+                        await expect(page.locator('.hw-banner__title')).toContainText(hello.bannerTitle);
+                        await expect(page.locator('.hw-banner__badge')).toHaveText(hello.pluginActive);
+                        await expect(page.locator('.hw-widget__link')).toHaveText(hello.openPage);
+                    } else if (name === 'product-tab') {
+                        const tab = page.getByRole('tab', { name: hello.tabLabel, exact: true });
+                        await expect(tab).toBeVisible();
+                        await tab.click();
+                        await expect(tab).toHaveAttribute('aria-selected', 'true');
+                        const state = JSON.parse((await page.locator('script[data-page="app"]').textContent())!);
+                        const sku = state.props.product.sku;
+                        await expect(page.locator('.hw-tab__title')).toHaveText(sku ? hello.greeting.replace('{name}', sku) : hello.productGreeting);
+                        await expect(page.locator('.hw-tab__text')).toHaveText(hello.tabDescription.replace('{slot}', 'tabs'));
+                    } else if (name === 'order-action') {
+                        const actions = page.getByRole('button', { name: core.common.actions, exact: true });
+                        if (await actions.isVisible()) await actions.click();
+                        const invoice = page.locator(`a[href$="${invoiceUrl}"]`);
+                        await expect(invoice).toHaveText(tax.taxInvoice);
+                        await expect(invoice).toBeVisible();
+                    } else if (name === 'customer-fields') {
+                        await expect(page.getByLabel(tax.defaultSupplyRegionCode, { exact: true })).toBeVisible();
+                    }
+                    const result = await inspect(page, `plugin-locale-${locale}-${name}`, url, width, width === 1440, false);
+                    expect(result.lang, `${locale}: ${url}`).toBe(locale);
+                    expect(result.dir, `${locale}: ${url}`).toBe(locale === 'ar' ? 'rtl' : 'ltr');
+
+                    if (name === 'hello-world') {
+                        const navigation = page.locator('button[aria-controls="workspace-navigation"]');
+                        if (width === 320) await navigation.click();
+                        const sidebar = page.locator('#workspace-navigation');
+                        const helloLink = sidebar.locator('a[href$="/p/hello-world"]');
+                        const taxLink = sidebar.locator('a[href$="/p/tax-billing/settings"]');
+                        await expect(helloLink).toHaveText(hello.title);
+                        await expect(taxLink).toHaveText(tax.title);
+                        await helloLink.scrollIntoViewIfNeeded();
+                        await expect(helloLink).toBeVisible();
+                        await taxLink.scrollIntoViewIfNeeded();
+                        await expect(taxLink).toBeVisible();
+                        const menu = await inspect(page, `plugin-locale-${locale}-navigation`, url, width, true, false, '#workspace-navigation');
+                        expect(menu.lang).toBe(locale);
+                        expect(menu.dir).toBe(locale === 'ar' ? 'rtl' : 'ltr');
+                        if (width === 320) await page.keyboard.press('Escape');
+                    }
+                }
+            }
+        }
+    } finally {
+        try {
+            await page.goto('/dashboard', { waitUntil: 'networkidle' });
+            await selectLanguage('en');
+        } finally {
+            plugin('deactivate', 'hello-world');
+            plugin('deactivate', 'tax-billing');
+        }
+    }
 });
 
 test('all supported languages across layout families', async ({ page }) => {

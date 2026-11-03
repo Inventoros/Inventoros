@@ -505,6 +505,7 @@ add_page_component('products.show', 'tabs', [
     'plugin' => 'my-plugin',
     'component' => 'SupplierHistory',
     'label' => 'Supplier history',             // the tab's label
+    'label_key' => 'plugins.my-plugin.tabs.history', // optional translated label
     'permission' => 'view_purchase_orders',    // users without it see no tab
     'data' => fn ($user) => ['productId' => request()->route('product')?->id],
     'position' => 10,                          // tab order
@@ -617,7 +618,7 @@ export default function setup(plugin) {
 | `plugin.i18n` | Since `apiVersion` 2. `addMessages(locale, messages)`, `t(key, params)`, `te(key)` and the read-only `locale`, on the app's own translations and scoped to the plugin. See [Translations](#translations). |
 | `plugin.registerComponent(name, component)` | Provide the component for a server placement (`add_page_component()`) or a dashboard widget. |
 | `plugin.registerPage(page, component)` | Provide the page component rendered by `register_page(..., 'Plugin::{slug}/{page}')`. |
-| `plugin.registerSlotComponent(slot, component, { position, props, label })` | Render a component in a slot without a server placement. `slot` is `"<page>:<slot>"`, for example `"products.show:sidebar"`. For a `tabs` slot, `label` is the tab label. |
+| `plugin.registerSlotComponent(slot, component, { position, props, label, label_key })` | Render a component in a slot without a server placement. `slot` is `"<page>:<slot>"`, for example `"products.show:sidebar"`. For a `tabs` slot, `label_key` resolves a plugin translation and `label` supplies the fallback. |
 
 The same members are available globally on `window.Inventoros`, where the register functions take the slug explicitly: `registerComponent(slug, name, component)`, `registerSlotComponent(slot, component, options)` and `registerPage('Plugin::slug/Page', component)`. `window.Inventoros.plugin(slug)` returns the scoped SDK. `window.Inventoros.i18n` is read-only (`t`, `te` and `locale` on the app's own keys). `window.Inventoros.apiVersion` is `2` on installs that offer the members marked "since `apiVersion` 2"; check it, or that a member exists (`plugin.ui.Input ?? fallback`), when a plugin supports older installs.
 

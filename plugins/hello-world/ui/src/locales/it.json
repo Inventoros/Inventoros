@@ -1,0 +1,22 @@
+{
+    "title": "Ciao mondo",
+    "tabLabel": "Ciao",
+    "plugins": "Plugin",
+    "bannerTitle": "Ciao dal plugin Ciao mondo",
+    "pluginActive": "Plugin attivo",
+    "bannerDescription": "Questo avviso viene caricato dal pacchetto precompilato del plugin e funziona senza eseguire npm.",
+    "managePlugins": "Gestisci nella pagina Plugin.",
+    "version": "Versione {version}",
+    "dismiss": "Chiudi",
+    "greeting": "Ciao, {name}",
+    "productGreeting": "Ciao, prodotto",
+    "tabDescription": "Questa scheda proviene dal plugin Ciao mondo. Compare perché il plugin ha inserito un componente nello spazio {slot} della pagina prodotto; i dettagli restano nella scheda Panoramica.",
+    "widgetLabel": "un prodotto ti saluta | i prodotti ti salutano",
+    "openPage": "Apri la pagina Ciao mondo",
+    "pageDescription": "Una pagina visualizzata dal pacchetto del plugin Ciao mondo.",
+    "pageGreeting": "Ciao, {name}.",
+    "anonymousGreeting": "Ciao.",
+    "registrationDescription": "Questa rotta è stata registrata con {phpRegistration} nel PHP del plugin e questa pagina con {bundleRegistration} nel pacchetto precompilato.",
+    "organizationProducts": "La tua organizzazione ha {total} prodotto. | La tua organizzazione ha {total} prodotti.",
+    "backToDashboard": "Torna alla dashboard"
+}

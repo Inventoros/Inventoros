@@ -1,4 +1,5 @@
 <script setup>
+import { t, formatNumber } from './i18n.js';
 // A dashboard widget. Its props are the widget's `data`, which the server
 // computes only for users who hold the widget's permission.
 const {
@@ -12,9 +13,9 @@ defineProps({
 
 <template>
     <div class="hw-widget">
-        <p class="hw-widget__value">{{ productCount }}</p>
-        <p class="hw-widget__label">products say hello</p>
-        <Link href="/p/hello-world" class="hw-widget__link">Open the Hello World page</Link>
+        <p class="hw-widget__value">{{ formatNumber(productCount) }}</p>
+        <p class="hw-widget__label">{{ t('widgetLabel', { count: productCount }) }}</p>
+        <Link href="/p/hello-world" class="hw-widget__link">{{ t('openPage') }}</Link>
     </div>
 </template>
 
