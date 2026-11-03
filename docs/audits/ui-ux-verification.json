@@ -1,113 +1,211 @@
 {
   "audit_date": "2026-11-02",
-  "implementation_commit": "25a5cc41",
-  "strict_locale_harness_commit": "6d3672e7",
-  "runs": {
-    "full": "https://github.com/Inventoros/Inventoros/actions/runs/41502431909",
-    "strict_locales": "https://github.com/Inventoros/Inventoros/actions/runs/41505431538",
-    "interactions": "https://github.com/Inventoros/Inventoros/actions/runs/41502425404",
-    "backend": "https://github.com/Inventoros/Inventoros/actions/runs/41502425546",
-    "e2e": "https://github.com/Inventoros/Inventoros/actions/runs/41502425572",
-    "screenshots": "https://github.com/Inventoros/Inventoros/actions/runs/41497379156"
-  },
+  "implementation_commit": "342e5e05",
   "findings": {
-    "discovered": 31,
-    "fixed": 29,
+    "discovered": 38,
+    "fixed": 37,
     "remaining": {
       "P0": 0,
       "P1": 0,
-      "P2": 2,
+      "P2": 1,
       "P3": 0
     }
   },
-  "full_sweep": {
-    "checks": 1164,
-    "screenshots": 544,
-    "widths": {
-      "320": 226,
-      "375": 124,
-      "430": 124,
-      "768": 124,
-      "1024": 124,
-      "1440": 318,
-      "1920": 124
-    },
-    "languages": {
-      "ar": 12,
-      "de": 12,
-      "en": 1008,
-      "es": 12,
-      "fr": 12,
-      "it": 12,
-      "ja": 12,
-      "ko": 12,
-      "nl": 11,
-      "pl": 12,
-      "pt-BR": 12,
-      "ru": 13,
-      "tr": 12,
-      "zh-CN": 12
-    },
-    "axeChecked": 246,
-    "unexpectedHttp": [],
-    "javascriptExceptions": [],
-    "documentOverflows": [],
-    "accessibilityFindings": []
+  "second_pass": {
+    "reviewed": 9,
+    "fixed": 8,
+    "carried_over": 2,
+    "new_findings": 7
   },
-  "strict_locale_sweep": {
-    "checks": 168,
-    "screenshots": 168,
-    "widths": {
-      "320": 84,
-      "1440": 84
-    },
-    "languages": {
-      "ar": 12,
-      "de": 12,
-      "en": 12,
-      "es": 12,
-      "fr": 12,
-      "it": 12,
-      "ja": 12,
-      "ko": 12,
-      "nl": 12,
-      "pl": 12,
-      "pt-BR": 12,
-      "ru": 12,
-      "tr": 12,
-      "zh-CN": 12
-    },
-    "axeChecked": 0,
-    "unexpectedHttp": [],
-    "javascriptExceptions": [],
-    "documentOverflows": [],
-    "accessibilityFindings": []
+  "runs": {
+    "full": "https://github.com/Inventoros/Inventoros/actions/runs/41562022628",
+    "backend": "https://github.com/Inventoros/Inventoros/actions/runs/41562021075",
+    "e2e": "https://github.com/Inventoros/Inventoros/actions/runs/41562021067"
   },
-  "interaction_sweep": {
-    "checks": 100,
-    "screenshots": 45,
-    "widths": {
-      "320": 23,
-      "375": 11,
-      "430": 11,
-      "768": 11,
-      "1024": 11,
-      "1440": 22,
-      "1920": 11
-    },
-    "languages": {
-      "en": 100
-    },
-    "axeChecked": 34,
-    "unexpectedHttp": [],
-    "javascriptExceptions": [],
-    "documentOverflows": [],
-    "accessibilityFindings": []
+  "verification": {
+    "js_passed": 224,
+    "e2e_passed": 101,
+    "targeted_php_passed": 46,
+    "targeted_php_assertions": 302,
+    "locale_php_passed": 9,
+    "locale_php_assertions": 60,
+    "additional_plugin_locale_records": 224,
+    "supported_languages": 14,
+    "core_keys_per_locale": 3329,
+    "plugin_ui_keys_per_locale": 73,
+    "backend_shared_entries_per_locale": 148,
+    "tax_plugin_backend_messages": 16,
+    "tax_plugin_validation_labels": 19
   },
-  "scope_notes": [
-    "Application code is unchanged between the implementation and stricter locale-harness commits.",
-    "One Dutch capture in the first full run used Russian before the preference save completed. The strict locale sweep waits for persistence and verifies exactly 12 checks per locale.",
-    "Warehouse popup accessibility scans cover the foreground menu. Base pages and other dialog states receive document-wide scans; keyboard and click-away regressions verify background access after dismissal.",
-    "These counts describe automated rendered checks, not manual inspection of every screenshot or complete WCAG conformance."
-  ]
+  "assets": {
+    "entry_before": {
+      "bytes": 2650125,
+      "gzip": 790465
+    },
+    "entry_after": {
+      "bytes": 637316,
+      "gzip": 210657
+    },
+    "non_english_locales_lazy": 13,
+    "global_speculative_prefetch": false,
+    "performance_note": "Asset sizes, not Core Web Vitals; selected language adds its catalog. Functional browser regression asserts no unselected-language downloads."
+  },
+  "full_sweep_evidence": {
+    "artifact": "ui-ux-audit",
+    "summary_file": "audit-artifacts/summary.json",
+    "note": "The linked full run publishes measured counts, screenshots, HTTP/overflow/axe/JavaScript findings. First-pass measured summaries remain below as historical evidence."
+  },
+  "manual_browser": {
+    "browser": "Chrome",
+    "widths": [
+      320,
+      1920
+    ],
+    "short_mobile_height": 568,
+    "languages": [
+      "en",
+      "fr",
+      "ar"
+    ],
+    "verified": [
+      "real notification payload",
+      "bell pointer toggling and Escape",
+      "French selection",
+      "Arabic plugin page/settings/tab and visible navigation after fresh load",
+      "own-account delete explanation",
+      "permission-search empty feedback",
+      "mobile delete dialog names/focus",
+      "table scrolling"
+    ],
+    "final_workspace": {
+      "viewport": [
+        1920,
+        911
+      ],
+      "document_overflow": [
+        0,
+        0
+      ],
+      "table_height": 724,
+      "table_content_height": 891
+    },
+    "console_errors": []
+  },
+  "remaining": [
+    "Invoice PDF labels and Arabic/CJK font/layout support",
+    "Exceptional provider diagnostics outside existing catalogs"
+  ],
+  "first_pass": {
+    "audit_date": "2026-11-02",
+    "implementation_commit": "25a5cc41",
+    "strict_locale_harness_commit": "6d3672e7",
+    "runs": {
+      "full": "https://github.com/Inventoros/Inventoros/actions/runs/41502431909",
+      "strict_locales": "https://github.com/Inventoros/Inventoros/actions/runs/41505431538",
+      "interactions": "https://github.com/Inventoros/Inventoros/actions/runs/41502425404",
+      "backend": "https://github.com/Inventoros/Inventoros/actions/runs/41502425546",
+      "e2e": "https://github.com/Inventoros/Inventoros/actions/runs/41502425572",
+      "screenshots": "https://github.com/Inventoros/Inventoros/actions/runs/41497379156"
+    },
+    "findings": {
+      "discovered": 31,
+      "fixed": 29,
+      "remaining": {
+        "P0": 0,
+        "P1": 0,
+        "P2": 2,
+        "P3": 0
+      }
+    },
+    "full_sweep": {
+      "checks": 1164,
+      "screenshots": 544,
+      "widths": {
+        "320": 226,
+        "375": 124,
+        "430": 124,
+        "768": 124,
+        "1024": 124,
+        "1440": 318,
+        "1920": 124
+      },
+      "languages": {
+        "ar": 12,
+        "de": 12,
+        "en": 1008,
+        "es": 12,
+        "fr": 12,
+        "it": 12,
+        "ja": 12,
+        "ko": 12,
+        "nl": 11,
+        "pl": 12,
+        "pt-BR": 12,
+        "ru": 13,
+        "tr": 12,
+        "zh-CN": 12
+      },
+      "axeChecked": 246,
+      "unexpectedHttp": [],
+      "javascriptExceptions": [],
+      "documentOverflows": [],
+      "accessibilityFindings": []
+    },
+    "strict_locale_sweep": {
+      "checks": 168,
+      "screenshots": 168,
+      "widths": {
+        "320": 84,
+        "1440": 84
+      },
+      "languages": {
+        "ar": 12,
+        "de": 12,
+        "en": 12,
+        "es": 12,
+        "fr": 12,
+        "it": 12,
+        "ja": 12,
+        "ko": 12,
+        "nl": 12,
+        "pl": 12,
+        "pt-BR": 12,
+        "ru": 12,
+        "tr": 12,
+        "zh-CN": 12
+      },
+      "axeChecked": 0,
+      "unexpectedHttp": [],
+      "javascriptExceptions": [],
+      "documentOverflows": [],
+      "accessibilityFindings": []
+    },
+    "interaction_sweep": {
+      "checks": 100,
+      "screenshots": 45,
+      "widths": {
+        "320": 23,
+        "375": 11,
+        "430": 11,
+        "768": 11,
+        "1024": 11,
+        "1440": 22,
+        "1920": 11
+      },
+      "languages": {
+        "en": 100
+      },
+      "axeChecked": 34,
+      "unexpectedHttp": [],
+      "javascriptExceptions": [],
+      "documentOverflows": [],
+      "accessibilityFindings": []
+    },
+    "scope_notes": [
+      "Application code is unchanged between the implementation and stricter locale-harness commits.",
+      "One Dutch capture in the first full run used Russian before the preference save completed. The strict locale sweep waits for persistence and verifies exactly 12 checks per locale.",
+      "Warehouse popup accessibility scans cover the foreground menu. Base pages and other dialog states receive document-wide scans; keyboard and click-away regressions verify background access after dismissal.",
+      "These counts describe automated rendered checks, not manual inspection of every screenshot or complete WCAG conformance."
+    ]
+  }
 }

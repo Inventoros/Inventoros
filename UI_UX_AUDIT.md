@@ -4,13 +4,13 @@ Audit date: 2 November 2026. **Application-wide verification completed**, with t
 
 ## Executive summary
 
-The approved identity is retained: restrained blue actions, semantic light/dark surfaces, compact navigation and operational tables filling the workspace. The main defects were dialog focus, unnamed controls, mixed-language feedback, incomplete Arabic direction, stale translated labels, narrow-screen overflow and table alignment. The register contains **31 findings: 29 fixed and two remaining P2 items**. No known P0/P1 issue remains in the verified scope. The full sweep recorded 1,164 checks, 544 screenshots and 246 axe scans with no unexpected HTTP responses, JavaScript exceptions, document overflows or scoped accessibility findings. Supported-language verification was independently rerun with explicit language/direction assertions.
+The approved identity is retained: restrained blue actions, semantic light/dark surfaces, compact navigation and operational tables filling the workspace. The register now contains **38 findings: 37 fixed and one partially resolved P2 localization item**. The second pass reviewed nine findings, including two carried over from the first pass, and fixed eight. It addresses real notification responses, rejected actions, late plugin translations and language-loading performance. No known P0/P1 issue remains in the verified scope. Earlier passing runs remain historical evidence alongside the second-pass verification below.
 
 ## Application discovery and audit checklist
 
 Laravel 13, Inertia 3, Vue 3, Tailwind 4, Lucide, vue-i18n 11 and Vite form the stack. AppLayout, GuestLayout and PortalLayout share semantic tokens in `resources/css/design-tokens.css`, `dashboard.css` and `tables.css`. The existing Inter/Figtree/system font stack, compact 13px operational text, blue actions and semantic borders/surfaces are preserved.
 
-The [application map](docs/audits/ui-ux-application-map.json) inventories 123 page Vue files: 118 top-level templates and five embedded partials. Initial discovery counted 64 reusable Vue components, 83 form sources, 24 dialog/teleport sources and 71 table templates in 61 files. There are now 66 components after adding DialogSurface and Pagination. The normalized map has 119 route candidates, including one API route sharing a controller. An inventoried template is not automatically a visually verified screen.
+The [application map](docs/audits/ui-ux-application-map.json) inventories 123 page Vue files: 118 top-level templates and five embedded partials. Initial discovery counted 64 reusable Vue components, 83 form sources, 24 dialog/teleport sources and 71 table templates in 61 files. There are now 67 components after adding DialogSurface, Pagination and ActionError. The normalized map has 119 route candidates, including one API route sharing a controller. An inventoried template is not automatically a visually verified screen.
 
 - [x] Map routes, templates, roles, shared components, conventions and localization files.
 - [x] Review spacing, typography, colors, states and table architecture in source and screenshots.
@@ -35,13 +35,13 @@ The optional plugin sweep activates Hello World and Tax Billing only in its disp
 
 Widths: **320, 375, 430, 768, 1024, 1440, 1920**. Height is 812 below tablet and 1080 otherwise; tall-dialog regressions also use 320x568. Audit screenshots are captured at 320/1440; the public gallery is 1920x1080. Dark-mode automation covers staff routes at 1440 and six layout families at 320. This is not every combination of route, viewport, theme and language.
 
-All **14 languages** are covered by source/catalog checks: ar, de, en, es, fr, it, ja, ko, nl, pl, pt-BR, ru, tr, zh-CN. Each frontend catalog has **3,324 leaf keys**. Key/interpolation/plural parity and message compilation pass across all 14. The language browser sweep visits dashboard, product index/create, orders, account settings and reports at 320/1440. Arabic has an additional real browser assertion for RTL persistence and mirrored sidebar placement. French headings were manually verified to update and return to English without navigation.
+All **14 languages** are covered by source/catalog checks: ar, de, en, es, fr, it, ja, ko, nl, pl, pt-BR, ru, tr, zh-CN. Each frontend catalog now has **3,329 leaf keys**. Key/interpolation/plural parity and message compilation pass across all 14. The language browser sweep visits dashboard, product index/create, orders, account settings and reports at 320/1440. Arabic has an additional real browser assertion for RTL persistence and mirrored sidebar placement. French headings were manually verified to update and return to English without navigation.
 
-Backend JSON catalogs contain **148 shared feedback/validation entries per locale**, with placeholder and encoding checks. Standard Laravel auth/password/pagination/validation catalogs remain in use. Internal protocol values, CSV/API identifiers and user data are preserved. Optional plugin-owned copy and exception/provider diagnostics outside these catalogs remain a translation gap; this is not a claim that every possible backend exception has been translated.
+Backend JSON catalogs contain **148 shared feedback/validation entries per locale**, with placeholder and encoding checks. Standard Laravel auth/password/pagination/validation catalogs remain in use. The two bundled plugins add **73 frontend keys**, and Tax Billing adds **16 backend messages and 19 validation labels**, in every supported language. Plugin catalog parity, interpolation, compilation and shipped-bundle rendering are tested. Internal protocol values, CSV/API identifiers, configured tax labels and immutable invoice snapshots are preserved. Fixed-English invoice PDF labels/fonts and exception/provider diagnostics outside these catalogs remain a translation gap.
 
 ## Issues discovered and fixes implemented
 
-Rows 01-28 and 31 are fixed and regression-verified. References name the main shared fix, not every affected page. Rows 29-30 remain open.
+References name the main shared fix, not every affected page. Rows 01-31 describe the initial pass; rows 32-38 record the second pass. Final verification and remaining scope are listed below.
 
 | ID | Severity | Finding and impact | Fix / main files |
 | --- | --- | --- | --- |
@@ -73,11 +73,32 @@ Rows 01-28 and 31 are fixed and regression-verified. References name the main sh
 | 26 | P2 | Fresh-install titles said Laravel; auth heading semantics were missing. | Inventoros defaults and localized auth headings; existing configured APP_NAME is preserved. |
 | 27 | P2 | Demo order/PO totals lacked supporting lines and customer links. | Deterministic linked fixtures, exact totals/cost snapshots and consistency regression. |
 | 28 | P1 | Workspace menus/drawer lacked consistent keyboard dismissal/focus; open menus left partially covered targets clickable. | Shared disclosure keys, selection semantics, click-away layers, drawer containment/Escape restoration and regressions. |
-| 29 | P2 | Optional plugins and exception/provider diagnostics contain English outside shared catalogs. | **Remaining:** localize plugin copy/tax terminology through scoped i18n and review user-facing diagnostic fallbacks. |
-| 30 | P2 | Eager application bundle is about 2.65MB minified / 790KB gzip. | **Remaining:** split locale/runtime payloads after measuring throttled first-interaction performance. |
+| 29 | P2 | Optional plugins and exception/provider diagnostics contain English outside shared catalogs. | **Partially resolved:** all bundled plugin UI, permission labels and tax validation/flash messages now cover 14 locales; tab/menu/widget labels react to late message registration. **Remaining:** invoice PDF labels/font support and exceptional provider diagnostics. |
+| 30 | P2 | Eager application bundle is about 2.65MB minified / 790KB gzip; global speculative prefetch would download all split locales anyway. | English fallback remains eager; 13 other catalogs load on selection, with initial-load, race, merge, retry and failure handling. Disable broad speculative asset prefetch; test real deferred downloads. |
 | 31 | P1 | Direct permission-denied visits showed a plain framework page without recovery navigation; refreshing could make Back loop. | Browser staff 403s use Errors/403 consistently; sanitize previous URL to a same-origin noncurrent fallback. JSON/API/portal behavior is preserved; PHP and browser regressions cover recovery. |
+| 32 | P1 | Notification dropdown expected an ordinary JSON response from an Inertia endpoint; unread messages appeared empty and failed requests had no usable feedback. | Read the actual partial Inertia payload, retain records/count on failures, announce retryable errors, cancel unmounted requests and coalesce overlapping loads/writes. |
+| 33 | P1 | Notification details launched competing GET/POST requests, risking a cancelled read update or duplicate destination load. | Follow the existing server redirect through one guarded Inertia POST; verify the write precedes one destination request. |
+| 34 | P1 | Rejected user/role/order deletion and order approval closed the confirmation and hid validation; review notes could disappear. | useForm closes only on success; shared ActionError announces/focuses the reason inside the open dialog. Notes survive rejection; duplicate submissions are guarded. |
+| 35 | P2 | Self-deletion was offered despite server rejection; user/role delete buttons ignored the delete permission. | Match existing permission gates; disable self-delete with a translated visible explanation. Server authorization remains authoritative. |
+| 36 | P2 | Permission search's scroll region was called Activity Log and provided no feedback for no matches. | Correct region name and localized status for empty search results. |
+| 37 | P2 | Parent opacity and pale timestamps reduced notification text below AA contrast despite semantic text colors. | Remove read-row opacity and use readable timestamp colors while retaining read/unread indicators. |
+| 38 | P2 | Notification click-away layer covered the bell, preventing pointer dismissal/reopening during loading. | Keep the open bell above its backdrop; exercise actual repeated pointer clicks while a request is delayed. |
 
 ## Verification results
+
+### Second pass
+
+Implementation commits: `a2baf46e`, `d5b9cb02`, `342e5e05`. The first new functional run exposed the bell/backdrop defect, speculative locale downloads and an ambiguous status assertion; these were fixed rather than retried away. Superseded runs were cancelled. No test was removed or weakened to accept a broken interaction.
+
+- [Functional browser CI](https://github.com/Inventoros/Inventoros/actions/runs/41562021067): **101 passed**, no flaky result. Four new action-feedback, seven notification-feedback and three real locale-download tests cover rejected updates, input preservation, overlap/coalescing, one destination request, genuine retry, initial RTL, cached languages and no unselected-language downloads.
+- Local **224 JS tests pass**, including 14-language core/plugin parity, shipped plugin bundle rendering and real Vue reactivity after late catalog registration. The targeted PHP pass contains **46 tests / 302 assertions** for notifications, plugin metadata, namespace boundaries and tax billing; locale preference tests separately pass **9 tests / 60 assertions**.
+- [Backend/database CI](https://github.com/Inventoros/Inventoros/actions/runs/41562021075) runs SQLite, MySQL and PostgreSQL plus JS, production installation and dependency checks. Its job logs contain the final totals.
+- [Second full strict rendered sweep](https://github.com/Inventoros/Inventoros/actions/runs/41562022628) retains all seven viewports, guest/portal/authentication/installer states, dark screens and core language checks. It adds **224 plugin locale records** across all 14 languages at 320/1440: plugin pages, visible navigation, banner/widget, selected product tab, order action and customer field. Each record asserts language/direction and real text against the relevant catalog. Uploaded `summary.json` and screenshots are the measured evidence.
+- Production Vite build passes. The application entry is **637,316 bytes / 210,657 gzip**, versus **2,650,125 / 790,465** before the split: **76.0% less minified code, 73.4% less compressed initial JavaScript**. A non-English startup additionally loads its selected catalog. This is an asset-size comparison, not a measured Core Web Vitals claim. Global speculative prefetch is disabled so the bandwidth saving survives startup; page chunks still load on navigation. Vite's advisory 500KB entry warning remains.
+- PHP syntax checks, affected plugin/service Pint checks, Vue compilation and diff checks pass. AppServiceProvider has existing whole-file Pint formatting findings outside its removed prefetch/import lines; they were not broadly rewritten. No standalone lint/typecheck script exists.
+- Manual Chrome verification covers real unread records; repeated bell toggles; French switching; Arabic plugin page, tax settings, selected product tab and visible drawer labels after a fresh load; self-delete explanation; permission-search empty feedback; and the named mobile delete confirmation. [New before/after evidence](docs/audits/ui-ux/README.md) is retained. The final 1920x911 preview has zero document overflow and a 724px table scrolling 891px of content; browser-console error log is empty.
+
+### First-pass baseline and historical verification
 
 Persistent counts, run links and scope notes: [verification ledger](docs/audits/ui-ux-verification.json). The main affected areas are [DialogSurface](resources/js/Components/DialogSurface.vue), [TableViewport](resources/js/Components/ui/TableViewport.vue), [Button](resources/js/Components/ui/Button.vue), [Pagination](resources/js/Components/ui/Pagination.vue), [AppLayout](resources/js/Layouts/AppLayout.vue), [shared styles](resources/css/design-tokens.css), [date helpers](resources/js/lib/dates.js), [frontend catalogs](resources/js/i18n/locales), [server catalogs](lang), controller feedback and the audit/regression tests under `e2e/tests` and `tests/Feature`.
 
@@ -101,15 +122,15 @@ The [live desktop capture](docs/audits/ui-ux/workspace-after.png) is 1920x911: t
 
 ## Remaining work and verification limits
 
-Remaining severity counts: **P0: 0; P1: 0; P2: 2; P3: 0** in the findings register. The two P2 items are plugin/diagnostic localization and initial bundle size. This is not a claim of exhaustive state coverage or certified accessibility.
+Remaining severity counts: **P0: 0; P1: 0; P2: 1; P3: 0** in the findings register. The partially resolved item is localization outside the translated UI catalogs: invoice PDF labels and Arabic/CJK font/layout support, plus exceptional provider diagnostics. Existing configured tax labels, historical notification text and immutable invoice snapshots retain their recorded values. This is not a claim of exhaustive state coverage or certified accessibility.
 
 Native screen readers, native-speaker review in all languages, physical iOS/Android devices, Firefox/Safari and every provider/permission combination were not tested. Catalog parity does not establish linguistic quality. All conditional tab/modal branches, expired invitation/session states, credential issuance/activation and provider failures were not exhaustively exercised visually. Real email delivery, paid labels, marketplace transactions, invoice issuance and production installation/update flows were not exercised. Backend permission/failure tests are not claimed as visual verification.
 
 ## Recommendations
 
 1. Retain the strict route/viewport sweep as a release gate and review its artifacts alongside functional e2e.
-2. Localize optional plugin interfaces with scoped i18n and add their catalogs to parity checks.
-3. Load locales on demand, then measure cold navigation/first interaction under throttling.
+2. Extend localization to invoice exports with an explicit document-language choice and verified Arabic/CJK font/layout support; review exceptional diagnostic fallbacks.
+3. Measure cold navigation/first interaction and Core Web Vitals under throttling after the verified locale split.
 4. Add native screen-reader and native-speaker acceptance, prioritizing Arabic and longer German/Polish/Russian text.
 
 Criteria: [WCAG 2.2](https://www.w3.org/TR/WCAG22/) and [axe documentation](https://github.com/dequelabs/axe-core/blob/develop/doc/API.md). This targets practical AA improvements, not certified conformance.

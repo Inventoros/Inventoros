@@ -23,3 +23,21 @@ The [public screenshot gallery](../../../screenshots) contains the regenerated l
 ## Full-height operational workspace
 
 The desktop [after capture](workspace-after.png) measures 1920x911. The document has no horizontal or vertical overflow; the table occupies 724px and independently scrolls 891px of row content.
+
+## Second audit: account actions and runtime localization
+
+Account actions at 1920x911, using the disposable administrator account. The unavailable delete action now has a visible explanation. Rejected delete/approval feedback is separately verified with non-writing browser response fixtures.
+
+| Before | After |
+| --- | --- |
+| ![Self-delete offered as available](account-actions-before.png) | ![Self-delete disabled with an explanation](account-actions-after.png) |
+
+The [notification capture](notifications-after.png) shows a real unread record loaded from the existing Inertia endpoint. The [Arabic plugin capture](plugin-ar-mobile-after.png) shows translated runtime content at 320x568.
+
+The second pass also caught stale sidebar labels after an asynchronous plugin bundle loaded. Both captures use Arabic at 320x568 with the same links focused and scrolled into view.
+
+| Before | After |
+| --- | --- |
+| ![English plugin navigation in the Arabic drawer](plugin-navigation-before.png) | ![Translated plugin navigation after a fresh load](plugin-navigation-after.png) |
+
+The [final workspace capture](workspace-second-pass.png) retains the 724px scrolling table at 1920x911, with no document overflow.
