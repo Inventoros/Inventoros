@@ -3,7 +3,7 @@ import { onBeforeUnmount, onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { ChevronDown } from '@lucide/vue';
 
-const { t } = useI18n();
+const { t, locale } = useI18n();
 const actions = ref(null);
 const actionsToggle = ref(null);
 const actionsOpen = ref(false);
@@ -29,6 +29,8 @@ defineProps({
     title: { type: String, required: true },
     description: { type: String, default: null },
     eyebrow: { type: String, default: null },
+    icon: { type: [Object, Function], default: null },
+    count: { type: Number, default: null },
 });
 </script>
 
@@ -50,11 +52,11 @@ defineProps({
             >
                 {{ eyebrow }}
             </p>
-            <h1
-                class="mt-0.5 text-xl font-semibold text-text-primary tracking-tight wrap-break-word"
-            >
-                {{ title }}
-            </h1>
+            <div class="page-header-title flex min-w-0 items-center gap-2.5">
+                <component v-if="icon" :is="icon" :size="19" :stroke-width="1.6" aria-hidden="true" class="shrink-0 text-text-tertiary" />
+                <h1 class="min-w-0 mt-0.5 text-xl font-semibold text-text-primary tracking-tight [overflow-wrap:anywhere]">{{ title }}</h1>
+                <span v-if="count !== null" class="record-count shrink-0" :title="t('common.total')">{{ new Intl.NumberFormat(locale).format(count) }}</span>
+            </div>
             <p v-if="description" class="mt-1 text-sm text-text-secondary">
                 {{ description }}
             </p>

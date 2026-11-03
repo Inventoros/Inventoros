@@ -8,7 +8,7 @@
  * Design notes:
  *   - Light, single-surface sidebar (matches the workspace, not a dark slab)
  *   - Lucide icons (no inline SVG paths)
- *   - 240px fixed width — no collapse rail; mobile drawer instead
+ *   - 232px fixed width — no collapse rail; mobile drawer instead
  *   - Section labels (UPPERCASE, tracking-wider) group related nav items
  *   - Workspace badge at top, user pill at bottom
  *   - Branded header, workspace card, quiet selected navigation
@@ -243,7 +243,7 @@ const isActive = (item) => item.active.some((pattern) => route().current(pattern
 </script>
 
 <template>
-    <div class="min-h-screen bg-surface-canvas text-text-primary" :class="{ 'app-layout-table': tablePage }">
+    <div class="workspace-shell min-h-screen bg-surface-canvas text-text-primary" :class="{ 'app-layout-table': tablePage }">
         <!-- Mobile top bar -->
         <div class="md:hidden fixed top-0 inset-x-0 z-40 h-12 flex items-center justify-between px-4 bg-surface-base border-b border-border-subtle">
             <Link :href="route('dashboard')" class="flex items-center gap-2">
@@ -279,30 +279,30 @@ const isActive = (item) => item.active.some((pattern) => route().current(pattern
             @keydown="event => { if (isMobile && mobileOpen) containTabFocus(event, sidebarRef); }"
             :inert="isMobile && !mobileOpen"
             :class="[
-                'fixed md:fixed inset-y-0 start-0 z-50 w-60 flex flex-col',
+                'workspace-sidebar fixed md:fixed inset-y-0 start-0 z-50 w-60 flex flex-col',
                 'bg-surface-base border-e border-border-subtle',
                 'transform transition-transform duration-200',
                 mobileOpen ? 'translate-x-0' : '-translate-x-full rtl:translate-x-full md:translate-x-0 rtl:md:translate-x-0',
                 'pt-12 md:pt-0',
             ]"
         >
-            <Link :href="route('dashboard')" class="flex h-16 shrink-0 items-center gap-2.5 px-5 text-xl font-semibold tracking-tighter ds-focus-ring">
-                <img src="/images/brand/inventoros_icon_transparent_512.png" alt="" class="h-8 w-8 object-contain" />
+            <Link :href="route('dashboard')" class="workspace-brand flex h-14 shrink-0 items-center gap-2 px-5 text-lg font-semibold tracking-tight ds-focus-ring">
+                <img src="/images/brand/inventoros_icon_transparent_512.png" alt="" class="h-6 w-6 object-contain" />
                 <span>Inventoros</span>
             </Link>
-            <!-- Workspace card retains the organization's custom logo. -->
-            <div class="mx-3 mb-3 flex shrink-0 items-center rounded-lg border border-border-subtle bg-surface-raised">
+            <!-- Workspace context retains the organization's custom logo. -->
+            <div class="workspace-context mx-3 mb-2 flex shrink-0 items-center rounded-md">
                 <Link
                     :href="route('dashboard')"
                     :title="workspaceName"
-                    class="flex items-center gap-2.5 w-full px-2.5 py-3 rounded-lg hover:bg-surface-overlay transition-colors ds-focus-ring"
+                    class="flex items-center gap-2.5 w-full px-2 py-2 rounded-md hover:bg-surface-overlay transition-colors ds-focus-ring"
                 >
-                    <img v-if="workspaceLogo" :src="workspaceLogo" :alt="workspaceName" class="h-7 w-7 shrink-0 object-contain" />
-                    <span v-else class="h-7 w-7 shrink-0 rounded-md bg-surface-overlay grid place-items-center text-sm font-semibold">{{ workspaceName.charAt(0).toUpperCase() }}</span>
+                    <img v-if="workspaceLogo" :src="workspaceLogo" :alt="workspaceName" class="h-6 w-6 shrink-0 object-contain" />
+                    <span v-else class="h-6 w-6 shrink-0 rounded-md border border-border-subtle bg-surface-raised grid place-items-center text-xs font-semibold">{{ workspaceName.charAt(0).toUpperCase() }}</span>
                     <span class="text-xs font-semibold tracking-tight truncate flex-1 text-start">
                         {{ workspaceName }}
                     </span>
-                    <PackageSearch :size="14" class="text-text-tertiary" />
+                    <PackageSearch :size="14" :stroke-width="1.6" class="text-text-tertiary" />
                 </Link>
             </div>
 
@@ -310,8 +310,8 @@ const isActive = (item) => item.active.some((pattern) => route().current(pattern
             <div class="px-3 shrink-0">
                 <button
                     @click="globalSearchRef?.open()"
-                    class="w-full flex items-center gap-2 h-8 px-2.5 rounded-md text-xs text-text-tertiary
-                           bg-surface-raised border border-border-subtle hover:border-border-strong
+                    class="workspace-search w-full flex items-center gap-2 h-8 px-2.5 rounded-md text-xs text-text-secondary
+                           bg-surface-overlay border border-transparent hover:border-border-strong
                            transition-colors ds-focus-ring"
                 >
                     <Search :size="13" />
@@ -323,9 +323,9 @@ const isActive = (item) => item.active.some((pattern) => route().current(pattern
             </div>
 
             <!-- Nav -->
-            <nav class="flex-1 mt-4 overflow-y-auto ds-scroll px-3 pb-4">
+            <nav class="workspace-nav flex-1 mt-4 overflow-y-auto ds-scroll px-3 pb-4">
                 <div v-for="section in visibleSections" :key="section.id" class="mb-4">
-                    <p class="px-2 mb-1 text-[10px] font-medium uppercase tracking-wider text-text-tertiary">
+                    <p class="workspace-section-label px-2 mb-1 text-[11px] font-medium text-text-tertiary">
                         {{ section.label }}
                     </p>
                     <div class="space-y-px">
@@ -335,16 +335,17 @@ const isActive = (item) => item.active.some((pattern) => route().current(pattern
                             :key="item.name"
                             :href="item.href"
                             :class="[
-                                'group flex items-center gap-2.5 h-8 px-2.5 rounded-md text-[13px] font-medium',
+                                'workspace-nav-item group flex items-center gap-2.5 h-8 px-2.5 rounded-md text-[13px]',
                                 'transition-colors ds-focus-ring',
                                 isActive(item)
-                                    ? 'bg-brand-soft text-brand ring-1 ring-inset ring-brand/15'
+                                    ? 'is-active text-text-primary'
                                     : 'text-text-secondary hover:bg-surface-overlay hover:text-text-primary',
                             ]"
                         >
                             <component
                                 :is="item.icon"
-                                :size="15"
+                                :size="16"
+                                :stroke-width="1.65"
                                 :class="isActive(item) ? 'text-brand' : 'text-text-tertiary group-hover:text-text-secondary'"
                             />
                             <span class="truncate flex-1">{{ item.name }}</span>
@@ -389,15 +390,15 @@ const isActive = (item) => item.active.some((pattern) => route().current(pattern
         </aside>
 
         <!-- Main column -->
-        <div class="app-main-column md:ps-60 pt-12 md:pt-0" :inert="isMobile && mobileOpen">
+        <div class="workspace-main app-main-column pt-12 md:pt-0" :inert="isMobile && mobileOpen">
             <!-- Top strip — sticky, thin -->
-            <div class="app-topbar sticky top-0 z-30 h-14 flex items-center justify-between gap-3 px-4 md:px-8 bg-surface-raised border-b border-border-subtle">
+            <div class="workspace-topbar app-topbar sticky top-0 z-30 h-14 flex items-center justify-between gap-3 px-4 md:px-8 bg-surface-raised border-b border-border-subtle">
                 <div class="app-breadcrumb flex-1 min-w-0">
                     <slot name="header">
                         <span class="text-xs text-text-tertiary">{{ workspaceName }}</span>
                     </slot>
                 </div>
-                <div class="flex items-center gap-1 shrink-0">
+                <div class="workspace-global-controls flex items-center gap-1 shrink-0">
                     <OrganizationSwitcher />
                     <WarehouseSwitcher />
                     <LanguageSwitcher />

@@ -122,6 +122,43 @@ test('numeric product headings and cells align to the end of their columns', asy
     await expect(page.locator('tbody tr').first().locator('td').nth(6)).toHaveCSS('text-align', 'end');
 });
 
+test('long unbroken record titles wrap completely within mobile page headers', async ({ page }) => {
+    const { report } = JSON.parse(readFileSync('e2e/.auth/layout-fixtures.json', 'utf8'));
+    const reportPath = `/reports/builder/${report}`;
+    const title = 'WarehouseInventory'.repeat(12);
+    await page.setViewportSize({ width: 320, height: 812 });
+    await page.goto('/reports/builder');
+    // Change only this browser's response so the shared fixture remains intact.
+    await page.route(`**${reportPath}`, async route => {
+        const response = await route.fetch();
+        const data = await response.json();
+        data.props.report.name = title;
+        await route.fulfill({ response, json: data });
+    });
+    await page.locator(`a[href$="${reportPath}"]`).first().click();
+    const heading = page.getByRole('heading', { level: 1, name: title, exact: true });
+    await expect(heading).toBeVisible();
+    for (const width of [320, 375, 430]) {
+        await page.setViewportSize({ width, height: 812 });
+        const layout = await heading.evaluate(element => {
+            const bounds = element.getBoundingClientRect();
+            return {
+                left: bounds.left,
+                right: bounds.right,
+                height: bounds.height,
+                lineHeight: parseFloat(getComputedStyle(element).lineHeight),
+                contentOverflow: element.scrollWidth - element.clientWidth,
+                pageOverflow: document.documentElement.scrollWidth - innerWidth,
+            };
+        });
+        expect(layout.left, `${width}px: heading starts inside the viewport`).toBeGreaterThanOrEqual(0);
+        expect(layout.right, `${width}px: heading ends inside the viewport`).toBeLessThanOrEqual(width);
+        expect(layout.height, `${width}px: title wraps instead of truncating`).toBeGreaterThan(layout.lineHeight);
+        expect(layout.contentOverflow, `${width}px: complete title fits its heading`).toBeLessThanOrEqual(1);
+        expect(layout.pageOverflow, `${width}px: title does not widen the page`).toBeLessThanOrEqual(1);
+    }
+});
+
 test('mobile navigation contains keyboard focus and returns it after Escape', async ({ page }) => {
     await page.setViewportSize({ width: 320, height: 812 });
     await page.goto('/products');

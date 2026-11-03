@@ -63,6 +63,7 @@ jobs:
             e2e/tests/mobile-layout.spec.ts \
             e2e/tests/table-viewport.spec.ts \
             e2e/tests/ui-foundations.spec.ts \
+            e2e/tests/account-navigation.spec.ts \
             e2e/tests/action-feedback.spec.ts \
             e2e/tests/notification-feedback.spec.ts \
             e2e/tests/locale-loading.spec.ts \

@@ -43,7 +43,8 @@ test.describe('Account Settings', () => {
     });
 
     test('should display account settings page', async ({ page }) => {
-        await expect(page.locator('h1, h2').filter({ hasText: /account|profile|settings/i })).toBeVisible();
+        await expect(page.getByRole('heading', { level: 1, name: 'Account Settings', exact: true })).toBeVisible();
+        await expect(page.getByRole('tab', { name: 'Profile', exact: true })).toHaveAttribute('aria-selected', 'true');
     });
 
     test('should display profile fields', async ({ page }) => {
@@ -52,15 +53,18 @@ test.describe('Account Settings', () => {
     });
 
     test('should have password change section', async ({ page }) => {
-        await expect(page.locator('input[name="password"], input[name="current_password"], #password')).toBeVisible();
+        await page.getByRole('tab', { name: 'Password', exact: true }).click();
+        const panel = page.getByRole('tabpanel', { name: 'Password', exact: true });
+        await expect(panel.getByLabel('Current Password', { exact: true })).toBeVisible();
+        await expect(panel.getByLabel('New Password', { exact: true })).toBeVisible();
+        await expect(panel.getByLabel('Confirm Password', { exact: true })).toBeVisible();
     });
 
     test('should have notification preferences', async ({ page }) => {
-        // Look for notification toggle/checkbox
-        const notificationToggle = page.locator('input[type="checkbox"][name*="notification"], .notification-toggle');
-
-        if (await notificationToggle.first().isVisible()) {
-            await expect(notificationToggle.first()).toBeVisible();
+        await page.getByRole('tab', { name: 'Notifications', exact: true }).click();
+        const panel = page.getByRole('tabpanel', { name: 'Notifications', exact: true });
+        for (const name of ['Email Notifications', 'Low Stock Alerts', 'Order Notifications', 'System Notifications']) {
+            await expect(panel.getByRole('switch', { name, exact: true })).toBeVisible();
         }
     });
 });

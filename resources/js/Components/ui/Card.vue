@@ -10,7 +10,7 @@ defineProps({
 <template>
     <div
         :class="cn(
-            'rounded-lg border border-border-subtle bg-surface-raised shadow-xs',
+            'rounded-lg border border-border-subtle bg-surface-raised',
             'transition-colors',
             padded && 'p-5',
             hoverable && 'hover:border-border-strong cursor-pointer',

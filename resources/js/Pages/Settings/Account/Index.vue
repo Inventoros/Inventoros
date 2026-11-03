@@ -1,12 +1,13 @@
 <script setup>
 import AppLayout from '@/Layouts/AppLayout.vue';
 import PageHeader from '@/Components/ui/PageHeader.vue';
-import Card from '@/Components/ui/Card.vue';
 import Button from '@/Components/ui/Button.vue';
+import '../../../../css/settings.css';
 import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, useId } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { availableLocales } from '@/i18n';
+import { UserCircle, KeyRound, Bell, SlidersHorizontal } from '@lucide/vue';
 
 const { t } = useI18n();
 
@@ -18,6 +19,36 @@ const props = defineProps({
 const tabs = ['profile', 'password', 'notifications', 'preferences'];
 const requestedTab = new URLSearchParams(window.location.search).get('tab');
 const activeTab = ref(tabs.includes(requestedTab) ? requestedTab : 'profile');
+const tabId = `account-${useId().replace(/[^a-zA-Z0-9_-]/g, '')}`;
+const tabButtons = ref({});
+const verticalTabs = ref(false);
+let tabMedia;
+const updateTabOrientation = () => { verticalTabs.value = tabMedia.matches; };
+onMounted(() => {
+    tabMedia = window.matchMedia('(min-width: 1024px)');
+    updateTabOrientation();
+    tabMedia.addEventListener('change', updateTabOrientation);
+});
+onBeforeUnmount(() => tabMedia?.removeEventListener('change', updateTabOrientation));
+const tabItems = computed(() => [
+    { key: 'profile', label: t('settings.account.profile'), icon: UserCircle },
+    { key: 'password', label: t('settings.account.password'), icon: KeyRound },
+    { key: 'notifications', label: t('settings.account.notifications'), icon: Bell },
+    { key: 'preferences', label: t('settings.account.preferences'), icon: SlidersHorizontal },
+]);
+const handleTabKeydown = async (event) => {
+    if (event.altKey || event.ctrlKey || event.metaKey) return;
+    if (!['ArrowDown', 'ArrowUp', 'ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+    event.preventDefault();
+    const rtl = document.documentElement.dir === 'rtl';
+    let offset = ['ArrowUp', 'ArrowLeft'].includes(event.key) ? -1 : 1;
+    if (['ArrowRight', 'ArrowLeft'].includes(event.key) && rtl) offset *= -1;
+    if (!verticalTabs.value && ['ArrowDown', 'ArrowUp'].includes(event.key)) offset *= 2;
+    const index = event.key === 'Home' ? 0 : event.key === 'End' ? tabs.length - 1 : (tabs.indexOf(activeTab.value) + offset + tabs.length) % tabs.length;
+    activeTab.value = tabs[index];
+    await nextTick();
+    tabButtons.value[activeTab.value]?.focus();
+};
 
 // Profile form
 const profileForm = useForm({
@@ -79,9 +110,9 @@ const submitPreferences = () => {
     });
 };
 
-const fieldLabel = 'mb-1 block text-sm font-medium text-text-secondary';
-const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface-canvas px-3 text-sm text-text-primary placeholder:text-text-tertiary ds-focus-ring disabled:cursor-not-allowed disabled:opacity-60';
-const fieldError = 'mt-1 text-xs text-status-danger';
+const fieldLabel = 'settings-field-label';
+const fieldInput = 'settings-field-input ds-focus-ring';
+const fieldError = 'settings-field-error';
 
 const toggles = [
     { key: 'email_notifications', label: 'settings.account.emailNotifications', desc: 'settings.account.emailNotificationsDesc' },
@@ -108,222 +139,193 @@ const toggles = [
             </div>
         </template>
 
+        <div class="settings-workspace">
         <PageHeader :title="t('settings.account.title')" :description="t('settings.account.description')" />
 
         <!-- Tabs -->
-        <div class="mt-6 border-b border-border-subtle">
-            <nav class="ds-tabs -mb-px gap-6 sm:gap-8">
-                <button
-                    @click="activeTab = 'profile'"
-                    :class="[
-                        'border-b-2 px-1 py-3 text-sm font-medium transition-colors',
-                        activeTab === 'profile'
-                            ? 'border-brand text-brand'
-                            : 'border-transparent text-text-tertiary hover:border-border-strong hover:text-text-secondary'
-                    ]"
-                >
-                    {{ t('settings.account.profile') }}
-                </button>
-                <button
-                    @click="activeTab = 'password'"
-                    :class="[
-                        'border-b-2 px-1 py-3 text-sm font-medium transition-colors',
-                        activeTab === 'password'
-                            ? 'border-brand text-brand'
-                            : 'border-transparent text-text-tertiary hover:border-border-strong hover:text-text-secondary'
-                    ]"
-                >
-                    {{ t('settings.account.password') }}
-                </button>
-                <button
-                    @click="activeTab = 'notifications'"
-                    :class="[
-                        'border-b-2 px-1 py-3 text-sm font-medium transition-colors',
-                        activeTab === 'notifications'
-                            ? 'border-brand text-brand'
-                            : 'border-transparent text-text-tertiary hover:border-border-strong hover:text-text-secondary'
-                    ]"
-                >
-                    {{ t('settings.account.notifications') }}
-                </button>
-                <button
-                    @click="activeTab = 'preferences'"
-                    :class="[
-                        'border-b-2 px-1 py-3 text-sm font-medium transition-colors',
-                        activeTab === 'preferences'
-                            ? 'border-brand text-brand'
-                            : 'border-transparent text-text-tertiary hover:border-border-strong hover:text-text-secondary'
-                    ]"
-                >
-                    {{ t('settings.account.preferences') }}
+        <div class="settings-account-shell">
+            <nav class="settings-section-nav" role="tablist" :aria-label="t('settings.account.title')" :aria-orientation="verticalTabs ? 'vertical' : 'horizontal'" @keydown="handleTabKeydown">
+                <button v-for="tab in tabItems" :key="tab.key" :ref="element => tabButtons[tab.key] = element" :id="`${tabId}-tab-${tab.key}`" type="button" role="tab" :aria-selected="activeTab === tab.key" :aria-controls="`${tabId}-panel-${tab.key}`" :tabindex="activeTab === tab.key ? 0 : -1" class="settings-section-tab ds-focus-ring" :class="{ 'is-active': activeTab === tab.key }" @click="activeTab = tab.key">
+                    <component :is="tab.icon" :size="16" aria-hidden="true" />
+                    <span>{{ tab.label }}</span>
                 </button>
             </nav>
-        </div>
+
+        <div class="settings-account-panels">
 
         <!-- Profile Tab -->
-        <div v-show="activeTab === 'profile'" class="mt-6">
-            <Card :padded="false">
+        <div v-show="activeTab === 'profile'" :id="`${tabId}-panel-profile`" role="tabpanel" :aria-labelledby="`${tabId}-tab-profile`" class="settings-account-panel">
+            <section class="settings-form-surface">
                 <form @submit.prevent="submitProfile">
-                    <div class="px-5 pt-5">
-                        <h3 class="text-sm font-semibold text-text-primary">{{ t('settings.account.profileInfo') }}</h3>
+                    <div class="settings-form-heading">
+                        <h2>{{ t('settings.account.profileInfo') }}</h2>
                     </div>
-                    <div class="p-5">
-                        <div class="grid grid-cols-1 gap-5">
-                            <div>
+                    <div class="settings-form-body">
+                        <div class="settings-fields">
+                            <div class="settings-field">
                                 <label for="name" :class="fieldLabel">{{ t('common.name') }}</label>
                                 <input
                                     id="name"
+                                    :aria-invalid="!!profileForm.errors.name"
+                                    :aria-describedby="profileForm.errors.name ? 'account-name-error' : undefined"
                                     v-model="profileForm.name"
                                     type="text"
+                                    autocomplete="name"
                                     :class="fieldInput"
                                     required
                                 />
-                                <p v-if="profileForm.errors.name" :class="fieldError">{{ profileForm.errors.name }}</p>
+                                <p v-if="profileForm.errors.name" id="account-name-error" :class="fieldError" role="alert">{{ profileForm.errors.name }}</p>
                             </div>
-                            <div>
+                            <div class="settings-field">
                                 <label for="email" :class="fieldLabel">{{ t('common.email') }}</label>
                                 <input
                                     id="email"
+                                    :aria-invalid="!!profileForm.errors.email"
+                                    :aria-describedby="profileForm.errors.email ? 'account-email-error' : undefined"
                                     v-model="profileForm.email"
                                     type="email"
+                                    autocomplete="email"
                                     :class="fieldInput"
                                     required
                                 />
-                                <p v-if="profileForm.errors.email" :class="fieldError">{{ profileForm.errors.email }}</p>
+                                <p v-if="profileForm.errors.email" id="account-email-error" :class="fieldError" role="alert">{{ profileForm.errors.email }}</p>
                             </div>
                         </div>
 
-                        <div class="mt-6 flex justify-end">
+                        <div class="settings-form-actions">
                             <Button type="submit" variant="default" :loading="profileForm.processing" :disabled="profileForm.processing">
                                 {{ t('common.saveChanges') }}
                             </Button>
                         </div>
                     </div>
                 </form>
-            </Card>
+            </section>
         </div>
 
         <!-- Password Tab -->
-        <div v-show="activeTab === 'password'" class="mt-6">
-            <Card :padded="false">
+        <div v-show="activeTab === 'password'" :id="`${tabId}-panel-password`" role="tabpanel" :aria-labelledby="`${tabId}-tab-password`" class="settings-account-panel">
+            <section class="settings-form-surface">
                 <form @submit.prevent="submitPassword">
-                    <div class="px-5 pt-5">
-                        <h3 class="text-sm font-semibold text-text-primary">{{ t('settings.account.changePassword') }}</h3>
+                    <div class="settings-form-heading">
+                        <h2>{{ t('settings.account.changePassword') }}</h2>
                     </div>
-                    <div class="p-5">
-                        <div class="grid grid-cols-1 gap-5">
-                            <div>
+                    <div class="settings-form-body">
+                        <div class="settings-fields">
+                            <div class="settings-field">
                                 <label for="current_password" :class="fieldLabel">{{ t('settings.account.currentPassword') }}</label>
                                 <input
                                     id="current_password"
+                                    :aria-invalid="!!passwordForm.errors.current_password"
+                                    :aria-describedby="passwordForm.errors.current_password ? 'account-current_password-error' : undefined"
                                     v-model="passwordForm.current_password"
                                     type="password"
                                     :class="fieldInput"
                                     required
                                     autocomplete="current-password"
                                 />
-                                <p v-if="passwordForm.errors.current_password" :class="fieldError">{{ passwordForm.errors.current_password }}</p>
+                                <p v-if="passwordForm.errors.current_password" id="account-current_password-error" :class="fieldError" role="alert">{{ passwordForm.errors.current_password }}</p>
                             </div>
-                            <div>
+                            <div class="settings-field">
                                 <label for="password" :class="fieldLabel">{{ t('settings.account.newPassword') }}</label>
                                 <input
                                     id="password"
+                                    :aria-invalid="!!passwordForm.errors.password"
+                                    :aria-describedby="passwordForm.errors.password ? 'account-password-error' : undefined"
                                     v-model="passwordForm.password"
                                     type="password"
                                     :class="fieldInput"
                                     required
                                     autocomplete="new-password"
                                 />
-                                <p v-if="passwordForm.errors.password" :class="fieldError">{{ passwordForm.errors.password }}</p>
+                                <p v-if="passwordForm.errors.password" id="account-password-error" :class="fieldError" role="alert">{{ passwordForm.errors.password }}</p>
                             </div>
-                            <div>
+                            <div class="settings-field">
                                 <label for="password_confirmation" :class="fieldLabel">{{ t('settings.account.confirmPassword') }}</label>
                                 <input
                                     id="password_confirmation"
+                                    :aria-invalid="!!passwordForm.errors.password_confirmation"
+                                    :aria-describedby="passwordForm.errors.password_confirmation ? 'account-password_confirmation-error' : undefined"
                                     v-model="passwordForm.password_confirmation"
                                     type="password"
                                     :class="fieldInput"
                                     required
                                     autocomplete="new-password"
                                 />
-                                <p v-if="passwordForm.errors.password_confirmation" :class="fieldError">{{ passwordForm.errors.password_confirmation }}</p>
+                                <p v-if="passwordForm.errors.password_confirmation" id="account-password_confirmation-error" :class="fieldError" role="alert">{{ passwordForm.errors.password_confirmation }}</p>
                             </div>
                         </div>
 
-                        <div class="mt-6 flex justify-end">
+                        <div class="settings-form-actions">
                             <Button type="submit" variant="default" :loading="passwordForm.processing" :disabled="passwordForm.processing">
                                 {{ t('settings.account.updatePassword') }}
                             </Button>
                         </div>
                     </div>
                 </form>
-            </Card>
+            </section>
         </div>
 
         <!-- Notifications Tab -->
-        <div v-show="activeTab === 'notifications'" class="mt-6">
-            <Card :padded="false">
+        <div v-show="activeTab === 'notifications'" :id="`${tabId}-panel-notifications`" role="tabpanel" :aria-labelledby="`${tabId}-tab-notifications`" class="settings-account-panel">
+            <section class="settings-form-surface">
                 <form @submit.prevent="submitNotifications">
-                    <div class="px-5 pt-5">
-                        <h3 class="text-sm font-semibold text-text-primary">{{ t('settings.account.notificationPreferences') }}</h3>
+                    <div class="settings-form-heading">
+                        <h2>{{ t('settings.account.notificationPreferences') }}</h2>
                     </div>
-                    <div class="p-5">
-                        <div class="divide-y divide-border-subtle">
+                    <div class="settings-form-body">
+                        <div class="settings-notification-list">
                             <div
                                 v-for="toggle in toggles"
                                 :key="toggle.key"
-                                class="flex items-start justify-between gap-4 py-4 first:pt-0 last:pb-0"
+                                class="settings-notification-row"
                             >
                                 <div class="min-w-0">
-                                    <label :for="toggle.key" class="block text-sm font-medium text-text-primary">
+                                    <label :for="toggle.key" class="settings-toggle-label">
                                         {{ t(toggle.label) }}
                                     </label>
-                                    <p class="mt-0.5 text-sm text-text-secondary">{{ t(toggle.desc) }}</p>
+                                    <p :id="`${toggle.key}-description`" class="settings-toggle-description">{{ t(toggle.desc) }}</p>
+                                    <p v-if="notificationForm.errors[toggle.key]" :class="fieldError" role="alert">{{ notificationForm.errors[toggle.key] }}</p>
                                 </div>
                                 <button
                                     :id="toggle.key"
                                     type="button"
                                     role="switch"
                                     :aria-checked="notificationForm[toggle.key]"
+                                    :aria-describedby="`${toggle.key}-description`"
                                     @click="notificationForm[toggle.key] = !notificationForm[toggle.key]"
-                                    :class="[
-                                        'relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors ds-focus-ring',
-                                        notificationForm[toggle.key] ? 'bg-brand' : 'bg-surface-sunken border border-border-subtle'
-                                    ]"
+                                    class="settings-toggle ds-focus-ring"
+                                    :class="{ 'is-on': notificationForm[toggle.key] }"
                                 >
-                                    <span
-                                        :class="[
-                                            'inline-block h-3.5 w-3.5 transform rounded-full bg-surface-raised shadow-xs transition-transform',
-                                            notificationForm[toggle.key] ? 'translate-x-4' : 'translate-x-1'
-                                        ]"
-                                    />
+                                    <span class="settings-toggle-thumb" aria-hidden="true" />
                                 </button>
                             </div>
                         </div>
 
-                        <div class="mt-6 flex justify-end">
+                        <div class="settings-form-actions">
                             <Button type="submit" variant="default" :loading="notificationForm.processing" :disabled="notificationForm.processing">
                                 {{ t('settings.account.savePreferences') }}
                             </Button>
                         </div>
                     </div>
                 </form>
-            </Card>
+            </section>
         </div>
 
         <!-- Preferences Tab -->
-        <div v-show="activeTab === 'preferences'" class="mt-6">
-            <Card :padded="false">
+        <div v-show="activeTab === 'preferences'" :id="`${tabId}-panel-preferences`" role="tabpanel" :aria-labelledby="`${tabId}-tab-preferences`" class="settings-account-panel">
+            <section class="settings-form-surface">
                 <form @submit.prevent="submitPreferences">
-                    <div class="px-5 pt-5">
-                        <h3 class="text-sm font-semibold text-text-primary">{{ t('settings.account.userPreferences') }}</h3>
+                    <div class="settings-form-heading">
+                        <h2>{{ t('settings.account.userPreferences') }}</h2>
                     </div>
-                    <div class="p-5">
-                        <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
-                            <div>
+                    <div class="settings-form-body">
+                        <div class="settings-fields">
+                            <div class="settings-field">
                                 <label for="theme" :class="fieldLabel">{{ t('settings.account.theme') }}</label>
                                 <select
                                     id="theme"
+                                    :aria-invalid="!!preferencesForm.errors.theme"
+                                    :aria-describedby="preferencesForm.errors.theme ? 'account-theme-error' : undefined"
                                     v-model="preferencesForm.theme"
                                     :class="fieldInput"
                                 >
@@ -331,41 +333,48 @@ const toggles = [
                                     <option value="dark">{{ t('settings.account.dark') }}</option>
                                     <option value="auto">{{ t('settings.account.auto') }}</option>
                                 </select>
-                                <p v-if="preferencesForm.errors.theme" :class="fieldError">{{ preferencesForm.errors.theme }}</p>
+                                <p v-if="preferencesForm.errors.theme" id="account-theme-error" :class="fieldError" role="alert">{{ preferencesForm.errors.theme }}</p>
                             </div>
-                            <div>
+                            <div class="settings-field">
                                 <label for="language" :class="fieldLabel">{{ t('settings.account.language') }}</label>
                                 <select
                                     id="language"
+                                    :aria-invalid="!!preferencesForm.errors.language"
+                                    :aria-describedby="preferencesForm.errors.language ? 'account-language-error' : undefined"
                                     v-model="preferencesForm.language"
                                     :class="fieldInput"
                                 >
                                     <option v-for="loc in availableLocales" :key="loc.code" :value="loc.code">{{ loc.name }}</option>
                                 </select>
-                                <p v-if="preferencesForm.errors.language" :class="fieldError">{{ preferencesForm.errors.language }}</p>
+                                <p v-if="preferencesForm.errors.language" id="account-language-error" :class="fieldError" role="alert">{{ preferencesForm.errors.language }}</p>
                             </div>
-                            <div>
+                            <div class="settings-field">
                                 <label for="items_per_page" :class="fieldLabel">{{ t('settings.account.itemsPerPage') }}</label>
                                 <input
                                     id="items_per_page"
+                                    :aria-invalid="!!preferencesForm.errors.items_per_page"
+                                    :aria-describedby="preferencesForm.errors.items_per_page ? 'account-items_per_page-error' : undefined"
                                     v-model="preferencesForm.items_per_page"
                                     type="number"
                                     :class="fieldInput"
                                     min="10"
                                     max="100"
                                 />
-                                <p v-if="preferencesForm.errors.items_per_page" :class="fieldError">{{ preferencesForm.errors.items_per_page }}</p>
+                                <p v-if="preferencesForm.errors.items_per_page" id="account-items_per_page-error" :class="fieldError" role="alert">{{ preferencesForm.errors.items_per_page }}</p>
                             </div>
                         </div>
 
-                        <div class="mt-6 flex justify-end">
+                        <div class="settings-form-actions">
                             <Button type="submit" variant="default" :loading="preferencesForm.processing" :disabled="preferencesForm.processing">
                                 {{ t('settings.account.savePreferences') }}
                             </Button>
                         </div>
                     </div>
                 </form>
-            </Card>
+            </section>
+        </div>
+        </div>
+        </div>
         </div>
     </AppLayout>
 </template>

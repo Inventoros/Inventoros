@@ -1,5 +1,6 @@
 <script setup>
 import { Link } from '@inertiajs/vue3';
+import { ArrowUpRight } from '@lucide/vue';
 
 defineProps({
     label: { type: String, required: true },
@@ -21,8 +22,9 @@ defineProps({
         :tabindex="href ? undefined : 0"
     >
         <div class="dashboard-metric-label">
+            <component :is="icon" :size="15" :stroke-width="1.6" class="dashboard-metric-icon" aria-hidden="true" />
             <span>{{ label }}</span>
-            <span class="dashboard-metric-icon"><component :is="icon" :size="15" :stroke-width="1.6" aria-hidden="true" /></span>
+            <ArrowUpRight v-if="href" :size="13" class="dashboard-metric-link" aria-hidden="true" />
         </div>
         <p class="dashboard-metric-value">{{ value }}</p>
         <p v-if="context" class="dashboard-metric-context">{{ context }}</p>
