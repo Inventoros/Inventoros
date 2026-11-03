@@ -1,10 +1,11 @@
 <script setup>
+defineProps({ singleLine: { type: Boolean, default: false } });
 const year = new Date().getFullYear();
 </script>
 
 <template>
-    <footer class="text-xs text-text-tertiary">
-        <p class="flex flex-wrap items-center gap-x-2 gap-y-1">
+    <footer class="text-xs text-text-tertiary" :class="{ 'min-w-0 max-w-full shrink-0 overflow-x-auto overscroll-x-contain ds-scroll ds-focus-ring': singleLine }" :tabindex="singleLine ? 0 : undefined">
+        <p class="flex items-center gap-x-2 gap-y-1" :class="singleLine ? 'w-max min-w-full flex-nowrap whitespace-nowrap' : 'flex-wrap'">
             <img src="/images/brand/inventoros_icon_transparent_512.png" alt="" class="h-5 w-5" />
             <span>&copy; {{ year }} Inventoros</span>
             <span aria-hidden="true">&middot;</span>

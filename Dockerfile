@@ -125,7 +125,8 @@ COPY --from=assets --chown=app:app /app/plugins/hello-world/dist /app/plugins/he
 COPY --from=assets --chown=app:app /app/plugins/tax-billing/dist /app/plugins/tax-billing/dist
 
 RUN set -eux; \
-    rm -rf tests e2e screenshots docs node_modules docker-compose*.yml playwright.config.ts; \
+    rm -rf tests e2e screenshots docs node_modules docker-compose*.yml playwright*.config.* \
+           database/seeders/E2E*Seeder.php database/seeders/ScreenshotSeeder.php; \
     mkdir -p storage/app/public storage/framework/cache/data storage/framework/sessions \
              storage/framework/views storage/logs bootstrap/cache; \
     # The web installer writes DB settings to .env; it must exist and be writable.

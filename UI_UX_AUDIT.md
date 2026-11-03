@@ -120,6 +120,22 @@ Manual browser checks include Arabic shell geometry, French headings without nav
 
 The [live desktop capture](docs/audits/ui-ux/workspace-after.png) is 1920x911: the document has zero horizontal/vertical overflow, while the 724px table viewport scrolls 891px of row content. The final live preview recorded no browser-console errors.
 
+### Release refinement: legal footer
+
+The requested footer placement is included in the 2.1.0 candidate. Primary
+table workspaces put legal links on one line below pagination/actions, and
+expanded tables include the same footer after their control row. Sidebar legal
+text is removed on these pages. Other page/authentication/portal footers retain
+their existing behavior. The row keeps 12px text, keyboard-reachable links and
+its own narrow-screen horizontal scrolling.
+
+The [new desktop capture](docs/audits/ui-ux/table-footer-after.png) has zero
+document overflow at 1920x911: a 33px footer leaves a 691px independently
+scrolling table. [Mobile expanded-table verification](docs/audits/ui-ux/table-footer-mobile-after.png)
+uses 320x568. Four browser regressions cover placement, single-line geometry,
+fixed controls, keyboard access and expanded embedded tables; navigation focus
+now wraps to Log Out because the legal links are outside the drawer.
+
 ## Remaining work and verification limits
 
 Remaining severity counts: **P0: 0; P1: 0; P2: 1; P3: 0** in the findings register. The partially resolved item is localization outside the translated UI catalogs: invoice PDF labels and Arabic/CJK font/layout support, plus exceptional provider diagnostics. Existing configured tax labels, historical notification text and immutable invoice snapshots retain their recorded values. This is not a claim of exhaustive state coverage or certified accessibility.

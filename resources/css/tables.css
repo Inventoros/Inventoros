@@ -31,20 +31,17 @@
     height: 44px;
     padding-inline: 16px;
 }
-.table-nav-legal {
-    font-size: 11px;
-    line-height: 1.5;
+.table-legal-footer {
+    flex-shrink: 0;
+    min-width: 0;
+    padding: 4px 16px;
+    border-top: 1px solid hsl(var(--border-subtle));
+    background: hsl(var(--surface-raised));
 }
-.table-nav-legal p {
-    gap: 2px 5px;
-}
-.table-nav-legal a {
+.table-legal-footer a {
     display: inline-flex;
     align-items: center;
     min-height: 24px;
-}
-.table-nav-legal img {
-    display: none;
 }
 .app-table-page {
     display: flex;
@@ -381,7 +378,8 @@
         padding-inline: 12px;
     }
     .app-table-page .table-pagination,
-    .table-panel-expanded .table-pagination {
+    .table-panel-expanded .table-pagination,
+    .table-legal-footer {
         padding-inline: 12px;
     }
     .table-viewport {

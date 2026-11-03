@@ -4,6 +4,7 @@ import { useI18n } from 'vue-i18n';
 import { Maximize2, X } from '@lucide/vue';
 import { lockPageScroll } from '@/lib/scrollLock';
 import { containTabFocus } from '@/lib/focus';
+import LegalFooter from '@/Components/LegalFooter.vue';
 
 defineOptions({ inheritAttrs: false });
 const props = defineProps({ label: { type: String, default: null } });
@@ -146,6 +147,7 @@ onBeforeUnmount(() => {
             <div v-if="$slots.footer" class="table-panel-footer">
                 <slot name="footer" />
             </div>
+            <LegalFooter v-if="expanded" single-line class="table-legal-footer" />
         </section>
     </Teleport>
 </template>

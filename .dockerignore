@@ -30,6 +30,10 @@ database/database.sqlite
 database/database.sqlite-journal
 
 # Tests / dev tooling
+playwright*.config.*
+database/seeders/E2E*Seeder.php
+database/seeders/**/E2E*Seeder.php
+database/seeders/ScreenshotSeeder.php
 .phpunit.result.cache
 .phpunit.cache
 phpunit.xml

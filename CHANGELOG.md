@@ -6,7 +6,7 @@ Full release notes, with the pull request behind each change, are on [GitHub Rel
 
 ## [Unreleased]
 
-## [2.1.0] - Pending release
+## [2.1.0] - 2026-11-03
 
 ### Added
 
@@ -35,6 +35,10 @@ Full release notes, with the pull request behind each change, are on [GitHub Rel
 
 ### Changed
 
+- Operational tables fill the available workspace, with fixed controls and pagination while only table content scrolls. A shared full-table view works across all application tables; legal links sit on one line beneath the table controls.
+- Refined dashboard hierarchy, navigation, typography, spacing and light/dark surfaces, preserving the Inventoros identity. Dialog focus, keyboard navigation, responsive forms, permission recovery and error feedback are consistent across the application.
+- All 14 supported UI languages cover core and bundled plugin interfaces, with reactive language switching, Arabic direction, regional date/number formatting and translated tax validation. Other languages load on demand instead of being downloaded at startup, reducing compressed initial application JavaScript by about 73%.
+- Measured list-query index improvements and redundant-index cleanup support both MySQL and PostgreSQL. Tenant, warehouse, relationship and ordering access paths are covered by query-plan and database regression checks.
 - Creating and starting a stock audit takes a fixed number of queries however many products it covers. The lines are seeded with one `INSERT ... SELECT` and re-snapshotted on start with one `UPDATE`, instead of a save per product; a 20,000-product count went from about 20,000 queries and 7 to 10 seconds per step to under 10 queries and well under a second (SQLite benchmark). Snapshot values and the start lock are unchanged. Scheduled cycle counts use the same path. Benchmark: `php artisan test --group=performance`.
 - Members added from other organizations now receive the organization's notifications (low and out of stock, variant and per-warehouse stock alerts, new orders, portal return requests, approval requests, account activity alerts), can be scheduled report recipients, and appear in the cycle count assignee, warehouse assignment, stock adjustment and activity log user pickers. A withdrawn member stops receiving them and leaves the pickers. Permissions are those held in the organization concerned (stock and new order alerts still need a role assigned there that grants `manage_stock` or `view_orders`; the base role alone does not count), and the Users screens still list home users only.
 - Creating, starting, completing and cancelling a work order run through one service for the web, REST API and MCP `start_work_order`, which until now checked stock on its own without locking the work order.
@@ -43,6 +47,9 @@ Full release notes, with the pull request behind each change, are on [GitHub Rel
 
 ### Fixed
 
+- Notification dropdowns read the actual Inertia response, retain usable content after failures and offer retry feedback. Marking messages read and following their links no longer starts competing navigation requests.
+- Rejected delete and approval actions keep their dialog open, announce the reason and preserve review notes. Permission-sensitive actions and self-deletion affordances match existing server restrictions.
+- Release packages exclude all QA seeders and Playwright configurations, including the application-wide audit harness, while retaining production seeders.
 - Update follow-redirects to 1.16.2 to address [GHSA-mrwp-f3q8-3g9p](https://github.com/advisories/GHSA-mrwp-f3q8-3g9p) in sensitive-header handling across redirects.
 - Update Symfony Mime to 8.1.10 to address [CVE-2026-45070](https://symfony.com/cve-2026-45070), which affects MIME header parameter-name validation.
 - Restored the Log Out button in the authenticated sidebar, including the mobile navigation drawer and accounts with restricted permissions.

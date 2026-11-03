@@ -105,6 +105,9 @@ final class CpanelPackageVerifierTest extends TestCase
             'HTTPS compose' => ['inventoros/docker-compose.https.yml'],
             'compose override' => ['inventoros/docker-compose.override.yaml'],
             'phpunit.xml' => ['inventoros/phpunit.xml'],
+            'playwright config' => ['inventoros/playwright.config.ts'],
+            'playwright audit config' => ['inventoros/playwright.audit.config.ts'],
+            'named playwright config' => ['inventoros/playwright.smoke.config.js'],
             'node_modules' => ['inventoros/plugins/hello-world/ui/node_modules/x.js'],
             'dev dependency' => ['inventoros/vendor/phpunit/phpunit/src/x.php'],
             'user upload' => ['inventoros/storage/app/uploads/invoice.pdf'],
@@ -114,6 +117,12 @@ final class CpanelPackageVerifierTest extends TestCase
             'vite hot file' => ['public_html/hot'],
             'e2e seeder' => ['inventoros/database/seeders/E2ETestSeeder.php'],
             'e2e layout seeder' => ['inventoros/database/seeders/E2ELayoutSeeder.php'],
+            'e2e UI audit seeder' => ['inventoros/database/seeders/E2EUiAuditSeeder.php'],
+            'e2e stock reset seeder' => ['inventoros/database/seeders/E2EStockResetSeeder.php'],
+            'e2e audit history seeder' => ['inventoros/database/seeders/E2EStockAuditHistorySeeder.php'],
+            'e2e replenishment seeder' => ['inventoros/database/seeders/E2EVariantReplenishmentSeeder.php'],
+            'future e2e seeder' => ['inventoros/database/seeders/E2EFutureSeeder.php'],
+            'nested e2e seeder' => ['inventoros/database/seeders/QA/E2EFutureSeeder.php'],
             'screenshot seeder' => ['inventoros/database/seeders/ScreenshotSeeder.php'],
         ];
     }
@@ -138,10 +147,17 @@ final class CpanelPackageVerifierTest extends TestCase
         $this->assertStringContainsString('release.json: missing', $process->getErrorOutput());
     }
 
-    public function test_build_excludes_docker_compose_variants_without_dropping_other_yaml(): void
+    public function test_build_excludes_development_files_and_keeps_runtime_configuration_and_seeders(): void
     {
         $root = $this->dir.'/project';
-        $composeFiles = ['docker-compose.yml', 'docker-compose.prod.yml', 'docker-compose.https.yml', 'docker-compose.override.yaml'];
+        $developmentFiles = [
+            'docker-compose.yml', 'docker-compose.prod.yml', 'docker-compose.https.yml', 'docker-compose.override.yaml',
+            'playwright.config.ts', 'playwright.audit.config.ts', 'playwright.smoke.config.js',
+            'database/seeders/E2ETestSeeder.php', 'database/seeders/E2ELayoutSeeder.php',
+            'database/seeders/E2EUiAuditSeeder.php', 'database/seeders/E2EStockResetSeeder.php',
+            'database/seeders/E2EStockAuditHistorySeeder.php', 'database/seeders/E2EVariantReplenishmentSeeder.php',
+            'database/seeders/ScreenshotSeeder.php', 'database/seeders/QA/E2EFutureSeeder.php',
+        ];
         $files = [
             'artisan' => '<?php',
             '.env.example' => 'APP_KEY=',
@@ -151,12 +167,16 @@ final class CpanelPackageVerifierTest extends TestCase
             'composer.json' => json_encode(['require' => ['php' => '^8.4.1']]),
             'composer.lock' => json_encode(['packages' => []]),
             'operations.yaml' => 'enabled: true',
+            'database/seeders/DatabaseSeeder.php' => '<?php',
+            'database/seeders/RoleSeeder.php' => '<?php',
+            'database/seeders/PermissionSetSeeder.php' => '<?php',
+            'database/seeders/DemoDataSeeder.php' => '<?php',
         ];
         foreach (['build-release.php', 'index.php', '.htaccess', 'INSTALL.md'] as $file) {
             $files['deploy/cpanel/'.$file] = File::get(base_path('deploy/cpanel/'.$file));
         }
-        foreach ($composeFiles as $file) {
-            $files[$file] = 'services: {}';
+        foreach ($developmentFiles as $file) {
+            $files[$file] = 'development fixture';
         }
         foreach ($files as $file => $contents) {
             File::ensureDirectoryExists(dirname($root.'/'.$file));
@@ -172,10 +192,13 @@ final class CpanelPackageVerifierTest extends TestCase
 
         $zip = new ZipArchive;
         $this->assertTrue($zip->open($this->dir.'/out/inventoros-cpanel-2.0.0.zip'));
-        foreach ($composeFiles as $file) {
+        foreach ($developmentFiles as $file) {
             $this->assertFalse($zip->locateName('inventoros/'.$file), $file);
         }
         $this->assertNotFalse($zip->locateName('inventoros/operations.yaml'));
+        foreach (['DatabaseSeeder', 'RoleSeeder', 'PermissionSetSeeder', 'DemoDataSeeder'] as $seeder) {
+            $this->assertNotFalse($zip->locateName('inventoros/database/seeders/'.$seeder.'.php'));
+        }
         $zip->close();
     }
 

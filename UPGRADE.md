@@ -2,8 +2,9 @@
 
 ## Upgrading from v2.0.0 to v2.1.0
 
-The 2.1.0 release is being prepared. Use the final tagged artifact after it is
-published. Review the [release notes](docs/releases/2.1.0.md) and
+Use the signed package or pinned container image from the
+[v2.1.0 release](https://github.com/Inventoros/Inventoros/releases/tag/v2.1.0).
+Review the [release notes](docs/releases/2.1.0.md) and
 [deployment checklist](docs/releases/2.1.0-checklist.md) before updating.
 
 1. Test the upgrade against a restored database and copied files in staging.

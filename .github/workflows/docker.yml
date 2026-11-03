@@ -91,6 +91,9 @@ jobs:
 
           docker exec inventoros-smoke sh -c 'test -s /app/plugins/hello-world/dist/plugin.js && test -s /app/plugins/hello-world/dist/plugin.css && test -s /app/plugins/tax-billing/dist/plugin.js && test -s /app/plugins/tax-billing/dist/plugin.css'
 
+          # Browser fixtures contain known test credentials and never ship.
+          docker exec inventoros-smoke sh -c 'test -z "$(find /app/database/seeders -type f \( -name "E2E*Seeder.php" -o -name "ScreenshotSeeder.php" \) -print)" && test -z "$(find /app -maxdepth 1 -type f -name "playwright*.config.*" -print)" && test -s /app/database/seeders/DatabaseSeeder.php && test -s /app/database/seeders/RoleSeeder.php'
+
           # The unprivileged web process can install plugins, and a fresh
           # worker/container sees the same files after the web container is gone.
           docker exec inventoros-smoke sh -c 'printf plugin > /app/plugins/persistence-check.txt; printf asset > /app/public/plugin-assets/persistence-check.txt'

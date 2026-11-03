@@ -41,3 +41,17 @@ The second pass also caught stale sidebar labels after an asynchronous plugin bu
 | ![English plugin navigation in the Arabic drawer](plugin-navigation-before.png) | ![Translated plugin navigation after a fresh load](plugin-navigation-after.png) |
 
 The [final workspace capture](workspace-second-pass.png) retains the 724px scrolling table at 1920x911, with no document overflow.
+
+## Release refinement: legal footer beneath table controls
+
+The legal footer moves from the sidebar to one line below table pagination and
+actions. At 1920x911, the compact 33px footer leaves a 691px table viewport;
+neither document axis scrolls. Expanded tables use the same bottom row. On a
+narrow screen the footer can scroll horizontally while keeping 12px text and
+all links keyboard-reachable.
+
+| Before | After |
+| --- | --- |
+| ![Legal text in the sidebar](workspace-second-pass.png) | ![Single legal row below pagination](table-footer-after.png) |
+
+[Mobile expanded table capture](table-footer-mobile-after.png).
