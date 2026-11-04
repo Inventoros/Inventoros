@@ -37,6 +37,7 @@ return [
         'AED' => ['symbol' => 'د.إ', 'name' => 'UAE Dirham'],
         'SAR' => ['symbol' => '﷼', 'name' => 'Saudi Riyal'],
         'RUB' => ['symbol' => '₽', 'name' => 'Российский рубль'],
+        'HUF' => ['symbol' => 'Ft', 'name' => 'Hungarian Forint'],
     ],
 
     /*
