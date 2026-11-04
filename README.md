@@ -18,6 +18,18 @@
   <a href="CODE_OF_CONDUCT.md"><img src="https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg" alt="Code of Conduct"></a>
 </p>
 
+<p align="center">
+  <img src=".github/demo/receive-stock.gif" width="100%" alt="Receiving stock in Inventoros: the dashboard flags a laptop stand below its minimum, the sent purchase order for it is opened and its 40 stands and 20 webcams are received, and the dashboard then shows all products well stocked">
+  <br>
+  <sub>A low-stock alert, the purchase order that restocks it, and a clear dashboard once it is received.</sub>
+</p>
+
+<p align="center">
+  <img src=".github/demo/order-to-ship.gif" width="100%" alt="Creating an order in Inventoros: a saved customer is picked, four mesh chairs and four desk frames are added, the order is created as pending and then marked shipped from the order list">
+  <br>
+  <sub>A customer order written up and marked shipped.</sub>
+</p>
+
 Inventoros is an open-source Inventory and Warehouse Management System (WMS) built with Laravel 13, Inertia.js, and Vue 3. Designed to bridge the gap between complex enterprise-grade WMS tools and user-friendly systems, Inventoros provides powerful inventory management capabilities with a developer-focused, extensible architecture.
 
 ## Screenshots

@@ -60,8 +60,8 @@ class ScreenshotSeeder extends Seeder
         // Create suppliers
         $suppliers = collect([
             ['name' => 'TechParts Global', 'code' => 'SUP-1001'],
-            ['name' => 'Office Depot Direct', 'code' => 'SUP-1002'],
-            ['name' => 'Steelcase Furniture', 'code' => 'SUP-1003'],
+            ['name' => 'Paperline Direct', 'code' => 'SUP-1002'],
+            ['name' => 'Oakridge Workspace', 'code' => 'SUP-1003'],
             ['name' => 'PackRight Solutions', 'code' => 'SUP-1004'],
         ])->map(fn ($s) => Supplier::updateOrCreate(
             ['code' => $s['code'], 'organization_id' => $orgId],
@@ -120,7 +120,7 @@ class ScreenshotSeeder extends Seeder
 
         // Create customers
         $customers = [];
-        $customerNames = ['Globex Corporation', 'Initech LLC', 'Stark Industries', 'Wayne Enterprises', 'Umbrella Corp'];
+        $customerNames = ['Larkspur Dental Group', 'Bluepine Design Studio', 'Hollow Creek Library', 'Saltmarsh Coworking', 'Fernway Veterinary Clinic'];
         foreach ($customerNames as $i => $name) {
             $customers[] = Customer::updateOrCreate(
                 ['code' => 'CUST-' . (2001 + $i), 'organization_id' => $orgId],
