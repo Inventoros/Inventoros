@@ -1,0 +1,144 @@
+name: demo-gifs
+
+# Re-records the README demo GIFs in .github/demo/ (scripts/generate-demo.js)
+# when the UI changes. Pull requests record them as a check and upload them as
+# an artifact; pushes to main and manual runs commit the new GIFs.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'resources/js/**'
+      - 'resources/css/**'
+      - 'scripts/generate-demo.js'
+      - 'database/seeders/ReadmeDemoSeeder.php'
+      - '.github/workflows/demo.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'resources/js/**'
+      - 'resources/css/**'
+      - 'scripts/generate-demo.js'
+      - 'database/seeders/ReadmeDemoSeeder.php'
+      - '.github/workflows/demo.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: demo-gifs-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  demo-gifs:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          tools: composer:v2
+          extensions: sqlite3, gd, bcmath
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Install ffmpeg
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends ffmpeg
+
+      - name: Install PHP dependencies
+        run: composer install --no-interaction --prefer-dist --optimize-autoloader
+
+      - name: Install Node dependencies
+        run: npm ci
+
+      - name: Install Playwright Chromium
+        run: npx playwright install chromium --with-deps
+
+      - name: Setup environment
+        run: |
+          cp .env.example .env
+          sed -i 's|APP_URL=http://localhost|APP_URL=http://127.0.0.1:8000|' .env
+          php artisan key:generate
+          touch database/database.sqlite
+
+      - name: Build frontend assets
+        run: npm run build
+
+      - name: Seed the demo company
+        run: php artisan migrate:fresh --force --seed --seeder=ReadmeDemoSeeder
+
+      - name: Start server
+        run: |
+          php artisan serve --host=127.0.0.1 --port=8000 > /tmp/serve.log 2>&1 &
+          for i in $(seq 1 30); do
+            if curl -sf http://127.0.0.1:8000/login -o /dev/null; then
+              echo "[ready] app up after ${i}s"
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "::error::The app did not start within 30s"
+          cat /tmp/serve.log
+          exit 1
+
+      - name: Record demo GIFs
+        run: node scripts/generate-demo.js
+        env:
+          DEMO_BASE_URL: http://127.0.0.1:8000
+          DEMO_DEBUG_FRAMES: '1'
+
+      - name: Verify GIFs
+        run: |
+          for GIF in .github/demo/receive-stock.gif .github/demo/order-to-ship.gif; do
+            if [ ! -f "$GIF" ]; then
+              echo "::error::Expected $GIF was not produced"
+              exit 1
+            fi
+            SIZE=$(stat -c%s "$GIF")
+            echo "[verify] $GIF size: $SIZE bytes"
+            if [ "$SIZE" -lt 50000 ]; then
+              echo "::error::$GIF is implausibly small ($SIZE bytes); the recording flow likely failed"
+              exit 1
+            fi
+            if [ "$SIZE" -gt 5242880 ]; then
+              echo "::error::$GIF exceeds 5 MB ($SIZE bytes); lower GIF_FPS or GIF_WIDTH in scripts/generate-demo.js"
+              exit 1
+            fi
+          done
+
+      - name: Upload GIFs
+        uses: actions/upload-artifact@v4
+        with:
+          name: demo-gifs
+          path: .github/demo/*.gif
+          retention-days: 14
+
+      - name: Upload debug frames
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: demo-debug-frames
+          path: |
+            .github/demo/*_frame_*.png
+            recordings/*-failure.png
+          retention-days: 7
+          if-no-files-found: ignore
+
+      - name: Commit updated GIFs
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: 'chore(demo): update README demo GIFs [skip ci]'
+          file_pattern: '.github/demo/*.gif'

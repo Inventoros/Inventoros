@@ -34,6 +34,10 @@ Thumbs.db
 /blob-report/
 /playwright/.cache/
 
+# README demo GIF recorder (scripts/generate-demo.js)
+/recordings/
+/.github/demo/*_frame_*.png
+
 # Claude / Agents
 .claude/
 CLAUDE.md
