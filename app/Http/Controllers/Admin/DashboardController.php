@@ -116,10 +116,15 @@ class DashboardController extends Controller
         };
 
         if ($canViewReports) {
-            $money('totalValue', Product::where('organization_id', $orgId)
+            $productValues = Product::where('organization_id', $orgId)
                 ->where('is_active', true)
+                ->select('currency')
+                ->selectRaw(Product::stockValueSql('price').' AS stock_value');
+
+            $money('totalValue', DB::query()
+                ->fromSub($productValues, 'product_values')
+                ->selectRaw('currency, COALESCE(SUM(stock_value), 0) AS amount')
                 ->groupBy('currency')
-                ->selectRaw('currency, COALESCE(SUM('.Product::stockValueSql('price').'), 0) as amount')
                 ->pluck('amount', 'currency'));
 
             // Cancelled orders are not sales (as in reports.sales-analysis).
@@ -201,18 +206,30 @@ class DashboardController extends Controller
         // join keeps uncategorized stock in the breakdown, excludes deleted
         // products through the model scope, and prevents another tenant's
         // category name from entering the payload through a legacy bad link.
-        $stockByCategory = ! $canViewReports ? collect() : Product::where('products.organization_id', $orgId)
+        $productValuesByCategory = Product::where('products.organization_id', $orgId)
             ->where('products.is_active', true)
+            ->select('products.id', 'products.category_id', 'products.currency')
+            ->selectRaw(Product::stockValueSql('price').' AS stock_value');
+
+        $stockByCategory = $canViewReports ? DB::query()
+            ->fromSub($productValuesByCategory, 'product_values')
             ->leftJoin('product_categories', function ($join) use ($orgId) {
-                $join->on('products.category_id', '=', 'product_categories.id')
+                $join->on('product_values.category_id', '=', 'product_categories.id')
                     ->where('product_categories.organization_id', $orgId);
             })
-            ->selectRaw('product_categories.name, product_categories.id, products.currency, COALESCE(SUM('.Product::stockValueSql('price').'), 0) as value, COUNT(products.id) as count')
-            ->groupBy('product_categories.id', 'product_categories.name', 'products.currency')
+            ->selectRaw('
+                product_categories.name,
+                product_categories.id,
+                product_values.currency,
+                COALESCE(SUM(product_values.stock_value), 0) AS value,
+                COUNT(product_values.id) AS count
+            ')
+            ->groupBy(
+                'product_categories.id',
+                'product_categories.name',
+                'product_values.currency'
+            )
             ->get()
-            // One row per category. Its value is in the organization's
-            // currency; `values` lists every currency's own total (the
-            // organization's first) rather than adding them together.
             ->groupBy(fn ($row) => $row->id ?? 'uncategorized')
             ->map(function ($rows) use ($currency) {
                 $values = CurrencyTotals::list($rows->pluck('value', 'currency'), $currency);
@@ -225,7 +242,7 @@ class DashboardController extends Controller
                     'count' => (int) $rows->sum('count'),
                 ];
             })
-            ->values();
+            ->values() : collect();
 
         // Get recent activity logs
         $recentActivity = ! $canViewActivity ? collect() : ActivityLog::where('organization_id', $user->organization_id)
