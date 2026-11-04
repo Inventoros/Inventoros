@@ -33,7 +33,7 @@ class ReadmeDemoSeeder extends Seeder
 
     public const PASSWORD = 'ReadmeDemoPassword123!';
 
-    public const ORG_NAME = 'Alder & Finch Supply Co.';
+    public const ORG_NAME = 'Alder & Finch Supply';
 
     /** The sent purchase order the receiving demo opens. */
     public const RESTOCK_PO = 'PO-1048';

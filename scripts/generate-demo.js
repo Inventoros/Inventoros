@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * Records the README demo GIFs in .github/demo/ from the running app, seeded
- * with ReadmeDemoSeeder (a made-up company, Alder & Finch Supply Co.):
+ * with ReadmeDemoSeeder (a made-up company, Alder & Finch Supply):
  *
  *   receive-stock.gif   a low-stock item on the dashboard, its purchase order
  *                       received, and the dashboard clear again
