@@ -84,6 +84,44 @@ class SKUGeneratorServiceTest extends TestCase
         $this->assertSame('PRO', $sku);
     }
 
+    public function test_generate_category_code_uppercases_multibyte_letters(): void
+    {
+        $category = ProductCategory::create([
+            'organization_id' => $this->organization->id,
+            'name' => 'Könyvek',
+        ]);
+
+        $sku = $this->service->generate('{category}-001', $this->organization->id, null, $category->id);
+
+        $this->assertSame('KÖN-001', $sku);
+    }
+
+    public function test_generate_category_code_counts_characters_not_bytes(): void
+    {
+        $category = ProductCategory::create([
+            'organization_id' => $this->organization->id,
+            'name' => 'Árvíztűrő',
+        ]);
+
+        $sku = $this->service->generate('{category}', $this->organization->id, null, $category->id);
+
+        $this->assertSame('ÁRV', $sku);
+    }
+
+    public function test_generate_name_keeps_and_uppercases_non_ascii_letters(): void
+    {
+        $sku = $this->service->generate('{name}-001', $this->organization->id, 'Üveg pohár');
+
+        $this->assertSame('ÜVE-001', $sku);
+    }
+
+    public function test_generate_name_strips_non_letters_around_non_ascii(): void
+    {
+        $sku = $this->service->generate('{name}', $this->organization->id, '12-őzike');
+
+        $this->assertSame('ŐZI', $sku);
+    }
+
     public function test_generate_name_defaults_to_prd(): void
     {
         $sku = $this->service->generate('{name}-001', $this->organization->id);

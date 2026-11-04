@@ -531,7 +531,7 @@ final class ProductsImport extends ProductSpreadsheetValueBinder implements Skip
      */
     protected function uniqueLocationCode(string $name): string
     {
-        $base = strtoupper(substr($name, 0, 3));
+        $base = mb_strtoupper(mb_substr($name, 0, 3));
         if ($base === '') {
             $base = 'LOC';
         }

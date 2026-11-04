@@ -55,6 +55,25 @@ class ProductsImportLocationCodeTest extends TestCase
         $this->assertSame('TOR-2', $second->code);
     }
 
+    public function test_import_location_code_uppercases_multibyte_letters(): void
+    {
+        $import = new ProductsImport($this->org->id);
+
+        $import->collection(new Collection([
+            collect([
+                'sku' => 'P1', 'name' => 'P1', 'price' => 1, 'stock' => 1,
+                'location' => 'Öntöde raktár',
+            ]),
+        ]));
+
+        $location = ProductLocation::where('organization_id', $this->org->id)
+            ->where('name', 'Öntöde raktár')
+            ->first();
+
+        $this->assertNotNull($location);
+        $this->assertSame('ÖNT', $location->code);
+    }
+
     public function test_import_skips_pre_existing_code_when_external_one_already_holds_it(): void
     {
         // Operator pre-created a location named "Other" but with code TOR.
