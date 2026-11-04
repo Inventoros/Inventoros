@@ -72,6 +72,31 @@ final class VariantSkuAutoGenerateTest extends TestCase
         );
     }
 
+    public function test_generated_variant_skus_keep_non_ascii_letters(): void
+    {
+        $this->actingAs($this->admin)
+            ->post(route('products.store'), [
+                'sku' => 'KÖN-000001',
+                'name' => 'Könyv',
+                'price' => 20,
+                'currency' => 'USD',
+                'stock' => 0,
+                'min_stock' => 0,
+                'is_active' => true,
+                'has_variants' => true,
+                'options' => [['name' => 'Kötés', 'values' => ['Puhafedeles', 'Keményfedeles']]],
+                'variants' => [
+                    ['option_values' => ['Kötés' => 'Keményfedeles'], 'sku' => ''],
+                ],
+            ])
+            ->assertSessionHasNoErrors()
+            ->assertRedirect();
+
+        $book = Product::where('sku', 'KÖN-000001')->firstOrFail();
+
+        $this->assertSame(['KÖN-000001-KEMÉNYFEDELES'], $book->variants()->pluck('sku')->all());
+    }
+
     public function test_an_explicit_variant_sku_is_kept(): void
     {
         $tee = $this->storeTee([

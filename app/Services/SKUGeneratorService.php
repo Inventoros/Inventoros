@@ -54,7 +54,7 @@ final class SKUGeneratorService
         if (str_contains($sku, '{category}')) {
             if ($categoryId) {
                 $category = ProductCategory::find($categoryId);
-                $categoryCode = $category ? strtoupper(substr($category->name, 0, 3)) : 'UNC';
+                $categoryCode = $category ? mb_strtoupper(mb_substr($category->name, 0, 3)) : 'UNC';
             } else {
                 $categoryCode = 'UNC';
             }
@@ -70,7 +70,7 @@ final class SKUGeneratorService
         // Replace product name placeholder
         if (str_contains($sku, '{name}')) {
             $nameCode = $productName 
-                ? strtoupper(substr(preg_replace('/[^A-Za-z]/', '', $productName), 0, 3))
+                ? mb_strtoupper(mb_substr((string) preg_replace('/\P{L}+/u', '', $productName), 0, 3))
                 : 'PRD';
             $sku = str_replace('{name}', $nameCode, $sku);
         }
@@ -214,13 +214,13 @@ final class SKUGeneratorService
     }
 
     /**
-     * Upper-case alphanumeric run for a SKU: "Extra large!" -> "EXTRA-LARGE".
+     * Upper-case letter/number run for a SKU: "Extra large!" -> "EXTRA-LARGE",
+     * "Keményfedeles" -> "KEMÉNYFEDELES". Letters outside ASCII are kept so a
+     * variant shares its parent's prefix ("KÖN-000001-...").
      */
     private static function skuSegment(string $value): string
     {
-        $ascii = \Illuminate\Support\Str::ascii($value);
-
-        return trim((string) preg_replace('/[^A-Z0-9]+/', '-', strtoupper($ascii)), '-');
+        return trim((string) preg_replace('/[^\p{L}\p{N}]+/u', '-', mb_strtoupper($value)), '-');
     }
 
     /**
