@@ -26,7 +26,7 @@ import ImageGallery from '@/Components/ImageGallery.vue';
 import { usePermissions } from '@/composables/usePermissions';
 import { formatMoney } from '@/lib/money';
 import { displayDate, displayDateTime } from '@/lib/dates';
-import { onHandStock, stockStatus as stockStatusOf, stockValue } from '@/lib/productStock';
+import { isAtOrBelowMinimum, onHandStock, stockStatus as stockStatusOf, stockValue } from '@/lib/productStock';
 import {
     Boxes,
     DollarSign,
@@ -907,7 +907,7 @@ const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface
                                     <p class="mb-1 text-sm text-text-tertiary">{{ t('products.show.currentStock') }}</p>
                                     <p
                                         class="text-3xl font-bold tabular-nums"
-                                        :class="onHand <= product.min_stock ? 'text-status-danger' : 'text-brand'"
+                                        :class="isAtOrBelowMinimum(onHand, product.min_stock) ? 'text-status-danger' : 'text-brand'"
                                     >
                                         {{ onHand }}
                                     </p>

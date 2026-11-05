@@ -35,6 +35,15 @@ export function stockValue(product, variants = [], column = 'price') {
     return onHandStock(product, variants) * toNumber(product?.[column]);
 }
 
+// At or below the minimum. A minimum of 0 means "no minimum": only negative
+// (oversold) stock counts, so an item kept at 0 with a 0 minimum isn't
+// flagged. Mirrors TracksStockLevels::isAtOrBelowMinimum() on the server.
+export function isAtOrBelowMinimum(stock, minimum) {
+    const min = toNumber(minimum);
+    const onHand = toNumber(stock);
+    return min > 0 ? onHand <= min : onHand < 0;
+}
+
 // 'out_of_stock' | 'low_stock' | 'in_stock'
 export function stockStatus(product, variants = []) {
     const onHand = onHandStock(product, variants);

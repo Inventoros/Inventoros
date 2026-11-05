@@ -1,7 +1,7 @@
 // Runs with Node's built-in test runner: `npm run test:js`.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { onHandStock, stockStatus, stockValue } from '../../resources/js/lib/productStock.js';
+import { isAtOrBelowMinimum, onHandStock, stockStatus, stockValue } from '../../resources/js/lib/productStock.js';
 
 const tee = { has_variants: true, stock: 0, min_stock: 2, price: '20.00' };
 const variants = [
@@ -32,4 +32,17 @@ test('status reads the on-hand figure, not products.stock', () => {
     assert.equal(stockStatus(tee, variants), 'in_stock');
     assert.equal(stockStatus({ ...tee, min_stock: 5 }, variants), 'low_stock');
     assert.equal(stockStatus(tee, [{ stock: 0, is_active: true }]), 'out_of_stock');
+});
+
+test('a minimum of 0 only flags negative stock', () => {
+    assert.equal(isAtOrBelowMinimum(0, 0), false);
+    assert.equal(isAtOrBelowMinimum(3, 0), false);
+    assert.equal(isAtOrBelowMinimum(-1, 0), true);
+    assert.equal(isAtOrBelowMinimum(0, null), false);
+});
+
+test('a positive minimum flags stock at or below it', () => {
+    assert.equal(isAtOrBelowMinimum(0, 5), true);
+    assert.equal(isAtOrBelowMinimum(5, '5'), true);
+    assert.equal(isAtOrBelowMinimum(6, 5), false);
 });

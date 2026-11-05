@@ -189,13 +189,14 @@ class ProductVariant extends Model
     }
 
     /**
-     * Check if the variant is low on stock.
+     * Check if the variant is low on stock. A min_stock of 0 means no
+     * minimum, so only negative stock counts.
      *
      * @return bool
      */
     public function isLowStock(): bool
     {
-        return $this->stock <= $this->min_stock;
+        return Product::isAtOrBelowMinimum((int) $this->stock, $this->min_stock === null ? null : (int) $this->min_stock);
     }
 
     /**
@@ -299,7 +300,9 @@ class ProductVariant extends Model
      */
     public function scopeLowStock($query)
     {
-        return $query->whereColumn('stock', '<=', 'min_stock');
+        $table = $this->getTable();
+
+        return $query->whereRaw(Product::atOrBelowMinimumSql("{$table}.stock", "{$table}.min_stock"));
     }
 
     /**
