@@ -59,6 +59,36 @@ trait TracksStockLevels
     }
 
     /**
+     * SQL that is true when $stockSql is at or below the minimum $minSql.
+     *
+     * A minimum of 0 means "no minimum": the item only counts once its stock
+     * goes negative (oversold). Without this, anything kept at 0 stock with a
+     * 0 minimum, such as a discontinued product still listed in a store,
+     * would sit in every low-stock list forever. Stock is an integer, so
+     * "<= min" is written "< min + 1" to evaluate $stockSql once.
+     */
+    public static function atOrBelowMinimumSql(string $stockSql, string $minSql): string
+    {
+        return "({$stockSql} < (CASE WHEN {$minSql} > 0 THEN {$minSql} + 1 ELSE 0 END))";
+    }
+
+    /**
+     * The PHP twin of atOrBelowMinimumSql().
+     */
+    public static function isAtOrBelowMinimum(int $stock, ?int $minimum): bool
+    {
+        return ($minimum ?? 0) > 0 ? $stock <= $minimum : $stock < 0;
+    }
+
+    /**
+     * SQL for "this product is at or below its own min_stock".
+     */
+    public static function lowStockSql(string $table = 'products'): string
+    {
+        return self::atOrBelowMinimumSql(self::effectiveStockSql($table), "{$table}.min_stock");
+    }
+
+    /**
      * Add the effective stock as `effective_stock`, read by total_stock.
      *
      * @param  Builder<static>  $query
@@ -79,7 +109,8 @@ trait TracksStockLevels
      * Scope a query to only include products with low stock: the total at or
      * below min_stock, or the on-hand in any warehouse with its own
      * thresholds at or below that warehouse's minimum (blank inherits the
-     * product's min_stock).
+     * product's min_stock). A minimum of 0 only catches negative stock; see
+     * atOrBelowMinimumSql().
      *
      * @param  Builder<static>  $query
      * @return Builder<static>
@@ -89,7 +120,7 @@ trait TracksStockLevels
         $table = $this->getTable();
 
         return $query->where(function ($q) use ($table) {
-            $q->whereRaw(self::effectiveStockSql($table)." <= {$table}.min_stock")
+            $q->whereRaw(self::lowStockSql($table))
                 ->orWhereExists(function (QueryBuilder $sub) use ($table) {
                     $min = "coalesce(warehouse_reorder_points.min_stock, {$table}.min_stock)";
 
@@ -97,7 +128,7 @@ trait TracksStockLevels
                         ->from('warehouse_reorder_points')
                         ->whereColumn('warehouse_reorder_points.product_id', "{$table}.id")
                         ->whereRaw("{$min} is not null")
-                        ->whereRaw(WarehouseReorderPoint::onHandSql()." <= {$min}");
+                        ->whereRaw(self::atOrBelowMinimumSql(WarehouseReorderPoint::onHandSql(), $min));
                 });
         });
     }
@@ -148,11 +179,12 @@ trait TracksStockLevels
     }
 
     /**
-     * Check if the product is low on stock.
+     * Check if the product is low on stock. A min_stock of 0 means no
+     * minimum, so only negative stock counts.
      */
     public function isLowStock(): bool
     {
-        return $this->total_stock <= $this->min_stock;
+        return self::isAtOrBelowMinimum((int) $this->total_stock, $this->min_stock === null ? null : (int) $this->min_stock);
     }
 
     /**

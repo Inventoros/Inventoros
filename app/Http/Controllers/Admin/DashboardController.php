@@ -76,7 +76,7 @@ class DashboardController extends Controller
             ? Product::where('organization_id', $orgId)
                 ->selectRaw('
                     COUNT(*) as total_count,
-                    SUM(CASE WHEN '.Product::effectiveStockSql().' <= products.min_stock THEN 1 ELSE 0 END) as low_stock_count
+                    SUM(CASE WHEN '.Product::lowStockSql().' THEN 1 ELSE 0 END) as low_stock_count
                 ')
                 ->first()
             : null;
@@ -178,7 +178,7 @@ class DashboardController extends Controller
 
         // Get low stock products
         $lowStockProducts = ! $canViewProducts ? collect() : Product::where('organization_id', $user->organization_id)
-            ->whereRaw(Product::effectiveStockSql().' <= products.min_stock')
+            ->whereRaw(Product::lowStockSql())
             ->withEffectiveStock()
             ->with(['category', 'location'])
             ->orderBy('effective_stock', 'asc')

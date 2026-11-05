@@ -735,7 +735,7 @@ class ReportController extends Controller
                 COUNT(*) as product_count,
                 COALESCE(SUM('.Product::effectiveStockSql().'), 0) as total_stock,
                 COALESCE(SUM('.Product::stockValueSql('price').'), 0) as total_value,
-                SUM(CASE WHEN '.Product::effectiveStockSql().' <= products.min_stock THEN 1 ELSE 0 END) as low_stock_items
+                SUM(CASE WHEN '.Product::lowStockSql().' THEN 1 ELSE 0 END) as low_stock_items
             ')
             ->get()
             ->map(fn ($row) => [

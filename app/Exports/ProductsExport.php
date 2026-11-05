@@ -83,7 +83,7 @@ final class ProductsExport extends ProductSpreadsheetValueBinder implements From
         }
 
         if (! empty($this->filters['low_stock'])) {
-            $query->whereRaw(Product::effectiveStockSql().' <= products.min_stock');
+            $query->whereRaw(Product::lowStockSql());
         }
 
         return $query->orderBy('created_at', 'desc');

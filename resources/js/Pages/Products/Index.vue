@@ -20,6 +20,7 @@ import {
 const BarcodeScannerModal = defineAsyncComponent(() => import('@/Components/BarcodeScannerModal.vue'));
 import { useI18n } from 'vue-i18n';
 import { formatMoney } from '@/lib/money';
+import { isAtOrBelowMinimum } from '@/lib/productStock';
 import { usePermissions } from '@/composables/usePermissions';
 
 const { hasPermission, canVisit } = usePermissions();
@@ -156,7 +157,7 @@ const deleteProduct = (product) => {
 
 // A product sold by variant shows the sum of its active variants' stock.
 const onHand = (product) => product.effective_stock ?? product.stock;
-const isLowStock = (product) => onHand(product) <= product.min_stock;
+const isLowStock = (product) => isAtOrBelowMinimum(onHand(product), product.min_stock);
 
 const bulkDelete = () => {
     if (!confirm(t('products.index.confirmBulkDelete', { count: selectedProducts.value.length }, selectedProducts.value.length))) return;
