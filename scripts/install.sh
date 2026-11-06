@@ -401,24 +401,15 @@ ok "Inventoros is running"
 
 # --- done -------------------------------------------------------------------
 
-printf '
-%sInventoros %s is ready.%s
-
-' "$GREEN$BOLD" "$VERSION" "$RESET"
+printf '\n%sInventoros %s is ready.%s\n\n' "$GREEN$BOLD" "$VERSION" "$RESET"
 if [ -n "$previous_image" ]; then
-    printf '  Open %s and sign in.
-' "$APP_URL"
+    printf '  Open %s and sign in.\n' "$APP_URL"
 else
-    printf '  1. Open %s/install
-' "$APP_URL"
-    printf '  2. On the database step, host, port, database and user are filled in.
-'
-    printf '     The password is DB_PASSWORD in %s. Show it with:
-' "$ENV_FILE"
-    printf '       sudo grep DB_PASSWORD %s
-' "$ENV_FILE"
-    printf '  3. Create your organization and administrator account.
-'
+    printf '  1. Open %s/install\n' "$APP_URL"
+    printf '  2. On the database step, host, port, database and user are filled in.\n'
+    printf '     The password is DB_PASSWORD in %s. Show it with:\n' "$ENV_FILE"
+    printf '       sudo grep DB_PASSWORD %s\n' "$ENV_FILE"
+    printf '  3. Create your organization and administrator account.\n'
 fi
 cat <<EOF
 

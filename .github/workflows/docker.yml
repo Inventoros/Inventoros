@@ -123,14 +123,12 @@ jobs:
           IMAGE_TAGS: ${{ steps.meta.outputs.tags }}
         run: |
           set -eux
-          version="$(tr -d '
-' < VERSION)"
+          version="$(tr -d '\r\n' < VERSION)"
           # The installer pins ghcr.io/inventoros/inventoros:$version; point
           # that tag at the image just built, and use this checkout's Compose
           # files rather than the release's.
-          docker tag "$(printf '%s
-' "$IMAGE_TAGS" | head -n1)" "${IMAGE}:${version}"
-          sudo INVENTOROS_SOURCE_DIR="$PWD" INVENTOROS_SKIP_PULL=true bash scripts/install.sh             --version "$version" --dir /tmp/inventoros --port 8090 --yes
+          docker tag "$(printf '%s\n' "$IMAGE_TAGS" | head -n1)" "${IMAGE}:${version}"
+          sudo INVENTOROS_SOURCE_DIR="$PWD" INVENTOROS_SKIP_PULL=true bash scripts/install.sh --version "$version" --dir /tmp/inventoros --port 8090 --yes
           test "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8090/install)" = "200"
           sudo grep -q '^APP_KEY=base64:' /tmp/inventoros/.env
           test "$(sudo stat -c %a /tmp/inventoros/.env)" = "600"
