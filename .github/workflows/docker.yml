@@ -4,6 +4,10 @@ name: Docker image
 # caught before merge, and publishes it to GHCR on version tags.
 #
 #   v1.2.3 tag -> ghcr.io/inventoros/inventoros:1.2.3, :1.2, :1, :latest
+#
+# Docker Hub is an optional mirror: set the repository variable
+# DOCKERHUB_IMAGE (for example inventoros/inventoros) and the secrets
+# DOCKERHUB_USERNAME and DOCKERHUB_TOKEN, and tags push there too.
 
 on:
   pull_request:
@@ -42,11 +46,20 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Log in to Docker Hub
+        if: startsWith(github.ref, 'refs/tags/v') && vars.DOCKERHUB_IMAGE != ''
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
       - name: Image metadata
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.IMAGE }}
+          images: |
+            ${{ env.IMAGE }}
+            ${{ vars.DOCKERHUB_IMAGE }}
           tags: |
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
@@ -103,6 +116,37 @@ jobs:
             -v inventoros-smoke-plugins:/app/plugins \
             -v inventoros-smoke-plugin-assets:/app/public/plugin-assets \
             "$image" -c 'test "$(cat /app/plugins/persistence-check.txt)" = plugin && test "$(cat /app/public/plugin-assets/persistence-check.txt)" = asset && test "$(whoami)" = app'
+
+      - name: Installer end to end
+        if: ${{ !startsWith(github.ref, 'refs/tags/v') }}
+        env:
+          IMAGE_TAGS: ${{ steps.meta.outputs.tags }}
+        run: |
+          set -eux
+          version="$(tr -d '
+' < VERSION)"
+          # The installer pins ghcr.io/inventoros/inventoros:$version; point
+          # that tag at the image just built, and use this checkout's Compose
+          # files rather than the release's.
+          docker tag "$(printf '%s
+' "$IMAGE_TAGS" | head -n1)" "${IMAGE}:${version}"
+          sudo INVENTOROS_SOURCE_DIR="$PWD" INVENTOROS_SKIP_PULL=true bash scripts/install.sh             --version "$version" --dir /tmp/inventoros --port 8090 --yes
+          test "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8090/install)" = "200"
+          sudo grep -q '^APP_KEY=base64:' /tmp/inventoros/.env
+          test "$(sudo stat -c %a /tmp/inventoros/.env)" = "600"
+          key="$(sudo grep '^APP_KEY=' /tmp/inventoros/.env)"
+          # A re-run keeps the secrets and the running stack.
+          sudo INVENTOROS_SOURCE_DIR="$PWD" INVENTOROS_SKIP_PULL=true bash scripts/install.sh --version "$version" --dir /tmp/inventoros --yes
+          test "$(sudo grep '^APP_KEY=' /tmp/inventoros/.env)" = "$key"
+          sudo grep -qx 'APP_PORT=8090' /tmp/inventoros/.env
+          # Moving back to an older release is refused.
+          if sudo INVENTOROS_SOURCE_DIR="$PWD" INVENTOROS_SKIP_PULL=true bash scripts/install.sh --version 1.0.0 --dir /tmp/inventoros --yes; then exit 1; fi
+
+      - name: Installer logs
+        if: failure()
+        run: |
+          sudo cat /tmp/inventoros/install.log || true
+          (cd /tmp/inventoros && sudo docker compose logs --no-color --tail 100) || true
 
       - name: Container logs
         if: failure()

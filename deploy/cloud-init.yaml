@@ -1,0 +1,22 @@
+#cloud-config
+# Inventoros on a fresh cloud server (DigitalOcean, Hetzner, Vultr, Linode,
+# AWS EC2 and other providers that accept cloud-init "user data").
+#
+# Create an Ubuntu 24.04 server (x86_64, 2 GB memory recommended), paste this
+# file into the User data field, and open http://SERVER-IP:8080/install a few
+# minutes after it boots. Progress: /opt/inventoros/install.log, or
+# /var/log/cloud-init-output.log on the server.
+#
+# For HTTPS, point a DNS record at the server first and add
+# `--domain inventory.example.com` to the install command below. To pin a
+# release, add `--version 2.3.0`.
+
+package_update: true
+packages:
+  - curl
+  - ca-certificates
+  - openssl
+
+runcmd:
+  - curl -fsSL https://inventoros.com/install.sh -o /root/inventoros-install.sh
+  - bash /root/inventoros-install.sh --yes

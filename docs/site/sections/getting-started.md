@@ -1,25 +1,36 @@
 Inventoros is a self-hosted, open-source inventory and warehouse management system built on Laravel. You run it on your own server, you own your data, and you choose how to deploy it.
 
-This guide covers the system requirements and the three supported installation paths. Pick the one that matches your hosting.
-
-## Recommended: the web installer
-
-Every release ships with a guided web installer. The fastest way to get started is:
-
-1. Download the latest release package, `inventoros-cpanel-X.X.X.zip`, from GitHub.
-2. Upload the `inventoros/` folder beside your web root (for example your home directory) and the contents of `public_html/` into your web server's document root. The [cPanel guide](installation-cpanel) walks through this.
-3. Visit `http://yourdomain.com/install` in your browser.
-4. Follow the on-screen instructions: the installer checks the server requirements, connects to your database and creates the tables, then creates the first administrator.
-
-Download the latest release: https://github.com/Inventoros/Inventoros/releases/latest
+This guide covers the installation methods and the system requirements. Pick the method that matches your hosting.
 
 ## Choose an installation method
 
-- [Install on cPanel](installation-cpanel). Perfect for shared hosting environments with cPanel access. Uses a pre-built release package, no npm required on the server.
-- [Install on a VPS](installation-vps). Full control on Ubuntu, Debian, or CentOS / RHEL with Nginx, PHP-FPM, and MySQL or MariaDB.
-- [Install with Docker](installation-docker). The official production image from GHCR, with a Compose file for the app, queue worker, scheduler and PostgreSQL.
+| Method | Best for | What you need |
+|---|---|---|
+| [One-command install](installation-linux) (recommended) | A Linux VPS or dedicated server | Root access; the installer sets up Docker and everything else |
+| [Install with Docker](installation-docker) | Servers that already run Docker, and IT teams | Docker and Docker Compose |
+| [Cloud & Coolify](installation-cloud) | A new cloud server, or a Coolify instance | An account with a cloud provider, or Coolify |
+| [Install on cPanel](installation-cpanel) | Shared hosting | cPanel with PHP 8.4 and a MySQL database |
+| [Install on a VPS](installation-vps) | Running PHP directly, without Docker | Nginx, PHP-FPM, MySQL or PostgreSQL, Composer and Node.js |
+
+The Docker-based methods (one-command, Docker, cloud and Coolify) run the official production image with a queue worker, a scheduler and PostgreSQL, and upgrade by switching to the new release's image. cPanel and manual VPS installs use the PHP package and update from the admin panel.
+
+On a Linux server, the quickest start is:
+
+```bash
+curl -fsSL https://inventoros.com/install.sh -o install.sh
+less install.sh
+sudo bash install.sh
+```
+
+## Every method ends in the web installer
+
+However you deploy, you finish at `https://your-address/install`. The guided installer checks the server, connects to the database and creates the tables, then creates your organization and the first administrator. With the Docker-based methods the database details are already filled in.
+
+Download the latest release: https://github.com/Inventoros/Inventoros/releases/latest
 
 ## System requirements
+
+The requirements below apply to cPanel and manual VPS installs. The Docker-based methods only need Docker (the one-command installer installs it), x86_64, 1 GB of memory (2 GB recommended) and 5 GB of disk.
 
 ### Server
 

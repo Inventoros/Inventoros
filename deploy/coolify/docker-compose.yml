@@ -1,0 +1,151 @@
+# documentation: https://inventoros.com/docs/installation-cloud
+# slogan: Open-source inventory and warehouse management: stock, orders, purchasing and warehouses.
+# tags: inventory,warehouse,stock,orders,purchasing,erp,laravel
+# logo: svgs/inventoros.png
+# port: 8080
+#
+# Inventoros for Coolify. In Coolify: + New > Docker Compose Empty, paste this
+# file, deploy, then open the generated URL and add /install to finish setup.
+# Coolify generates the domain, APP_KEY and the database password; they stay
+# the same across redeploys. To upgrade, change INVENTOROS_VERSION and redeploy.
+
+services:
+  app:
+    image: ghcr.io/inventoros/inventoros:${INVENTOROS_VERSION:-2.3.0}
+    environment:
+      - SERVICE_URL_APP_8080
+      - APP_URL=${SERVICE_URL_APP}
+      - APP_KEY=base64:${SERVICE_REALBASE64_32_APPKEY}
+      - APP_ENV=production
+      - APP_DEBUG=false
+      - LOG_CHANNEL=stderr
+      - LOG_LEVEL=${LOG_LEVEL:-warning}
+      - DB_CONNECTION=pgsql
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_DATABASE=${DB_DATABASE:-inventoros}
+      - DB_USERNAME=${SERVICE_USER_POSTGRES}
+      - DB_PASSWORD=${SERVICE_PASSWORD_64_POSTGRES}
+      - SESSION_DRIVER=database
+      - CACHE_STORE=database
+      - QUEUE_CONNECTION=database
+      - QUEUE_RUN_VIA_SCHEDULER=false
+      - TRUSTED_PROXIES=private_ranges
+      - MAIL_MAILER=${MAIL_MAILER:-log}
+      - MAIL_HOST=${MAIL_HOST:-}
+      - MAIL_PORT=${MAIL_PORT:-587}
+      - MAIL_USERNAME=${MAIL_USERNAME:-}
+      - MAIL_PASSWORD=${MAIL_PASSWORD:-}
+      - MAIL_FROM_ADDRESS=${MAIL_FROM_ADDRESS:-inventory@example.com}
+      - MAIL_FROM_NAME=${MAIL_FROM_NAME:-Inventoros}
+      - RUN_MIGRATIONS=true
+    volumes:
+      - inventoros-storage:/app/storage
+      - inventoros-plugins:/app/plugins
+      - inventoros-plugin-assets:/app/public/plugin-assets
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "inventoros-healthcheck"]
+      interval: 15s
+      timeout: 5s
+      retries: 20
+      start_period: 60s
+
+  worker:
+    image: ghcr.io/inventoros/inventoros:${INVENTOROS_VERSION:-2.3.0}
+    command: ["php", "artisan", "queue:work", "--tries=3", "--max-time=3600", "--sleep=3"]
+    stop_grace_period: 660s
+    environment:
+      - APP_URL=${SERVICE_URL_APP}
+      - APP_KEY=base64:${SERVICE_REALBASE64_32_APPKEY}
+      - APP_ENV=production
+      - APP_DEBUG=false
+      - LOG_CHANNEL=stderr
+      - LOG_LEVEL=${LOG_LEVEL:-warning}
+      - DB_CONNECTION=pgsql
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_DATABASE=${DB_DATABASE:-inventoros}
+      - DB_USERNAME=${SERVICE_USER_POSTGRES}
+      - DB_PASSWORD=${SERVICE_PASSWORD_64_POSTGRES}
+      - SESSION_DRIVER=database
+      - CACHE_STORE=database
+      - QUEUE_CONNECTION=database
+      - QUEUE_RUN_VIA_SCHEDULER=false
+      - MAIL_MAILER=${MAIL_MAILER:-log}
+      - MAIL_HOST=${MAIL_HOST:-}
+      - MAIL_PORT=${MAIL_PORT:-587}
+      - MAIL_USERNAME=${MAIL_USERNAME:-}
+      - MAIL_PASSWORD=${MAIL_PASSWORD:-}
+      - MAIL_FROM_ADDRESS=${MAIL_FROM_ADDRESS:-inventory@example.com}
+      - MAIL_FROM_NAME=${MAIL_FROM_NAME:-Inventoros}
+      - RUN_MIGRATIONS=false
+    volumes:
+      - inventoros-storage:/app/storage
+      - inventoros-plugins:/app/plugins
+      - inventoros-plugin-assets:/app/public/plugin-assets
+    depends_on:
+      app:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "true"]
+
+  scheduler:
+    image: ghcr.io/inventoros/inventoros:${INVENTOROS_VERSION:-2.3.0}
+    command: ["php", "artisan", "schedule:work"]
+    environment:
+      - APP_URL=${SERVICE_URL_APP}
+      - APP_KEY=base64:${SERVICE_REALBASE64_32_APPKEY}
+      - APP_ENV=production
+      - APP_DEBUG=false
+      - LOG_CHANNEL=stderr
+      - LOG_LEVEL=${LOG_LEVEL:-warning}
+      - DB_CONNECTION=pgsql
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_DATABASE=${DB_DATABASE:-inventoros}
+      - DB_USERNAME=${SERVICE_USER_POSTGRES}
+      - DB_PASSWORD=${SERVICE_PASSWORD_64_POSTGRES}
+      - SESSION_DRIVER=database
+      - CACHE_STORE=database
+      - QUEUE_CONNECTION=database
+      - QUEUE_RUN_VIA_SCHEDULER=false
+      - MAIL_MAILER=${MAIL_MAILER:-log}
+      - MAIL_HOST=${MAIL_HOST:-}
+      - MAIL_PORT=${MAIL_PORT:-587}
+      - MAIL_USERNAME=${MAIL_USERNAME:-}
+      - MAIL_PASSWORD=${MAIL_PASSWORD:-}
+      - MAIL_FROM_ADDRESS=${MAIL_FROM_ADDRESS:-inventory@example.com}
+      - MAIL_FROM_NAME=${MAIL_FROM_NAME:-Inventoros}
+      - RUN_MIGRATIONS=false
+    volumes:
+      - inventoros-storage:/app/storage
+      - inventoros-plugins:/app/plugins
+      - inventoros-plugin-assets:/app/public/plugin-assets
+    depends_on:
+      app:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "true"]
+
+  db:
+    image: postgres:17-alpine
+    environment:
+      - POSTGRES_DB=${DB_DATABASE:-inventoros}
+      - POSTGRES_USER=${SERVICE_USER_POSTGRES}
+      - POSTGRES_PASSWORD=${SERVICE_PASSWORD_64_POSTGRES}
+    volumes:
+      - inventoros-db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+volumes:
+  inventoros-storage:
+  inventoros-plugins:
+  inventoros-plugin-assets:
+  inventoros-db:

@@ -2,12 +2,14 @@ Inventoros publishes a production Docker image to the GitHub Container Registry 
 
 ```
 ghcr.io/inventoros/inventoros:latest   # newest release
-ghcr.io/inventoros/inventoros:2.0.0    # an exact release
-ghcr.io/inventoros/inventoros:2.0      # newest patch of a minor line
+ghcr.io/inventoros/inventoros:2.3.0    # an exact release
+ghcr.io/inventoros/inventoros:2.3      # newest patch of a minor line
 ghcr.io/inventoros/inventoros:2        # newest release of a major line
 ```
 
-There is no image for releases before v2.0.0. If `docker compose pull` cannot fetch the image (for example `unauthorized` or `denied`), build it from a checkout instead: see [Building the image yourself](#building-the-image-yourself).
+There is no image for releases before v2.0.0. Images are built for x86_64 (amd64); on ARM servers, see [Building the image yourself](#building-the-image-yourself).
+
+On a Linux server, the [one-command installer](installation-linux) does everything on this page for you: it installs Docker, writes the `.env`, pins the release and starts the stack. Read on to set it up by hand or to customize it.
 
 The image runs PHP 8.4 under FrankenPHP (Caddy and PHP in one process), serves the app on port 8080 as a non-root user, and ships with production settings: `APP_ENV=production`, `APP_DEBUG=false`, OPcache on, and config, route, view and event caches built at start. The `mysqldump`, `pg_dump` and `sqlite3` clients are included so the built-in backups can capture the database.
 
@@ -21,20 +23,21 @@ The image runs PHP 8.4 under FrankenPHP (Caddy and PHP in one process), serves t
 
 The repository contains a ready-to-use `docker-compose.prod.yml` that runs four containers: the web app, a queue worker, the scheduler, and PostgreSQL 17.
 
-1. Download the compose file into an empty directory:
+1. Download the compose file for the release you want into an empty directory:
 
 ```bash
 mkdir inventoros && cd inventoros
-curl -fsSLO https://raw.githubusercontent.com/Inventoros/Inventoros/main/docker-compose.prod.yml
+curl -fsSLO https://raw.githubusercontent.com/Inventoros/Inventoros/v2.3.0/docker-compose.prod.yml
 ```
 
-2. Create a `.env` file next to it:
+2. Create a `.env` file next to it, pinning the same release:
 
 ```bash
 cat > .env <<EOF
 APP_KEY=base64:$(openssl rand -base64 32)
 APP_URL=https://inventory.example.com
 DB_PASSWORD=$(openssl rand -hex 24)
+INVENTOROS_IMAGE=ghcr.io/inventoros/inventoros:2.3.0
 EOF
 ```
 
@@ -174,7 +177,7 @@ docker compose -f docker-compose.prod.yml pull
 docker compose -f docker-compose.prod.yml up -d
 ```
 
-Pin a version with `INVENTOROS_IMAGE=ghcr.io/inventoros/inventoros:2.0.0` in `.env` if you prefer to upgrade deliberately. Do not use the in-app updater inside a container: it replaces files in the running container, and those changes are lost when the container is recreated.
+With a pinned release, change `INVENTOROS_IMAGE` in `.env` to the new version (for example `ghcr.io/inventoros/inventoros:2.4.0`) before pulling. Back up first: see [Updates & Backups](updates). Do not use the in-app updater inside a container: it replaces files in the running container, and those changes are lost when the container is recreated.
 
 ## Building the image yourself
 
