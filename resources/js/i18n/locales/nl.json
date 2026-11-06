@@ -2552,9 +2552,9 @@
       "step4": "Installatie voltooien",
       "step4Desc": "Installatie afronden en beginnen met Inventoros",
       "beforeBegin": "Voordat u begint",
-      "beforeBeginDesc": "Zorg ervoor dat PHP 8.2+, MySQL/PostgreSQL en de vereiste PHP-extensies zijn geïnstalleerd.",
+      "beforeBeginDesc": "Zorg ervoor dat PHP 8.4.1+, MySQL/PostgreSQL en de vereiste PHP-extensies zijn geïnstalleerd.",
       "startInstallation": "Installatie starten",
-      "license": "Open source onder MIT-licentie"
+      "license": "Open source onder AGPL-3.0-licentie"
     },
     "requirements": {
       "title": "Systeemvereisten",

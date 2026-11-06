@@ -2552,9 +2552,9 @@
       "step4": "Einrichtung abschließen",
       "step4Desc": "Installation abschließen und Inventoros verwenden",
       "beforeBegin": "Bevor Sie beginnen",
-      "beforeBeginDesc": "Stellen Sie sicher, dass PHP 8.2+, MySQL/PostgreSQL und die erforderlichen PHP-Erweiterungen installiert sind.",
+      "beforeBeginDesc": "Stellen Sie sicher, dass PHP 8.4.1+, MySQL/PostgreSQL und die erforderlichen PHP-Erweiterungen installiert sind.",
       "startInstallation": "Installation starten",
-      "license": "Open Source unter MIT-Lizenz"
+      "license": "Open Source unter AGPL-3.0-Lizenz"
     },
     "requirements": {
       "title": "Systemanforderungen",

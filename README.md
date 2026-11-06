@@ -180,6 +180,16 @@ Inventoros is an open-source Inventory and Warehouse Management System (WMS) bui
 
 ## Installation
 
+On a Linux server, install with one command (it sets up Docker, generates secrets and starts everything):
+
+```bash
+curl -fsSL https://inventoros.com/install.sh -o install.sh
+less install.sh
+sudo bash install.sh
+```
+
+Docker Compose, Coolify, cloud servers, cPanel and manual installs are covered in the [installation guides](https://inventoros.com/docs/getting-started). The steps below are for development.
+
 > **Upgrading from 1.0.x?** The in-app updater in 1.0.x cannot install 2.0.0 (or any release), so upgrade by hand once by following [UPGRADE.md](UPGRADE.md). From 2.0.0 on, the updater works again.
 
 ### Quick Start

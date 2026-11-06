@@ -2552,9 +2552,9 @@
       "step4": "Завершение настройки",
       "step4Desc": "Завершение установки и начало работы с Inventoros",
       "beforeBegin": "Перед началом",
-      "beforeBeginDesc": "Убедитесь, что у вас установлены PHP 8.2+, MySQL/PostgreSQL и необходимые расширения PHP.",
+      "beforeBeginDesc": "Убедитесь, что у вас установлены PHP 8.4.1+, MySQL/PostgreSQL и необходимые расширения PHP.",
       "startInstallation": "Начать установку",
-      "license": "Открытый исходный код, лицензия MIT"
+      "license": "Открытый исходный код, лицензия AGPL-3.0"
     },
     "requirements": {
       "title": "Системные требования",

@@ -194,6 +194,7 @@ jobs:
             inventoros-cpanel-${{ steps.version.outputs.version }}.zip
             inventoros-cpanel-${{ steps.version.outputs.version }}.zip.sig
             hello-world-plugin.zip
+            scripts/install.sh
           name: Release ${{ steps.version.outputs.tag_name }}
           body_path: docs/releases/${{ steps.version.outputs.version }}.md
           draft: false
