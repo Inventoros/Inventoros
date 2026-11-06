@@ -2552,9 +2552,9 @@
       "step4": "설치 완료",
       "step4Desc": "설치를 마무리하고 Inventoros 사용 시작",
       "beforeBegin": "시작하기 전에",
-      "beforeBeginDesc": "PHP 8.2 이상, MySQL/PostgreSQL 및 필수 PHP 확장이 설치되어 있는지 확인하세요.",
+      "beforeBeginDesc": "PHP 8.4.1 이상, MySQL/PostgreSQL 및 필수 PHP 확장이 설치되어 있는지 확인하세요.",
       "startInstallation": "설치 시작",
-      "license": "MIT 라이선스에 따른 오픈소스"
+      "license": "AGPL-3.0 라이선스에 따른 오픈소스"
     },
     "requirements": {
       "title": "시스템 요구사항",

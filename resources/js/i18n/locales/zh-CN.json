@@ -2552,9 +2552,9 @@
       "step4": "完成设置",
       "step4Desc": "完成安装并开始使用 Inventoros",
       "beforeBegin": "开始之前",
-      "beforeBeginDesc": "请确保已安装 PHP 8.2+、MySQL/PostgreSQL 及所需的 PHP 扩展。",
+      "beforeBeginDesc": "请确保已安装 PHP 8.4.1+、MySQL/PostgreSQL 及所需的 PHP 扩展。",
       "startInstallation": "开始安装",
-      "license": "基于 MIT 许可证的开源项目"
+      "license": "基于 AGPL-3.0 许可证的开源项目"
     },
     "requirements": {
       "title": "系统要求",

@@ -2552,9 +2552,9 @@
       "step4": "Completar configuración",
       "step4Desc": "Finalizar la instalación y comenzar a usar Inventoros",
       "beforeBegin": "Antes de comenzar",
-      "beforeBeginDesc": "Asegúrate de tener PHP 8.2+, MySQL/PostgreSQL y las extensiones PHP requeridas instaladas.",
+      "beforeBeginDesc": "Asegúrate de tener PHP 8.4.1+, MySQL/PostgreSQL y las extensiones PHP requeridas instaladas.",
       "startInstallation": "Iniciar instalación",
-      "license": "Código abierto bajo licencia MIT"
+      "license": "Código abierto bajo licencia AGPL-3.0"
     },
     "requirements": {
       "title": "Requisitos del sistema",

@@ -2552,9 +2552,9 @@
       "step4": "Zakończenie konfiguracji",
       "step4Desc": "Zakończenie instalacji i rozpoczęcie korzystania z Inventoros",
       "beforeBegin": "Zanim zaczniesz",
-      "beforeBeginDesc": "Upewnij się, że masz zainstalowane PHP 8.2+, MySQL/PostgreSQL i wymagane rozszerzenia PHP.",
+      "beforeBeginDesc": "Upewnij się, że masz zainstalowane PHP 8.4.1+, MySQL/PostgreSQL i wymagane rozszerzenia PHP.",
       "startInstallation": "Rozpocznij instalację",
-      "license": "Otwarte oprogramowanie na licencji MIT"
+      "license": "Otwarte oprogramowanie na licencji AGPL-3.0"
     },
     "requirements": {
       "title": "Wymagania systemowe",

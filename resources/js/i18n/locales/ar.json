@@ -2552,9 +2552,9 @@
       "step4": "إكمال الإعداد",
       "step4Desc": "إنهاء التثبيت والبدء باستخدام Inventoros",
       "beforeBegin": "قبل البدء",
-      "beforeBeginDesc": "تأكد من تثبيت PHP 8.2+ و MySQL/PostgreSQL وامتدادات PHP المطلوبة.",
+      "beforeBeginDesc": "تأكد من تثبيت PHP 8.4.1+ و MySQL/PostgreSQL وامتدادات PHP المطلوبة.",
       "startInstallation": "بدء التثبيت",
-      "license": "مفتوح المصدر تحت رخصة MIT"
+      "license": "مفتوح المصدر تحت رخصة AGPL-3.0"
     },
     "requirements": {
       "title": "متطلبات النظام",

@@ -2552,9 +2552,9 @@
       "step4": "Kurulumu Tamamla",
       "step4Desc": "Kurulumu sonlandırın ve Inventoros'u kullanmaya başlayın",
       "beforeBegin": "Başlamadan önce",
-      "beforeBeginDesc": "PHP 8.2+, MySQL/PostgreSQL ve gerekli PHP uzantılarının yüklü olduğundan emin olun.",
+      "beforeBeginDesc": "PHP 8.4.1+, MySQL/PostgreSQL ve gerekli PHP uzantılarının yüklü olduğundan emin olun.",
       "startInstallation": "Kurulumu Başlat",
-      "license": "MIT Lisansı ile açık kaynak"
+      "license": "AGPL-3.0 Lisansı ile açık kaynak"
     },
     "requirements": {
       "title": "Sistem Gereksinimleri",
