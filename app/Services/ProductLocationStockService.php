@@ -12,6 +12,7 @@ use App\Models\Inventory\ProductVariant;
 use App\Models\Inventory\VariantLocationStock;
 use Illuminate\Database\Eloquent\Builder;
 use App\Models\User;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
@@ -167,11 +168,15 @@ final class ProductLocationStockService
      * caller's check against available stock guarantees there is enough of
      * it.
      *
+     * With a restricted $actor, only their assigned warehouses' bins are
+     * eligible and those free bins must cover the entire request. Unassigned
+     * stock and bins outside their assignments are never fallback sources.
+     *
      * Must run inside the caller's product-locked transaction.
      *
      * @api
      */
-    public function consume(Product|ProductVariant $product, int $quantity, ?int $preferWarehouseId = null, bool $respectHolds = true): void
+    public function consume(Product|ProductVariant $product, int $quantity, ?int $preferWarehouseId = null, bool $respectHolds = true, ?User $actor = null): void
     {
         if ($quantity <= 0) {
             return;
@@ -181,6 +186,7 @@ final class ProductLocationStockService
 
         $bins = $this->bins($product)
             ->where('quantity', '>', 0)
+            ->when($actor !== null, fn ($query) => app(WarehouseAccessService::class)->scopeByLocation($query, $actor, 'location_id'))
             // The fulfilling warehouse's bins first, when one is named.
             ->when($preferWarehouseId !== null, fn ($query) => $query->orderByRaw(
                 'case when '.$this->bins($product)->getModel()->getTable().'.location_id in (select product_locations.id from product_locations where product_locations.warehouse_id = ?) then 0 else 1 end',
@@ -204,6 +210,15 @@ final class ProductLocationStockService
             ->get();
 
         $held = $this->reservations()->reservedByLocation($this->productId($product), $this->variantId($product));
+        // A restricted actor cannot spend the organization's aggregate stock
+        // when their own bins cannot cover it. Check before changing any bin;
+        // a preferred warehouse is only an ordering hint, never authorization.
+        if ($actor !== null && app(WarehouseAccessService::class)->isRestricted($actor)) {
+            $available = $bins->sum(fn ($bin) => max(0, (int) $bin->quantity - ($respectHolds ? ($held[(int) $bin->location_id] ?? 0) : 0)));
+            if ($available < $quantity) {
+                throw new AuthorizationException('Your accessible warehouses do not contain enough available stock for this order.');
+            }
+        }
         $remaining = $quantity;
 
         // Free units first, in fulfilment order.
