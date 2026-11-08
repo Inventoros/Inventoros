@@ -9,6 +9,7 @@ use App\Models\Auth\Organization;
 use App\Models\System\SystemSetting;
 use App\Models\User;
 use App\Support\AppVersion;
+use App\Support\InstallationState;
 use App\Support\PublicPath;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
@@ -445,6 +446,7 @@ class InstallerController extends Controller
                 'QUEUE_CONNECTION' => 'database',
                 'APP_ENV' => 'production',
                 'APP_DEBUG' => 'false',
+                'INVENTOROS_INSTALLED' => 'true',
             ]);
 
             DB::commit();
@@ -483,11 +485,7 @@ class InstallerController extends Controller
      */
     protected function isInstalled(): bool
     {
-        try {
-            return SystemSetting::get('installed', false) === true;
-        } catch (\Exception $e) {
-            return false;
-        }
+        return InstallationState::installed();
     }
 
     /**

@@ -72,7 +72,7 @@ const i18n = { t, te };
                         {{ t('common.view') }}
                     </Button>
                     <Button
-                        v-if="(role.slug !== 'system-administrator') && canVisit('roles.edit')"
+                        v-if="!role.is_system && role.organization_id !== null && canVisit('roles.edit')"
                         variant="default"
                         size="sm"
                         as="Link"

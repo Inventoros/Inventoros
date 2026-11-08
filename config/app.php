@@ -28,6 +28,9 @@ return [
 
     'env' => env('APP_ENV', 'production'),
 
+    // Written by the installer so losing the database cannot reopen setup.
+    'installed' => (bool) env('INVENTOROS_INSTALLED', false),
+
     /*
     |--------------------------------------------------------------------------
     | Application Debug Mode

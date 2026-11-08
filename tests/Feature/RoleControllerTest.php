@@ -245,7 +245,7 @@ class RoleControllerTest extends TestCase
         $roleData = [
             'name' => 'Member Created Role',
             'description' => 'A role created by a member',
-            'permissions' => ['view_products'],
+            'permissions' => ['view_roles'],
         ];
 
         $response = $this->actingAs($this->member)
@@ -459,12 +459,12 @@ class RoleControllerTest extends TestCase
 
     public function test_member_can_update_role(): void
     {
-        $role = $this->createCustomRole(['name' => 'Original Role']);
+        $role = $this->createCustomRole(['name' => 'Original Role', 'permissions' => ['view_roles']]);
 
         $response = $this->actingAs($this->member)
             ->put(route('roles.update', $role), [
                 'name' => 'Member Updated',
-                'permissions' => ['view_products'],
+                'permissions' => ['view_roles'],
             ]);
 
         $response->assertRedirect(route('roles.index'));

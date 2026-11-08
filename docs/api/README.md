@@ -412,6 +412,13 @@ Mutations: `createProduct`, `updateProduct`, `deleteProduct`, `createOrder`, `up
 
 Every field is gated like the matching REST route: the user must hold the permission and the token must allow it, so a scoped token is enforced the same way over GraphQL. Mutations call the same services as the web app and REST API, so a return received or a transfer completed over GraphQL restocks and moves bins exactly as it would anywhere else. List queries accept `limit` (default 50, max 100). The endpoint shares the REST rate limit of 60 requests per minute.
 
+Collection fields, including nested relationships, return at most 100 records.
+The endpoint accepts one operation per request; array batching is disabled.
+Queries must fit the existing depth/field-complexity limits and a separate
+50,000-response-node budget that accounts for nested collection cardinality.
+Oversized queries are rejected before their resolvers execute. Use the REST
+endpoints for larger collections and exports.
+
 ```bash
 curl -X POST "${APP_URL}/graphql" \
   -H "Authorization: Bearer ${TOKEN}" \

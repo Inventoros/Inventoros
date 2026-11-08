@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\GraphQL\Queries;
 
+use App\GraphQL\Support\ListResourceLimits;
 use App\Services\ApprovalService;
 use Closure;
 use GraphQL\Type\Definition\ResolveInfo;
@@ -28,6 +29,6 @@ class PendingApprovalsQuery extends Query
     {
         $user = auth()->user() ?? throw new AuthorizationException('Unauthorized');
 
-        return app(ApprovalService::class)->pendingFor($user)->all();
+        return app(ApprovalService::class)->pendingFor($user, ListResourceLimits::MAX_RESULTS)->all();
     }
 }

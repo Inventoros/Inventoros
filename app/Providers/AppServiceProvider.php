@@ -41,9 +41,11 @@ use App\Observers\WarehouseObserver;
 use App\Observers\WorkOrderObserver;
 use App\Services\PluginService;
 use App\Services\PluginUIService;
+use App\Support\ApplicationUrl;
 use Dedoc\Scramble\Scramble;
 use Dedoc\Scramble\Support\Generator\OpenApi;
 use Dedoc\Scramble\Support\Generator\SecurityScheme;
+use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Mail\Events\MessageSent;
@@ -100,6 +102,11 @@ class AppServiceProvider extends ServiceProvider
         // and admins choose. Escape them so a name written as a Markdown link
         // or HTML stays text instead of becoming a link in the email.
         Markdown::withSecuredEncoding();
+
+        ResetPassword::createUrlUsing(static fn ($notifiable, string $token): string => ApplicationUrl::route('password.reset', [
+            'token' => $token,
+            'email' => $notifiable->getEmailForPasswordReset(),
+        ]));
 
         // API rate limiting
         RateLimiter::for('api', function (Request $request) {

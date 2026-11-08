@@ -83,7 +83,7 @@ class LocationsQuery extends Query
             });
         }
 
-        $limit = min($args['limit'] ?? 50, 100);
+        $limit = max(0, min($args['limit'] ?? 50, 100));
 
         return $query->orderBy('name')->limit($limit)->get();
     }

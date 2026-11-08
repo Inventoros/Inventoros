@@ -88,7 +88,7 @@ class SuppliersQuery extends Query
         $sortDir = $args['sort_dir'] ?? 'desc';
         $query->orderBy($sortBy, $sortDir);
 
-        $limit = min($args['limit'] ?? 50, 100);
+        $limit = max(0, min($args['limit'] ?? 50, 100));
 
         return $query->limit($limit)->get();
     }

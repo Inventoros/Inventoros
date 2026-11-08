@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\GraphQL\Types;
 
+use App\GraphQL\Support\ListResourceLimits;
 use App\Models\User;
 use GraphQL\Type\Definition\Type;
 use Rebing\GraphQL\Support\Facades\GraphQL;
@@ -35,8 +36,8 @@ class UserType extends GraphQLType
             ],
             'roles' => [
                 'type' => Type::listOf(GraphQL::type('Role')),
-                'description' => 'Custom roles assigned to the user',
-                'resolve' => fn (User $user) => $user->roles,
+                'description' => 'Custom roles assigned to the user (at most 100 entries).',
+                'resolve' => fn (User $user) => ListResourceLimits::relation($user, 'roles'),
             ],
             'created_at' => [
                 'type' => Type::string(),

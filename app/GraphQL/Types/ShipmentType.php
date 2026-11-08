@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\GraphQL\Types;
 
+use App\GraphQL\Support\ListResourceLimits;
 use App\Models\Shipping\Shipment;
 use GraphQL\Type\Definition\Type;
 use Rebing\GraphQL\Support\Facades\GraphQL;
@@ -49,8 +50,8 @@ class ShipmentType extends GraphQLType
             'created_at' => ['type' => Type::string(), 'description' => 'Creation timestamp', 'resolve' => $iso('created_at')],
             'items' => [
                 'type' => Type::listOf(GraphQL::type('ShipmentItem')),
-                'description' => 'Order lines and quantities in this shipment',
-                'resolve' => fn (Shipment $s) => $s->items,
+                'description' => 'Order lines and quantities in this shipment (at most 100 entries).',
+                'resolve' => fn (Shipment $s) => ListResourceLimits::relation($s, 'items'),
             ],
         ];
     }

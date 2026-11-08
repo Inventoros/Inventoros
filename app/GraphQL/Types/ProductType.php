@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\GraphQL\Types;
 
+use App\GraphQL\Support\ListResourceLimits;
 use App\Models\Inventory\Product;
 use GraphQL\Type\Definition\Type;
 use Rebing\GraphQL\Support\Facades\GraphQL;
@@ -148,13 +149,13 @@ class ProductType extends GraphQLType
             ],
             'variants' => [
                 'type' => Type::listOf(GraphQL::type('ProductVariant')),
-                'description' => 'Product variants',
-                'resolve' => fn (Product $product) => $product->variants,
+                'description' => 'Product variants (at most 100 entries).',
+                'resolve' => fn (Product $product) => ListResourceLimits::relation($product, 'variants'),
             ],
             'suppliers' => [
                 'type' => Type::listOf(GraphQL::type('Supplier')),
-                'description' => 'Product suppliers',
-                'resolve' => fn (Product $product) => $product->suppliers,
+                'description' => 'Product suppliers (at most 100 entries).',
+                'resolve' => fn (Product $product) => ListResourceLimits::relation($product, 'suppliers'),
             ],
             'created_at' => [
                 'type' => Type::string(),

@@ -91,7 +91,7 @@ jobs:
             -v inventoros-smoke-plugins:/app/plugins \
             -v inventoros-smoke-plugin-assets:/app/public/plugin-assets \
             -e APP_KEY="base64:$(openssl rand -base64 32)" \
-            -e DB_CONNECTION=sqlite -e DB_DATABASE=/tmp/smoke.sqlite \
+            -e DB_CONNECTION=sqlite -e DB_DATABASE=:memory: \
             -e SESSION_DRIVER=file -e CACHE_STORE=file -e QUEUE_CONNECTION=sync \
             "$image"
           for i in $(seq 1 30); do

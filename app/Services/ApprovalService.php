@@ -576,7 +576,7 @@ final class ApprovalService
      *
      * @return Collection<int, array<string, mixed>>
      */
-    public function pendingFor(User $user): Collection
+    public function pendingFor(User $user, ?int $limit = null): Collection
     {
         $items = collect();
         // A scoped API token only sees the kinds of request it may decide.
@@ -589,14 +589,23 @@ final class ApprovalService
                 continue;
             }
 
-            foreach ($this->pendingQuery($type, $user->organization_id)->get() as $subject) {
+            $query = $this->pendingQuery($type, $user->organization_id);
+            // GraphQL requests a bounded view; browser lists and counts keep
+            // their complete result when no limit is supplied. Bound before
+            // hydration rather than trimming an already unbounded collection.
+            if ($limit !== null) {
+                $query->limit(max(1, $limit));
+            }
+            foreach ($query->get() as $subject) {
                 if ($this->canDecide($user, $type, $subject)) {
                     $items->push($this->describe($type, $subject) + ['can_decide' => true]);
                 }
             }
         }
 
-        return $items->sortBy('requested_at')->values();
+        $items = $items->sortBy('requested_at')->values();
+
+        return $limit === null ? $items : $items->take(max(1, $limit))->values();
     }
 
     public function pendingCountFor(User $user): int

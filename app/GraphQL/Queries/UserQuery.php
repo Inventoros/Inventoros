@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\GraphQL\Queries;
 
 use App\GraphQL\Concerns\RequiresPermissions;
+use App\GraphQL\Support\ListResourceLimits;
 use App\Models\User;
 use GraphQL\Error\Error;
 use GraphQL\Type\Definition\Type;
@@ -39,7 +40,7 @@ class UserQuery extends Query
 
     public function resolve($root, array $args)
     {
-        return User::with('roles')
+        return User::with(ListResourceLimits::eager('roles'))
             ->forOrganization($this->organizationId())
             ->find($args['id']) ?? throw new Error('User not found');
     }

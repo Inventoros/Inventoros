@@ -27,6 +27,7 @@ use App\Support\ApprovalSettings;
 use App\Support\Money;
 use App\Support\OrderApprovalGate;
 use App\Support\SequenceNumberRetry;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
@@ -111,6 +112,9 @@ final class OrderService
      */
     public function create(array $data, User $creator, string $source = 'manual', bool $adjustStock = true, bool $announce = true): Order
     {
+        if ($adjustStock && isset($data['warehouse_id'])) {
+            app(WarehouseAccessService::class)->authorizeWarehouse($creator, (int) $data['warehouse_id']);
+        }
         $data['organization_id'] = $creator->organization_id;
         $data['created_by'] = $creator->id;
         $data['source'] = $source;
@@ -158,6 +162,9 @@ final class OrderService
                     throw new \Exception("Product not found: {$pid}");
                 }
                 $product = $products[$pid];
+                if ($adjustStock) {
+                    $this->authorizeTrackedStock($product, $creator);
+                }
                 $variantId = $item['product_variant_id'] ?? null;
 
                 if ($variantId !== null) {
@@ -191,6 +198,11 @@ final class OrderService
             $claimed = $adjustStock && $reservationOwner !== null
                 ? $reservations->claim((int) $orgId, $reservationOwner, (string) $reservationReference)
                 : null;
+            foreach ($claimed ?? [] as $hold) {
+                if ($hold->location_id !== null) {
+                    app(WarehouseAccessService::class)->authorizeLocation($creator, (int) $hold->location_id);
+                }
+            }
 
             // Validate availability across ALL lines first. Lines sharing a
             // target (same product, or same variant) accumulate against one
@@ -315,7 +327,7 @@ final class OrderService
                 $target = $targets[$key];
 
                 // Each stock target has its own bins, including variants.
-                $locationStock->consume($target, $totalQty, $this->fulfillingWarehouseId($order));
+                $locationStock->consume($target, $totalQty, $this->fulfillingWarehouseId($order), actor: $creator);
 
                 $target->decrement('stock', $totalQty);
             }
@@ -567,7 +579,31 @@ final class OrderService
         // order creation for the same product. adjust()'s later re-lock is
         // harmlessly re-entrant.
         if ($item->product_id !== null) {
-            Product::withTrashed()->whereKey($item->product_id)->lockForUpdate()->first();
+            $lockedProduct = Product::withTrashed()->whereKey($item->product_id)->lockForUpdate()->first();
+            $item->setRelation('product', $lockedProduct);
+            $item->variant?->setRelation('product', $lockedProduct);
+        }
+
+        $viewer = $actor ?? (auth()->user() instanceof User ? auth()->user() : null);
+        if ($viewer !== null) {
+            $access = app(WarehouseAccessService::class);
+            if ($order->warehouse_id !== null) {
+                $access->authorizeWarehouse($viewer, (int) $order->warehouse_id);
+            }
+            $access->authorizeLocation($viewer, $item->product?->location_id);
+            // The order does not record its original source bins and returns
+            // units to the current primary location. If any possible source
+            // is outside the actor's scope, require unrestricted staff rather
+            // than moving another warehouse's stock through cancellation.
+            $target = $item->variant ?? $item->product;
+            if ($target !== null && $access->isRestricted($viewer)) {
+                foreach (app(ProductLocationStockService::class)->breakdown($target) as $bin) {
+                    $access->authorizeLocation($viewer, (int) $bin->location_id);
+                }
+            }
+            if ($item->product !== null) {
+                $this->authorizeTrackedStock($item->product, $viewer);
+            }
         }
 
         // Return any serials this line consumed to available before restocking
@@ -618,6 +654,27 @@ final class OrderService
     private function fulfillingWarehouseId(Order $order): ?int
     {
         return $order->warehouse_id === null || $order->warehouse_id === '' ? null : (int) $order->warehouse_id;
+    }
+
+    /**
+     * Tracked records have no location of their own. A restricted actor may
+     * allocate or release them only when every possible stock location is
+     * accessible; otherwise only an unrestricted actor can safely do so.
+     */
+    private function authorizeTrackedStock(Product $product, User $actor): void
+    {
+        $access = app(WarehouseAccessService::class);
+        if (! $access->isRestricted($actor) || ! in_array($product->tracking_type?->value, ['serial', 'batch'], true)) {
+            return;
+        }
+
+        $access->authorizeLocation($actor, $product->location_id);
+        $bins = app(ProductLocationStockService::class)->breakdown($product);
+        foreach ($bins as $bin) {
+            if (! $access->canAccessLocation($actor, (int) $bin->location_id)) {
+                throw new AuthorizationException('Tracked stock spans warehouses you cannot access; an unrestricted user must fulfil or restock this order.');
+            }
+        }
     }
 
     /**
@@ -770,6 +827,10 @@ final class OrderService
      */
     public function replaceItems(Order $order, array $items, ?User $actor = null): string
     {
+        $viewer = $actor ?? (auth()->user() instanceof User ? auth()->user() : null);
+        if ($viewer !== null && $order->warehouse_id !== null) {
+            app(WarehouseAccessService::class)->authorizeWarehouse($viewer, (int) $order->warehouse_id);
+        }
         $order->load('items.product', 'items.variant');
 
         // Resubmitting the lines unchanged (an edit that only touches the
@@ -875,6 +936,9 @@ final class OrderService
             }
 
             $qty = (int) $item['quantity'];
+            if ($commitsStock && $viewer !== null) {
+                $this->authorizeTrackedStock($product, $viewer);
+            }
             $available[$key] ??= (int) $target->stock - $reservations->reservedTotal((int) $product->id, $variant?->id);
             $running[$key] = ($running[$key] ?? $available[$key]) - $qty;
             if ($commitsStock && $running[$key] < 0) {
@@ -929,16 +993,18 @@ final class OrderService
             }
 
             if ($variant !== null) {
+                $locationStock->consume($variant, $qty, $this->fulfillingWarehouseId($order), actor: $viewer);
                 StockAdjustment::adjustVariant(
                     $variant, -$qty, 'order_fulfillment',
                     "Order {$order->order_number} edited", null, $order, allowNegative: false,
                     actor: $this->restockActor($order, $actor),
+                    syncBins: false,
                     preferWarehouseId: $this->fulfillingWarehouseId($order),
                 );
             } else {
                 // consume() before adjust() so the lazy bin seed reads the
                 // pre-decrement total; allocate after the item exists.
-                $locationStock->consume($product, $qty, $this->fulfillingWarehouseId($order));
+                $locationStock->consume($product, $qty, $this->fulfillingWarehouseId($order), actor: $viewer);
                 StockAdjustment::adjust(
                     $product, -$qty, 'order_fulfillment',
                     "Order {$order->order_number} edited", null, $order, allowNegative: false,

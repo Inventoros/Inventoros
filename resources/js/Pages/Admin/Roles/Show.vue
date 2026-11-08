@@ -28,7 +28,7 @@ const deleteForm = useForm({});
 const deleting = computed(() => deleteForm.processing);
 watch(showDeleteModal, () => deleteForm.clearErrors());
 
-const isProtected = computed(() => props.role.is_system || props.role.slug === 'system-administrator');
+const isProtected = computed(() => props.role.is_system || props.role.organization_id === null);
 
 const groupedPermissions = computed(() => {
     const groups = {};
@@ -213,7 +213,7 @@ const deleteRole = () => {
                     <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">{{ t('common.actions') }}</h3></div>
                     <div class="p-5">
                         <div class="space-y-3">
-                            <Button v-if="canVisit('roles.edit')" variant="default" class="w-full" as="Link" :href="route('roles.edit', role.id)">
+                            <Button v-if="!isProtected && canVisit('roles.edit')" variant="default" class="w-full" as="Link" :href="route('roles.edit', role.id)">
                                 <Pencil :size="16" />
                                 {{ t('admin.roles.show.editRole') }}
                             </Button>

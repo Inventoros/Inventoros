@@ -6,6 +6,7 @@ namespace App\Mail;
 
 use App\Mail\Concerns\UsesOrganizationBranding;
 use App\Models\CustomerContact;
+use App\Support\ApplicationUrl;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
@@ -31,7 +32,7 @@ class PortalPasswordResetEmail extends Mailable
     {
         $this->data = ['organization_id' => (int) $contact->organization_id];
 
-        $this->resetUrl = route('portal.password.reset', [
+        $this->resetUrl = ApplicationUrl::route('portal.password.reset', [
             'organization' => $contact->organization->slug,
             'token' => $token,
             'email' => $contact->email,
