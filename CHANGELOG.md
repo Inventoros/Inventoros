@@ -15,6 +15,7 @@ Full release notes, with the pull request behind each change, are on [GitHub Rel
 
 ### Security
 
+- Production Docker and cPanel packages exclude development demo seeders. Both demo entry points refuse production execution, including forced seeding, before changing installation state or creating accounts.
 - Installation checks fail closed during database outages. Completed new installations retain an environment marker that keeps setup closed when the database is unavailable.
 - Password-reset and invitation emails use the configured `APP_URL`, including signed customer portal links and subdirectory installations.
 - Sales creation, edits and restocking enforce warehouse assignments across browser, REST, GraphQL and MCP requests. Ambiguous tracked stock movements and reversals require unrestricted staff.

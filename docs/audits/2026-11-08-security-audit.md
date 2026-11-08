@@ -187,6 +187,15 @@ audit and the current all-dependency audit commands.
 
 ## Scope, evidence and limits
 
+The 2.4.0 release artifact review additionally found development demo seeders
+included in production packages. Running them manually could provision their
+known demo accounts. `ReadmeDemoSeeder` and its `DemoDataSeeder` companion now
+refuse production execution, including `--force`, before changing any records.
+Both are excluded from Docker and cPanel artifacts, and package verification
+rejects them. The follow-up package, updater, installer and seeder checks passed
+76 tests with 265 assertions; release-candidate validation is recorded in
+[pull request #337](https://github.com/Inventoros/Inventoros/pull/337).
+
 The review covered dependency alerts and lockfiles, authentication and sessions,
 organization and warehouse boundaries, REST/GraphQL/MCP entry points, installer
 state, plugins and release updates, uploads/imports, outbound webhooks, and CI
@@ -208,7 +217,7 @@ No full repository-history secret scan or external penetration test was performe
 
 | Check | Result |
 | --- | --- |
-| Complete PHPUnit suite, PHP 8.4.19 / SQLite | 4,036 tests; 28,956 assertions; zero failures; 7 skips and 12 existing PHPUnit metadata deprecations |
+| Complete audit-change PHPUnit suite, PHP 8.4.19 / SQLite | 4,036 tests; 28,956 assertions; zero failures; 7 skips and 12 existing PHPUnit metadata deprecations |
 | JavaScript unit tests | 226 passed |
 | Production frontend build | Passed |
 | Both bundled plugin rebuilds | Passed; committed bundles reproduced without changes |

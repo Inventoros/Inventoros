@@ -4,9 +4,13 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Models\System\SystemSetting;
 use App\Models\User;
 use Database\Seeders\DatabaseSeeder;
+use Database\Seeders\DemoDataSeeder;
+use Database\Seeders\ReadmeDemoSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
 /**
@@ -47,5 +51,30 @@ final class DatabaseSeederSafetyTest extends TestCase
         $this->artisan('db:seed', ['--force' => true])->assertSuccessful();
 
         $this->assertSame(0, User::count());
+    }
+
+    public static function demoSeeders(): array
+    {
+        return [[ReadmeDemoSeeder::class], [DemoDataSeeder::class]];
+    }
+
+    #[DataProvider('demoSeeders')]
+    public function test_demo_seeders_refuse_production_before_writing_any_records(string $seeder): void
+    {
+        $this->app['env'] = 'production';
+
+        $refused = false;
+        try {
+            $this->artisan('db:seed', ['--class' => $seeder, '--force' => true])->run();
+        } catch (\RuntimeException $error) {
+            $refused = true;
+            $this->assertSame('Demo data cannot be seeded in production.', $error->getMessage());
+        }
+
+        $this->assertTrue($refused, 'A development demo seeder must refuse production, including --force.');
+        $this->assertDatabaseCount('users', 0);
+        $this->assertDatabaseCount('organizations', 0);
+        $this->assertDatabaseCount('roles', 0);
+        $this->assertFalse(SystemSetting::get('installed', false));
     }
 }
