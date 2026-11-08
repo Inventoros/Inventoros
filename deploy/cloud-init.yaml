@@ -9,7 +9,7 @@
 #
 # For HTTPS, point a DNS record at the server first and add
 # `--domain inventory.example.com` to the install command below. To pin a
-# release, add `--version 2.3.0`.
+# release, add `--version 2.4.0`.
 
 package_update: true
 packages:

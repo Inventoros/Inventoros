@@ -81,7 +81,7 @@ INVENTOROS_YES=true.
 Examples:
   sudo bash install.sh
   sudo bash install.sh --domain inventory.example.com
-  sudo bash install.sh --version 2.3.0 --port 8088
+  sudo bash install.sh --version 2.4.0 --port 8088
 EOF
 }
 
@@ -104,7 +104,7 @@ while [ $# -gt 0 ]; do
 done
 
 VERSION="${VERSION#v}"
-[ -z "$VERSION" ] || [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || die "--version must look like 2.3.0, got '$VERSION'."
+[ -z "$VERSION" ] || [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || die "--version must look like 2.4.0, got '$VERSION'."
 [ -z "$PORT" ] || { [[ "$PORT" =~ ^[0-9]+$ ]] && [ "$PORT" -ge 1 ] && [ "$PORT" -le 65535 ]; } || die "--port must be a number from 1 to 65535."
 [ -z "$DOMAIN" ] || [[ "$DOMAIN" =~ ^[A-Za-z0-9]([A-Za-z0-9.-]*[A-Za-z0-9])?$ && "$DOMAIN" == *.* ]] || die "--domain must be a host name like inventory.example.com (no https:// or path)."
 [ -z "$APP_URL_ARG" ] || [[ "$APP_URL_ARG" =~ ^https?://[^/[:space:]]+$ ]] || die "--url must be like https://inventory.example.com (scheme and host, no path)."
@@ -270,7 +270,7 @@ step "Choosing the release"
 if [ -z "$VERSION" ]; then
     latest_json="$(fetch "https://api.github.com/repos/$REPO/releases/latest")" || die "Could not reach GitHub to find the latest release. Check the server's internet access, or pass --version."
     VERSION="$(printf '%s' "$latest_json" | grep -m1 '"tag_name"' | sed -E 's/.*"tag_name"[[:space:]]*:[[:space:]]*"v?([^"]+)".*/\1/')"
-    [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || die "Could not read the latest release version from GitHub. Pass --version, for example --version 2.3.0."
+    [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || die "Could not read the latest release version from GitHub. Pass --version, for example --version 2.4.0."
 fi
 
 previous_image="$(env_get INVENTOROS_IMAGE)"

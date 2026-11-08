@@ -29,7 +29,7 @@ The same file is in the repository as [`deploy/cloud-init.yaml`](https://github.
 Some providers (AWS in particular) give the server a private address, so the printed address points at it. Pass the public address with `--url`, or use a domain:
 
 - **HTTPS from the start:** create a DNS record for your domain pointing at the server's public IP first, then change the last line to `bash /root/inventoros-install.sh --yes --domain inventory.example.com`.
-- **Pin a release:** add `--version 2.3.0`.
+- **Pin a release:** add `--version 2.4.0`.
 
 Progress is written to `/opt/inventoros/install.log` and `/var/log/cloud-init-output.log`. Make sure the provider's firewall allows port 8080, or 80 and 443 with `--domain`.
 

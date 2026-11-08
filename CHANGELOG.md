@@ -6,6 +6,43 @@ Full release notes, with the pull request behind each change, are on [GitHub Rel
 
 ## [Unreleased]
 
+## [2.4.0] - 2026-11-08
+
+### Added
+
+- A one-command Linux installer that provisions the Docker stack, generates secrets, supports HTTPS and upgrades, and waits for a healthy application. The installer is attached to each release.
+- Coolify and cloud-init deployment templates, with Linux and cloud installation documentation.
+
+### Security
+
+- Installation checks fail closed during database outages. Completed new installations retain an environment marker that keeps setup closed when the database is unavailable.
+- Password-reset and invitation emails use the configured `APP_URL`, including signed customer portal links and subdirectory installations.
+- Sales creation, edits and restocking enforce warehouse assignments across browser, REST, GraphQL and MCP requests. Ambiguous tracked stock movements and reversals require unrestricted staff.
+- Shared system roles are read-only. Delegated role managers cannot grant permissions beyond their own; permission-set assignments and role member lists are scoped to the active organization.
+- GraphQL prevents negative limits from removing query caps, disables operation batching, bounds object collections to 100 records and enforces a separate 50,000-node response budget.
+- Webhook delivery stops responses exceeding 1 MiB of decoded data and retains at most 5,000 bytes of diagnostic body text.
+- Reconciled all 58 stale GitHub dependency alerts against the committed lockfile: patched or removed dependencies account for every alert, and both all-dependency audits are clean. GitHub dependency graph scanning must be enabled to refresh its inventory.
+
+### Changed
+
+- `LICENSE` contains the unmodified AGPL-3.0 text for automatic license detection; attribution and additional notices are retained in `NOTICE`.
+- Corrected the web installer's PHP requirement and license copy in all supported languages.
+
+## [2.3.0] - 2026-11-05
+
+### Added
+
+- Hungarian Forint (HUF) and Russian Ruble (RUB) currencies.
+
+### Fixed
+
+- Generated product and variant SKUs retain non-ASCII prefixes consistently.
+- A minimum stock of zero no longer produces low-stock warnings at zero stock.
+
+### Security
+
+- Updated Symfony dependencies for published advisories. Full changes since 2.1.0 are recorded in the [2.3.0 release notes](docs/releases/2.3.0.md).
+
 ## [2.1.0] - 2026-11-03
 
 ### Added
@@ -223,7 +260,9 @@ Before upgrading: take a database backup you have checked, run `php artisan opti
 
 Releases 1.0.0 to 1.0.8 are described on [GitHub Releases](https://github.com/Inventoros/Inventoros/releases?q=v1.0).
 
-[Unreleased]: https://github.com/Inventoros/Inventoros/compare/v2.1.0...HEAD
+[Unreleased]: https://github.com/Inventoros/Inventoros/compare/v2.4.0...HEAD
+[2.4.0]: https://github.com/Inventoros/Inventoros/compare/v2.3.0...v2.4.0
+[2.3.0]: https://github.com/Inventoros/Inventoros/compare/v2.1.0...v2.3.0
 [2.1.0]: https://github.com/Inventoros/Inventoros/compare/v2.0.0...v2.1.0
 [2.0.0]: https://github.com/Inventoros/Inventoros/compare/v1.0.8...v2.0.0
 [1.0.x]: https://github.com/Inventoros/Inventoros/releases?q=v1.0
