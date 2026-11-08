@@ -10,8 +10,8 @@ use App\Models\Customer;
 use App\Models\CustomerContact;
 use App\Models\User;
 use App\Services\SecurityEventLogger;
+use App\Support\ApplicationUrl;
 use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Str;
 
 /**
@@ -114,7 +114,7 @@ final class PortalInvitationService
      */
     public function acceptUrl(CustomerContact $contact): string
     {
-        return URL::temporarySignedRoute(
+        return ApplicationUrl::temporarySignedRoute(
             'portal.invitation.show',
             ($contact->invited_at ?? now())->copy()->addDays(self::EXPIRES_IN_DAYS),
             [
