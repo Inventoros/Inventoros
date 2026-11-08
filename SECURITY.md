@@ -96,24 +96,19 @@ When deploying Inventoros, follow these security best practices:
 - **Monitor security advisories**: Watch for Laravel and package security updates
 - **Review dependency licenses**: Ensure compatibility with your use case
 
-#### Development dependency audit (2026-10-17)
+#### Dependency audit (2026-11-08)
 
-The lockfiles use `symfony/yaml` 8.1.9 and override the Tailwind 3 subtree to
-`postcss-selector-parser` 7.1.6 or newer in its 7.x series. The latter fixes
-[flat-selector CPU exhaustion](https://github.com/postcss/postcss-selector-parser/security/advisories/GHSA-rj75-hqrm-r3gf).
-The production CSS emitted before and after this parser update was byte-identical.
+The committed npm and Composer lockfiles report no known vulnerabilities,
+including development dependencies. The previous Tailwind 3/braces exception
+no longer applies to the current Tailwind 4 dependency tree.
 
-One underlying npm advisory remains open:
-[braces stack exhaustion](https://github.com/advisories/GHSA-vfj7-8cjw-p6xm).
-Tailwind 3 pulls in `braces` through its build-time dependency chain. The latest
-published `braces` release on the audit date is 3.0.3 and remains affected; npm
-reports five affected packages in that chain. Removing it requires a verified
-toolchain migration. The advisory has not been dismissed.
+The [security audit](docs/audits/2026-11-08-security-audit.md) reconciles the
+58 stale GitHub alerts with the current lockfile and records application fixes.
+GitHub's dependency graph must be enabled for its alert inventory to stay current.
 
-Include development dependencies when checking this status with
-`composer audit --locked` and `npm audit --package-lock-only`. On the audit date,
-the updated Composer lock has no reported advisories and the npm lock retains
-the `braces` chain described above.
+Check every locked dependency with `composer audit --locked --abandoned=report`
+and `npm audit --package-lock-only`. CI runs both on changes and weekly; new
+advisories can appear without a lockfile change.
 
 ### Access Control
 
