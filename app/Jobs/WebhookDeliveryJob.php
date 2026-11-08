@@ -27,6 +27,7 @@ final class WebhookDeliveryJob implements ShouldQueue
     public const MAX_TRIES = 5;
     public const TIMEOUT_SECONDS = 30;
     public const RESPONSE_BODY_LIMIT = 5000;
+    public const MAX_RESPONSE_BYTES = 1024 * 1024;
 
     private const BACKOFF_DELAYS = [60, 300, 1800, 7200, 86400];
 
@@ -254,11 +255,12 @@ final class WebhookDeliveryJob implements ShouldQueue
         $this->delivery->increment('attempts');
         $startedAt = hrtime(true);
         $reported = false;
+        $sink = $this->responseSink();
 
         try {
             // Resolve once, validate every address and pin that answer. Force
             // cURL so a stream/TLS fallback cannot ignore the DNS override.
-            $response = Http::withOptions(PublicHostGuard::connectionOptions($webhook->url))
+            $response = Http::withOptions(PublicHostGuard::connectionOptions($webhook->url) + ['sink' => $sink])
                 ->setHandler(new CurlHandler)
                 ->timeout($request['timeout'])
                 ->withHeaders($request['headers'])
@@ -270,9 +272,16 @@ final class WebhookDeliveryJob implements ShouldQueue
                 ->withBody($payloadJson, 'application/json')
                 ->post($webhook->url);
 
+            $body = $response->toPsrResponse()->getBody();
+            if ($body->isSeekable()) {
+                $body->rewind();
+            }
+            // Read only the diagnostic prefix, never stringify an entire body.
+            $responseBody = $body->read(self::RESPONSE_BODY_LIMIT);
+
             $this->delivery->update([
                 'response_status' => $response->status(),
-                'response_body' => Str::limit($response->body(), 5000),
+                'response_body' => mb_strcut($responseBody, 0, self::RESPONSE_BODY_LIMIT, 'UTF-8'),
                 'status' => $response->successful() ? 'success' : 'pending',
                 'completed_at' => $response->successful() ? now() : null,
                 // Clear next_retry_at on success; populate on HTTP failure
@@ -321,7 +330,55 @@ final class WebhookDeliveryJob implements ShouldQueue
             ]);
 
             throw $e; // Let Laravel handle retry
+        } finally {
+            if (is_resource($sink)) {
+                fclose($sink);
+            }
         }
+    }
+
+    /**
+     * A native resource keeps Laravel's HTTP fake compatible, while a write
+     * filter caps the decoded chunks Guzzle/cURL writes before they reach disk.
+     * Content-Length and compressed wire-byte counters cannot enforce this.
+     *
+     * @return resource
+     */
+    private function responseSink()
+    {
+        $filterName = 'inventoros.webhook-response-limit';
+        if (! in_array($filterName, stream_get_filters(), true)) {
+            $filter = new class extends \php_user_filter
+            {
+                private int $bytes = 0;
+
+                public function filter($in, $out, &$consumed, bool $closing): int
+                {
+                    while ($bucket = stream_bucket_make_writeable($in)) {
+                        $this->bytes += $bucket->datalen;
+                        if ($this->bytes > WebhookDeliveryJob::MAX_RESPONSE_BYTES) {
+                            throw new \RuntimeException('Webhook response exceeds the 1 MiB limit.');
+                        }
+                        $consumed += $bucket->datalen;
+                        stream_bucket_append($out, $bucket);
+                    }
+
+                    return PSFS_PASS_ON;
+                }
+            };
+            stream_filter_register($filterName, $filter::class);
+        }
+
+        $sink = fopen('php://temp', 'w+');
+        if ($sink === false) {
+            throw new \RuntimeException('Could not create a bounded webhook response stream.');
+        }
+        if (stream_filter_append($sink, $filterName, STREAM_FILTER_WRITE) === false) {
+            fclose($sink);
+            throw new \RuntimeException('Could not create a bounded webhook response stream.');
+        }
+
+        return $sink;
     }
 
     /**
