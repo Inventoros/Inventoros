@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Middleware;
 
-use App\Models\System\SystemSetting;
+use App\Support\InstallationState;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -44,15 +44,10 @@ final class UseFileDriversUntilInstalled
     }
 
     /**
-     * Whether installation has completed. False while the database or its
-     * tables do not exist yet.
+     * False only for a confirmed fresh installation; database failures fail closed.
      */
     public static function installed(): bool
     {
-        try {
-            return SystemSetting::get('installed', false) === true;
-        } catch (\Throwable) {
-            return false;
-        }
+        return InstallationState::installed();
     }
 }

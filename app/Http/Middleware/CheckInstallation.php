@@ -4,10 +4,9 @@ declare(strict_types=1);
 
 namespace App\Http\Middleware;
 
-use App\Models\System\SystemSetting;
+use App\Support\InstallationState;
 use Closure;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
@@ -44,13 +43,6 @@ final class CheckInstallation
      */
     protected function isInstalled(): bool
     {
-        try {
-            return SystemSetting::get('installed', false) === true;
-        } catch (\Exception $e) {
-            Log::warning('Installation check failed - assuming not installed', [
-                'error' => $e->getMessage(),
-            ]);
-            return false;
-        }
+        return InstallationState::installed();
     }
 }

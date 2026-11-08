@@ -73,6 +73,7 @@ final class InstallerProductionSettingsTest extends TestCase
         $env = (string) file_get_contents($this->envFile);
         $this->assertMatchesRegularExpression('/^APP_ENV="production"$/m', $env);
         $this->assertMatchesRegularExpression('/^APP_DEBUG="false"$/m', $env);
+        $this->assertMatchesRegularExpression('/^INVENTOROS_INSTALLED="true"$/m', $env);
         $this->assertDoesNotMatchRegularExpression('/^APP_ENV=local$/m', $env);
         $this->assertDoesNotMatchRegularExpression('/^APP_DEBUG=true$/m', $env);
     }
@@ -101,6 +102,16 @@ final class InstallerProductionSettingsTest extends TestCase
         $this->createAdmin()->assertOk();
 
         $this->assertSame(\App\Support\AppVersion::current(), \App\Models\System\SystemSetting::get('app_version'));
+    }
+
+    public function test_the_first_admin_can_finish_the_wizard_and_setup_then_stays_closed(): void
+    {
+        $this->createAdmin()->assertOk()->assertJson(['success' => true]);
+
+        $this->get('/install/complete')->assertOk();
+        $this->get('/install')->assertRedirect('/login');
+        $this->createAdmin()->assertForbidden();
+        $this->assertDatabaseCount('users', 1);
     }
 
     public function test_a_failed_admin_step_leaves_the_environment_unchanged(): void
