@@ -204,4 +204,25 @@ change a production deployment. GitHub code scanning returned “no analysis fou
 secret scanning is disabled, so neither is counted as a clean scanner result.
 No full repository-history secret scan or external penetration test was performed.
 
-Validation results will be recorded after the complete regression pass.
+## Validation
+
+| Check | Result |
+| --- | --- |
+| Complete PHPUnit suite, PHP 8.4.19 / SQLite | 4,036 tests; 28,956 assertions; zero failures; 7 skips and 12 existing PHPUnit metadata deprecations |
+| JavaScript unit tests | 226 passed |
+| Production frontend build | Passed |
+| Both bundled plugin rebuilds | Passed; committed bundles reproduced without changes |
+| Changed/new PHP files | PHP 8.4 syntax checks passed |
+| npm and Composer audits, including development dependencies | Zero reported advisories |
+| All 58 GitHub advisory ranges | Valid semver ranges; zero affected locked entries |
+
+New regressions cover installer outages and completion, poisoned request origins,
+warehouse mutations across browser/REST/GraphQL/MCP, role boundaries and legitimate
+permission-set delegation, GraphQL limits and response budgets, and bounded webhook
+responses. A real cURL transfer of a compressed 2 MiB response was stopped at the
+1 MiB decoded-data cap.
+
+GitHub also runs the suite against MySQL and PostgreSQL, plus production-only
+installation, Docker, JavaScript, dependency audits, demo generation and end-to-end
+checks. The live results and final review state are recorded in
+[pull request #336](https://github.com/Inventoros/Inventoros/pull/336).
