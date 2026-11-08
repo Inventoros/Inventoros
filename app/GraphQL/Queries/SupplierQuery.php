@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\GraphQL\Queries;
 
 use App\GraphQL\Concerns\RequiresPermissions;
+use App\GraphQL\Support\ListResourceLimits;
 use App\Models\Inventory\Supplier;
 use Closure;
 use GraphQL\Type\Definition\ResolveInfo;
@@ -58,7 +59,7 @@ class SupplierQuery extends Query
         $user = auth()->user();
         $organizationId = $user->organization_id;
 
-        return Supplier::with('products')
+        return Supplier::with(ListResourceLimits::eager('products'))
             ->forOrganization($organizationId)
             ->findOrFail($args['id']);
     }

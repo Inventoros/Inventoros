@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\GraphQL\Queries;
 
 use App\GraphQL\Concerns\RequiresPermissions;
+use App\GraphQL\Support\ListResourceLimits;
 use App\Models\Purchasing\PurchaseOrder;
 use Closure;
 use GraphQL\Type\Definition\ResolveInfo;
@@ -78,7 +79,7 @@ class PurchaseOrdersQuery extends Query
         $user = auth()->user();
         $organizationId = $user->organization_id;
 
-        $query = PurchaseOrder::with(['supplier', 'items'])
+        $query = PurchaseOrder::with(['supplier', ...ListResourceLimits::eager('items')])
             ->forOrganization($organizationId);
 
         if (! empty($args['search'])) {
@@ -97,7 +98,7 @@ class PurchaseOrdersQuery extends Query
         $sortDir = $args['sort_dir'] ?? 'desc';
         $query->orderBy($sortBy, $sortDir);
 
-        $limit = min($args['limit'] ?? 50, 100);
+        $limit = max(0, min($args['limit'] ?? 50, 100));
 
         return $query->limit($limit)->get();
     }

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\GraphQL\Queries;
 
 use App\GraphQL\Concerns\RequiresPermissions;
+use App\GraphQL\Support\ListResourceLimits;
 use App\Models\Inventory\ProductCategory;
 use Closure;
 use GraphQL\Type\Definition\ResolveInfo;
@@ -74,7 +75,7 @@ class CategoriesQuery extends Query
         $user = auth()->user();
         $organizationId = $user->organization_id;
 
-        $query = ProductCategory::with('children')
+        $query = ProductCategory::with(ListResourceLimits::eager('children'))
             ->forOrganization($organizationId);
 
         if (isset($args['is_active'])) {
@@ -93,7 +94,7 @@ class CategoriesQuery extends Query
             $query->where('name', 'like', "%{$args['search']}%");
         }
 
-        $limit = min($args['limit'] ?? 50, 100);
+        $limit = max(0, min($args['limit'] ?? 50, 100));
 
         return $query->orderBy('name')->limit($limit)->get();
     }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\GraphQL\Types;
 
+use App\GraphQL\Support\ListResourceLimits;
 use App\Models\Order\ReturnOrder;
 use GraphQL\Type\Definition\Type;
 use Rebing\GraphQL\Support\Facades\GraphQL;
@@ -40,8 +41,8 @@ class ReturnOrderType extends GraphQLType
             ],
             'items' => [
                 'type' => Type::listOf(GraphQL::type('ReturnOrderItem')),
-                'description' => 'Returned lines',
-                'resolve' => fn (ReturnOrder $r) => $r->items,
+                'description' => 'Returned lines (at most 100 entries).',
+                'resolve' => fn (ReturnOrder $r) => ListResourceLimits::relation($r, 'items'),
             ],
             'created_at' => [
                 'type' => Type::string(),

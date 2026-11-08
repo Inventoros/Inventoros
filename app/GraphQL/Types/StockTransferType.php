@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\GraphQL\Types;
 
+use App\GraphQL\Support\ListResourceLimits;
 use App\Models\Inventory\StockTransfer;
 use GraphQL\Type\Definition\Type;
 use Rebing\GraphQL\Support\Facades\GraphQL;
@@ -55,8 +56,8 @@ class StockTransferType extends GraphQLType
             ],
             'items' => [
                 'type' => Type::listOf(GraphQL::type('StockTransferItem')),
-                'description' => 'Transfer lines',
-                'resolve' => fn (StockTransfer $t) => $t->items,
+                'description' => 'Transfer lines (at most 100 entries).',
+                'resolve' => fn (StockTransfer $t) => ListResourceLimits::relation($t, 'items'),
             ],
             'created_at' => $timestamp('created_at', 'Creation timestamp'),
             'updated_at' => $timestamp('updated_at', 'Last update timestamp'),

@@ -131,6 +131,10 @@ return [
     // Used when the route is used without specifying a schema
     'default_schema' => 'default',
 
+    // Charge one operation to each rate/complexity budget. The package's
+    // default permits arbitrary batches behind a single route-limiter hit.
+    'batching' => ['enable' => false],
+
     'schemas' => [
         'default' => [
             'query' => [
@@ -339,6 +343,7 @@ return [
         // AutomaticPersistedQueriesMiddleware listed even if APQ is disabled, as the
         // temporary parsed request data is also used by the GraphQLUploadMiddleware
         \Rebing\GraphQL\Support\ExecutionMiddleware\AutomaticPersistedQueriesMiddleware::class,
+        \App\GraphQL\Middleware\EnforceListResourceLimits::class,
         \Rebing\GraphQL\Support\ExecutionMiddleware\AddAuthUserContextValueMiddleware::class,
     ],
 ];

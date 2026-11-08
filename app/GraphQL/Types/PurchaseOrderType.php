@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\GraphQL\Types;
 
+use App\GraphQL\Support\ListResourceLimits;
 use App\Models\Purchasing\PurchaseOrder;
 use GraphQL\Type\Definition\Type;
 use Rebing\GraphQL\Support\Facades\GraphQL;
@@ -125,8 +126,8 @@ class PurchaseOrderType extends GraphQLType
             ],
             'items' => [
                 'type' => Type::listOf(GraphQL::type('PurchaseOrderItem')),
-                'description' => 'Purchase order line items',
-                'resolve' => fn (PurchaseOrder $po) => $po->items,
+                'description' => 'Purchase order line items (at most 100 entries).',
+                'resolve' => fn (PurchaseOrder $po) => ListResourceLimits::relation($po, 'items'),
             ],
             'items_count' => [
                 'type' => Type::int(),

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\GraphQL\Queries;
 
 use App\GraphQL\Concerns\RequiresPermissions;
+use App\GraphQL\Support\ListResourceLimits;
 use App\Models\Order\ReturnOrder;
 use App\Services\ReturnOrderService;
 use GraphQL\Type\Definition\Type;
@@ -42,7 +43,7 @@ class ReturnOrdersQuery extends Query
 
     public function resolve($root, array $args)
     {
-        return ReturnOrder::with(['order', 'items.product'])
+        return ReturnOrder::with(['order', ...ListResourceLimits::eager('items.product')])
             ->forOrganization($this->organizationId())
             ->tap(fn ($q) => app(ReturnOrderService::class)->scopeForUser($q, $this->actor()))
             ->when($args['status'] ?? null, fn ($query, $status) => $query->byStatus($status))

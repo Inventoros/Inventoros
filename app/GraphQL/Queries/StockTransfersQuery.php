@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\GraphQL\Queries;
 
 use App\GraphQL\Concerns\RequiresPermissions;
+use App\GraphQL\Support\ListResourceLimits;
 use App\Models\Inventory\StockTransfer;
 use App\Services\WarehouseAccessService;
 use GraphQL\Type\Definition\Type;
@@ -44,7 +45,7 @@ class StockTransfersQuery extends Query
 
     public function resolve($root, array $args)
     {
-        return StockTransfer::with(self::WITH)
+        return StockTransfer::with([...self::WITH, ...ListResourceLimits::eager('items')])
             ->forOrganization($this->organizationId())
             ->tap(fn ($q) => app(WarehouseAccessService::class)->scopeByAnyLocation($q, $this->actor(), ['from_location_id', 'to_location_id']))
             ->when($args['status'] ?? null, fn ($query, $status) => $query->byStatus($status))

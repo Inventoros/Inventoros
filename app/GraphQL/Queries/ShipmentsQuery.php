@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\GraphQL\Queries;
 
+use App\GraphQL\Support\ListResourceLimits;
 use App\Enums\ShipmentStatus;
 use App\GraphQL\Concerns\RequiresPermissions;
 use App\Models\Shipping\Shipment;
@@ -42,7 +43,7 @@ class ShipmentsQuery extends Query
 
     public function resolve($root, array $args)
     {
-        return Shipment::with('items.orderItem')
+        return Shipment::with(ListResourceLimits::eager('items.orderItem'))
             ->where('organization_id', $this->organizationId())
             ->when($args['order_id'] ?? null, fn ($q, $orderId) => $q->where('order_id', $orderId))
             ->when($args['status'] ?? null, fn ($q, $status) => $q->where('status', $status))

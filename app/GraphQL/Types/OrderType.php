@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\GraphQL\Types;
 
+use App\GraphQL\Support\ListResourceLimits;
 use App\Models\Order\Order;
 use App\Support\PaymentVisibility;
 use App\Support\ShipmentVisibility;
@@ -129,14 +130,14 @@ class OrderType extends GraphQLType
             ],
             'payments' => [
                 'type' => Type::listOf(GraphQL::type('OrderPayment')),
-                'description' => 'Payments and refunds, voided ones included. Null without view_payments.',
-                'resolve' => fn (Order $order) => self::canViewPayments() ? $order->payments()->orderBy('paid_at')->orderBy('id')->get() : null,
+                'description' => 'Payments and refunds, voided ones included. Null without view_payments. (at most 100 entries).',
+                'resolve' => fn (Order $order) => self::canViewPayments() ? $order->payments()->orderBy('paid_at')->orderBy('id')->limit(ListResourceLimits::MAX_RESULTS)->get() : null,
             ],
             'shipments' => [
                 'type' => Type::listOf(GraphQL::type('Shipment')),
-                'description' => 'Shipments for this order, newest first, cancelled ones included. Null without view_shipments.',
+                'description' => 'Shipments for this order, newest first, cancelled ones included. Null without view_shipments. (at most 100 entries).',
                 'resolve' => fn (Order $order) => ShipmentVisibility::allows(auth()->user())
-                    ? $order->shipments()->with('items.orderItem')->latest('id')->get()
+                    ? $order->shipments()->with(ListResourceLimits::eager('items.orderItem'))->latest('id')->limit(ListResourceLimits::MAX_RESULTS)->get()
                     : null,
             ],
             'currency' => [
@@ -164,8 +165,8 @@ class OrderType extends GraphQLType
             ],
             'items' => [
                 'type' => Type::listOf(GraphQL::type('OrderItem')),
-                'description' => 'Order line items',
-                'resolve' => fn (Order $order) => $order->items,
+                'description' => 'Order line items (at most 100 entries).',
+                'resolve' => fn (Order $order) => ListResourceLimits::relation($order, 'items'),
             ],
             'items_count' => [
                 'type' => Type::int(),

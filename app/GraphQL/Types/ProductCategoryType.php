@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\GraphQL\Types;
 
+use App\GraphQL\Support\ListResourceLimits;
 use App\Models\Inventory\ProductCategory;
 use GraphQL\Type\Definition\Type;
 use Rebing\GraphQL\Support\Facades\GraphQL;
@@ -51,8 +52,8 @@ class ProductCategoryType extends GraphQLType
             ],
             'children' => [
                 'type' => Type::listOf(GraphQL::type('ProductCategory')),
-                'description' => 'Child categories',
-                'resolve' => fn (ProductCategory $category) => $category->children,
+                'description' => 'Child categories (at most 100 entries).',
+                'resolve' => fn (ProductCategory $category) => ListResourceLimits::relation($category, 'children'),
             ],
             'products_count' => [
                 'type' => Type::int(),

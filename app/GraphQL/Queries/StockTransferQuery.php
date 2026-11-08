@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\GraphQL\Queries;
 
 use App\GraphQL\Concerns\RequiresPermissions;
+use App\GraphQL\Support\ListResourceLimits;
 use App\Models\Inventory\StockTransfer;
 use App\Services\StockTransferService;
 use GraphQL\Error\Error;
@@ -40,7 +41,7 @@ class StockTransferQuery extends Query
 
     public function resolve($root, array $args)
     {
-        $transfer = StockTransfer::with(StockTransfersQuery::WITH)
+        $transfer = StockTransfer::with([...StockTransfersQuery::WITH, ...ListResourceLimits::eager('items')])
             ->forOrganization($this->organizationId())
             ->find($args['id']) ?? throw new Error('Stock transfer not found');
 

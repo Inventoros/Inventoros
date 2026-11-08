@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\GraphQL\Queries;
 
 use App\GraphQL\Concerns\RequiresPermissions;
+use App\GraphQL\Support\ListResourceLimits;
 use App\Models\Inventory\Product;
 use Closure;
 use GraphQL\Type\Definition\ResolveInfo;
@@ -58,7 +59,7 @@ class ProductQuery extends Query
         $user = auth()->user();
         $organizationId = $user->organization_id;
 
-        return Product::with(['category', 'location', 'variants', 'suppliers'])
+        return Product::with(['category', 'location', ...ListResourceLimits::eager('variants'), ...ListResourceLimits::eager('suppliers')])
             ->forOrganization($organizationId)
             ->findOrFail($args['id']);
     }

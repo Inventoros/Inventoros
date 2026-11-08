@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\GraphQL\Queries;
 
 use App\GraphQL\Concerns\RequiresPermissions;
+use App\GraphQL\Support\ListResourceLimits;
 use App\Models\Order\Order;
 use Closure;
 use GraphQL\Type\Definition\ResolveInfo;
@@ -58,7 +59,7 @@ class OrderQuery extends Query
         $user = auth()->user();
         $organizationId = $user->organization_id;
 
-        return Order::with('items.product')
+        return Order::with(ListResourceLimits::eager('items.product'))
             ->forOrganization($organizationId)
             ->findOrFail($args['id']);
     }

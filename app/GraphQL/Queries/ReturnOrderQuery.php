@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\GraphQL\Queries;
 
 use App\GraphQL\Concerns\RequiresPermissions;
+use App\GraphQL\Support\ListResourceLimits;
 use App\Models\Order\ReturnOrder;
 use App\Services\ReturnOrderService;
 use GraphQL\Error\Error;
@@ -40,7 +41,7 @@ class ReturnOrderQuery extends Query
 
     public function resolve($root, array $args)
     {
-        $returnOrder = ReturnOrder::with(['order', 'items.product'])
+        $returnOrder = ReturnOrder::with(['order', ...ListResourceLimits::eager('items.product')])
             ->forOrganization($this->organizationId())
             ->find($args['id']) ?? throw new Error('Return not found');
 
