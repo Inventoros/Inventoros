@@ -40,6 +40,10 @@ class ReadmeDemoSeeder extends Seeder
 
     public function run(): void
     {
+        if (app()->environment('production')) {
+            throw new \RuntimeException('Demo data cannot be seeded in production.');
+        }
+
         SystemSetting::set('installed', true, 'boolean', 'Installation completed');
         SystemSetting::set('installed_at', now()->toDateTimeString(), 'string', 'Installation date');
         SystemSetting::set('app_version', config('app.version', '0.1.0'), 'string', 'Application version');

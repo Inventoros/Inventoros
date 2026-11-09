@@ -25,6 +25,10 @@ class DemoDataSeeder extends Seeder
      */
     public function run(): void
     {
+        if (app()->environment('production')) {
+            throw new \RuntimeException('Demo data cannot be seeded in production.');
+        }
+
         // Ensure base demo data exists
         $this->call(ScreenshotSeeder::class);
 

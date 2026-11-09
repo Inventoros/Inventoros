@@ -124,6 +124,9 @@ final class CpanelPackageVerifierTest extends TestCase
             'future e2e seeder' => ['inventoros/database/seeders/E2EFutureSeeder.php'],
             'nested e2e seeder' => ['inventoros/database/seeders/QA/E2EFutureSeeder.php'],
             'screenshot seeder' => ['inventoros/database/seeders/ScreenshotSeeder.php'],
+            'README demo seeder' => ['inventoros/database/seeders/ReadmeDemoSeeder.php'],
+            'nested README demo seeder' => ['inventoros/database/seeders/QA/ReadmeDemoSeeder.php'],
+            'generic demo seeder' => ['inventoros/database/seeders/DemoDataSeeder.php'],
         ];
     }
 
@@ -157,6 +160,7 @@ final class CpanelPackageVerifierTest extends TestCase
             'database/seeders/E2EUiAuditSeeder.php', 'database/seeders/E2EStockResetSeeder.php',
             'database/seeders/E2EStockAuditHistorySeeder.php', 'database/seeders/E2EVariantReplenishmentSeeder.php',
             'database/seeders/ScreenshotSeeder.php', 'database/seeders/QA/E2EFutureSeeder.php',
+            'database/seeders/ReadmeDemoSeeder.php', 'database/seeders/DemoDataSeeder.php',
         ];
         $files = [
             'artisan' => '<?php',
@@ -170,7 +174,6 @@ final class CpanelPackageVerifierTest extends TestCase
             'database/seeders/DatabaseSeeder.php' => '<?php',
             'database/seeders/RoleSeeder.php' => '<?php',
             'database/seeders/PermissionSetSeeder.php' => '<?php',
-            'database/seeders/DemoDataSeeder.php' => '<?php',
         ];
         foreach (['build-release.php', 'index.php', '.htaccess', 'INSTALL.md'] as $file) {
             $files['deploy/cpanel/'.$file] = File::get(base_path('deploy/cpanel/'.$file));
@@ -196,7 +199,7 @@ final class CpanelPackageVerifierTest extends TestCase
             $this->assertFalse($zip->locateName('inventoros/'.$file), $file);
         }
         $this->assertNotFalse($zip->locateName('inventoros/operations.yaml'));
-        foreach (['DatabaseSeeder', 'RoleSeeder', 'PermissionSetSeeder', 'DemoDataSeeder'] as $seeder) {
+        foreach (['DatabaseSeeder', 'RoleSeeder', 'PermissionSetSeeder'] as $seeder) {
             $this->assertNotFalse($zip->locateName('inventoros/database/seeders/'.$seeder.'.php'));
         }
         $zip->close();

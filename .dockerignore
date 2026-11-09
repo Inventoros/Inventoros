@@ -34,6 +34,10 @@ playwright*.config.*
 database/seeders/E2E*Seeder.php
 database/seeders/**/E2E*Seeder.php
 database/seeders/ScreenshotSeeder.php
+database/seeders/ReadmeDemoSeeder.php
+database/seeders/**/ReadmeDemoSeeder.php
+database/seeders/DemoDataSeeder.php
+database/seeders/**/DemoDataSeeder.php
 .phpunit.result.cache
 .phpunit.cache
 phpunit.xml
