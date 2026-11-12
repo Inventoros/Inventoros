@@ -1044,6 +1044,11 @@ paths:
                     properties:
                       id: { type: integer, description: "purchase_order_items.id" }
                       quantity_to_receive: { type: integer, minimum: 0 }
+                      receiving_location_id:
+                        type: integer
+                        nullable: true
+                        minimum: 1
+                        description: "Optional destination bin for this receipt only. Omit or pass null to retain the existing destination. Planned receipts stay in their planned warehouse."
       responses:
         '200': { description: Items received }
         '422': { description: "PO cannot receive items, or no items received" }

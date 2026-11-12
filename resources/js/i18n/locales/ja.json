@@ -1,4 +1,14 @@
 {
+  "receivingDestination": {
+    "label": "入庫先の棚",
+    "existing": "既存の入庫先を使用",
+    "hint": "変更は今回の入庫にのみ適用されます。",
+    "empty": "利用可能な入庫先の棚がありません。"
+  },
+  "fulfillment": {
+    "pickList": "ピッキングリスト",
+    "packingSlip": "納品書"
+  },
   "auditPaging": {
     "perPage": "ページあたりの行数",
     "search": "商品・SKU・バーコードで検索",

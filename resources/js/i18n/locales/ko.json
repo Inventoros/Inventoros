@@ -1,4 +1,14 @@
 {
+  "receivingDestination": {
+    "label": "입고 보관함",
+    "existing": "기존 목적지 사용",
+    "hint": "변경 사항은 이번 입고에만 적용됩니다.",
+    "empty": "사용 가능한 입고 보관함이 없습니다."
+  },
+  "fulfillment": {
+    "pickList": "피킹 목록",
+    "packingSlip": "포장 명세서"
+  },
   "auditPaging": {
     "perPage": "페이지당 행 수",
     "search": "상품, SKU 또는 바코드 검색",

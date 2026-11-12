@@ -164,7 +164,7 @@ Call `who_am_i` first to confirm the token works.
 | `get_purchase_order` | `view_purchase_orders` | Single PO with supplier and line items. |
 | `create_purchase_order` | `create_purchase_orders` | Create a draft PO. Does not affect stock. **Destructive**. |
 | `send_purchase_order` | `edit_purchase_orders` | Transition draft to sent. **Destructive** and idempotent. |
-| `receive_purchase_order` | `receive_purchase_orders` | Receive items; writes stock; transitions to partial/received. **Destructive**. |
+| `receive_purchase_order` | `receive_purchase_orders` | Receive items, optionally choosing a `receiving_location_id` per line for this receipt only; writes stock; transitions to partial/received. **Destructive**. |
 | `submit_purchase_order_for_approval` | `edit_purchase_orders` | Put a draft PO in front of the approvers when the organization requires approval. **Destructive**. |
 
 ### Approvals

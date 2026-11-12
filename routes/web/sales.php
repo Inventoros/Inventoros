@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Http\Controllers\CustomerContactController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\Inventory\SupplierController;
+use App\Http\Controllers\Order\FulfillmentDocumentController;
 use App\Http\Controllers\Order\InvoiceController;
 use App\Http\Controllers\Order\OrderController;
 use App\Http\Controllers\Order\OrderPaymentController;
@@ -87,6 +88,10 @@ Route::post('/orders/{order}/payments/{payment}/void', [OrderPaymentController::
 Route::get('/orders/{order}/invoice/download', [InvoiceController::class, 'download'])->name('orders.invoice.download')->middleware('permission:view_orders');
 Route::get('/orders/{order}/invoice/preview', [InvoiceController::class, 'preview'])->name('orders.invoice.preview')->middleware('permission:view_orders');
 Route::post('/orders/{order}/invoice/email', [InvoiceController::class, 'email'])->name('orders.invoice.email')->middleware('permission:edit_orders');
+
+// Basic fulfillment documents are available without a paid plugin.
+Route::get('/orders/{order}/pick-list', [FulfillmentDocumentController::class, 'pickList'])->name('orders.pick-list')->middleware('permission:view_orders');
+Route::get('/shipments/{shipment}/packing-slip', [FulfillmentDocumentController::class, 'packingSlip'])->name('shipments.packing-slip')->middleware(['permission:view_orders', 'permission:view_shipments']);
 
 // Shipments - Permission based
 Route::post('/orders/{order}/shipments', [ShipmentController::class, 'store'])->name('orders.shipments.store')->middleware('permission:create_shipments');

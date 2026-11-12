@@ -20,7 +20,7 @@ import { formatMoney } from '@/lib/money';
 import { invoiceState } from '@/lib/invoiceState';
 import { approvalStatusLabel, approvalStatusVariant, orderSourceLabel, orderStatusLabel, orderStatusVariant } from '@/lib/orderLabels';
 import { useI18n } from 'vue-i18n';
-import { ArrowLeft, Pencil, Download, Eye, Undo2, Trash2, X, AlertTriangle, PackageOpen, Mail, Plus, RotateCcw, Wallet } from '@lucide/vue';
+import { ArrowLeft, Pencil, Download, Eye, Undo2, Trash2, X, AlertTriangle, PackageOpen, Mail, Plus, RotateCcw, Wallet, ClipboardList } from '@lucide/vue';
 
 const { t, te } = useI18n();
 const statusText = (status) => orderStatusLabel(status, { t, te });
@@ -32,6 +32,7 @@ const { hasPermission, canVisit } = usePermissions();
 const props = defineProps({
     order: Object,
     canApprove: Boolean,
+    canPrintPickList: Boolean,
     // False when the organization did not require approval for this order.
     approvalRequired: { type: Boolean, default: true },
     awaitingApproval: { type: Boolean, default: false },
@@ -189,6 +190,18 @@ const formatOrderDate = (date, long = false) =>
                 <Badge :variant="statusVariant(order.status)" size="sm" dot>{{ statusText(order.status) }}</Badge>
                 <Badge v-if="approvalRequired && order.approval_status" :variant="approvalStatusVariant(order.approval_status)" size="sm" dot>{{ approvalText(order.approval_status) }}</Badge>
                 <Badge v-if="order.payment_status" :variant="paymentStatusVariant(order.payment_status)" size="sm" dot>{{ t(`payments.status.${order.payment_status}`) }}</Badge>
+                <Button
+                    v-if="canPrintPickList"
+                    variant="secondary"
+                    size="sm"
+                    as="a"
+                    :href="route('orders.pick-list', order.id)"
+                    target="_blank"
+                    rel="noopener"
+                >
+                    <ClipboardList :size="14" />
+                    {{ t('fulfillment.pickList') }}
+                </Button>
                 <Button
                     v-if="hasPermission('view_orders')"
                     variant="secondary"

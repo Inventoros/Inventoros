@@ -1,4 +1,14 @@
 {
+  "receivingDestination": {
+    "label": "Ubicazione di ricezione",
+    "existing": "Usa la destinazione esistente",
+    "hint": "Le modifiche si applicano solo a questa ricezione.",
+    "empty": "Nessuna ubicazione di ricezione disponibile."
+  },
+  "fulfillment": {
+    "pickList": "Lista di prelievo",
+    "packingSlip": "Distinta di imballaggio"
+  },
   "auditPaging": {
     "perPage": "Righe per pagina",
     "search": "Cerca prodotto, SKU o codice a barre",

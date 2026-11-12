@@ -26,6 +26,11 @@ class PurchaseOrderReceiveItemInputType extends InputType
                 'description' => 'Quantity received now',
                 'rules' => ['required', 'integer', 'min:0'],
             ],
+            'receiving_location_id' => [
+                'type' => Type::int(),
+                'description' => 'Optional bin for this receipt only. Null keeps the existing destination; planned receipts stay in their planned warehouse.',
+                'rules' => ['nullable', 'integer', 'min:1'],
+            ],
         ];
     }
 }

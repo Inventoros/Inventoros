@@ -7,8 +7,7 @@ namespace App\Http\Requests\PurchaseOrder;
 use Illuminate\Foundation\Http\FormRequest;
 
 /**
- * Validates the receiving form for a purchase order (web surface). Rules
- * unchanged from Purchasing\PurchaseOrderController::processReceiving.
+ * Validates the receiving form and optional per-receipt bin selections.
  */
 final class ProcessReceivingRequest extends FormRequest
 {
@@ -21,6 +20,7 @@ final class ProcessReceivingRequest extends FormRequest
             'items' => 'required|array',
             'items.*.id' => 'required|exists:purchase_order_items,id',
             'items.*.quantity_to_receive' => 'required|integer|min:0',
+            'items.*.receiving_location_id' => 'nullable|integer|min:1',
         ];
     }
 }

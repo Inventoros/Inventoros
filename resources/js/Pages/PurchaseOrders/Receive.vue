@@ -19,6 +19,7 @@ const { t } = useI18n();
 const props = defineProps({
     purchaseOrder: Object,
     pluginComponents: Object,
+    receivingLocations: { type: Array, default: () => [] },
 });
 
 const showScanner = ref(false);
@@ -32,6 +33,7 @@ const form = useForm({
         product_name: item.product_name,
         sku: item.sku,
         receiving_location: item.receiving_location,
+        receiving_location_id: null,
         quantity_ordered: item.quantity_ordered,
         quantity_received: item.quantity_received,
         remaining: item.quantity_ordered - item.quantity_received,
@@ -42,6 +44,18 @@ const form = useForm({
 const hasItemsToReceive = computed(() => {
     return form.items.some(item => item.quantity_to_receive > 0);
 });
+
+const receivingLocationsFor = (item) => {
+    const warehouseId = item.receiving_location?.warehouse_id;
+    return warehouseId == null
+        ? props.receivingLocations
+        : props.receivingLocations.filter(location => Number(location.warehouse_id) === Number(warehouseId));
+};
+
+const receivingLocationLabel = (location) => [
+    location.warehouse_name,
+    [location.code, location.name].filter(Boolean).join(' / '),
+].filter(Boolean).join(' / ');
 
 const totalItemsToReceive = computed(() => {
     return form.items.reduce((sum, item) => sum + item.quantity_to_receive, 0);
@@ -179,6 +193,7 @@ const thClassCenter = 'px-4 py-2.5 text-center text-xs font-medium tracking-tigh
                     </div>
                 </div>
                 <div class="p-5">
+                    <p class="mb-3 text-xs text-text-secondary">{{ t('receivingDestination.hint') }}</p>
                     <TableViewport class="w-full overflow-x-auto rounded-lg border border-border-subtle">
                         <table class="w-full text-sm">
                             <thead>
@@ -189,6 +204,7 @@ const thClassCenter = 'px-4 py-2.5 text-center text-xs font-medium tracking-tigh
                                     <th :class="thClassCenter">{{ t('purchaseOrders.receive.alreadyReceived') }}</th>
                                     <th :class="thClassCenter">{{ t('purchaseOrders.receive.remaining') }}</th>
                                     <th :class="thClassCenter">{{ t('purchaseOrders.receive.receiveNow') }}</th>
+                                    <th :class="thClass">{{ t('receivingDestination.label') }}</th>
                                     <th :class="thClassCenter">{{ t('common.actions') }}</th>
                                 </tr>
                             </thead>
@@ -242,6 +258,26 @@ const thClassCenter = 'px-4 py-2.5 text-center text-xs font-medium tracking-tigh
                                         <Badge v-else variant="success" size="sm">
                                             {{ t('purchaseOrders.receive.complete') }}
                                         </Badge>
+                                    </td>
+                                    <td class="min-w-[15rem] px-4 py-3">
+                                        <template v-if="item.remaining > 0">
+                                            <select
+                                                v-model="item.receiving_location_id"
+                                                :aria-label="t('receivingDestination.label')"
+                                                :aria-invalid="!!form.errors[`items.${index}.receiving_location_id`]"
+                                                :aria-describedby="form.errors[`items.${index}.receiving_location_id`] ? `receiving-location-error-${item.id}` : undefined"
+                                                :class="fieldInput"
+                                                :disabled="form.processing"
+                                            >
+                                                <option :value="null">{{ t('receivingDestination.existing') }}</option>
+                                                <option v-for="location in receivingLocationsFor(item)" :key="location.id" :value="location.id">
+                                                    {{ receivingLocationLabel(location) }}
+                                                </option>
+                                            </select>
+                                            <p v-if="receivingLocationsFor(item).length === 0" class="mt-1 text-xs text-text-tertiary">{{ t('receivingDestination.empty') }}</p>
+                                            <p v-if="form.errors[`items.${index}.receiving_location_id`]" :id="`receiving-location-error-${item.id}`" :class="fieldError">{{ form.errors[`items.${index}.receiving_location_id`] }}</p>
+                                        </template>
+                                        <span v-else class="text-text-tertiary">-</span>
                                     </td>
                                     <td class="px-4 py-3 text-center">
                                         <Button

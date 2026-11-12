@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api;
 
-use App\Enums\ShipmentStatus;
 use App\Exceptions\ShippingException;
 use App\Http\Controllers\Controller;
 use App\Models\Order\Order;
@@ -12,6 +11,7 @@ use App\Models\Shipping\Shipment;
 use App\Services\Shipping\CarrierManager;
 use App\Services\Shipping\ShipmentService;
 use App\Services\Shipping\ShippingRate;
+use App\Services\WarehouseAccessService;
 use Dedoc\Scramble\Attributes\QueryParameter;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -140,7 +140,7 @@ class ShipmentController extends Controller
      */
     public function ship(Request $request, Shipment $shipment): JsonResponse
     {
-        $this->assertOwned($request, $shipment->organization_id);
+        $this->assertShipmentAccess($request, $shipment);
 
         try {
             $shipment = $this->shipments->markShipped($shipment, $request->user());
@@ -159,7 +159,7 @@ class ShipmentController extends Controller
      */
     public function rates(Request $request, Shipment $shipment): JsonResponse
     {
-        $this->assertOwned($request, $shipment->organization_id);
+        $this->assertShipmentAccess($request, $shipment);
 
         try {
             $rates = $this->shipments->fetchRates($shipment);
@@ -184,7 +184,7 @@ class ShipmentController extends Controller
      */
     public function buyLabel(Request $request, Shipment $shipment): JsonResponse
     {
-        $this->assertOwned($request, $shipment->organization_id);
+        $this->assertShipmentAccess($request, $shipment);
 
         $validated = $request->validate([
             'rate_id' => ['required', 'string', 'max:100'],
@@ -206,7 +206,7 @@ class ShipmentController extends Controller
      */
     public function voidLabel(Request $request, Shipment $shipment): JsonResponse
     {
-        $this->assertOwned($request, $shipment->organization_id);
+        $this->assertShipmentAccess($request, $shipment);
 
         try {
             $shipment = $this->shipments->cancel($shipment);
@@ -243,5 +243,11 @@ class ShipmentController extends Controller
         if ((int) $organizationId !== (int) $request->user()->organization_id) {
             abort(response()->json(['message' => 'Not found', 'error' => 'not_found'], 404));
         }
+    }
+
+    private function assertShipmentAccess(Request $request, Shipment $shipment): void
+    {
+        $this->assertOwned($request, $shipment->organization_id);
+        app(WarehouseAccessService::class)->authorizeWarehouse($request->user(), $shipment->warehouse_id);
     }
 }

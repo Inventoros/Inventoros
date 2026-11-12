@@ -1,4 +1,14 @@
 {
+  "receivingDestination": {
+    "label": "Ontvangstlocatie",
+    "existing": "Bestaande bestemming gebruiken",
+    "hint": "Wijzigingen gelden alleen voor deze ontvangst.",
+    "empty": "Geen ontvangstlocaties beschikbaar."
+  },
+  "fulfillment": {
+    "pickList": "Picklijst",
+    "packingSlip": "Pakbon"
+  },
   "auditPaging": {
     "perPage": "Regels per pagina",
     "search": "Zoek product, SKU of barcode",

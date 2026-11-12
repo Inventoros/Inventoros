@@ -175,33 +175,28 @@ final class WarehouseAccessService
     }
 
     /**
-     * Receiving books each line into its product's primary location, so a
-     * restricted user may only receive lines that land in their warehouses.
+     * Preflight the effective receipt destinations. PurchaseOrderService also
+     * resolves and authorizes each location while holding its receipt locks.
      *
-     * @param  array<int, array{id: int|string, quantity_to_receive: int|string}>  $items
+     * @param  array<int, array{id: int|string, quantity_to_receive: int|string, receiving_location_id?: int|string|null}>  $items
      *
      * @throws AuthorizationException
      */
     public function authorizeReceiving(User $user, PurchaseOrder $purchaseOrder, array $items): void
     {
-        if (! $this->isRestricted($user)) {
-            return;
-        }
-
-        $itemIds = collect($items)
+        $requested = collect($items)
             ->filter(fn ($item) => (int) ($item['quantity_to_receive'] ?? 0) > 0)
-            ->pluck('id')
-            ->map(fn ($id) => (int) $id)
-            ->all();
+            ->keyBy('id');
 
         $lines = PurchaseOrderItem::query()
             ->with('product:id,location_id')
             ->where('purchase_order_id', $purchaseOrder->id)
-            ->whereIn('id', $itemIds)
+            ->whereIn('id', $requested->keys())
             ->get();
 
         foreach ($lines as $line) {
-            $this->authorizeLocation($user, $line->receivingLocationId());
+            $override = $requested[$line->id]['receiving_location_id'] ?? null;
+            $this->authorizeLocation($user, $line->receivingLocationId($override !== null ? (int) $override : null));
         }
     }
 

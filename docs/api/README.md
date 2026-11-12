@@ -89,6 +89,19 @@ When a token was created with a list of abilities, the token must also include t
 
 A request lacking the required permission returns `403 forbidden`.
 
+## Purchase-order receiving destinations
+
+`POST /api/v1/purchase-orders/{id}/receive` accepts an optional
+`receiving_location_id` on each item alongside `id` and `quantity_to_receive`.
+Omitting it or sending `null` uses the line's existing planned destination, or
+the product's primary location. A selected bin applies only to this receipt and
+does not change either default. It must be active, belong to the organization
+and be accessible to the receiver. Planned receipts remain within their planned
+warehouse. Invalid selections roll back the whole delivery and return a nested
+validation error; unauthorized warehouse access returns `403`.
+
+See the [receiving guide](../features/purchase-order-receiving.md) for an example.
+
 ## Rate limiting
 
 | Scope                      | Limit             | Keyed by             | Defined in                                  |
