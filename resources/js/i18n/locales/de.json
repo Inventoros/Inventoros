@@ -1,4 +1,8 @@
 {
+  "fulfillment": {
+    "pickList": "Pickliste",
+    "packingSlip": "Lieferschein"
+  },
   "auditPaging": {
     "perPage": "Zeilen pro Seite",
     "search": "Produkt, SKU oder Barcode suchen",

@@ -1,4 +1,8 @@
 {
+  "fulfillment": {
+    "pickList": "Liste de prélèvement",
+    "packingSlip": "Bon de livraison"
+  },
   "auditPaging": {
     "perPage": "Lignes par page",
     "search": "Rechercher un produit, une référence ou un code-barres",

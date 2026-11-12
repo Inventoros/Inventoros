@@ -1,4 +1,8 @@
 {
+  "fulfillment": {
+    "pickList": "Lista kompletacji",
+    "packingSlip": "Lista pakowania"
+  },
   "auditPaging": {
     "perPage": "Wiersze na stronę",
     "search": "Szukaj produktu, SKU lub kodu kreskowego",

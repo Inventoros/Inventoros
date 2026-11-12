@@ -8,7 +8,7 @@ import ShipOrderModal from '@/Components/Shipping/ShipOrderModal.vue';
 import { router } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { Truck, Download, ExternalLink, PackageCheck } from '@lucide/vue';
+import { Truck, Download, ExternalLink, PackageCheck, Printer } from '@lucide/vue';
 
 /**
  * Shipments card on the order detail page, with the "Ship" modal.
@@ -124,7 +124,7 @@ const formatMoney = (amount, currency) =>
                     </div>
 
                     <div
-                        v-if="shipment.has_label || (shipping.canCreate && ['pending', 'label_created'].includes(shipment.status))"
+                        v-if="shipment.has_label || shipment.can_print_packing_slip || (shipping.canCreate && ['pending', 'label_created'].includes(shipment.status))"
                         class="mt-3 flex flex-wrap gap-2 border-t border-border-subtle pt-3"
                     >
                         <Button
@@ -138,6 +138,18 @@ const formatMoney = (amount, currency) =>
                         >
                             <Download :size="12" />
                             {{ t('shipping.downloadLabel') }}
+                        </Button>
+                        <Button
+                            v-if="shipment.can_print_packing_slip"
+                            variant="secondary"
+                            size="xs"
+                            as="a"
+                            :href="route('shipments.packing-slip', shipment.id)"
+                            target="_blank"
+                            rel="noopener"
+                        >
+                            <Printer :size="12" />
+                            {{ t('fulfillment.packingSlip') }}
                         </Button>
                         <template v-if="shipping.canCreate">
                             <Button

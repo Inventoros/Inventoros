@@ -1,4 +1,8 @@
 {
+  "fulfillment": {
+    "pickList": "ピッキングリスト",
+    "packingSlip": "納品書"
+  },
   "auditPaging": {
     "perPage": "ページあたりの行数",
     "search": "商品・SKU・バーコードで検索",

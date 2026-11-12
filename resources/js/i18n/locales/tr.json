@@ -1,4 +1,8 @@
 {
+  "fulfillment": {
+    "pickList": "Toplama listesi",
+    "packingSlip": "Paketleme listesi"
+  },
   "auditPaging": {
     "perPage": "Sayfa başına satır",
     "search": "Ürün, SKU veya barkod ara",

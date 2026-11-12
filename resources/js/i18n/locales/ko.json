@@ -1,4 +1,8 @@
 {
+  "fulfillment": {
+    "pickList": "피킹 목록",
+    "packingSlip": "포장 명세서"
+  },
   "auditPaging": {
     "perPage": "페이지당 행 수",
     "search": "상품, SKU 또는 바코드 검색",

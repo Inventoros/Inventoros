@@ -21,14 +21,17 @@ use App\Models\Inventory\Product;
 use App\Models\Inventory\ProductVariant;
 use App\Models\Order\Order;
 use App\Models\Warehouse;
+use App\Services\Documents\FulfillmentDocumentService;
 use App\Services\OrderService;
 use App\Services\Shipping\OrderShippingPanel;
+use App\Services\WarehouseAccessService;
 use App\Support\ApprovalSettings;
 use App\Support\Search;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
@@ -125,7 +128,7 @@ class OrderController extends Controller
             'canRecordPayments' => $request->user()->hasPermission(Permission::RECORD_PAYMENTS),
             'untrackedOrderCount' => (int) ($untracked->count ?? 0),
             'markPaidBefore' => filled($untracked->latest ?? null)
-                ? \Illuminate\Support\Carbon::parse($untracked->latest)->addDay()->toDateString()
+                ? Carbon::parse($untracked->latest)->addDay()->toDateString()
                 : null,
             'sources' => ['manual', 'ebay', 'shopify', 'amazon'],
             'activeWarehouse' => $activeWarehouse,
@@ -259,6 +262,8 @@ class OrderController extends Controller
             // does not require it): the page hides the approval card.
             'approvalRequired' => $order->approval_status !== OrderApprovalStatus::NOT_REQUIRED,
             'awaitingApproval' => $order->isPendingApproval(),
+            'canPrintPickList' => app(FulfillmentDocumentService::class)->canPrintPickList($order)
+                && app(WarehouseAccessService::class)->canAccessWarehouse(auth()->user(), $order->warehouse_id),
             'canRecordPayments' => $canViewPayments && auth()->user()->hasPermission(Permission::RECORD_PAYMENTS),
             'paymentMethods' => $canViewPayments
                 ? array_map(fn (PaymentMethod $method) => ['value' => $method->value, 'label' => $method->label()], PaymentMethod::cases())

@@ -11,6 +11,7 @@ use App\Models\Shipping\Shipment;
 use App\Services\Shipping\CarrierManager;
 use App\Services\Shipping\ShipmentService;
 use App\Services\Shipping\ShippingRate;
+use App\Services\WarehouseAccessService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -35,7 +36,7 @@ class ShipmentController extends Controller
      */
     public function store(Request $request, Order $order): Response
     {
-        $this->assertSameOrganization($request, $order->organization_id);
+        $this->assertAccess($request, $order);
 
         $organizationId = (int) $request->user()->organization_id;
 
@@ -95,7 +96,7 @@ class ShipmentController extends Controller
      */
     public function rates(Request $request, Shipment $shipment): JsonResponse
     {
-        $this->assertSameOrganization($request, $shipment->organization_id);
+        $this->assertAccess($request, $shipment);
 
         try {
             $rates = $this->shipments->fetchRates($shipment);
@@ -114,7 +115,7 @@ class ShipmentController extends Controller
      */
     public function buy(Request $request, Shipment $shipment): JsonResponse
     {
-        $this->assertSameOrganization($request, $shipment->organization_id);
+        $this->assertAccess($request, $shipment);
 
         $validated = $request->validate([
             'rate_id' => ['required', 'string', 'max:100'],
@@ -134,7 +135,7 @@ class ShipmentController extends Controller
      */
     public function ship(Request $request, Shipment $shipment): RedirectResponse
     {
-        $this->assertSameOrganization($request, $shipment->organization_id);
+        $this->assertAccess($request, $shipment);
 
         try {
             $this->shipments->markShipped($shipment, $request->user());
@@ -150,7 +151,7 @@ class ShipmentController extends Controller
      */
     public function cancel(Request $request, Shipment $shipment): RedirectResponse
     {
-        $this->assertSameOrganization($request, $shipment->organization_id);
+        $this->assertAccess($request, $shipment);
 
         $hadLabel = $shipment->hasLabel();
 
@@ -168,7 +169,7 @@ class ShipmentController extends Controller
      */
     public function label(Request $request, Shipment $shipment): Response
     {
-        $this->assertSameOrganization($request, $shipment->organization_id);
+        $this->assertAccess($request, $shipment);
 
         try {
             $contents = $this->shipments->labelContents($shipment);
@@ -199,13 +200,17 @@ class ShipmentController extends Controller
     }
 
     /**
-     * Route binding is already tenant-scoped; this is the explicit check the
-     * other order controllers make too.
+     * Route binding checks the organization; existing shipments also belong
+     * to their ship-from warehouse, whoever originally created them.
      */
-    private function assertSameOrganization(Request $request, int|string|null $organizationId): void
+    private function assertAccess(Request $request, Order|Shipment $resource): void
     {
-        if ((int) $organizationId !== (int) $request->user()->organization_id) {
+        if ((int) $resource->organization_id !== (int) $request->user()->organization_id) {
             abort(404);
+        }
+
+        if ($resource instanceof Shipment) {
+            app(WarehouseAccessService::class)->authorizeWarehouse($request->user(), $resource->warehouse_id);
         }
     }
 }

@@ -13,6 +13,7 @@ use App\Models\Purchasing\PurchaseOrderItem;
 use App\Models\User;
 use App\Support\Money;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 /**
  * The single implementation of purchase-order create, update and receive.
@@ -154,6 +155,7 @@ final class PurchaseOrderService
      * @return int the number of lines that received stock
      *
      * @throws InvalidStateException when the PO cannot receive items
+     * @throws ValidationException when a requested line's product or variant is unavailable
      */
     public function receive(PurchaseOrder $purchaseOrder, User $actor, array $items): int
     {
@@ -188,7 +190,15 @@ final class PurchaseOrderService
                         ->first();
 
                     if ($item && $item->remaining_quantity > 0) {
-                        $item->receive($itemData['quantity_to_receive']);
+                        if ($item->receive($itemData['quantity_to_receive']) === null) {
+                            // A product or variant may have been deleted after
+                            // this PO was sent. Refuse the whole delivery so a
+                            // skipped line cannot be reported as received, or
+                            // leave earlier lines silently partially booked.
+                            throw ValidationException::withMessages([
+                                'items' => "The product or variant for {$item->product_name} is no longer available. Restore it before receiving this line.",
+                            ]);
+                        }
                         $receivedCount++;
                     }
                 }

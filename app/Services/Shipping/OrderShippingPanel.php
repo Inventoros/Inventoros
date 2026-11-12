@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace App\Services\Shipping;
 
+use App\Enums\ShipmentStatus;
 use App\Models\Order\Order;
 use App\Models\Order\OrderItem;
 use App\Models\Shipping\Shipment;
 use App\Models\Shipping\ShippingSetting;
 use App\Models\User;
 use App\Models\Warehouse;
+use App\Services\WarehouseAccessService;
 
 /**
  * The shipping props for the order detail page: the order's shipments and
@@ -37,11 +39,18 @@ final class OrderShippingPanel
         $settings = ShippingSetting::forOrganization($organizationId);
         $remaining = $this->shipments->remainingQuantities($order);
 
+        $accessibleWarehouses = app(WarehouseAccessService::class)->accessibleWarehouseIds($user);
+        $canAccess = fn (?int $id) => $accessibleWarehouses === null
+            || ($id !== null && in_array($id, $accessibleWarehouses, true));
+        $canPrint = $user->hasPermission('view_orders') && $canAccess($order->warehouse_id);
+
         $shipments = Shipment::where('order_id', $order->id)
             ->with('items.orderItem.variant', 'warehouse')
             ->latest('id')
             ->get()
-            ->map(fn (Shipment $s) => $s->toPublicArray())
+            ->map(fn (Shipment $s) => $s->toPublicArray() + [
+                'can_print_packing_slip' => $canPrint && $s->status !== ShipmentStatus::CANCELLED && $canAccess($s->warehouse_id),
+            ])
             ->all();
 
         $warehouseId = $order->warehouse_id ?? $settings->default_warehouse_id;

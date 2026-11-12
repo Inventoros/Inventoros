@@ -1,4 +1,8 @@
 {
+  "fulfillment": {
+    "pickList": "قائمة الانتقاء",
+    "packingSlip": "قائمة التعبئة"
+  },
   "auditPaging": {
     "perPage": "الصفوف في الصفحة",
     "search": "البحث عن منتج أو رمز SKU أو باركود",

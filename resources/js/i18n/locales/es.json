@@ -1,4 +1,8 @@
 {
+  "fulfillment": {
+    "pickList": "Lista de preparación",
+    "packingSlip": "Albarán"
+  },
   "auditPaging": {
     "perPage": "Líneas por página",
     "search": "Buscar producto, SKU o código de barras",

@@ -6,6 +6,18 @@ Full release notes, with the pull request behind each change, are on [GitHub Rel
 
 ## [Unreleased]
 
+### Added
+
+- Printable order pick lists and price-free packing slips per shipment, including manual and partial shipments, available in the free core.
+
+### Fixed
+
+- Purchase-order receiving rejects unavailable products or variants and rolls back the delivery instead of reporting skipped lines as successfully received.
+
+### Security
+
+- Existing shipment rate requests, label purchases, dispatch, cancellations and web label downloads enforce ship-from warehouse assignments before carrier calls or changes.
+
 ## [2.4.0] - 2026-11-08
 
 ### Added

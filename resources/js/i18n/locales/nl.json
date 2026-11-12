@@ -1,4 +1,8 @@
 {
+  "fulfillment": {
+    "pickList": "Picklijst",
+    "packingSlip": "Pakbon"
+  },
   "auditPaging": {
     "perPage": "Regels per pagina",
     "search": "Zoek product, SKU of barcode",

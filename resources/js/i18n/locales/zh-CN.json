@@ -1,4 +1,8 @@
 {
+  "fulfillment": {
+    "pickList": "拣货单",
+    "packingSlip": "装箱单"
+  },
   "auditPaging": {
     "perPage": "每页行数",
     "search": "搜索商品、SKU 或条码",

@@ -7,6 +7,8 @@
 // the routes; regenerate the object from `php artisan route:list --json`.
 
 export const ROUTE_PERMISSIONS = {
+    "orders.pick-list": ["view_orders"],
+    "shipments.packing-slip": ["view_orders", "view_shipments"],
     "variant-replenishment.index": ["view_products"],
     "variant-replenishment.options": ["view_products", "edit_products"],
     "products.images.show": ["view_products|edit_products"],

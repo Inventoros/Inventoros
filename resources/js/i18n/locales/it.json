@@ -1,4 +1,8 @@
 {
+  "fulfillment": {
+    "pickList": "Lista di prelievo",
+    "packingSlip": "Distinta di imballaggio"
+  },
   "auditPaging": {
     "perPage": "Righe per pagina",
     "search": "Cerca prodotto, SKU o codice a barre",
