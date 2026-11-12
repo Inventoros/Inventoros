@@ -1,4 +1,10 @@
 {
+  "receivingDestination": {
+    "label": "收货库位",
+    "existing": "使用现有目的地",
+    "hint": "更改仅适用于本次收货。",
+    "empty": "没有可用的收货库位。"
+  },
   "fulfillment": {
     "pickList": "拣货单",
     "packingSlip": "装箱单"

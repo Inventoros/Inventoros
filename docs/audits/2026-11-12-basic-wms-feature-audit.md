@@ -18,9 +18,9 @@ also have a free official plugin. These capabilities should remain included.
 
 The review covered feature availability, shared service boundaries, access
 control, query behavior, maintainability, failure cases and existing regression
-coverage. It identified two missing basic documents and two confirmed workflow
-defects addressed in this change. This is a code-level audit of the supported
-inventory and fulfillment workflows.
+coverage. It identified two missing basic documents, a receiving-destination gap
+and two confirmed workflow defects addressed in this change. This is a code-level
+audit of the supported inventory and fulfillment workflows.
 
 ## Findings addressed
 
@@ -30,6 +30,7 @@ inventory and fulfillment workflows.
 | P1 | No price-free packing slip | Core had no packing-slip template or route; ordinary shipment users needed invoice PDFs or a specialist plugin | Free packing slip per shipment, including manual and partial shipments |
 | P1 | Existing shipment actions bypassed warehouse assignments | Shipment creation checked `WarehouseAccessService`, but existing-shipment rates, label purchase, ship, cancellation and web label download checked organization only | Matching warehouse authorization before carrier calls, file access or mutation |
 | P2 | Deleted products could be reported as successfully received | `PurchaseOrderItem::receive()` could return null, while `PurchaseOrderService` still incremented its successful line count | Clear validation failure and whole-delivery rollback for unavailable products or variants |
+| P2 | Ordinary receipts could not choose a destination bin | Receiving form accepted quantities only; planned bins were available only to generated replenishment orders | Optional per-receipt bin selection across web, REST, GraphQL and MCP |
 
 ## Fulfillment document behavior
 
@@ -57,15 +58,16 @@ inventory and fulfillment workflows.
   state, contact carriers, or send email. UI action labels cover all 14 locales;
   PDF labels follow the existing server-side document language conventions.
 
-## Follow-up basic capability
+## Receiving destinations
 
-Manual selection of a receiving bin is a useful separate addition (P2, medium
-effort). `PurchaseOrders/Receive.vue` currently accepts quantities only. The
-existing PO-line `receiving_location_id` primitive supports generated variant
-replenishment receipts, but the ordinary receiving form does not let staff
-choose it. A complete addition needs consistent active-bin, organization and
-warehouse validation across web, REST, GraphQL and MCP. It is not included in
-this focused document/workflow change and should not require a paid plugin.
+Each receipt line can select an active, accessible bin. Omitting the selection
+retains the planned or product primary location. Overrides apply to that receipt
+only, and a planned receipt stays in its planned warehouse. Resolution and access
+checks run inside the locked PO transaction. Invalid lines roll back the whole
+delivery. This is included in core, with the same behavior on every interface.
+
+Recommended next basic additions are printable receiving records for individual
+deliveries and clearer discrepancy notes for short or damaged receipts.
 
 The existing consume-at-order-creation inventory model was reviewed alongside
 `OrderWarehouseBinConsumeTest`. It is deliberate behavior, not reclassified here
@@ -83,10 +85,14 @@ pick confirmation needs a separate design and migration review.
   remain available.
 - `PurchaseOrderDeletedProductReceivingTest`: web/REST/GraphQL/MCP validation,
   deleted variants, mixed-delivery rollback and restore/retry.
+- `PurchaseOrderReceivingDestinationTest`: effective-bin access, planned/default
+  destinations, partial deliveries, variants, numeric-string input, invalid bins
+  and warehouses, transaction rollback and all receiving entry points.
 - Existing receiving and shipping regressions, JavaScript localization and UI
   tests, production build, PHP formatting, and complete default PHP suite.
-- Final results: 4,076 PHP tests passed, 7 skipped (29,172 assertions); all 226
+- Final results: 4,112 PHP tests passed, 7 skipped (29,413 assertions); all 226
   JavaScript tests passed. Production build, Pint and whitespace checks passed.
+- Desktop/mobile browser checks submitted a partial receipt into the selected
+  bin and verified its quantity, the unchanged product/PO defaults and page layout.
 - Rendered one-page pick list and packing slip plus a 75-line, multi-page pick
   list. Checked wrapping, repeated table headers, row pagination and page numbers.
-

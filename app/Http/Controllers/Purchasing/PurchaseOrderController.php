@@ -14,12 +14,14 @@ use App\Http\Requests\PurchaseOrder\StorePurchaseOrderRequest;
 use App\Http\Requests\PurchaseOrder\UpdatePurchaseOrderRequest;
 use App\Http\Requests\SendDocumentEmailRequest;
 use App\Models\Inventory\Product;
+use App\Models\Inventory\ProductLocation;
 use App\Models\Inventory\ProductVariant;
 use App\Models\Inventory\Supplier;
 use App\Models\Purchasing\PurchaseOrder;
 use App\Services\ApprovalService;
 use App\Services\PurchaseOrderEmailService;
 use App\Services\PurchaseOrderService;
+use App\Services\WarehouseAccessService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -282,8 +284,22 @@ class PurchaseOrderController extends Controller
 
         $purchaseOrder->load(['supplier', 'items.product', 'items.variant', 'items.receivingLocation.warehouse']);
 
+        $locations = ProductLocation::forOrganization((int) $purchaseOrder->organization_id)->active()
+            ->where(fn ($query) => $query->whereNull('warehouse_id')->orWhereHas('warehouse', fn ($warehouses) => $warehouses
+                ->where('organization_id', $purchaseOrder->organization_id)->where('is_active', true)));
+        app(WarehouseAccessService::class)->scopeLocations($locations, $request->user());
+
         return Inertia::render('PurchaseOrders/Receive', [
             'purchaseOrder' => $purchaseOrder,
+            'receivingLocations' => $locations->with('warehouse:id,name')->orderBy('warehouse_id')->orderBy('name')
+                ->get(['id', 'name', 'code', 'warehouse_id'])
+                ->map(fn (ProductLocation $location) => [
+                    'id' => (int) $location->id,
+                    'name' => $location->name,
+                    'code' => $location->code,
+                    'warehouse_id' => $location->warehouse_id !== null ? (int) $location->warehouse_id : null,
+                    'warehouse_name' => $location->warehouse?->name,
+                ])->all(),
             'pluginComponents' => [
                 'header' => get_page_components('purchase-orders.receive', 'header'),
                 'footer' => get_page_components('purchase-orders.receive', 'footer'),

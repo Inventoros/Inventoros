@@ -1,4 +1,10 @@
 {
+  "receivingDestination": {
+    "label": "Ubicación de recepción",
+    "existing": "Usar el destino existente",
+    "hint": "Los cambios solo se aplican a esta recepción.",
+    "empty": "No hay ubicaciones de recepción disponibles."
+  },
   "fulfillment": {
     "pickList": "Lista de preparación",
     "packingSlip": "Albarán"

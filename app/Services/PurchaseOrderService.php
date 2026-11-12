@@ -12,7 +12,9 @@ use App\Models\Purchasing\PurchaseOrder;
 use App\Models\Purchasing\PurchaseOrderItem;
 use App\Models\User;
 use App\Support\Money;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 
 /**
@@ -151,7 +153,7 @@ final class PurchaseOrderService
     /**
      * Receive quantities against a sent/partial purchase order.
      *
-     * @param  array<int, array{id: int, quantity_to_receive: int}>  $items
+     * @param  array<int, array{id: int, quantity_to_receive: int, receiving_location_id?: int|null}>  $items
      * @return int the number of lines that received stock
      *
      * @throws InvalidStateException when the PO cannot receive items
@@ -159,9 +161,15 @@ final class PurchaseOrderService
      */
     public function receive(PurchaseOrder $purchaseOrder, User $actor, array $items): int
     {
-        // Goods land in the line's designated location, falling back to the
-        // product's primary location for legacy/manual lines.
-        $this->warehouseAccess->authorizeReceiving($actor, $purchaseOrder, $items);
+        if ((int) $actor->organization_id !== (int) $purchaseOrder->organization_id) {
+            throw new AuthorizationException('You do not have access to this purchase order.');
+        }
+
+        // Direct PHP callers share the same destination shape checks as the
+        // web and API surfaces. Null means use the existing destination.
+        Validator::make(['items' => $items], [
+            'items.*.receiving_location_id' => ['nullable', 'integer', 'min:1'],
+        ])->validate();
 
         if (! $purchaseOrder->canReceiveItems()) {
             throw new InvalidStateException('This purchase order cannot receive items.', 'cannot_receive');
@@ -169,7 +177,7 @@ final class PurchaseOrderService
 
         $receivedCount = 0;
 
-        DB::transaction(function () use ($items, $purchaseOrder, &$receivedCount) {
+        DB::transaction(function () use ($items, $purchaseOrder, $actor, &$receivedCount) {
             // Re-read the PO under a row lock so two concurrent receive calls
             // (a double-submit, a retried timeout, or two integration workers)
             // serialize here; the second observes the post-receive
@@ -182,7 +190,7 @@ final class PurchaseOrderService
                 throw new InvalidStateException('This purchase order cannot receive items.', 'cannot_receive');
             }
 
-            foreach ($items as $itemData) {
+            foreach ($items as $index => $itemData) {
                 if ($itemData['quantity_to_receive'] > 0) {
                     $item = PurchaseOrderItem::where('id', $itemData['id'])
                         ->where('purchase_order_id', $po->id)
@@ -190,7 +198,23 @@ final class PurchaseOrderService
                         ->first();
 
                     if ($item && $item->remaining_quantity > 0) {
-                        if ($item->receive($itemData['quantity_to_receive']) === null) {
+                        $override = isset($itemData['receiving_location_id']) ? (int) $itemData['receiving_location_id'] : null;
+                        try {
+                            $locationId = $item->receivingLocationId($override);
+                        } catch (InvalidStateException $exception) {
+                            if ($override === null) {
+                                throw $exception;
+                            }
+                            throw ValidationException::withMessages([
+                                "items.{$index}.receiving_location_id" => $exception->getMessage(),
+                            ]);
+                        }
+                        // Check the actual receipt bin while the PO and line
+                        // are locked, rather than authorizing a stale default
+                        // before the transaction starts.
+                        $this->warehouseAccess->authorizeLocation($actor, $locationId);
+
+                        if ($item->receive((int) $itemData['quantity_to_receive'], $override) === null) {
                             // A product or variant may have been deleted after
                             // this PO was sent. Refuse the whole delivery so a
                             // skipped line cannot be reported as received, or

@@ -28,7 +28,7 @@ class ReceivePurchaseOrderTool extends Tool
     {
         return [
             'id' => $schema->integer()->required()->description('Purchase order id.'),
-            'items' => $schema->array()->required()->description('Items to receive: [{id: po_item_id, quantity_to_receive: int}]. Quantities must be >= 0.'),
+            'items' => $schema->array()->required()->description('Items to receive: [{id: po_item_id, quantity_to_receive: int, receiving_location_id?: int|null}]. Quantities must be >= 0. The optional bin applies only to this receipt; null keeps the existing destination. Planned receipts must stay in their planned warehouse.'),
         ];
     }
 
@@ -59,6 +59,7 @@ class ReceivePurchaseOrderTool extends Tool
                 Rule::exists('purchase_order_items', 'id')->where('purchase_order_id', $po->id),
             ],
             'items.*.quantity_to_receive' => ['required', 'integer', 'min:0'],
+            'items.*.receiving_location_id' => ['nullable', 'integer', 'min:1'],
         ]);
 
         // The same receive the web, REST and GraphQL surfaces use: warehouse
@@ -68,7 +69,7 @@ class ReceivePurchaseOrderTool extends Tool
         try {
             $received = app(PurchaseOrderService::class)->receive($po, $this->user(), $validated['items']);
         } catch (InvalidStateException $e) {
-            return Response::error("Purchase order in status [{$po->fresh()?->status}] cannot receive items.");
+            return Response::error($e->getMessage());
         }
 
         if ($received === 0) {

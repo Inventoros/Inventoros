@@ -9,6 +9,7 @@ Full release notes, with the pull request behind each change, are on [GitHub Rel
 ### Added
 
 - Printable order pick lists and price-free packing slips per shipment, including manual and partial shipments, available in the free core.
+- Optional receiving-bin selection for each purchase-order receipt line across the web form, REST, GraphQL and MCP. Partial receipts retain their planned destinations and enforce active-bin and warehouse access checks.
 
 ### Fixed
 

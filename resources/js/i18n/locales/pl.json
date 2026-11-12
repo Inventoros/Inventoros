@@ -1,4 +1,10 @@
 {
+  "receivingDestination": {
+    "label": "Miejsce przyjęcia",
+    "existing": "Użyj istniejącego miejsca docelowego",
+    "hint": "Zmiany dotyczą tylko tego przyjęcia.",
+    "empty": "Brak dostępnych miejsc przyjęcia."
+  },
   "fulfillment": {
     "pickList": "Lista kompletacji",
     "packingSlip": "Lista pakowania"

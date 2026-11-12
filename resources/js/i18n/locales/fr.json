@@ -1,4 +1,10 @@
 {
+  "receivingDestination": {
+    "label": "Emplacement de réception",
+    "existing": "Utiliser la destination existante",
+    "hint": "Les modifications s’appliquent uniquement à cette réception.",
+    "empty": "Aucun emplacement de réception disponible."
+  },
   "fulfillment": {
     "pickList": "Liste de prélèvement",
     "packingSlip": "Bon de livraison"

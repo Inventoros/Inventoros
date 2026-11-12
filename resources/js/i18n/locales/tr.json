@@ -1,4 +1,10 @@
 {
+  "receivingDestination": {
+    "label": "Kabul rafı",
+    "existing": "Mevcut hedefi kullan",
+    "hint": "Değişiklikler yalnızca bu teslim alım için geçerlidir.",
+    "empty": "Kullanılabilir kabul rafı yok."
+  },
   "fulfillment": {
     "pickList": "Toplama listesi",
     "packingSlip": "Paketleme listesi"

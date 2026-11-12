@@ -1,4 +1,10 @@
 {
+  "receivingDestination": {
+    "label": "Wareneingangsplatz",
+    "existing": "Vorhandenes Ziel verwenden",
+    "hint": "Änderungen gelten nur für diesen Wareneingang.",
+    "empty": "Keine Wareneingangsplätze verfügbar."
+  },
   "fulfillment": {
     "pickList": "Pickliste",
     "packingSlip": "Lieferschein"

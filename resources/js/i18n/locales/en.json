@@ -1,4 +1,10 @@
 {
+  "receivingDestination": {
+    "label": "Receiving bin",
+    "existing": "Use existing destination",
+    "hint": "Changes apply to this receipt only.",
+    "empty": "No receiving bins available."
+  },
   "fulfillment": {
     "pickList": "Pick list",
     "packingSlip": "Packing slip"

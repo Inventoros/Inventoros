@@ -102,6 +102,7 @@ Inventoros is an open-source Inventory and Warehouse Management System (WMS) bui
 - **Invoices** with per-organization numbering, emailed to the customer as a PDF
 - **Returns & exchanges (RMA)** -- full return lifecycle with automatic stock restoration
 - Purchase orders emailed to suppliers with the PDF, item receiving, supplier price history and ratings
+- Choose a receiving bin per delivery line, with warehouse access checks and planned destinations preserved ([guide](docs/features/purchase-order-receiving.md))
 - Customer management with order history
 - Automated reorder points with supplier-grouped PO generation
 

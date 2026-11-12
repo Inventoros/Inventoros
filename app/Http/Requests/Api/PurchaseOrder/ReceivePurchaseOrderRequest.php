@@ -7,8 +7,7 @@ namespace App\Http\Requests\Api\PurchaseOrder;
 use Illuminate\Foundation\Http\FormRequest;
 
 /**
- * Validates the receiving payload for a purchase order via the REST API. Rules
- * unchanged from Api\PurchaseOrderController::receive.
+ * Validates receiving quantities and optional per-receipt destinations.
  */
 final class ReceivePurchaseOrderRequest extends FormRequest
 {
@@ -21,6 +20,7 @@ final class ReceivePurchaseOrderRequest extends FormRequest
             'items' => ['required', 'array'],
             'items.*.id' => ['required', 'exists:purchase_order_items,id'],
             'items.*.quantity_to_receive' => ['required', 'integer', 'min:0'],
+            'items.*.receiving_location_id' => ['nullable', 'integer', 'min:1'],
         ];
     }
 }

@@ -1,4 +1,10 @@
 {
+  "receivingDestination": {
+    "label": "Local de recebimento",
+    "existing": "Usar destino existente",
+    "hint": "As alterações se aplicam apenas a este recebimento.",
+    "empty": "Nenhum local de recebimento disponível."
+  },
   "fulfillment": {
     "pickList": "Lista de separação",
     "packingSlip": "Romaneio de embalagem"

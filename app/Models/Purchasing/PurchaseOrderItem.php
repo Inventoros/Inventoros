@@ -84,6 +84,7 @@ class PurchaseOrderItem extends Model
     protected $casts = [
         'quantity_ordered' => 'integer',
         'quantity_received' => 'integer',
+        'receiving_location_id' => 'integer',
         'unit_cost' => 'decimal:2',
         'subtotal' => 'decimal:2',
         'tax' => 'decimal:2',
@@ -128,17 +129,31 @@ class PurchaseOrderItem extends Model
         return $this->belongsTo(ProductLocation::class, 'receiving_location_id')->withTrashed();
     }
 
-    public function receivingLocationId(): ?int
+    public function receivingLocationId(?int $overrideLocationId = null): ?int
     {
-        if ($this->receiving_location_id === null) {
-            return $this->product?->location_id;
+        $locationId = $overrideLocationId ?? $this->receiving_location_id ?? $this->product?->location_id;
+        if ($locationId === null) {
+            return null;
         }
         $org = (int) $this->purchaseOrder->organization_id;
         $location = ProductLocation::withoutGlobalScope(OrganizationScope::class)->where('organization_id', $org)
-            ->active()->find($this->receiving_location_id);
+            ->active()->find($locationId);
         if ($location === null || ($location->warehouse_id !== null && ! Warehouse::withoutGlobalScope(OrganizationScope::class)
             ->where('organization_id', $org)->where('is_active', true)->whereKey($location->warehouse_id)->exists())) {
             throw new InvalidStateException('The designated receiving location is no longer available. Review the purchase order before receiving it.', 'invalid_receiving_location');
+        }
+
+        // A receipt may use another bin in a planned warehouse, without
+        // silently redirecting the remaining inbound stock to another site.
+        // Keep the planned location intact, including its historical identity
+        // when that bin has been retired and a replacement is selected.
+        if ($overrideLocationId !== null && $this->receiving_location_id !== null) {
+            $planned = ProductLocation::withoutGlobalScope(OrganizationScope::class)->withTrashed()
+                ->where('organization_id', $org)->find($this->receiving_location_id);
+            if ($planned === null || ($planned->warehouse_id !== null
+                && (int) $planned->warehouse_id !== (int) $location->warehouse_id)) {
+                throw new InvalidStateException('Choose a receiving location in the purchase order line\'s planned warehouse.', 'invalid_receiving_location');
+            }
         }
 
         return (int) $location->id;
@@ -192,7 +207,7 @@ class PurchaseOrderItem extends Model
      *
      * @param  int  $quantity  The quantity to receive
      */
-    public function receive(int $quantity): ?StockAdjustment
+    public function receive(int $quantity, ?int $receivingLocationId = null): ?StockAdjustment
     {
         if ($quantity <= 0) {
             return null;
@@ -219,7 +234,7 @@ class PurchaseOrderItem extends Model
             return null;
         }
 
-        $receivingLocationId = $this->receivingLocationId();
+        $receivingLocationId = $this->receivingLocationId($receivingLocationId);
 
         // Update received quantity
         $this->quantity_received += $quantityToReceive;
