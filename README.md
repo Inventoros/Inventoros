@@ -70,6 +70,155 @@
   </tr>
 </table>
 
+## Features
+
+<table>
+<tr>
+<td width="33%" valign="top">
+
+**Inventory and products**
+- SKUs, pricing, categories, barcodes
+- Variants by size, colour, material
+- Kits and bundles from components
+- Assembly and work orders
+- Batch, lot, expiry and serial tracking
+- Code 128, EAN, UPC, Code 39, QR labels
+- Camera and keyboard-wedge scanning
+- SKU patterns with auto-generation
+- CSV import and export
+- Cycle counts and stock audits
+
+</td>
+<td width="33%" valign="top">
+
+**Warehouses**
+- Multiple warehouses with contacts
+- Staff limited to their warehouses
+- Warehouse switcher on every view
+- Transfers with tracking and transit status
+- Default warehouse per organization
+- Per-warehouse reorder points and capacity
+- Warehouse, aisle, shelf, bin
+
+</td>
+<td width="33%" valign="top">
+
+**Orders and purchasing**
+- Order lifecycle with automatic stock updates
+- Order approval: pending, approved, rejected
+- Discounts, payments, refunds, AR aging
+- PDF invoices emailed to customers
+- Returns and exchanges (RMA)
+- Purchase orders emailed to suppliers
+- Receive into a chosen bin
+- Supplier price history and ratings
+- Reorder points that draft purchase orders
+
+</td>
+</tr>
+<tr>
+<td width="33%" valign="top">
+
+**Shipping and fulfilment**
+- Pick lists and price-free packing slips
+- Partial and manual shipments
+- EasyPost rates, labels, tracking, voids
+- Tracking webhooks with polling backstop
+- Optional shipment emails
+
+</td>
+<td width="33%" valign="top">
+
+**Customer portal**
+- B2B portal per organization
+- Orders, shipments, payments, balance
+- Invoice PDFs and return requests
+
+</td>
+<td width="33%" valign="top">
+
+**Approvals**
+- Purchase orders, adjustments, transfers
+- Thresholds per workflow
+- Pending approvals page with a count
+- Every workflow off by default
+
+</td>
+</tr>
+<tr>
+<td width="33%" valign="top">
+
+**Reports**
+- Valuation, movement, sales, margin
+- Low stock, dead stock, turnover, ABC
+- Custom report builder over 6 sources
+- Export to CSV, Excel or PDF
+- Scheduled report emails
+
+</td>
+<td width="33%" valign="top">
+
+**Users and access**
+- 30+ granular permissions
+- Custom roles and permission sets
+- Two-factor authentication (TOTP)
+- API token management
+
+</td>
+<td width="33%" valign="top">
+
+**APIs**
+- REST API v1
+- GraphQL with depth and complexity limits
+- MCP server for AI clients
+- OpenAPI spec, served at `/docs/api`
+- Sanctum tokens with scoped abilities
+
+</td>
+</tr>
+<tr>
+<td width="33%" valign="top">
+
+**Plugins**
+- Hooks and filters
+- Plugin pages, widgets, menus, tabs
+- Signed plugins from the marketplace
+- Sample plugin with documentation
+
+</td>
+<td width="33%" valign="top">
+
+**Notifications and webhooks**
+- Email via SMTP, Mailgun, SendGrid
+- Templates and per-user preferences
+- Signed webhooks with retries and logs
+
+</td>
+<td width="33%" valign="top">
+
+**Platform**
+- Multi-tenant organizations
+- Install wizard and update manager
+- Automatic backups before updates
+- Activity log with export
+- Dark mode and Ctrl+K command palette
+- 1000+ automated tests
+
+</td>
+</tr>
+</table>
+
+<p align="center"><sub><a href="docs/feature-overview.md">Every feature in detail</a></sub></p>
+
+<p align="center">
+  <a href="https://laravel.com"><img src="https://img.shields.io/badge/Laravel_13-FF2D20?style=for-the-badge&logo=laravel&logoColor=white" alt="Laravel 13"></a>
+  <a href="https://www.php.net"><img src="https://img.shields.io/badge/PHP_8.4-777BB4?style=for-the-badge&logo=php&logoColor=white" alt="PHP 8.4"></a>
+  <a href="https://vuejs.org"><img src="https://img.shields.io/badge/Vue_3-4FC08D?style=for-the-badge&logo=vuedotjs&logoColor=white" alt="Vue 3"></a>
+  <a href="https://inertiajs.com"><img src="https://img.shields.io/badge/Inertia_v3-9553E9?style=for-the-badge&logo=inertia&logoColor=white" alt="Inertia v3"></a>
+  <a href="https://tailwindcss.com"><img src="https://img.shields.io/badge/Tailwind_CSS-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white" alt="Tailwind CSS"></a>
+  <a href="https://www.postgresql.org"><img src="https://img.shields.io/badge/PostgreSQL_or_MySQL-4169E1?style=for-the-badge&logo=postgresql&logoColor=white" alt="PostgreSQL or MySQL"></a>
+</p>
+
 ## Quick start
 
 On a Linux server, one command installs Docker, generates secrets and starts everything:
