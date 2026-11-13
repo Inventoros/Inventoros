@@ -165,7 +165,6 @@ compose() { (cd "$INSTALL_DIR" && docker compose "$@"); }
 
 printf '%sInventoros installer%s\n' "$BOLD" "$RESET"
 
-[ "${BASH_VERSINFO[0]}" -ge 4 ] || die "Bash 4 or newer is required."
 [ "$(uname -s)" = "Linux" ] || die "This installer supports Linux servers. On macOS or Windows use Docker Desktop and the Docker guide: https://inventoros.com/docs/installation-docker"
 [ "$(id -u)" -eq 0 ] || die "Run the installer as root, for example: sudo bash install.sh"
 
@@ -336,7 +335,7 @@ else
     else
         APP_URL="$(env_get APP_URL)"
         if [ -z "$APP_URL" ] || [ "$(env_get APP_PORT)" != "$PORT" ] || [ -n "$(env_get INVENTOROS_DOMAIN)" ]; then
-            ip="$(hostname -I 2>/dev/null | awk '{print $1}')"
+            ip="$(hostname -I 2>/dev/null | awk '{print $1}' || true)"
             APP_URL="http://${ip:-localhost}:$PORT"
         fi
     fi
