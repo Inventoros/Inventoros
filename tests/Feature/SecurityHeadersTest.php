@@ -27,7 +27,9 @@ final class SecurityHeadersTest extends TestCase
         $this->assertStringContainsString("default-src 'self'", $csp);
         $this->assertStringContainsString("'nonce-", $csp);
         $this->assertStringContainsString("object-src 'none'", $csp);
-        $this->assertStringContainsString('https://fonts.bunny.net', $csp);
+        // Fonts are bundled; the policy allows no third-party font or style hosts.
+        $this->assertStringContainsString("font-src 'self' data:;", $csp);
+        $this->assertStringNotContainsString('fonts.bunny.net', $csp);
         $this->assertFalse($response->headers->has('X-XSS-Protection'));
         $this->assertStringContainsString('camera=(self)', $response->headers->get('Permissions-Policy'));
     }

@@ -37,7 +37,7 @@ class ApiDocsCspTest extends TestCase
         $csp = (string) $response->headers->get('Content-Security-Policy');
 
         $this->assertMatchesRegularExpression("#script-src 'self' 'nonce-([^']+)' ".preg_quote(self::ELEMENTS, '#').';#', $csp);
-        $this->assertStringContainsString('style-src '."'self' 'unsafe-inline' https://fonts.bunny.net ".self::ELEMENTS, $csp);
+        $this->assertStringContainsString('style-src '."'self' 'unsafe-inline' ".self::ELEMENTS, $csp);
 
         preg_match("#'nonce-([^']+)'#", $csp, $m);
         $html = $response->getContent();
