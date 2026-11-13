@@ -3,7 +3,8 @@
  * These MUST match the values in database/seeders/E2ETestSeeder.php
  */
 export const E2E_TEST_USER = {
-    email: 'e2e-test@inventoros.test',
+    // The screenshots run renames this user (ScreenshotBrandingSeeder::SCREENSHOT_EMAIL).
+    email: process.env.E2E_TEST_EMAIL || 'e2e-test@inventoros.test',
     password: 'E2ETestPassword123!',
     name: 'E2E Test User',
 };

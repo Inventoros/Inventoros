@@ -55,6 +55,10 @@ jobs:
         run: |
           php artisan migrate --force
           php artisan db:seed --class=ScreenshotSeeder --force
+          php artisan db:seed --class=ScreenshotBrandingSeeder --force
+          # One scheduler pass records the heartbeat, so the dashboard doesn't
+          # show the "background tasks need attention" banner in screenshots.
+          php artisan schedule:run
 
       - name: Install Playwright
         run: npx playwright install chromium
@@ -71,6 +75,7 @@ jobs:
           APP_URL=http://127.0.0.1:8000 npx playwright test e2e/tests/screenshots.spec.ts --project=setup --project=chromium
         env:
           CI: true
+          E2E_TEST_EMAIL: alex@northwind-supply.example
 
       - name: Upload as artifact
         uses: actions/upload-artifact@v4
