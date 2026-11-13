@@ -2,7 +2,7 @@ Inventoros publishes a production Docker image to the GitHub Container Registry 
 
 ```
 ghcr.io/inventoros/inventoros:latest   # newest release
-ghcr.io/inventoros/inventoros:2.4.0    # an exact release
+ghcr.io/inventoros/inventoros:2.5.0    # an exact release
 ghcr.io/inventoros/inventoros:2.3      # newest patch of a minor line
 ghcr.io/inventoros/inventoros:2        # newest release of a major line
 ```
@@ -27,7 +27,7 @@ The repository contains a ready-to-use `docker-compose.prod.yml` that runs four 
 
 ```bash
 mkdir inventoros && cd inventoros
-curl -fsSLO https://raw.githubusercontent.com/Inventoros/Inventoros/v2.4.0/docker-compose.prod.yml
+curl -fsSLO https://raw.githubusercontent.com/Inventoros/Inventoros/v2.5.0/docker-compose.prod.yml
 ```
 
 2. Create a `.env` file next to it, pinning the same release:
@@ -37,7 +37,7 @@ cat > .env <<EOF
 APP_KEY=base64:$(openssl rand -base64 32)
 APP_URL=https://inventory.example.com
 DB_PASSWORD=$(openssl rand -hex 24)
-INVENTOROS_IMAGE=ghcr.io/inventoros/inventoros:2.4.0
+INVENTOROS_IMAGE=ghcr.io/inventoros/inventoros:2.5.0
 EOF
 ```
 
@@ -177,7 +177,7 @@ docker compose -f docker-compose.prod.yml pull
 docker compose -f docker-compose.prod.yml up -d
 ```
 
-With a pinned release, change `INVENTOROS_IMAGE` in `.env` to the new version (for example `ghcr.io/inventoros/inventoros:2.4.0`) before pulling. Back up first: see [Updates & Backups](updates). Do not use the in-app updater inside a container: it replaces files in the running container, and those changes are lost when the container is recreated.
+With a pinned release, change `INVENTOROS_IMAGE` in `.env` to the new version (for example `ghcr.io/inventoros/inventoros:2.5.0`) before pulling. Back up first: see [Updates & Backups](updates). Do not use the in-app updater inside a container: it replaces files in the running container, and those changes are lost when the container is recreated.
 
 ## Building the image yourself
 

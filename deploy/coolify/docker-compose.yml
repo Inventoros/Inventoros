@@ -11,7 +11,7 @@
 
 services:
   app:
-    image: ghcr.io/inventoros/inventoros:${INVENTOROS_VERSION:-2.4.0}
+    image: ghcr.io/inventoros/inventoros:${INVENTOROS_VERSION:-2.5.0}
     environment:
       - SERVICE_URL_APP_8080
       - APP_URL=${SERVICE_URL_APP}
@@ -54,7 +54,7 @@ services:
       start_period: 60s
 
   worker:
-    image: ghcr.io/inventoros/inventoros:${INVENTOROS_VERSION:-2.4.0}
+    image: ghcr.io/inventoros/inventoros:${INVENTOROS_VERSION:-2.5.0}
     command: ["php", "artisan", "queue:work", "--tries=3", "--max-time=3600", "--sleep=3"]
     stop_grace_period: 660s
     environment:
@@ -93,7 +93,7 @@ services:
       test: ["CMD", "true"]
 
   scheduler:
-    image: ghcr.io/inventoros/inventoros:${INVENTOROS_VERSION:-2.4.0}
+    image: ghcr.io/inventoros/inventoros:${INVENTOROS_VERSION:-2.5.0}
     command: ["php", "artisan", "schedule:work"]
     environment:
       - APP_URL=${SERVICE_URL_APP}
