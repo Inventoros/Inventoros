@@ -1,0 +1,35 @@
+name: Installer
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - scripts/install.sh
+      - tests/installer/**
+      - docker-compose.prod.yml
+      - docker-compose.https.yml
+      - .github/workflows/installer.yml
+  pull_request:
+    paths:
+      - scripts/install.sh
+      - tests/installer/**
+      - docker-compose.prod.yml
+      - docker-compose.https.yml
+      - .github/workflows/installer.yml
+
+permissions:
+  contents: read
+
+jobs:
+  bash-compat:
+    name: Bash ${{ matrix.bash }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # 3.2 is what macOS ships; the installer must not require anything newer.
+        bash: ['3.2', '4.4', '5.2']
+    steps:
+      - uses: actions/checkout@v6
+      - name: Run the installer end to end with a stub Docker
+        run: docker run --rm -e EXPECT_BASH=${{ matrix.bash }} -v "$PWD:/src:ro" bash:${{ matrix.bash }} sh /src/tests/installer/smoke.sh
