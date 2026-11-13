@@ -52,8 +52,8 @@ class SecurityHeaders
                 'Content-Security-Policy',
                 "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'self'; "
                 ."script-src 'self' 'nonce-{$nonce}'{$docsViewer}; "
-                ."style-src 'self' 'unsafe-inline' https://fonts.bunny.net{$docsViewer}; "
-                ."img-src 'self' data: blob:; font-src 'self' data: https://fonts.bunny.net; "
+                ."style-src 'self' 'unsafe-inline'{$docsViewer}; "
+                ."img-src 'self' data: blob:; font-src 'self' data:; "
                 ."connect-src 'self'; worker-src 'self' blob:; form-action 'self'"
             );
         }
