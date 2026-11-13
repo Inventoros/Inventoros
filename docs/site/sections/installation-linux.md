@@ -25,7 +25,7 @@ sudo grep DB_PASSWORD /opt/inventoros/.env
 
 Then create your organization and the administrator account.
 
-`https://inventoros.com/install.sh` always serves the installer from the latest release. A specific release's copy is attached to that release on GitHub, for example `https://github.com/Inventoros/Inventoros/releases/download/v2.4.0/install.sh`.
+`https://inventoros.com/install.sh` always serves the installer from the latest release. A specific release's copy is attached to that release on GitHub, for example `https://github.com/Inventoros/Inventoros/releases/download/v2.5.0/install.sh`.
 
 ## HTTPS with your own domain
 
@@ -81,7 +81,7 @@ Run the installer again. It keeps your secrets and settings, moves the image to 
 
 ```bash
 sudo bash install.sh                    # latest release
-sudo bash install.sh --version 2.4.0    # a specific release
+sudo bash install.sh --version 2.5.0    # a specific release
 ```
 
 Take a backup first (see [Updates & Backups](updates)). Moving back to an older release is refused, because migrations only run forward; restore a backup instead.

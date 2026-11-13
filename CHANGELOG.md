@@ -6,6 +6,8 @@ Full release notes, with the pull request behind each change, are on [GitHub Rel
 
 ## [Unreleased]
 
+## [2.5.0] - 2026-11-13
+
 ### Added
 
 - Printable order pick lists and price-free packing slips per shipment, including manual and partial shipments, available in the free core.
@@ -14,10 +16,17 @@ Full release notes, with the pull request behind each change, are on [GitHub Rel
 ### Fixed
 
 - Purchase-order receiving rejects unavailable products or variants and rolls back the delivery instead of reporting skipped lines as successfully received.
+- The Linux installer runs on Bash 3.2 and later instead of requiring Bash 4, so macOS users reach its Docker Desktop guidance, and no longer stops on systems whose `hostname` lacks `-I`.
+- The interface font loads in every region: Figtree is bundled with the app instead of fetched from Bunny Fonts, whose stylesheet now points some regions at a CDN the Content Security Policy blocks.
 
 ### Security
 
 - Existing shipment rate requests, label purchases, dispatch, cancellations and web label downloads enforce ship-from warehouse assignments before carrier calls or changes.
+- Pages make no third-party font or stylesheet requests; the Content Security Policy allows fonts and styles only from the application's own origin.
+
+### Changed
+
+- The README is rebuilt around screenshots, a feature grid and the one-command install, with long-form content moved to `docs/`. Release screenshots are captured with a demo company instead of the E2E fixtures.
 
 ## [2.4.0] - 2026-11-08
 
