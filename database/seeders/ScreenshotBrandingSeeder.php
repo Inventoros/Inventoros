@@ -6,6 +6,7 @@ namespace Database\Seeders;
 
 use App\Models\Auth\Organization;
 use App\Models\Inventory\Product;
+use App\Models\Inventory\ProductCategory;
 use App\Models\Inventory\Supplier;
 use App\Models\Order\Order;
 use App\Models\Purchasing\PurchaseOrder;
@@ -38,7 +39,11 @@ class ScreenshotBrandingSeeder extends Seeder
         User::where('email', E2ETestSeeder::STAFF_EMAIL)->update(['name' => 'Sam Rivera']);
 
         Product::where('organization_id', $orgId)->where('sku', E2ETestSeeder::TEST_PRODUCT_SKU)
-            ->update(['name' => 'Thermal Shipping Labels 4x6', 'sku' => 'PKG-LBL-46']);
+            ->update([
+                'name' => 'Thermal Shipping Labels 4x6',
+                'sku' => 'PKG-LBL-46',
+                'category_id' => ProductCategory::where('organization_id', $orgId)->where('name', 'Packaging')->value('id'),
+            ]);
         Supplier::where('organization_id', $orgId)->where('code', 'E2E-SUP')
             ->update(['name' => 'Harbor Packaging Co.', 'code' => 'HARBOR']);
         Order::where('organization_id', $orgId)->where('order_number', E2ETestSeeder::STAFF_ORDER_NUMBER)
