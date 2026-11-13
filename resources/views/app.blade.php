@@ -23,10 +23,6 @@
         <link rel="apple-touch-icon" href="{{ $iconUrl('apple-touch-icon.png') }}">
         <meta name="theme-color" content="#2563eb">
 
-        <!-- Fonts -->
-        <link rel="preconnect" href="https://fonts.bunny.net">
-        <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
-
         <!-- Scripts -->
         @routes(nonce: \Illuminate\Support\Facades\Vite::cspNonce())
         {{-- Plugin pages (Plugin::slug/Page) are not in the app's Vite manifest. --}}
