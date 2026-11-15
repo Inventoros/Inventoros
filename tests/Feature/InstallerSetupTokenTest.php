@@ -102,6 +102,40 @@ final class InstallerSetupTokenTest extends TestCase
         $response = $this->get('/install')->assertOk();
 
         $this->assertFalse($response->viewData('page')['props']['unlocked']);
+        $this->assertTrue($response->viewData('page')['props']['tokenAvailable']);
+    }
+
+    public function test_the_landing_page_says_when_no_token_can_be_created(): void
+    {
+        // No configured token, and the token file cannot be written: its
+        // directory would have to be created inside a regular file.
+        $this->useTheTokenFile();
+        $this->app->instance(InstallerSetupToken::class, new InstallerSetupToken($this->envFile.'/private/setup-token'));
+        Log::spy();
+
+        $props = $this->get('/install')->assertOk()->viewData('page')['props'];
+
+        $this->assertFalse($props['unlocked']);
+        $this->assertFalse($props['tokenAvailable'], 'The page must tell the operator to set INVENTOROS_SETUP_TOKEN or fix permissions.');
+        Log::shouldHaveReceived('error')->withArgs(
+            fn (string $message) => str_contains($message, 'INVENTOROS_SETUP_TOKEN'),
+        )->atLeast()->once();
+        $this->postJson('/install/unlock', ['token' => ''])->assertStatus(422);
+        $this->postJson('/install/unlock', ['token' => 'anything'])->assertForbidden();
+    }
+
+    public function test_generating_the_token_never_changes_the_process_umask(): void
+    {
+        // The umask is process-wide: under threaded PHP (FrankenPHP) changing
+        // it, even briefly, affects files other requests create meanwhile.
+        $source = (string) file_get_contents(app_path('Support/InstallerSetupToken.php'));
+        $this->assertStringNotContainsString('umask(', $source);
+
+        $this->useTheTokenFile();
+        $before = umask();
+        $this->get('/install')->assertOk();
+        $this->assertFileExists($this->tokenFile);
+        $this->assertSame($before, umask());
     }
 
     public function test_every_step_refuses_a_session_without_the_token(): void
@@ -162,6 +196,9 @@ final class InstallerSetupTokenTest extends TestCase
         $this->assertMatchesRegularExpression('/\A[A-Za-z0-9_-]{32,}\z/', $token, 'At least 128 bits, URL-safe.');
         if (DIRECTORY_SEPARATOR === '/') {
             $this->assertSame('0600', substr(sprintf('%o', fileperms($this->tokenFile)), -4));
+            // The private disk must stay usable by CLI and worker processes
+            // running as another user; only the token file itself is private.
+            $this->assertSame(sprintf('%o', 0755 & ~umask()), sprintf('%o', fileperms(dirname($this->tokenFile)) & 0777));
         }
         Log::shouldHaveReceived('warning')->withArgs(
             fn (string $message, array $context = []) => str_contains($message, $this->tokenFile)

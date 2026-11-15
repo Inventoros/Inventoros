@@ -63,6 +63,12 @@ bash /src/scripts/install.sh --version 2.5.0 --dir /tmp/inv --yes >/dev/null 2>&
 [ "$(grep '^INVENTOROS_SETUP_TOKEN=' /tmp/inv/.env)" = "$setup_token" ] || fail "setup token changed on re-run"
 grep -q ':2.5.0$' /tmp/inv/.env || fail "upgrade did not pin 2.5.0"
 
+# An upgrade of an instance installed without a setup token does not add one
+sed -i '/^INVENTOROS_SETUP_TOKEN=/d' /tmp/inv/.env
+out="$(bash /src/scripts/install.sh --version 2.5.0 --dir /tmp/inv --yes 2>&1)" || { echo "$out"; fail "upgrade without token"; }
+if grep -q '^INVENTOROS_SETUP_TOKEN=' /tmp/inv/.env; then fail "upgrade generated a setup token"; fi
+if echo "$out" | grep -q "setup token"; then echo "$out"; fail "upgrade mentioned the setup token"; fi
+
 # Downgrade is refused
 if bash /src/scripts/install.sh --version 2.4.0 --dir /tmp/inv --yes >/dev/null 2>&1; then fail "downgrade accepted"; fi
 

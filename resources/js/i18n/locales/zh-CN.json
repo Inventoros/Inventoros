@@ -2576,7 +2576,9 @@
       "unlock": "解锁",
       "unlocking": "正在解锁...",
       "tooManyAttempts": "尝试次数过多。请等待一分钟后重试。",
-      "unlockFailed": "无法解锁安装程序：{error}"
+      "unlockFailed": "无法解锁安装程序：{error}",
+      "tokenUnavailableTitle": "没有可用的安装令牌",
+      "tokenUnavailable": "未设置 INVENTOROS_SETUP_TOKEN，安装程序也无法写入 storage/app/private/setup-token。请在 .env 文件中设置 INVENTOROS_SETUP_TOKEN，或使 storage/app/private 可写，然后重新加载此页面。"
     },
     "requirements": {
       "title": "系统要求",

@@ -2576,7 +2576,9 @@
       "unlock": "Ontgrendelen",
       "unlocking": "Ontgrendelen...",
       "tooManyAttempts": "Te veel pogingen. Wacht een minuut en probeer het opnieuw.",
-      "unlockFailed": "Het installatieprogramma kon niet worden ontgrendeld: {error}"
+      "unlockFailed": "Het installatieprogramma kon niet worden ontgrendeld: {error}",
+      "tokenUnavailableTitle": "Geen installatietoken beschikbaar",
+      "tokenUnavailable": "INVENTOROS_SETUP_TOKEN is niet ingesteld en het installatieprogramma kon storage/app/private/setup-token niet schrijven. Stel INVENTOROS_SETUP_TOKEN in het bestand .env in, of maak storage/app/private schrijfbaar, en laad deze pagina daarna opnieuw."
     },
     "requirements": {
       "title": "Systeemvereisten",

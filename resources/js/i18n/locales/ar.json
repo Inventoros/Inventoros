@@ -2576,7 +2576,9 @@
       "unlock": "فتح القفل",
       "unlocking": "جارٍ فتح القفل...",
       "tooManyAttempts": "محاولات كثيرة جدًا. انتظر دقيقة ثم حاول مرة أخرى.",
-      "unlockFailed": "تعذر فتح قفل معالج التثبيت: {error}"
+      "unlockFailed": "تعذر فتح قفل معالج التثبيت: {error}",
+      "tokenUnavailableTitle": "لا يتوفر رمز إعداد",
+      "tokenUnavailable": "لم يتم تعيين INVENTOROS_SETUP_TOKEN ولم يتمكن معالج التثبيت من كتابة storage/app/private/setup-token. عيّن INVENTOROS_SETUP_TOKEN في ملف .env، أو اجعل storage/app/private قابلاً للكتابة، ثم أعد تحميل هذه الصفحة."
     },
     "requirements": {
       "title": "متطلبات النظام",

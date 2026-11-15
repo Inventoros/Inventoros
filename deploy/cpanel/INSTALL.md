@@ -56,7 +56,11 @@ real folder.
    It asks for a setup token: open
    `~/inventoros/storage/app/private/setup-token` in the File Manager (it
    is created on the first visit to `/install`), or set your own
-   `INVENTOROS_SETUP_TOKEN` in `.env` first.
+   `INVENTOROS_SETUP_TOKEN` in `.env` first. If the File Manager cannot
+   open the token file (PHP runs as a different user), set
+   `INVENTOROS_SETUP_TOKEN` in `.env` instead. Do not run
+   `php artisan config:cache` until the installer has finished; if you
+   did, run it again after changing `.env`.
    It writes the database settings you enter to `.env`, creates the
    tables in that database, and when it finishes sets `APP_ENV=production`
    and `APP_DEBUG=false`.

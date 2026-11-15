@@ -2576,7 +2576,9 @@
       "unlock": "Déverrouiller",
       "unlocking": "Déverrouillage...",
       "tooManyAttempts": "Trop de tentatives. Attendez une minute et réessayez.",
-      "unlockFailed": "Impossible de déverrouiller l'installateur : {error}"
+      "unlockFailed": "Impossible de déverrouiller l'installateur : {error}",
+      "tokenUnavailableTitle": "Aucun jeton d'installation disponible",
+      "tokenUnavailable": "INVENTOROS_SETUP_TOKEN n'est pas défini et l'installateur n'a pas pu écrire storage/app/private/setup-token. Définissez INVENTOROS_SETUP_TOKEN dans le fichier .env, ou rendez storage/app/private accessible en écriture, puis rechargez cette page."
     },
     "requirements": {
       "title": "Configuration requise",

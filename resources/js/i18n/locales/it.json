@@ -2576,7 +2576,9 @@
       "unlock": "Sblocca",
       "unlocking": "Sblocco in corso...",
       "tooManyAttempts": "Troppi tentativi. Attendi un minuto e riprova.",
-      "unlockFailed": "Impossibile sbloccare il programma di installazione: {error}"
+      "unlockFailed": "Impossibile sbloccare il programma di installazione: {error}",
+      "tokenUnavailableTitle": "Nessun token di configurazione disponibile",
+      "tokenUnavailable": "INVENTOROS_SETUP_TOKEN non è impostato e il programma di installazione non è riuscito a scrivere storage/app/private/setup-token. Imposta INVENTOROS_SETUP_TOKEN nel file .env oppure rendi scrivibile storage/app/private, poi ricarica questa pagina."
     },
     "requirements": {
       "title": "Requisiti di sistema",

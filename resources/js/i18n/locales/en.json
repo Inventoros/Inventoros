@@ -2447,7 +2447,9 @@
       "unlock": "Unlock",
       "unlocking": "Unlocking...",
       "tooManyAttempts": "Too many attempts. Wait a minute and try again.",
-      "unlockFailed": "Could not unlock the installer: {error}"
+      "unlockFailed": "Could not unlock the installer: {error}",
+      "tokenUnavailableTitle": "No setup token is available",
+      "tokenUnavailable": "INVENTOROS_SETUP_TOKEN is not set and the installer could not write storage/app/private/setup-token. Set INVENTOROS_SETUP_TOKEN in the .env file, or make storage/app/private writable, then reload this page."
     },
     "requirements": {
       "title": "System Requirements",

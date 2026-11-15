@@ -311,7 +311,8 @@ if [ -z "$(env_get DB_PASSWORD)" ]; then
     ok "Generated a database password"
 fi
 # Unlocks the web installer, so only someone who can read .env can finish it.
-if [ -z "$(env_get INVENTOROS_SETUP_TOKEN)" ]; then
+# An upgrade is already installed and never shows the installer again.
+if [ -z "$previous_image" ] && [ -z "$(env_get INVENTOROS_SETUP_TOKEN)" ]; then
     env_set INVENTOROS_SETUP_TOKEN "$(random_hex 24)"
     ok "Generated a setup token for the web installer"
 fi

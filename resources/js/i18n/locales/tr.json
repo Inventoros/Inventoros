@@ -2576,7 +2576,9 @@
       "unlock": "Kilidi aç",
       "unlocking": "Kilit açılıyor...",
       "tooManyAttempts": "Çok fazla deneme. Bir dakika bekleyip tekrar deneyin.",
-      "unlockFailed": "Kurulum sihirbazının kilidi açılamadı: {error}"
+      "unlockFailed": "Kurulum sihirbazının kilidi açılamadı: {error}",
+      "tokenUnavailableTitle": "Kullanılabilir kurulum belirteci yok",
+      "tokenUnavailable": "INVENTOROS_SETUP_TOKEN ayarlanmamış ve kurulum sihirbazı storage/app/private/setup-token dosyasını yazamadı. .env dosyasında INVENTOROS_SETUP_TOKEN ayarlayın veya storage/app/private klasörünü yazılabilir yapın, ardından bu sayfayı yenileyin."
     },
     "requirements": {
       "title": "Sistem Gereksinimleri",

@@ -2576,7 +2576,9 @@
       "unlock": "Entsperren",
       "unlocking": "Wird entsperrt...",
       "tooManyAttempts": "Zu viele Versuche. Warten Sie eine Minute und versuchen Sie es erneut.",
-      "unlockFailed": "Der Installer konnte nicht entsperrt werden: {error}"
+      "unlockFailed": "Der Installer konnte nicht entsperrt werden: {error}",
+      "tokenUnavailableTitle": "Kein Setup-Token verfügbar",
+      "tokenUnavailable": "INVENTOROS_SETUP_TOKEN ist nicht gesetzt, und der Installer konnte storage/app/private/setup-token nicht schreiben. Setzen Sie INVENTOROS_SETUP_TOKEN in der Datei .env oder machen Sie storage/app/private beschreibbar und laden Sie diese Seite dann neu."
     },
     "requirements": {
       "title": "Systemanforderungen",

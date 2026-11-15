@@ -77,9 +77,13 @@ class InstallerController extends Controller
             return redirect('/login');
         }
 
-        // Generates the token file on the first visit when no token is configured.
+        // Generates the token file on the first visit when no token is
+        // configured. Without either, the page says how to provide one.
+        $token = $this->setupToken();
+
         return Inertia::render('Install/Welcome', [
-            'unlocked' => $this->setupToken()->isUnlocked(request()),
+            'unlocked' => $token->isUnlocked(request()),
+            'tokenAvailable' => $token->available(),
         ]);
     }
 

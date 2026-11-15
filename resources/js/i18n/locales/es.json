@@ -2576,7 +2576,9 @@
       "unlock": "Desbloquear",
       "unlocking": "Desbloqueando...",
       "tooManyAttempts": "Demasiados intentos. Espere un minuto e inténtelo de nuevo.",
-      "unlockFailed": "No se pudo desbloquear el instalador: {error}"
+      "unlockFailed": "No se pudo desbloquear el instalador: {error}",
+      "tokenUnavailableTitle": "No hay ningún token de configuración disponible",
+      "tokenUnavailable": "INVENTOROS_SETUP_TOKEN no está definido y el instalador no pudo escribir storage/app/private/setup-token. Defina INVENTOROS_SETUP_TOKEN en el archivo .env o haga que storage/app/private tenga permisos de escritura y vuelva a cargar esta página."
     },
     "requirements": {
       "title": "Requisitos del sistema",

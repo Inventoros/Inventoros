@@ -52,6 +52,14 @@ class InstallerSetupToken
         return $this->readFile() ?? $this->generateFile();
     }
 
+    /**
+     * Whether a token exists that the operator can enter.
+     */
+    public function available(): bool
+    {
+        return $this->expected() !== null;
+    }
+
     public function matches(string $given): bool
     {
         $expected = $this->expected();
@@ -116,23 +124,21 @@ class InstallerSetupToken
 
     private function generateFile(): ?string
     {
+        // 0755 like the rest of storage: CLI and worker processes running as
+        // another user still use the private disk. Only the file is private.
         $directory = dirname($this->path);
         if (! is_dir($directory)) {
-            @mkdir($directory, 0700, true);
+            @mkdir($directory, 0755, true);
         }
 
         // 256 bits, URL-safe.
         $token = rtrim(strtr(base64_encode(random_bytes(32)), '+/', '-_'), '=');
 
         // Exclusive create: when two first visits race, both use the token
-        // that was written first. The umask keeps the file private from the
-        // start (0600); chmod covers systems that ignore it.
-        $umask = umask(0077);
-        try {
-            $handle = @fopen($this->path, 'x');
-        } finally {
-            umask($umask);
-        }
+        // that was written first. The file is made 0600 before the token is
+        // written to it. The umask is left alone: it is process-wide, and
+        // threaded PHP (FrankenPHP) shares it between concurrent requests.
+        $handle = @fopen($this->path, 'x');
 
         if ($handle === false) {
             $existing = $this->readFile();
@@ -143,9 +149,9 @@ class InstallerSetupToken
             return $existing;
         }
 
+        @chmod($this->path, 0600);
         fwrite($handle, $token."\n");
         fclose($handle);
-        @chmod($this->path, 0600);
 
         Log::warning('Inventoros is not installed yet. The web installer is locked with a setup token stored in '.$this->path.'; open that file on the server to unlock it.', ['path' => $this->path]);
 

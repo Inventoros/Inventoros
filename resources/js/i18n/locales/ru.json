@@ -2576,7 +2576,9 @@
       "unlock": "Разблокировать",
       "unlocking": "Разблокировка...",
       "tooManyAttempts": "Слишком много попыток. Подождите минуту и повторите попытку.",
-      "unlockFailed": "Не удалось разблокировать установщик: {error}"
+      "unlockFailed": "Не удалось разблокировать установщик: {error}",
+      "tokenUnavailableTitle": "Токен установки недоступен",
+      "tokenUnavailable": "INVENTOROS_SETUP_TOKEN не задан, и установщику не удалось записать storage/app/private/setup-token. Задайте INVENTOROS_SETUP_TOKEN в файле .env или сделайте storage/app/private доступным для записи, затем перезагрузите эту страницу."
     },
     "requirements": {
       "title": "Системные требования",

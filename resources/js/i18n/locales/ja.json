@@ -2576,7 +2576,9 @@
       "unlock": "ロック解除",
       "unlocking": "ロックを解除しています...",
       "tooManyAttempts": "試行回数が多すぎます。1 分待ってから再度お試しください。",
-      "unlockFailed": "インストーラーのロックを解除できませんでした: {error}"
+      "unlockFailed": "インストーラーのロックを解除できませんでした: {error}",
+      "tokenUnavailableTitle": "セットアップトークンがありません",
+      "tokenUnavailable": "INVENTOROS_SETUP_TOKEN が設定されておらず、インストーラーは storage/app/private/setup-token を書き込めませんでした。.env ファイルに INVENTOROS_SETUP_TOKEN を設定するか、storage/app/private を書き込み可能にしてから、このページを再読み込みしてください。"
     },
     "requirements": {
       "title": "システム要件",

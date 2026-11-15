@@ -10,6 +10,8 @@ const { t } = useI18n();
 defineProps({
     // Whether this session has entered the setup token.
     unlocked: { type: Boolean, default: false },
+    // False when no token is configured and none could be written to storage.
+    tokenAvailable: { type: Boolean, default: true },
 });
 
 const token = ref('');
@@ -143,7 +145,15 @@ const unlock = async () => {
                 <form v-if="!unlocked" class="border-t border-border-subtle pt-6" @submit.prevent="unlock">
                     <h3 class="font-semibold text-text-primary">{{ t('install.welcome.unlockTitle') }}</h3>
                     <p class="text-sm text-text-secondary mt-1">{{ t('install.welcome.unlockDesc') }}</p>
-                    <ul class="text-sm text-text-secondary mt-3 mb-4 list-disc ps-5 space-y-1">
+                    <div
+                        v-if="!tokenAvailable"
+                        class="bg-status-warning-soft border border-status-warning/20 rounded-lg p-4 mt-3 mb-4"
+                        role="alert"
+                    >
+                        <p class="text-sm font-semibold text-text-primary">{{ t('install.welcome.tokenUnavailableTitle') }}</p>
+                        <p class="text-sm text-text-secondary mt-1">{{ t('install.welcome.tokenUnavailable') }}</p>
+                    </div>
+                    <ul v-else class="text-sm text-text-secondary mt-3 mb-4 list-disc ps-5 space-y-1">
                         <li>{{ t('install.welcome.tokenEnv') }}</li>
                         <li>{{ t('install.welcome.tokenFile') }}</li>
                     </ul>

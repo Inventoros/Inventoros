@@ -2576,7 +2576,9 @@
       "unlock": "잠금 해제",
       "unlocking": "잠금 해제 중...",
       "tooManyAttempts": "시도 횟수가 너무 많습니다. 1분 후에 다시 시도하세요.",
-      "unlockFailed": "설치 프로그램의 잠금을 해제할 수 없습니다: {error}"
+      "unlockFailed": "설치 프로그램의 잠금을 해제할 수 없습니다: {error}",
+      "tokenUnavailableTitle": "사용할 수 있는 설정 토큰이 없습니다",
+      "tokenUnavailable": "INVENTOROS_SETUP_TOKEN이 설정되어 있지 않고 설치 프로그램이 storage/app/private/setup-token을 쓸 수 없습니다. .env 파일에 INVENTOROS_SETUP_TOKEN을 설정하거나 storage/app/private에 쓰기 권한을 준 다음 이 페이지를 새로 고치세요."
     },
     "requirements": {
       "title": "시스템 요구사항",
