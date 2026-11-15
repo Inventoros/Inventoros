@@ -46,6 +46,17 @@ class Role extends Model
     ];
 
     /**
+     * Slugs are unique across all organizations (roles.slug has a global
+     * unique index, and system roles are looked up by slug), so a new slug is
+     * checked against every role, not only the organization's own. Otherwise
+     * a name another organization already uses fails with a database error.
+     */
+    protected function getSlugScopeColumn(): ?string
+    {
+        return null;
+    }
+
+    /**
      * Get the organization that owns the role.
      *
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\Auth\Organization, $this>

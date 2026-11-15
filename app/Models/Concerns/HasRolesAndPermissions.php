@@ -79,7 +79,7 @@ trait HasRolesAndPermissions
     public function isAdmin(): bool
     {
         // Check if user has the Administrator system role
-        return $this->hasRole('system-administrator') || $this->role === 'admin';
+        return $this->holdsSystemRole(['system-administrator']) || $this->role === 'admin';
     }
 
     /**
@@ -88,7 +88,19 @@ trait HasRolesAndPermissions
     public function isManager(): bool
     {
         // Check if user has Administrator or Manager roles
-        return $this->isAdmin() || $this->hasAnyRole(['manager', 'system-manager']);
+        return $this->isAdmin() || $this->holdsSystemRole(['manager', 'system-manager']);
+    }
+
+    /**
+     * Whether the user holds one of the given built-in roles. Role names are
+     * free text in each organization, so a custom role whose slug happens to
+     * match (an organization's own "Manager" role) never counts.
+     *
+     * @param  array<string>  $roleSlugs
+     */
+    private function holdsSystemRole(array $roleSlugs): bool
+    {
+        return $this->roles()->whereIn('slug', $roleSlugs)->where('is_system', true)->exists();
     }
 
     /**
