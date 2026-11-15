@@ -608,9 +608,11 @@ final class NotificationService
      * @param  array<string, mixed>  $item  a request description from ApprovalService::describe()
      * @param  Collection<int, User>  $approvers
      */
-    public static function createApprovalRequestedNotifications(array $item, Collection $approvers, User $requester): void
+    public static function createApprovalRequestedNotifications(array $item, Collection $approvers, ?User $requester): void
     {
         $url = route('approvals.index');
+        // No requester: an automated change (see ApprovalService::requestOrderReapproval()).
+        $requesterName = $requester?->name ?? 'The system';
 
         foreach ($approvers as $user) {
             if (! self::shouldNotifyUser($user, 'approval_requested')) {
@@ -622,12 +624,12 @@ final class NotificationService
                 'user_id' => $user->id,
                 'type' => 'approval_requested',
                 'title' => 'Approval Needed',
-                'message' => "{$requester->name} asked for approval of {$item['title']}.",
+                'message' => "{$requesterName} asked for approval of {$item['title']}.",
                 'data' => [
                     'approval_type' => $item['type'],
                     'approval_id' => $item['id'],
                     'reference' => $item['reference'],
-                    'requested_by' => $requester->name,
+                    'requested_by' => $requesterName,
                 ],
                 'action_url' => $url,
                 'priority' => 'high',
@@ -636,7 +638,7 @@ final class NotificationService
             self::sendEmailNotification($user, 'approval_requested', [
                 'kind' => 'requested',
                 'item' => $item,
-                'actor' => $requester->name,
+                'actor' => $requesterName,
                 'notes' => null,
                 'notification_url' => $url,
             ]);
