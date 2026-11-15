@@ -867,6 +867,10 @@ final class OrderService
         $commitsStock = (bool) $order->stock_committed;
         $restockable = $this->restockableQuantities($order);
 
+        // New lines are new terms: an approval decision covered the old ones.
+        // The caller's save of the order persists this (see Order).
+        $order->requireReapprovalIfDecided();
+
         // Remember what each product/variant cost when it was originally sold,
         // so an edit does not re-price lines that were already on the order
         // (even if their quantity grows). Only products/variants new to the

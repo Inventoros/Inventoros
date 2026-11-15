@@ -739,6 +739,24 @@ final class ApprovalService
 
     // ==================== NOTIFY / LOG ====================
 
+    /**
+     * A decided sales order went back to pending because its terms changed
+     * (see Order::requireReapprovalIfDecided()): log it and ask the
+     * approvers to decide again. Runs after the change is committed.
+     */
+    public function requestOrderReapproval(Order $order, ?User $editor): void
+    {
+        $order = $order->fresh() ?? $order;
+        $requester = $editor ?? $order->creator;
+
+        if ($requester === null) {
+            return;
+        }
+
+        $this->log($order, $requester, 'approval_requested', "Sales order {$order->order_number} changed after its approval decision and is waiting for approval again");
+        $this->notifyApprovers(self::SALES_ORDER, $order, $requester);
+    }
+
     private function notifyApprovers(string $type, Model $subject, User $requester): void
     {
         $permission = self::permissionFor($type);
