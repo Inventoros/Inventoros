@@ -12,6 +12,7 @@ use App\Http\Requests\ReturnOrder\UpdateReturnLinesRequest;
 use App\Models\Order\Order;
 use App\Models\Order\ReturnOrder;
 use App\Services\ReturnOrderService;
+use App\Support\PaymentVisibility;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -55,6 +56,8 @@ class ReturnOrderController extends Controller
             ->paginate(config('limits.pagination.default', 15))
             ->withQueryString();
 
+        PaymentVisibility::hideOnOrders($request->user(), $returns->getCollection()->pluck('order'));
+
         return Inertia::render('Returns/Index', [
             'pluginComponents' => plugin_slots('returns.index', ['header', 'footer']),
             'returns' => $returns,
@@ -79,6 +82,7 @@ class ReturnOrderController extends Controller
         $order = Order::with(['items.product', 'items.variant'])
             ->forOrganization($organizationId)
             ->findOrFail($request->input('order_id'));
+        PaymentVisibility::hideOnOrders($request->user(), $order);
 
         $returns = app(ReturnOrderService::class);
         $returnedQuantities = $returns->returnedQuantities($order);
@@ -147,6 +151,7 @@ class ReturnOrderController extends Controller
         app(ReturnOrderService::class)->authorizeView($returnOrder, auth()->user());
 
         $returnOrder->load(['order.items.product', 'items.product', 'items.variant', 'items.orderItem', 'processor']);
+        PaymentVisibility::hideOnOrders(auth()->user(), $returnOrder->order);
 
         return Inertia::render('Returns/Show', [
             'pluginComponents' => plugin_slots('returns.show', ['header', 'actions', 'footer']),
