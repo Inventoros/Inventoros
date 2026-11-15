@@ -415,6 +415,7 @@ final class OrderService
      * pass the pending check. Shared by the web and REST surfaces.
      *
      * @throws InvalidStateException When the order was already approved/rejected.
+     * @throws AuthorizationException When the approver cannot access the order's warehouse.
      *
      * @api
      */
@@ -424,6 +425,9 @@ final class OrderService
 
         $approved = DB::transaction(function () use ($order, $approver, $notes) {
             $locked = Order::whereKey($order->getKey())->lockForUpdate()->firstOrFail();
+
+            // Same warehouse rule as the approvals inbox (ApprovalService).
+            app(WarehouseAccessService::class)->authorizeWarehouse($approver, $locked->warehouse_id === null ? null : (int) $locked->warehouse_id);
 
             if (! $locked->isPendingApproval()) {
                 throw new InvalidStateException('Order has already been processed.', 'already_processed');
@@ -453,6 +457,7 @@ final class OrderService
      * the stock that was decremented when it was created.
      *
      * @throws InvalidStateException When the order was already approved/rejected.
+     * @throws AuthorizationException When the approver cannot access the order's warehouse.
      *
      * @api
      */
@@ -460,6 +465,9 @@ final class OrderService
     {
         $rejected = DB::transaction(function () use ($order, $approver, $notes) {
             $locked = Order::whereKey($order->getKey())->lockForUpdate()->firstOrFail();
+
+            // Same warehouse rule as the approvals inbox (ApprovalService).
+            app(WarehouseAccessService::class)->authorizeWarehouse($approver, $locked->warehouse_id === null ? null : (int) $locked->warehouse_id);
 
             // isPendingApproval() is false for a cancelled order, whose stock
             // cancel() already gave back: rejecting it would restock twice.
