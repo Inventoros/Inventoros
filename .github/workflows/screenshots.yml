@@ -7,15 +7,20 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   screenshots:
     runs-on: ubuntu-latest
+    # Commits the screenshots back to main, so this job keeps a write token and
+    # persisted checkout credentials. It runs only for version tags and manual
+    # runs, never for pull requests.
+    permissions:
+      contents: write
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           # This workflow triggers on tag pushes, where checkout would land on
           # a detached HEAD. Check out the default branch so the screenshots
@@ -24,14 +29,14 @@ jobs:
           ref: main
 
       - name: Setup PHP
-        uses: shivammathur/setup-php@v2
+        uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
         with:
           php-version: '8.4'
           tools: composer:v2
           extensions: sqlite3, gd, bcmath
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: '22'
 
@@ -78,14 +83,14 @@ jobs:
           E2E_TEST_EMAIL: alex@northwind-supply.example
 
       - name: Upload as artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: screenshots
           path: screenshots/
           retention-days: 30
 
       - name: Commit screenshots to repo
-        uses: stefanzweifel/git-auto-commit-action@v5
+        uses: stefanzweifel/git-auto-commit-action@b863ae1933cb653a53c021fe36dbb774e1fb9403 # v5.2.0
         with:
           commit_message: 'chore(screenshots): update from CI [skip ci]'
           file_pattern: 'screenshots/*.png'

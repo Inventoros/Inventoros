@@ -26,13 +26,15 @@ jobs:
       UI_UX_AUDIT_SCOPE: ${{ inputs.scope }}
       UI_UX_AUDIT_GREP: ${{ inputs.scope == 'locales' && 'authenticate|all supported languages' || inputs.scope == 'interactions' && 'authenticate|dialogs,|verification,|runtime plugin' || inputs.scope == 'desktop-and-states' && 'authenticate|1440px|dark theme|dialogs,|verification,|runtime plugin' || '.' }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: shivammathur/setup-php@v2
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
         with:
           php-version: '8.4'
           tools: composer:v2
           extensions: sqlite3, gd, bcmath
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: '22'
       - run: composer install --no-interaction --prefer-dist --optimize-autoloader
@@ -56,7 +58,7 @@ jobs:
       - name: Summarize rendered evidence
         if: always()
         run: node e2e/summarize-ui-audit.mjs >> "$GITHUB_STEP_SUMMARY"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         if: always()
         with:
           name: ui-ux-audit
