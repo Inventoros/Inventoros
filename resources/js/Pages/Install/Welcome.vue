@@ -1,8 +1,56 @@
 <script setup>
 import { Head, Link } from '@inertiajs/vue3';
+import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
+import Button from '@/Components/ui/Button.vue';
+import Input from '@/Components/ui/Input.vue';
 
 const { t } = useI18n();
+
+defineProps({
+    // Whether this session has entered the setup token.
+    unlocked: { type: Boolean, default: false },
+});
+
+const token = ref('');
+const unlocking = ref(false);
+const unlockError = ref(null);
+
+const unlock = async () => {
+    unlocking.value = true;
+    unlockError.value = null;
+
+    try {
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
+
+        const response = await fetch(route('install.unlock'), {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': csrfToken,
+                'Accept': 'application/json',
+            },
+            body: JSON.stringify({ token: token.value.trim() }),
+        });
+
+        if (response.status === 429) {
+            unlockError.value = t('install.welcome.tooManyAttempts');
+            return;
+        }
+
+        const data = await response.json();
+
+        if (data.success) {
+            window.location.href = route('install.requirements');
+        } else {
+            unlockError.value = data.message_key ? t(data.message_key) : data.message;
+        }
+    } catch (error) {
+        unlockError.value = t('install.welcome.unlockFailed', { error: error.message });
+    } finally {
+        unlocking.value = false;
+    }
+};
 </script>
 
 <template>
@@ -91,8 +139,43 @@ const { t } = useI18n();
                     </div>
                 </div>
 
+                <!-- Setup token: the steps after this page need it -->
+                <form v-if="!unlocked" class="border-t border-border-subtle pt-6" @submit.prevent="unlock">
+                    <h3 class="font-semibold text-text-primary">{{ t('install.welcome.unlockTitle') }}</h3>
+                    <p class="text-sm text-text-secondary mt-1">{{ t('install.welcome.unlockDesc') }}</p>
+                    <ul class="text-sm text-text-secondary mt-3 mb-4 list-disc ps-5 space-y-1">
+                        <li>{{ t('install.welcome.tokenEnv') }}</li>
+                        <li>{{ t('install.welcome.tokenFile') }}</li>
+                    </ul>
+
+                    <label for="setup-token" class="block text-sm font-medium text-text-secondary mb-2">
+                        {{ t('install.welcome.tokenLabel') }}
+                    </label>
+                    <div class="flex flex-col sm:flex-row gap-3">
+                        <div class="flex-1">
+                            <Input
+                                id="setup-token"
+                                v-model="token"
+                                class="font-mono"
+                                autocomplete="off"
+                                autocapitalize="off"
+                                spellcheck="false"
+                                required
+                                :invalid="!!unlockError"
+                                :aria-describedby="unlockError ? 'setup-token-error' : undefined"
+                            />
+                        </div>
+                        <Button type="submit" size="md" :loading="unlocking" :disabled="unlocking || !token.trim()">
+                            {{ unlocking ? t('install.welcome.unlocking') : t('install.welcome.unlock') }}
+                        </Button>
+                    </div>
+                    <p v-if="unlockError" id="setup-token-error" class="text-sm text-status-danger mt-2" role="alert">
+                        {{ unlockError }}
+                    </p>
+                </form>
+
                 <!-- Start Button -->
-                <div class="flex justify-end">
+                <div v-else class="flex justify-end">
                     <Link
                         :href="route('install.requirements')"
                         class="inline-flex items-center px-6 py-3 bg-brand text-brand-foreground font-semibold rounded-lg hover:bg-brand-hover transition"

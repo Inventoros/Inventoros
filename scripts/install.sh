@@ -310,6 +310,11 @@ if [ -z "$(env_get DB_PASSWORD)" ]; then
     env_set DB_PASSWORD "$(random_hex 24)"
     ok "Generated a database password"
 fi
+# Unlocks the web installer, so only someone who can read .env can finish it.
+if [ -z "$(env_get INVENTOROS_SETUP_TOKEN)" ]; then
+    env_set INVENTOROS_SETUP_TOKEN "$(random_hex 24)"
+    ok "Generated a setup token for the web installer"
+fi
 
 # Remember the chosen access mode across re-runs unless a flag changes it.
 [ -n "$DOMAIN" ] || [ -n "$PORT" ] || [ -n "$APP_URL_ARG" ] || DOMAIN="$(env_get INVENTOROS_DOMAIN)"
@@ -404,7 +409,9 @@ printf '\n%sInventoros %s is ready.%s\n\n' "$GREEN$BOLD" "$VERSION" "$RESET"
 if [ -n "$previous_image" ]; then
     printf '  Open %s and sign in.\n' "$APP_URL"
 else
-    printf '  1. Open %s/install\n' "$APP_URL"
+    printf '  1. Open %s/install and enter the setup token, INVENTOROS_SETUP_TOKEN in %s.\n' "$APP_URL" "$ENV_FILE"
+    printf '     Show it with:\n'
+    printf '       sudo grep INVENTOROS_SETUP_TOKEN %s\n' "$ENV_FILE"
     printf '  2. On the database step, host, port, database and user are filled in.\n'
     printf '     The password is DB_PASSWORD in %s. Show it with:\n' "$ENV_FILE"
     printf '       sudo grep DB_PASSWORD %s\n' "$ENV_FILE"

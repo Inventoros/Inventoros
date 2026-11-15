@@ -2413,10 +2413,13 @@
     "server": {
       "alreadyInstalled": "Inventoros is already installed.",
       "connectionSuccessful": "Database connection successful.",
-      "connectionFailed": "Database connection failed: {error}",
+      "connectionFailed": "Database connection failed. Check the host, port, database name, user and password.",
       "databaseInstalled": "Database installed.",
       "unfinishedInstall": "The database already has tables, probably from an earlier installation that did not finish, and installing on top of them failed: {error}",
-      "adminCreated": "Admin account created."
+      "adminCreated": "Admin account created.",
+      "locked": "Unlock the installer with the setup token first.",
+      "invalidToken": "That setup token is not correct.",
+      "unlocked": "Installer unlocked."
     },
     "welcome": {
       "title": "Welcome to Inventoros",
@@ -2435,7 +2438,16 @@
       "beforeBegin": "Before you begin",
       "beforeBeginDesc": "Make sure you have PHP 8.4.1+, MySQL/PostgreSQL, and the required PHP extensions installed.",
       "startInstallation": "Start Installation",
-      "license": "Open-source under AGPL-3.0 license"
+      "license": "Open-source under AGPL-3.0 license",
+      "unlockTitle": "Unlock the installer",
+      "unlockDesc": "Enter the setup token to continue. It makes sure only someone with access to the server can finish the installation.",
+      "tokenEnv": "Installed with the install script or Docker: it is INVENTOROS_SETUP_TOKEN in the .env file.",
+      "tokenFile": "Otherwise (cPanel or a manual install): it is in the file storage/app/private/setup-token in the Inventoros folder on the server.",
+      "tokenLabel": "Setup token",
+      "unlock": "Unlock",
+      "unlocking": "Unlocking...",
+      "tooManyAttempts": "Too many attempts. Wait a minute and try again.",
+      "unlockFailed": "Could not unlock the installer: {error}"
     },
     "requirements": {
       "title": "System Requirements",

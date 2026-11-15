@@ -53,6 +53,10 @@ real folder.
 
    Using the web installer instead? Leave the database lines as shipped,
    run step 4, then open `https://yourdomain.com/install` (skip step 5).
+   It asks for a setup token: open
+   `~/inventoros/storage/app/private/setup-token` in the File Manager (it
+   is created on the first visit to `/install`), or set your own
+   `INVENTOROS_SETUP_TOKEN` in `.env` first.
    It writes the database settings you enter to `.env`, creates the
    tables in that database, and when it finishes sets `APP_ENV=production`
    and `APP_DEBUG=false`.

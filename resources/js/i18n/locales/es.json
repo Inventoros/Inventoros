@@ -2542,10 +2542,13 @@
     "server": {
       "alreadyInstalled": "Inventoros ya está instalado.",
       "connectionSuccessful": "Conexión con la base de datos correcta.",
-      "connectionFailed": "Error al conectar con la base de datos: {error}",
+      "connectionFailed": "Error al conectar con la base de datos. Compruebe el host, el puerto, el nombre de la base de datos, el usuario y la contraseña.",
       "databaseInstalled": "Base de datos instalada.",
       "unfinishedInstall": "La base de datos ya tiene tablas, probablemente de una instalación anterior que no terminó, y la instalación sobre ellas falló: {error}",
-      "adminCreated": "Cuenta de administrador creada."
+      "adminCreated": "Cuenta de administrador creada.",
+      "locked": "Primero desbloquee el instalador con el token de configuración.",
+      "invalidToken": "Ese token de configuración no es correcto.",
+      "unlocked": "Instalador desbloqueado."
     },
     "welcome": {
       "title": "Bienvenido a Inventoros",
@@ -2564,7 +2567,16 @@
       "beforeBegin": "Antes de comenzar",
       "beforeBeginDesc": "Asegúrate de tener PHP 8.4.1+, MySQL/PostgreSQL y las extensiones PHP requeridas instaladas.",
       "startInstallation": "Iniciar instalación",
-      "license": "Código abierto bajo licencia AGPL-3.0"
+      "license": "Código abierto bajo licencia AGPL-3.0",
+      "unlockTitle": "Desbloquear el instalador",
+      "unlockDesc": "Introduzca el token de configuración para continuar. Así solo alguien con acceso al servidor puede completar la instalación.",
+      "tokenEnv": "Si instaló con el script de instalación o Docker: es INVENTOROS_SETUP_TOKEN en el archivo .env.",
+      "tokenFile": "En otro caso (cPanel o instalación manual): está en el archivo storage/app/private/setup-token de la carpeta de Inventoros en el servidor.",
+      "tokenLabel": "Token de configuración",
+      "unlock": "Desbloquear",
+      "unlocking": "Desbloqueando...",
+      "tooManyAttempts": "Demasiados intentos. Espere un minuto e inténtelo de nuevo.",
+      "unlockFailed": "No se pudo desbloquear el instalador: {error}"
     },
     "requirements": {
       "title": "Requisitos del sistema",

@@ -2542,10 +2542,13 @@
     "server": {
       "alreadyInstalled": "Inventoros is al geïnstalleerd.",
       "connectionSuccessful": "Verbinding met de database geslaagd.",
-      "connectionFailed": "Verbinding met de database mislukt: {error}",
+      "connectionFailed": "Verbinding met de database mislukt. Controleer host, poort, databasenaam, gebruiker en wachtwoord.",
       "databaseInstalled": "Database geïnstalleerd.",
       "unfinishedInstall": "De database bevat al tabellen, waarschijnlijk van een eerdere installatie die niet is voltooid, en installeren daaroverheen is mislukt: {error}",
-      "adminCreated": "Beheerdersaccount aangemaakt."
+      "adminCreated": "Beheerdersaccount aangemaakt.",
+      "locked": "Ontgrendel eerst het installatieprogramma met het installatietoken.",
+      "invalidToken": "Dat installatietoken is niet juist.",
+      "unlocked": "Installatieprogramma ontgrendeld."
     },
     "welcome": {
       "title": "Welkom bij Inventoros",
@@ -2564,7 +2567,16 @@
       "beforeBegin": "Voordat u begint",
       "beforeBeginDesc": "Zorg ervoor dat PHP 8.4.1+, MySQL/PostgreSQL en de vereiste PHP-extensies zijn geïnstalleerd.",
       "startInstallation": "Installatie starten",
-      "license": "Open source onder AGPL-3.0-licentie"
+      "license": "Open source onder AGPL-3.0-licentie",
+      "unlockTitle": "Installatieprogramma ontgrendelen",
+      "unlockDesc": "Voer het installatietoken in om verder te gaan. Zo kan alleen iemand met toegang tot de server de installatie voltooien.",
+      "tokenEnv": "Geïnstalleerd met het installatiescript of Docker: het is INVENTOROS_SETUP_TOKEN in het bestand .env.",
+      "tokenFile": "Anders (cPanel of handmatige installatie): het staat in het bestand storage/app/private/setup-token in de Inventoros-map op de server.",
+      "tokenLabel": "Installatietoken",
+      "unlock": "Ontgrendelen",
+      "unlocking": "Ontgrendelen...",
+      "tooManyAttempts": "Te veel pogingen. Wacht een minuut en probeer het opnieuw.",
+      "unlockFailed": "Het installatieprogramma kon niet worden ontgrendeld: {error}"
     },
     "requirements": {
       "title": "Systeemvereisten",

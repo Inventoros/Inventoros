@@ -2542,10 +2542,13 @@
     "server": {
       "alreadyInstalled": "Inventoros zaten kurulu.",
       "connectionSuccessful": "Veritabanı bağlantısı başarılı.",
-      "connectionFailed": "Veritabanı bağlantısı başarısız: {error}",
+      "connectionFailed": "Veritabanı bağlantısı başarısız. Sunucu, port, veritabanı adı, kullanıcı ve parolayı kontrol edin.",
       "databaseInstalled": "Veritabanı kuruldu.",
       "unfinishedInstall": "Veritabanında, muhtemelen tamamlanmamış önceki bir kurulumdan kalan tablolar var ve bunların üzerine kurulum başarısız oldu: {error}",
-      "adminCreated": "Yönetici hesabı oluşturuldu."
+      "adminCreated": "Yönetici hesabı oluşturuldu.",
+      "locked": "Önce kurulum sihirbazının kilidini kurulum belirteciyle açın.",
+      "invalidToken": "Bu kurulum belirteci doğru değil.",
+      "unlocked": "Kurulum sihirbazının kilidi açıldı."
     },
     "welcome": {
       "title": "Inventoros'a Hoş Geldiniz",
@@ -2564,7 +2567,16 @@
       "beforeBegin": "Başlamadan önce",
       "beforeBeginDesc": "PHP 8.4.1+, MySQL/PostgreSQL ve gerekli PHP uzantılarının yüklü olduğundan emin olun.",
       "startInstallation": "Kurulumu Başlat",
-      "license": "AGPL-3.0 Lisansı ile açık kaynak"
+      "license": "AGPL-3.0 Lisansı ile açık kaynak",
+      "unlockTitle": "Kurulum sihirbazının kilidini açın",
+      "unlockDesc": "Devam etmek için kurulum belirtecini girin. Böylece kurulumu yalnızca sunucuya erişimi olan biri tamamlayabilir.",
+      "tokenEnv": "Kurulum betiği veya Docker ile kurulduysa: .env dosyasındaki INVENTOROS_SETUP_TOKEN değeridir.",
+      "tokenFile": "Aksi halde (cPanel veya elle kurulum): sunucudaki Inventoros klasöründe storage/app/private/setup-token dosyasındadır.",
+      "tokenLabel": "Kurulum belirteci",
+      "unlock": "Kilidi aç",
+      "unlocking": "Kilit açılıyor...",
+      "tooManyAttempts": "Çok fazla deneme. Bir dakika bekleyip tekrar deneyin.",
+      "unlockFailed": "Kurulum sihirbazının kilidi açılamadı: {error}"
     },
     "requirements": {
       "title": "Sistem Gereksinimleri",

@@ -2542,10 +2542,13 @@
     "server": {
       "alreadyInstalled": "Inventoros 已安装。",
       "connectionSuccessful": "数据库连接成功。",
-      "connectionFailed": "数据库连接失败：{error}",
+      "connectionFailed": "数据库连接失败。请检查主机、端口、数据库名称、用户名和密码。",
       "databaseInstalled": "数据库已安装。",
       "unfinishedInstall": "数据库中已有表，可能来自一次未完成的安装，在其上安装失败：{error}",
-      "adminCreated": "管理员账户已创建。"
+      "adminCreated": "管理员账户已创建。",
+      "locked": "请先使用安装令牌解锁安装程序。",
+      "invalidToken": "安装令牌不正确。",
+      "unlocked": "安装程序已解锁。"
     },
     "welcome": {
       "title": "欢迎使用 Inventoros",
@@ -2564,7 +2567,16 @@
       "beforeBegin": "开始之前",
       "beforeBeginDesc": "请确保已安装 PHP 8.4.1+、MySQL/PostgreSQL 及所需的 PHP 扩展。",
       "startInstallation": "开始安装",
-      "license": "基于 AGPL-3.0 许可证的开源项目"
+      "license": "基于 AGPL-3.0 许可证的开源项目",
+      "unlockTitle": "解锁安装程序",
+      "unlockDesc": "输入安装令牌以继续。这样只有能访问服务器的人才能完成安装。",
+      "tokenEnv": "使用安装脚本或 Docker 安装：即 .env 文件中的 INVENTOROS_SETUP_TOKEN。",
+      "tokenFile": "其他情况（cPanel 或手动安装）：位于服务器上 Inventoros 文件夹中的 storage/app/private/setup-token 文件。",
+      "tokenLabel": "安装令牌",
+      "unlock": "解锁",
+      "unlocking": "正在解锁...",
+      "tooManyAttempts": "尝试次数过多。请等待一分钟后重试。",
+      "unlockFailed": "无法解锁安装程序：{error}"
     },
     "requirements": {
       "title": "系统要求",

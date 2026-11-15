@@ -2542,10 +2542,13 @@
     "server": {
       "alreadyInstalled": "Inventoros はすでにインストールされています。",
       "connectionSuccessful": "データベースに接続しました。",
-      "connectionFailed": "データベースへの接続に失敗しました: {error}",
+      "connectionFailed": "データベースへの接続に失敗しました。ホスト、ポート、データベース名、ユーザー、パスワードを確認してください。",
       "databaseInstalled": "データベースをインストールしました。",
       "unfinishedInstall": "データベースには、完了しなかった以前のインストールのものと思われるテーブルがすでにあり、その上へのインストールに失敗しました: {error}",
-      "adminCreated": "管理者アカウントを作成しました。"
+      "adminCreated": "管理者アカウントを作成しました。",
+      "locked": "先にセットアップトークンでインストーラーのロックを解除してください。",
+      "invalidToken": "セットアップトークンが正しくありません。",
+      "unlocked": "インストーラーのロックを解除しました。"
     },
     "welcome": {
       "title": "Inventorosへようこそ",
@@ -2564,7 +2567,16 @@
       "beforeBegin": "開始する前に",
       "beforeBeginDesc": "PHP 8.4.1以上、MySQL/PostgreSQL、および必要なPHP拡張機能がインストールされていることを確認してください。",
       "startInstallation": "インストールを開始",
-      "license": "AGPL-3.0ライセンスのオープンソース"
+      "license": "AGPL-3.0ライセンスのオープンソース",
+      "unlockTitle": "インストーラーのロックを解除",
+      "unlockDesc": "続行するにはセットアップトークンを入力してください。サーバーにアクセスできる人だけがインストールを完了できるようにするためのものです。",
+      "tokenEnv": "インストールスクリプトまたは Docker でインストールした場合: .env ファイルの INVENTOROS_SETUP_TOKEN です。",
+      "tokenFile": "それ以外 (cPanel や手動インストール) の場合: サーバー上の Inventoros フォルダー内の storage/app/private/setup-token ファイルにあります。",
+      "tokenLabel": "セットアップトークン",
+      "unlock": "ロック解除",
+      "unlocking": "ロックを解除しています...",
+      "tooManyAttempts": "試行回数が多すぎます。1 分待ってから再度お試しください。",
+      "unlockFailed": "インストーラーのロックを解除できませんでした: {error}"
     },
     "requirements": {
       "title": "システム要件",

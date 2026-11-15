@@ -2542,10 +2542,13 @@
     "server": {
       "alreadyInstalled": "Inventoros è già installato.",
       "connectionSuccessful": "Connessione al database riuscita.",
-      "connectionFailed": "Connessione al database non riuscita: {error}",
+      "connectionFailed": "Connessione al database non riuscita. Controlla host, porta, nome del database, utente e password.",
       "databaseInstalled": "Database installato.",
       "unfinishedInstall": "Il database contiene già tabelle, probabilmente da un'installazione precedente non completata, e l'installazione su di esse non è riuscita: {error}",
-      "adminCreated": "Account amministratore creato."
+      "adminCreated": "Account amministratore creato.",
+      "locked": "Sblocca prima il programma di installazione con il token di configurazione.",
+      "invalidToken": "Il token di configurazione non è corretto.",
+      "unlocked": "Programma di installazione sbloccato."
     },
     "welcome": {
       "title": "Benvenuto su Inventoros",
@@ -2564,7 +2567,16 @@
       "beforeBegin": "Prima di iniziare",
       "beforeBeginDesc": "Assicurati di avere PHP 8.4.1+, MySQL/PostgreSQL e le estensioni PHP richieste installate.",
       "startInstallation": "Avvia l'installazione",
-      "license": "Open source con licenza AGPL-3.0"
+      "license": "Open source con licenza AGPL-3.0",
+      "unlockTitle": "Sblocca il programma di installazione",
+      "unlockDesc": "Inserisci il token di configurazione per continuare. Così solo chi ha accesso al server può completare l'installazione.",
+      "tokenEnv": "Installato con lo script di installazione o Docker: è INVENTOROS_SETUP_TOKEN nel file .env.",
+      "tokenFile": "Altrimenti (cPanel o installazione manuale): si trova nel file storage/app/private/setup-token nella cartella di Inventoros sul server.",
+      "tokenLabel": "Token di configurazione",
+      "unlock": "Sblocca",
+      "unlocking": "Sblocco in corso...",
+      "tooManyAttempts": "Troppi tentativi. Attendi un minuto e riprova.",
+      "unlockFailed": "Impossibile sbloccare il programma di installazione: {error}"
     },
     "requirements": {
       "title": "Requisiti di sistema",

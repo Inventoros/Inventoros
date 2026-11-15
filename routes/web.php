@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Install\InstallerController;
+use App\Http\Middleware\ThrottleInstaller;
 use App\Support\PluginPageRoutes;
 use App\Http\Controllers\Webhooks\EasyPostWebhookController;
 use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
@@ -15,15 +16,25 @@ use Illuminate\Support\Facades\Route;
  * authenticated. Public routes (installer, landing redirect) stay here.
  */
 
-// Installer routes
+// Installer routes. Every step after the landing page needs a session that
+// entered the setup token (see InstallerSetupToken).
 Route::prefix('install')->name('install.')->group(function () {
     Route::get('/', [InstallerController::class, 'index'])->name('index');
+    Route::post('/unlock', [InstallerController::class, 'unlock'])
+        ->middleware(ThrottleInstaller::with(5, 1, 'install-unlock'))
+        ->name('unlock');
     Route::get('/requirements', [InstallerController::class, 'requirements'])->name('requirements');
     Route::get('/database', [InstallerController::class, 'database'])->name('database');
-    Route::post('/database/test', [InstallerController::class, 'testDatabase'])->name('database.test');
-    Route::post('/database/install', [InstallerController::class, 'installDatabase'])->name('database.install');
+    Route::post('/database/test', [InstallerController::class, 'testDatabase'])
+        ->middleware(ThrottleInstaller::with(20, 1, 'install'))
+        ->name('database.test');
+    Route::post('/database/install', [InstallerController::class, 'installDatabase'])
+        ->middleware(ThrottleInstaller::with(20, 1, 'install'))
+        ->name('database.install');
     Route::get('/admin', [InstallerController::class, 'admin'])->name('admin');
-    Route::post('/admin', [InstallerController::class, 'createAdmin'])->name('admin.create');
+    Route::post('/admin', [InstallerController::class, 'createAdmin'])
+        ->middleware(ThrottleInstaller::with(20, 1, 'install'))
+        ->name('admin.create');
     Route::get('/complete', [InstallerController::class, 'complete'])->name('complete');
 });
 

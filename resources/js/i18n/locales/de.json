@@ -2542,10 +2542,13 @@
     "server": {
       "alreadyInstalled": "Inventoros ist bereits installiert.",
       "connectionSuccessful": "Datenbankverbindung erfolgreich.",
-      "connectionFailed": "Datenbankverbindung fehlgeschlagen: {error}",
+      "connectionFailed": "Datenbankverbindung fehlgeschlagen. Prüfen Sie Host, Port, Datenbankname, Benutzer und Passwort.",
       "databaseInstalled": "Datenbank installiert.",
       "unfinishedInstall": "Die Datenbank enthält bereits Tabellen, vermutlich aus einer früheren, nicht abgeschlossenen Installation, und die Installation darüber ist fehlgeschlagen: {error}",
-      "adminCreated": "Administratorkonto erstellt."
+      "adminCreated": "Administratorkonto erstellt.",
+      "locked": "Entsperren Sie den Installer zuerst mit dem Setup-Token.",
+      "invalidToken": "Dieses Setup-Token ist nicht korrekt.",
+      "unlocked": "Installer entsperrt."
     },
     "welcome": {
       "title": "Willkommen bei Inventoros",
@@ -2564,7 +2567,16 @@
       "beforeBegin": "Bevor Sie beginnen",
       "beforeBeginDesc": "Stellen Sie sicher, dass PHP 8.4.1+, MySQL/PostgreSQL und die erforderlichen PHP-Erweiterungen installiert sind.",
       "startInstallation": "Installation starten",
-      "license": "Open Source unter AGPL-3.0-Lizenz"
+      "license": "Open Source unter AGPL-3.0-Lizenz",
+      "unlockTitle": "Installer entsperren",
+      "unlockDesc": "Geben Sie das Setup-Token ein, um fortzufahren. So kann nur jemand mit Zugriff auf den Server die Installation abschließen.",
+      "tokenEnv": "Mit dem Installationsskript oder Docker installiert: Es steht als INVENTOROS_SETUP_TOKEN in der Datei .env.",
+      "tokenFile": "Andernfalls (cPanel oder manuelle Installation): Es steht in der Datei storage/app/private/setup-token im Inventoros-Ordner auf dem Server.",
+      "tokenLabel": "Setup-Token",
+      "unlock": "Entsperren",
+      "unlocking": "Wird entsperrt...",
+      "tooManyAttempts": "Zu viele Versuche. Warten Sie eine Minute und versuchen Sie es erneut.",
+      "unlockFailed": "Der Installer konnte nicht entsperrt werden: {error}"
     },
     "requirements": {
       "title": "Systemanforderungen",
