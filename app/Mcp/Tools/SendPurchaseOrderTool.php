@@ -6,6 +6,7 @@ namespace App\Mcp\Tools;
 
 use App\Exceptions\DocumentEmailException;
 use App\Mcp\Concerns\AuthenticatesMcpRequest;
+use App\Mcp\Support\McpRecipients;
 use App\Models\Purchasing\PurchaseOrder;
 use App\Services\Documents\DocumentRecipients;
 use App\Services\PurchaseOrderEmailService;
@@ -22,14 +23,14 @@ class SendPurchaseOrderTool extends Tool
 
     protected string $name = 'send_purchase_order';
 
-    protected string $description = 'Email a purchase order to its supplier with the PO PDF attached, and mark a draft as sent. A PO that is already sent (or partly received) can be re-sent; its status is unchanged. Fails, leaving the status unchanged, when the supplier has no email address and no "to" is given.';
+    protected string $description = 'Email a purchase order to its supplier with the PO PDF attached, and mark a draft as sent. A PO that is already sent (or partly received) can be re-sent; its status is unchanged. Only sends to the supplier\'s address on file; other recipients need the web UI. Fails, leaving the status unchanged, when the supplier has no email address.';
 
     public function schema(JsonSchema $schema): array
     {
         return [
             'id' => $schema->integer()->required()->description('Purchase order id.'),
-            'to' => $schema->string()->description('Recipient override. Defaults to the supplier email.'),
-            'cc' => $schema->array()->items($schema->string())->description('Up to '.DocumentRecipients::MAX_CC.' CC email addresses.'),
+            'to' => $schema->string()->description('Must be the supplier email on file, which is also the default.'),
+            'cc' => $schema->array()->items($schema->string())->description('Up to '.DocumentRecipients::MAX_CC.' CC addresses: users of this organization.'),
             'message' => $schema->string()->description('Optional note included in the email body.'),
         ];
     }
@@ -52,6 +53,18 @@ class SendPurchaseOrderTool extends Tool
 
         if (! $po) {
             return Response::error('Purchase order not found in this organization.');
+        }
+
+        $refused = McpRecipients::violation(
+            $request->get('to'),
+            (array) ($request->get('cc') ?? []),
+            McpRecipients::forPurchaseOrder($po),
+            $this->organizationId(),
+            'purchase order',
+        );
+
+        if ($refused !== null) {
+            return Response::error($refused);
         }
 
         try {
