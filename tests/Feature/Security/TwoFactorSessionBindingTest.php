@@ -171,7 +171,7 @@ class TwoFactorSessionBindingTest extends TestCase
 
         $this->actingAs($this->other)
             ->withSession(['two_factor_secret' => $secret])
-            ->post(route('two-factor.enable'), ['code' => $google2fa->getCurrentOtp($secret)])
+            ->post(route('two-factor.enable'), ['code' => $google2fa->getCurrentOtp($secret), 'current_password' => 'password'])
             ->assertRedirect(route('settings.account.index'));
 
         $this->assertSame($this->other->getKey(), session('two_factor_verified'));
