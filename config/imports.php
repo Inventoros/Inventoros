@@ -22,4 +22,21 @@ return [
     |--------------------------------------------------------------------------
     */
     'disk' => env('IMPORT_DISK', env('INVENTOROS_UPLOADS_DISK', 'local')),
+
+    /*
+    |--------------------------------------------------------------------------
+    | XLSX archive limits
+    |--------------------------------------------------------------------------
+    |
+    | An XLSX file is a ZIP that the reader inflates in memory. Uploads are
+    | checked before parsing: the number of parts, their total uncompressed
+    | size, and the compression ratio of any part larger than ratio_min_bytes.
+    |
+    */
+    'xlsx' => [
+        'max_entries' => (int) env('IMPORT_XLSX_MAX_ENTRIES', 1000),
+        'max_uncompressed_bytes' => (int) env('IMPORT_XLSX_MAX_UNCOMPRESSED_BYTES', 256 * 1024 * 1024),
+        'max_compression_ratio' => (float) env('IMPORT_XLSX_MAX_COMPRESSION_RATIO', 100),
+        'ratio_min_bytes' => (int) env('IMPORT_XLSX_RATIO_MIN_BYTES', 1024 * 1024),
+    ],
 ];

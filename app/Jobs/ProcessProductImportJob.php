@@ -16,6 +16,7 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Storage;
 use Maatwebsite\Excel\Facades\Excel;
+use PhpOffice\PhpSpreadsheet\Exception as SpreadsheetException;
 use Throwable;
 
 /**
@@ -66,7 +67,14 @@ final class ProcessProductImportJob implements ShouldQueue
         $importer = app(ActiveOrganization::class)->userIn($this->userId, $this->organizationId)
             ?? throw (new ModelNotFoundException)->setModel(User::class, [$this->userId]);
         $import = new ProductsImport($this->organizationId, $importer);
-        Excel::import($import, $this->path, $this->disk, $this->readerType);
+        try {
+            Excel::import($import, $this->path, $this->disk, $this->readerType);
+        } catch (SpreadsheetException $e) {
+            // An unreadable workbook fails the same way on every attempt.
+            $this->fail($e);
+
+            return;
+        }
 
         NotificationService::createImportCompleteNotification(
             $this->organizationId,

@@ -15,7 +15,8 @@ use ZipArchive;
  *
  * Used by plugin uploads, in-app updates, and backup restores — the three
  * surfaces in this codebase that accept a ZIP from a potentially-attacker-
- * controlled source.
+ * controlled source. inspect() applies the size limits without extracting,
+ * for XLSX spreadsheet imports.
  *
  * The validator does NOT enforce any naming convention on entries beyond
  * safety — callers that need a single-root-folder layout (PluginService)
@@ -23,6 +24,57 @@ use ZipArchive;
  */
 final class SafeZipExtractor
 {
+    /**
+     * Check an archive's size without extracting anything: reject it when it
+     * has too many entries, inflates to more than the byte cap in total, or
+     * has an entry larger than ratio_min_bytes that inflates more than
+     * max_ratio times its compressed size (a decompression bomb). For
+     * ZIP-based files that a library inflates itself, such as XLSX imports.
+     *
+     * @param array{max_entries?: int, max_bytes?: int, max_ratio?: int|float, ratio_min_bytes?: int} $opts
+     * @throws RuntimeException When the archive cannot be opened or exceeds a limit.
+     */
+    public static function inspect(string $path, array $opts = []): void
+    {
+        $maxEntries = $opts['max_entries'] ?? 2000;
+        $maxBytes = $opts['max_bytes'] ?? 50 * 1024 * 1024;
+        $maxRatio = $opts['max_ratio'] ?? 100;
+        $ratioMinBytes = $opts['ratio_min_bytes'] ?? 1024 * 1024;
+
+        $zip = new ZipArchive;
+        if ($zip->open($path, ZipArchive::RDONLY) !== true) {
+            throw new RuntimeException('The file is not a readable ZIP archive.');
+        }
+
+        try {
+            if ($zip->numFiles > $maxEntries) {
+                throw new RuntimeException("ZIP exceeds entry count limit ({$zip->numFiles} > {$maxEntries})");
+            }
+
+            $totalBytes = 0;
+            for ($i = 0; $i < $zip->numFiles; $i++) {
+                $stat = $zip->statIndex($i);
+                if ($stat === false) {
+                    throw new RuntimeException("Could not stat entry #{$i}");
+                }
+
+                $size = (int) ($stat['size'] ?? 0);
+                $compressed = (int) ($stat['comp_size'] ?? 0);
+
+                $totalBytes += $size;
+                if ($totalBytes > $maxBytes) {
+                    throw new RuntimeException('ZIP exceeds uncompressed-size limit');
+                }
+
+                if ($size > $ratioMinBytes && $size > $maxRatio * max($compressed, 1)) {
+                    throw new RuntimeException('ZIP exceeds compression-ratio limit');
+                }
+            }
+        } finally {
+            $zip->close();
+        }
+    }
+
     /**
      * Walk every entry in $zip and reject paths that would escape
      * $destinationDir, archives that exceed the configured entry-count
