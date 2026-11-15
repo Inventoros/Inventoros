@@ -120,6 +120,7 @@
     "The Administrator role cannot be edited.": "无法编辑管理员角色。",
     "System roles cannot be deleted.": "无法删除系统角色。",
     "Cannot delete a role that is assigned to users. Please reassign users first.": "无法删除已分配给用户的角色。请先为用户重新分配角色。",
+    "You cannot delete a role with permissions you do not hold.": "您无法删除包含您未拥有权限的角色。",
     "You cannot delete your own account.": "您无法删除自己的账户。",
     "Cannot delete the last administrator.": "无法删除最后一位管理员。",
     "Please start the setup process again.": "请重新开始设置过程。",

@@ -120,6 +120,7 @@
     "The Administrator role cannot be edited.": "관리자 역할은 수정할 수 없습니다.",
     "System roles cannot be deleted.": "시스템 역할은 삭제할 수 없습니다.",
     "Cannot delete a role that is assigned to users. Please reassign users first.": "사용자에게 할당된 역할은 삭제할 수 없습니다. 먼저 사용자의 역할을 변경하세요.",
+    "You cannot delete a role with permissions you do not hold.": "본인에게 없는 권한이 포함된 역할은 삭제할 수 없습니다.",
     "You cannot delete your own account.": "자신의 계정은 삭제할 수 없습니다.",
     "Cannot delete the last administrator.": "마지막 관리자는 삭제할 수 없습니다.",
     "Please start the setup process again.": "설정 과정을 다시 시작하세요.",

@@ -120,6 +120,7 @@
     "The Administrator role cannot be edited.": "لا يمكن تعديل دور المسؤول.",
     "System roles cannot be deleted.": "لا يمكن حذف أدوار النظام.",
     "Cannot delete a role that is assigned to users. Please reassign users first.": "لا يمكن حذف دور معيّن لمستخدمين. أعد تعيين أدوار المستخدمين أولاً.",
+    "You cannot delete a role with permissions you do not hold.": "لا يمكنك حذف دور يتضمن صلاحيات لا تملكها.",
     "You cannot delete your own account.": "لا يمكنك حذف حسابك الخاص.",
     "Cannot delete the last administrator.": "لا يمكن حذف آخر مسؤول.",
     "Please start the setup process again.": "يرجى بدء عملية الإعداد من جديد.",
