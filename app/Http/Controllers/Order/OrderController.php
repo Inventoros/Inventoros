@@ -26,6 +26,7 @@ use App\Services\OrderService;
 use App\Services\Shipping\OrderShippingPanel;
 use App\Services\WarehouseAccessService;
 use App\Support\ApprovalSettings;
+use App\Support\PaymentVisibility;
 use App\Support\Search;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\JsonResponse;
@@ -298,6 +299,7 @@ class OrderController extends Controller
         // Load each line's variant (so the form can show and round-trip it)
         // and the linked customer (so the customer picker starts on it).
         $order->load(['items.variant', 'customer']);
+        PaymentVisibility::hideOnOrders($request->user(), $order);
 
         // Keep the variants the order already uses selectable even if they
         // have since been deactivated, so editing the order doesn't force a

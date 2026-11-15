@@ -18,6 +18,7 @@ use App\Services\PluginUIService;
 use App\Services\ReorderService;
 use App\Services\Reports\InventoryAnalyticsService;
 use App\Support\CurrencyTotals;
+use App\Support\PaymentVisibility;
 use App\Support\SchedulerHealth;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -194,6 +195,7 @@ class DashboardController extends Controller
             ->latest('id')
             ->limit(5)
             ->get();
+        PaymentVisibility::hideOnOrders($user, $recentOrders);
 
         // Get stock value by category. This is reports.category-performance
         // in miniature, so it takes the same permission that page does.
