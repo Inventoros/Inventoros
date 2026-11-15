@@ -10,6 +10,7 @@ use App\Models\ActivityLog;
 use App\Models\Inventory\Product;
 use App\Models\Inventory\StockReservation;
 use App\Services\StockReservationService;
+use App\Services\WarehouseAccessService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -24,6 +25,8 @@ use Inertia\Response;
 class StockReservationController extends Controller
 {
     private const STATUSES = ['active', 'expired', 'consumed', 'released', 'all'];
+
+    public function __construct(private readonly WarehouseAccessService $warehouseAccess) {}
 
     public function index(Request $request): Response
     {
@@ -44,6 +47,7 @@ class StockReservationController extends Controller
                 'serial:id,serial_number',
                 'batch:id,batch_number',
             ])
+            ->tap(fn (Builder $query) => $this->warehouseAccess->scopeByLocation($query, $request->user(), 'location_id'))
             ->tap(fn (Builder $query) => $this->filterStatus($query, $status))
             ->when($validated['owner'] ?? null, fn (Builder $q, string $owner) => $q->where('owner_type', $owner))
             ->when($validated['product_id'] ?? null, fn (Builder $q, int $productId) => $q->where('product_id', $productId))
@@ -95,6 +99,8 @@ class StockReservationController extends Controller
      */
     public function release(Request $request, StockReservation $reservation, StockReservationService $reservations): RedirectResponse
     {
+        $this->warehouseAccess->authorizeLocation($request->user(), $reservation->location_id);
+
         if (! $reservation->isActive()) {
             return back()->with('error', __('This reservation is no longer active.'));
         }

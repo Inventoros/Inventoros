@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Report a security vulnerability
+    url: https://github.com/Inventoros/Inventoros/security/advisories/new
+    about: Please report vulnerabilities privately, never in a public issue. See SECURITY.md.
+  - name: Documentation
+    url: https://inventoros.com/docs
+    about: Installation, configuration, API and plugin guides.

@@ -21,50 +21,36 @@ on:
         default: 'dev'
 
 permissions:
-  contents: write
+  contents: read
 
+# The release is built and signed in two jobs. `build` runs Composer, npm
+# and third-party actions, so it gets no secrets, a read-only token and no
+# dependency cache. `sign-and-release` holds the update signing key and the
+# write token; it runs no project dependencies and only first-party actions
+# plus the release action, and checks the package again before signing it.
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
-          fetch-depth: 0
-
-      - name: Verify published releases come from main
-        if: (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')) || (github.event_name == 'workflow_dispatch' && github.event.inputs.version != 'dev')
-        run: |
-          git fetch --no-tags origin main
-          if ! git merge-base --is-ancestor "$GITHUB_SHA" refs/remotes/origin/main; then
-            echo "::error::Published releases must use a commit merged into main."
-            exit 1
-          fi
+          persist-credentials: false
 
       - name: Setup PHP
-        uses: shivammathur/setup-php@v2
+        uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
         with:
           php-version: '8.4'
           extensions: mbstring, xml, ctype, iconv, intl, pdo_sqlite, pdo_mysql, dom, filter, gd, json, libxml, openssl, pcre, phar, tokenizer, zip, sodium
           coverage: none
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: '22'
-          cache: 'npm'
-
-      - name: Get Composer Cache Directory
-        id: composer-cache
-        run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
-
-      - name: Cache Composer dependencies
-        uses: actions/cache@v4
-        with:
-          path: ${{ steps.composer-cache.outputs.dir }}
-          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
-          restore-keys: ${{ runner.os }}-composer-
 
       - name: Install Composer dependencies (production)
         run: composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
@@ -108,18 +94,6 @@ jobs:
           [[ "$source_version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]
           test -s "docs/releases/$source_version.md"
 
-      - name: Check release version and notes
-        if: (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')) || (github.event_name == 'workflow_dispatch' && github.event.inputs.version != 'dev')
-        env:
-          RELEASE_VERSION: ${{ steps.version.outputs.version }}
-          RELEASE_TAG: ${{ steps.version.outputs.tag_name }}
-        run: |
-          test "$(tr -d '\r\n' < VERSION)" = "$RELEASE_VERSION"
-          test -s "docs/releases/$RELEASE_VERSION.md"
-          if git show-ref --verify --quiet "refs/tags/$RELEASE_TAG"; then
-            test "$(git rev-parse "$RELEASE_TAG^{commit}")" = "$(git rev-parse HEAD)"
-          fi
-
       - name: Build the cPanel package
         # deploy/cpanel/build-release.php lays out inventoros/ + public_html/,
         # writes release.json (version, layout, min_php) for the in-app
@@ -149,51 +123,152 @@ jobs:
           (cd plugins && zip -r ../hello-world-plugin.zip hello-world -x 'hello-world/ui/node_modules/*')
           unzip -l hello-world-plugin.zip
 
-      - name: Sign release zip
-        if: (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')) || (github.event_name == 'workflow_dispatch' && github.event.inputs.version != 'dev')
-        env:
-          INVENTOROS_UPDATE_SECRET_KEY: ${{ secrets.INVENTOROS_UPDATE_SECRET_KEY }}
-          RELEASE_ZIP: inventoros-cpanel-${{ steps.version.outputs.version }}.zip
-          RELEASE_TAG: ${{ steps.version.outputs.tag_name }}
-        run: |
-          if [ -n "$INVENTOROS_UPDATE_SECRET_KEY" ]; then
-            # Detached Ed25519 signature over the exact zip bytes, base64-encoded
-            # into <zip>.sig — the format App\Support\ReleaseSignatureVerifier
-            # expects. Done with raw libsodium (no Laravel boot needed in CI).
-            php -r '$s = base64_decode(trim(getenv("INVENTOROS_UPDATE_SECRET_KEY")), true); if ($s === false || strlen($s) !== SODIUM_CRYPTO_SIGN_SECRETKEYBYTES) { fwrite(STDERR, "Invalid INVENTOROS_UPDATE_SECRET_KEY\n"); exit(1); } preg_match("/^INVENTOROS_UPDATE_PUBLIC_KEY=(.+)$/m", file_get_contents(".env.example"), $m); $p = base64_decode(trim($m[1] ?? ""), true); if ($p !== sodium_crypto_sign_publickey_from_secretkey($s)) { fwrite(STDERR, "Signing key does not match the public key shipped to users\n"); exit(1); } $f = getenv("RELEASE_ZIP"); $sig = sodium_crypto_sign_detached(file_get_contents($f), $s); file_put_contents($f . ".sig", base64_encode($sig));'
-            echo "Signed $RELEASE_ZIP -> $RELEASE_ZIP.sig"
-            # Only the core package is signed with the update key. The example
-            # plugin is NOT: anything signed with this key passes the core
-            # updater's signature check. The marketplace signs the plugin with
-            # its own key when it imports it (marketplace:import-release-asset).
-          elif [ "$RELEASE_TAG" != "dev" ]; then
-            echo "::error::INVENTOROS_UPDATE_SECRET_KEY is required to publish a signed release."
-            exit 1
-          else
-            echo "::warning::INVENTOROS_UPDATE_SECRET_KEY is not set; release will be unsigned and in-app updates with signature verification enabled will reject it."
-          fi
+      - name: Record package checksums
+        run: sha256sum "inventoros-cpanel-${{ steps.version.outputs.version }}.zip" hello-world-plugin.zip | tee -a "$GITHUB_STEP_SUMMARY"
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: inventoros-cpanel-${{ steps.version.outputs.version }}
           path: |
             inventoros-cpanel-${{ steps.version.outputs.version }}.zip
-            inventoros-cpanel-${{ steps.version.outputs.version }}.zip.sig
             hello-world-plugin.zip
           retention-days: 30
           if-no-files-found: ignore
 
+  sign-and-release:
+    needs: build
+    if: (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')) || (github.event_name == 'workflow_dispatch' && github.event.inputs.version != 'dev')
+    runs-on: ubuntu-latest
+    # Gate the signing key behind a protected environment (required reviewer,
+    # deployment restricted to release tags). Until the secret is moved into
+    # the environment, the job still reads the repository-level secret.
+    environment: release
+    permissions:
+      contents: write
+
+    steps:
+      # Release metadata, the package verifier and the public key all come
+      # from this clean checkout, never from the build job's artifact.
+      - name: Checkout code
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Verify published releases come from main
+        run: |
+          git fetch --no-tags origin main
+          if ! git merge-base --is-ancestor "$GITHUB_SHA" refs/remotes/origin/main; then
+            echo "::error::Published releases must use a commit merged into main."
+            exit 1
+          fi
+
+      - name: Determine version
+        id: version
+        env:
+          REQUESTED_VERSION: ${{ github.event.inputs.version }}
+        run: |
+          if [[ "$GITHUB_EVENT_NAME" == "push" && "$GITHUB_REF_TYPE" == "tag" ]]; then
+            echo "version=${GITHUB_REF#refs/tags/v}" >> "$GITHUB_OUTPUT"
+            echo "tag_name=${GITHUB_REF#refs/tags/}" >> "$GITHUB_OUTPUT"
+          else
+            echo "version=$REQUESTED_VERSION" >> "$GITHUB_OUTPUT"
+            echo "tag_name=v$REQUESTED_VERSION" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Check release version and notes
+        env:
+          RELEASE_VERSION: ${{ steps.version.outputs.version }}
+          RELEASE_TAG: ${{ steps.version.outputs.tag_name }}
+        run: |
+          test "$(tr -d '\r\n' < VERSION)" = "$RELEASE_VERSION"
+          test -s "docs/releases/$RELEASE_VERSION.md"
+          if git show-ref --verify --quiet "refs/tags/$RELEASE_TAG"; then
+            test "$(git rev-parse "$RELEASE_TAG^{commit}")" = "$(git rev-parse HEAD)"
+          fi
+
+      - name: Download the built package
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: inventoros-cpanel-${{ steps.version.outputs.version }}
+          path: ${{ runner.temp }}/release-assets
+
+      # The runner's preinstalled PHP is used so no third-party action runs
+      # in this job. The verifier needs only ZipArchive and libsodium.
+      - name: Check the signing toolchain
+        run: |
+          php -r 'foreach (["zip", "sodium"] as $e) { if (! extension_loaded($e)) { fwrite(STDERR, "PHP extension $e is not available\n"); exit(1); } } echo PHP_VERSION, "\n";'
+
+      - name: Verify the package before signing
+        env:
+          RELEASE_VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          release_zip="$RUNNER_TEMP/release-assets/inventoros-cpanel-$RELEASE_VERSION.zip"
+          plugin_zip="$RUNNER_TEMP/release-assets/hello-world-plugin.zip"
+          for f in "$release_zip" "$plugin_zip"; do
+            if [ ! -f "$f" ] || [ -L "$f" ]; then
+              echo "::error::Expected $(basename "$f") in the build artifact."
+              exit 1
+            fi
+          done
+          sha256sum "$release_zip" "$plugin_zip"
+          php deploy/cpanel/build-release.php --verify="$release_zip" --version="$RELEASE_VERSION"
+          for plugin in hello-world tax-billing; do
+            test "$(unzip -p "$release_zip" "inventoros/plugins/$plugin/dist/plugin.js" | wc -c)" -gt 0
+            test "$(unzip -p "$release_zip" "inventoros/plugins/$plugin/dist/plugin.css" | wc -c)" -gt 0
+          done
+          # Single top-level hello-world/ folder, as the plugin uploader expects.
+          plugin_entries="$(unzip -Z1 "$plugin_zip")"
+          test -n "$plugin_entries"
+          if printf '%s\n' "$plugin_entries" | grep -qv '^hello-world/'; then
+            echo "::error::hello-world-plugin.zip has entries outside hello-world/."
+            exit 1
+          fi
+
+      - name: Sign release zip
+        env:
+          INVENTOROS_UPDATE_SECRET_KEY: ${{ secrets.INVENTOROS_UPDATE_SECRET_KEY }}
+          RELEASE_VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          RELEASE_ZIP="$RUNNER_TEMP/release-assets/inventoros-cpanel-$RELEASE_VERSION.zip"
+          export RELEASE_ZIP
+          if [ -z "$INVENTOROS_UPDATE_SECRET_KEY" ]; then
+            echo "::error::INVENTOROS_UPDATE_SECRET_KEY is required to publish a signed release."
+            exit 1
+          fi
+          # Detached Ed25519 signature over the exact zip bytes, base64-encoded
+          # into <zip>.sig — the format App\Support\ReleaseSignatureVerifier
+          # expects. Done with raw libsodium (no Laravel boot needed in CI).
+          # The key must match the public key in this checkout's .env.example.
+          php -r '$s = base64_decode(trim(getenv("INVENTOROS_UPDATE_SECRET_KEY")), true); if ($s === false || strlen($s) !== SODIUM_CRYPTO_SIGN_SECRETKEYBYTES) { fwrite(STDERR, "Invalid INVENTOROS_UPDATE_SECRET_KEY\n"); exit(1); } preg_match("/^INVENTOROS_UPDATE_PUBLIC_KEY=(.+)$/m", file_get_contents(".env.example"), $m); $p = base64_decode(trim($m[1] ?? ""), true); if ($p !== sodium_crypto_sign_publickey_from_secretkey($s)) { fwrite(STDERR, "Signing key does not match the public key shipped to users\n"); exit(1); } $f = getenv("RELEASE_ZIP"); $sig = sodium_crypto_sign_detached(file_get_contents($f), $s); file_put_contents($f . ".sig", base64_encode($sig));'
+          echo "Signed $(basename "$RELEASE_ZIP") -> $(basename "$RELEASE_ZIP").sig"
+          # Only the core package is signed with the update key. The example
+          # plugin is NOT: anything signed with this key passes the core
+          # updater's signature check. The marketplace signs the plugin with
+          # its own key when it imports it (marketplace:import-release-asset).
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: inventoros-cpanel-${{ steps.version.outputs.version }}
+          path: |
+            ${{ runner.temp }}/release-assets/inventoros-cpanel-${{ steps.version.outputs.version }}.zip
+            ${{ runner.temp }}/release-assets/inventoros-cpanel-${{ steps.version.outputs.version }}.zip.sig
+            ${{ runner.temp }}/release-assets/hello-world-plugin.zip
+          retention-days: 30
+          if-no-files-found: ignore
+          overwrite: true
+
       - name: Create GitHub Release
-        if: (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')) || (github.event_name == 'workflow_dispatch' && github.event.inputs.version != 'dev')
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@de2c0eb89ae2a093876385947365aca7b0e5f844 # v0.1.15
         with:
           tag_name: ${{ steps.version.outputs.tag_name }}
           target_commitish: ${{ github.sha }}
           files: |
-            inventoros-cpanel-${{ steps.version.outputs.version }}.zip
-            inventoros-cpanel-${{ steps.version.outputs.version }}.zip.sig
-            hello-world-plugin.zip
+            ${{ runner.temp }}/release-assets/inventoros-cpanel-${{ steps.version.outputs.version }}.zip
+            ${{ runner.temp }}/release-assets/inventoros-cpanel-${{ steps.version.outputs.version }}.zip.sig
+            ${{ runner.temp }}/release-assets/hello-world-plugin.zip
             scripts/install.sh
           name: Release ${{ steps.version.outputs.tag_name }}
           body_path: docs/releases/${{ steps.version.outputs.version }}.md

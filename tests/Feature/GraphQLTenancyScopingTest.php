@@ -32,7 +32,9 @@ final class GraphQLTenancyScopingTest extends TestCase
         );
         $response = $this->postJson('/graphql', ['query' => $query]);
 
-        $response->assertJsonPath('errors.0.message', 'Category not found');
+        // Refused by org-scoped validation, exactly like a missing id.
+        $response->assertJsonPath('errors.0.message', 'validation');
+        $this->assertNotEmpty($response->json('errors.0.extensions.validation.category_id'));
         $this->assertDatabaseMissing('products', ['sku' => 'GQL-1']);
     }
 
@@ -70,7 +72,9 @@ final class GraphQLTenancyScopingTest extends TestCase
         );
         $response = $this->postJson('/graphql', ['query' => $query]);
 
-        $response->assertJsonPath('errors.0.message', 'Location not found');
+        // Refused by org-scoped validation, exactly like a missing id.
+        $response->assertJsonPath('errors.0.message', 'validation');
+        $this->assertNotEmpty($response->json('errors.0.extensions.validation.location_id'));
         $this->assertDatabaseHas('products', ['id' => $product->id, 'location_id' => null]);
     }
 

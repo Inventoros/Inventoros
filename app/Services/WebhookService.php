@@ -38,29 +38,48 @@ final class WebhookService
             ->get();
 
         foreach ($webhooks as $webhook) {
-            $payload = [
-                'id' => 'wh_' . Str::random(24),
-                'event' => $event,
-                'timestamp' => now()->toIso8601String(),
-                'organization_id' => $organizationId,
-                'data' => $data,
-            ];
-
-            // HOOK: let plugins skip this endpoint for this event (filters,
-            // pauses). Nothing is logged or sent for a skipped endpoint.
-            if (! self::shouldDeliver($webhook, $event, $payload)) {
-                continue;
-            }
-
-            $delivery = WebhookDelivery::create([
-                'webhook_id' => $webhook->id,
-                'event' => $event,
-                'payload' => $payload,
-                'status' => 'pending',
-            ]);
-
-            WebhookDeliveryJob::dispatch($delivery);
+            self::queueDelivery($webhook, $event, $data, $organizationId);
         }
+    }
+
+    /**
+     * Send an event to one webhook only (the "send test" button), never to
+     * the organization's other endpoints.
+     *
+     * @param array<string, mixed> $data
+     */
+    public static function dispatchTo(Webhook $webhook, string $event, array $data): void
+    {
+        self::queueDelivery($webhook, $event, $data, (int) $webhook->organization_id);
+    }
+
+    /**
+     * @param array<string, mixed> $data
+     */
+    private static function queueDelivery(Webhook $webhook, string $event, array $data, int $organizationId): void
+    {
+        $payload = [
+            'id' => 'wh_' . Str::random(24),
+            'event' => $event,
+            'timestamp' => now()->toIso8601String(),
+            'organization_id' => $organizationId,
+            'data' => $data,
+        ];
+
+        // HOOK: let plugins skip this endpoint for this event (filters,
+        // pauses). Nothing is logged or sent for a skipped endpoint.
+        if (! self::shouldDeliver($webhook, $event, $payload)) {
+            return;
+        }
+
+        $delivery = WebhookDelivery::create([
+            'webhook_id' => $webhook->id,
+            'event' => $event,
+            'payload' => $payload,
+            'status' => 'pending',
+        ]);
+
+        WebhookDeliveryJob::dispatch($delivery);
     }
 
     /**

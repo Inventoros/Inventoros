@@ -147,5 +147,7 @@
     "Payment recorded.": "Paiement enregistré.",
     "Cannot delete a supplier with open purchase orders.": "Impossible de supprimer un fournisseur ayant des commandes d’achat ouvertes.",
     "Stock adjustments created for discrepancies: :count.": "Ajustements de stock créés pour les écarts : :count.",
-    "No discrepancies found.": "Aucun écart trouvé."
+    "No discrepancies found.": "Aucun écart trouvé.",
+    "If that email belongs to an account, we have emailed a password reset link.": "Si cette adresse e-mail correspond à un compte, nous avons envoyé un lien de réinitialisation du mot de passe.",
+    "This code was already used; wait for the next one.": "Ce code a déjà été utilisé ; attendez le suivant."
 }

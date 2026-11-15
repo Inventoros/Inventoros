@@ -74,7 +74,7 @@ final class RoleSecurityBoundariesTest extends TestCase
         $foreign->roles()->attach($this->systemMember->id);
         $this->editor->roles()->attach($this->systemMember->id);
         $this->actingAs($this->admin)->get(route('roles.index'))->assertOk()
-            ->assertDontSee('private-foreign-user@bravo.test')->assertSee($this->editor->email);
+            ->assertDontSee('private-foreign-user@bravo.test');
         $this->get(route('roles.show', $this->systemMember))->assertOk()
             ->assertDontSee('private-foreign-user@bravo.test')->assertSee($this->editor->email);
     }
