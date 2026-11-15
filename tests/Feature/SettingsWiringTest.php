@@ -288,7 +288,7 @@ class SettingsWiringTest extends TestCase
         $this->actingAs($this->admin)
             ->postJson(route('settings.email.test'), ['test_email' => 'to@example.com'])
             ->assertStatus(422)
-            ->assertJsonPath('message', 'Failed to send test email. Check the email settings and try again.');
+            ->assertJsonPath('message', 'Failed to send test email: Connection refused by smtp.example.com');
     }
 
     public function test_an_invalid_test_email_address_is_a_validation_error(): void

@@ -12,6 +12,7 @@ use App\Models\User;
 use App\Services\OrganizationMailer;
 use App\Support\PublicHostResolver;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use RuntimeException;
 use Tests\TestCase;
@@ -196,15 +197,90 @@ class OrganizationSmtpHostGuardTest extends TestCase
         Mail::assertNothingSent();
     }
 
-    public function test_transport_errors_are_not_returned_to_the_browser(): void
+    public function test_transport_errors_are_not_returned_to_a_tenant(): void
     {
         Mail::shouldReceive('mailer')->andThrow(new RuntimeException('Connection could not be established with host "10.0.0.9:6379"'));
 
-        $response = $this->actingAs($this->adminOrgAdmin)
+        $response = $this->actingAs($this->tenantAdmin)
             ->postJson(route('settings.email.test'), ['test_email' => 'me@example.com'])
-            ->assertStatus(422);
+            ->assertStatus(422)
+            ->assertJsonPath('message', 'Failed to send test email. Check the email settings and try again.');
 
         $this->assertStringNotContainsString('10.0.0.9', $response->getContent());
+    }
+
+    /**
+     * The administrator organization's admins are trusted with the server;
+     * hosting control panel users rely on the transport error to fix SMTP.
+     */
+    public function test_the_administrator_organization_still_sees_the_transport_error(): void
+    {
+        Mail::shouldReceive('mailer')->andThrow(new RuntimeException('Connection refused by mail.local'));
+
+        $this->actingAs($this->adminOrgAdmin)
+            ->postJson(route('settings.email.test'), ['test_email' => 'me@example.com'])
+            ->assertStatus(422)
+            ->assertJsonPath('message', 'Failed to send test email: Connection refused by mail.local');
+    }
+
+    public function test_an_unresolvable_host_gets_its_own_message(): void
+    {
+        $this->dns([]);
+
+        $this->actingAs($this->tenantAdmin)
+            ->post(route('settings.email.update'), $this->smtpForm('no-such-host.example.com'))
+            ->assertSessionHasErrors(['smtp.host' => 'The SMTP host could not be found. Check the host name.']);
+
+        $this->assertNull($this->storedHost($this->tenantOrg));
+    }
+
+    public function test_a_private_host_keeps_the_public_server_message(): void
+    {
+        $this->dns(['10.1.2.3']);
+
+        $this->actingAs($this->tenantAdmin)
+            ->post(route('settings.email.update'), $this->smtpForm('relay.internal.example'))
+            ->assertSessionHasErrors(['smtp.host' => 'The SMTP host must be a public mail server.']);
+    }
+
+    public function test_a_refused_host_is_logged_as_an_error_before_sending(): void
+    {
+        $this->storeSmtpDirectly($this->tenantOrg, 'relay.internal.example');
+        $this->dns(['10.1.2.3']);
+        Log::spy();
+
+        try {
+            OrganizationMailer::for($this->tenantOrg->id);
+            $this->fail('A refused host must not build a mailer.');
+        } catch (RuntimeException) {
+            // expected
+        }
+
+        Log::shouldHaveReceived('error')->withArgs(fn (string $message, array $context) => str_contains($message, 'SMTP host')
+            && $context['organization_id'] === $this->tenantOrg->id
+            && $context['host'] === 'relay.internal.example')->once();
+    }
+
+    public function test_the_check_command_lists_organizations_whose_host_is_refused(): void
+    {
+        $this->storeSmtpDirectly($this->tenantOrg, 'relay.internal.example');
+        $this->storeSmtpDirectly($this->adminOrg, '127.0.0.1');
+        $this->dns(['10.1.2.3']);
+
+        $this->artisan('inventoros:check-smtp-hosts')
+            ->expectsOutputToContain('relay.internal.example')
+            ->doesntExpectOutputToContain('127.0.0.1')
+            ->assertExitCode(1);
+    }
+
+    public function test_the_check_command_passes_when_every_host_is_allowed(): void
+    {
+        $this->storeSmtpDirectly($this->tenantOrg, 'smtp.example.com');
+        $this->dns(['8.8.8.8']);
+
+        $this->artisan('inventoros:check-smtp-hosts')
+            ->expectsOutputToContain('No organization')
+            ->assertExitCode(0);
     }
 
     public function test_the_test_email_endpoint_is_throttled(): void
