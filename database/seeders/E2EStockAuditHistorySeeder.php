@@ -9,6 +9,7 @@ use App\Models\Inventory\Product;
 use App\Models\Inventory\StockAudit;
 use App\Models\User;
 use App\Services\StockAuditService;
+use Database\Seeders\Concerns\RunsOnlyInFixtureEnvironments;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -16,8 +17,12 @@ use Illuminate\Support\Str;
 
 final class E2EStockAuditHistorySeeder extends Seeder
 {
+    use RunsOnlyInFixtureEnvironments;
+
     public function run(): void
     {
+        $this->ensureFixtureEnvironment();
+
         $id = (string) env('E2E_AUDIT_HISTORY_ID');
         if (! Str::isUuid($id)) {
             throw new \InvalidArgumentException('E2E_AUDIT_HISTORY_ID must be a fresh UUID.');

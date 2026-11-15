@@ -411,7 +411,12 @@ class PurchaseOrderController extends Controller
                 ->with('error', __('This purchase order cannot be cancelled.'));
         }
 
-        $purchaseOrder->cancel();
+        try {
+            $purchaseOrder->cancel();
+        } catch (InvalidStateException) {
+            return redirect()->route('purchase-orders.show', $purchaseOrder)
+                ->with('error', __('This purchase order cannot be cancelled.'));
+        }
 
         return redirect()->route('purchase-orders.show', $purchaseOrder)
             ->with('success', __('Purchase order cancelled.'));

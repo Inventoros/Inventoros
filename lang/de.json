@@ -146,5 +146,6 @@
     "Payment recorded.": "Zahlung erfasst.",
     "Cannot delete a supplier with open purchase orders.": "Ein Lieferant mit offenen Bestellungen kann nicht gelöscht werden.",
     "Stock adjustments created for discrepancies: :count.": "Für Abweichungen erstellte Bestandskorrekturen: :count.",
-    "No discrepancies found.": "Keine Abweichungen gefunden."
+    "No discrepancies found.": "Keine Abweichungen gefunden.",
+    "If that email belongs to an account, we have emailed a password reset link.": "Wenn diese E-Mail-Adresse zu einem Konto gehört, haben wir einen Link zum Zurücksetzen des Passworts gesendet."
 }
