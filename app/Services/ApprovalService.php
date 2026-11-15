@@ -508,7 +508,8 @@ final class ApprovalService
             self::PURCHASE_ORDER => [$subject->approval_requested_by, $subject->created_by],
             self::STOCK_TRANSFER => [$subject->approval_requested_by, $subject->transferred_by],
             self::STOCK_ADJUSTMENT => [$subject->requested_by],
-            self::SALES_ORDER => [$subject->created_by],
+            // The creator, and whoever sent it back for approval by changing it.
+            self::SALES_ORDER => [$subject->created_by, $subject->approval_requested_by],
         };
 
         return array_values(array_map('intval', array_filter($ids)));

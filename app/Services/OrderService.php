@@ -429,6 +429,10 @@ final class OrderService
                 throw new InvalidStateException('Order has already been processed.', 'already_processed');
             }
 
+            // Re-checked on the locked row: who asked for this decision may
+            // have changed since the caller loaded the order.
+            OrderApprovalGate::assertMayApprove($locked, $approver);
+
             $locked->update([
                 'approval_status' => 'approved',
                 'approved_by' => $approver->id,
@@ -466,6 +470,9 @@ final class OrderService
             if (! $locked->isPendingApproval()) {
                 throw new InvalidStateException('Order has already been processed.', 'already_processed');
             }
+
+            // Whoever re-opened the order for approval cannot decide it.
+            OrderApprovalGate::assertMayReject($locked, $approver);
 
             if (in_array($locked->status, [OrderStatus::SHIPPED, OrderStatus::DELIVERED], true)) {
                 throw new InvalidStateException(
@@ -869,7 +876,7 @@ final class OrderService
 
         // New lines are new terms: an approval decision covered the old ones.
         // The caller's save of the order persists this (see Order).
-        $order->requireReapprovalIfDecided();
+        $order->requireReapprovalIfDecided($viewer);
 
         // Remember what each product/variant cost when it was originally sold,
         // so an edit does not re-price lines that were already on the order
