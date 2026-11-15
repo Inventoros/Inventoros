@@ -447,8 +447,10 @@ class ImportExportControllerTest extends TestCase
         ]);
     }
 
-    public function test_import_user_can_import_products(): void
+    public function test_import_only_user_cannot_import_products(): void
     {
+        // Importing products creates and updates them, so import_data alone
+        // is not enough: a product permission is needed too.
         $file = $this->createValidCsv();
 
         $response = $this->actingAs($this->importUser)
@@ -456,7 +458,7 @@ class ImportExportControllerTest extends TestCase
                 'file' => $file,
             ]);
 
-        $response->assertRedirect(route('import-export.index'));
+        $response->assertStatus(403);
     }
 
     public function test_export_user_cannot_import_products(): void

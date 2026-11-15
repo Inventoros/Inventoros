@@ -4,18 +4,22 @@ declare(strict_types=1);
 
 namespace App\Imports;
 
+use App\Enums\Permission;
 use App\Models\Inventory\Product;
 use App\Models\Inventory\ProductCategory;
 use App\Models\Inventory\ProductLocation;
 use App\Models\Inventory\StockAdjustment;
 use App\Models\Inventory\Supplier;
 use App\Models\User;
+use App\Services\ApprovalService;
 use App\Services\ProductLocationStockService;
 use App\Services\ProductService;
+use App\Services\WarehouseAccessService;
 use App\Support\ProductCurrencyColumns;
 use App\Support\ProductSpreadsheetText;
 use App\Support\ProductSpreadsheetValueBinder;
 use App\Support\SpreadsheetSafety;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
@@ -119,6 +123,11 @@ final class ProductsImport extends ProductSpreadsheetValueBinder implements Skip
      * product row lock, with the location bins moved in step. A sheet
      * exported before a sale and re-imported after it therefore shows up as
      * an audited recount rather than silently overwriting the count.
+     *
+     * A stock change needs manage_stock, is refused when the organization's
+     * approval rules would hold the same adjustment, and a restricted
+     * importer draws down only their own warehouses' bins and books units
+     * up only into one of their locations.
      */
     private function bookImportedStock(Product $product, int $target): void
     {
@@ -130,12 +139,23 @@ final class ProductsImport extends ProductSpreadsheetValueBinder implements Skip
                 return;
             }
 
+            $actor = $this->actingUser();
+            if ($actor !== null) {
+                $this->requirePermission($actor, Permission::MANAGE_STOCK, 'Changing stock needs the manage_stock permission; the row was skipped.');
+            }
+
+            if (app(ApprovalService::class)->stockAdjustmentNeedsApproval($locked, null, $delta)) {
+                throw new InvalidArgumentException("Changing stock by {$delta} needs approval under this organization's stock adjustment rules; the row was skipped. Submit a stock adjustment instead.");
+            }
+
             $bins = app(ProductLocationStockService::class);
 
             // Draw bins down before the total falls (the lazy seed reads the
             // pre-change stock); book them up after it rises.
             if ($delta < 0) {
-                $bins->consume($locked, -$delta);
+                $bins->consume($locked, -$delta, actor: $actor);
+            } elseif ($actor !== null) {
+                $this->authorizeLocation($actor, $locked->location_id === null ? null : (int) $locked->location_id);
             }
 
             StockAdjustment::adjust(
@@ -263,12 +283,48 @@ final class ProductsImport extends ProductSpreadsheetValueBinder implements Skip
     }
 
     /**
+     * The importing user: the one given, else the signed-in user. Null only
+     * for a system caller, which is not narrowed.
+     */
+    private function actingUser(): ?User
+    {
+        $user = $this->actor ?? auth()->user();
+
+        return $user instanceof User ? $user : null;
+    }
+
+    /**
+     * @throws AuthorizationException
+     */
+    private function requirePermission(User $user, Permission $permission, string $message): void
+    {
+        if (! $user->hasPermission($permission)) {
+            throw new AuthorizationException($message);
+        }
+    }
+
+    /**
+     * @throws AuthorizationException
+     */
+    private function authorizeLocation(User $user, ?int $locationId): void
+    {
+        app(WarehouseAccessService::class)->authorizeLocation($user, $locationId);
+    }
+
+    /**
      * Create or update one validated row's product (with its category,
      * location and supplier link).
+     *
+     * The importer needs create_products to create and edit_products to
+     * update or restore a product, and a warehouse-restricted importer may
+     * only touch locations in their own warehouses. A refusal throws, which
+     * rolls the row back and reports it as a row error.
      *
      * @param  Collection<string, mixed>  $row
      * @param  array<string, string>  $currencyColumns
      * @return bool true when a product was created, false when one was updated
+     *
+     * @throws AuthorizationException
      */
     private function saveRow(Collection $row, int $rowNumber, array $currencyColumns): bool
     {
@@ -309,6 +365,29 @@ final class ProductsImport extends ProductSpreadsheetValueBinder implements Skip
             ->where('sku', $row['sku'])
             ->where('organization_id', $this->organizationId)
             ->first();
+
+        $actor = $this->actingUser();
+        if ($actor !== null) {
+            if ($product) {
+                $this->requirePermission($actor, Permission::EDIT_PRODUCTS, 'Updating an existing product needs the edit_products permission; the row was skipped.');
+
+                // Moving the product's primary location needs access to both.
+                $currentLocationId = $product->location_id === null ? null : (int) $product->location_id;
+                if ($currentLocationId !== $locationId) {
+                    if ($currentLocationId !== null) {
+                        $this->authorizeLocation($actor, $currentLocationId);
+                    }
+                    $this->authorizeLocation($actor, $locationId);
+                }
+            } else {
+                $this->requirePermission($actor, Permission::CREATE_PRODUCTS, 'Creating a product needs the create_products permission; the row was skipped.');
+
+                // Opening stock with no location belongs to no warehouse.
+                if ($locationId !== null || (int) $row['stock'] > 0) {
+                    $this->authorizeLocation($actor, $locationId);
+                }
+            }
+        }
 
         // Convert status string to is_active boolean
         $status = $row['status'] ?? 'active';
