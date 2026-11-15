@@ -45,6 +45,7 @@ const showCreateModal = ref(false);
 const form = useForm({
     name: '',
     abilities: [],
+    current_password: '',
 });
 
 const openCreateModal = () => {
@@ -62,6 +63,7 @@ const submit = () => {
     form.post(route('settings.api-tokens.store'), {
         preserveScroll: true,
         onSuccess: () => closeCreateModal(),
+        onError: () => form.reset('current_password'),
     });
 };
 
@@ -280,6 +282,19 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                     </fieldset>
                                 </div>
                                 <p v-for="(message, index) in abilityErrors" :key="index" :class="fieldError">{{ message }}</p>
+                            </div>
+
+                            <div>
+                                <label for="api-token-current-password" :class="fieldLabel">{{ t('settings.account.currentPassword') }}</label>
+                                <input
+                                    id="api-token-current-password"
+                                    v-model="form.current_password"
+                                    type="password"
+                                    :class="fieldInput"
+                                    required
+                                    autocomplete="current-password"
+                                />
+                                <p v-if="form.errors.current_password" :class="fieldError">{{ form.errors.current_password }}</p>
                             </div>
 
                             <div class="flex justify-end gap-2">

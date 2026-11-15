@@ -16,16 +16,21 @@ use App\Models\Purchasing\PurchaseOrder;
 use App\Models\Purchasing\PurchaseOrderItem;
 use App\Models\System\SystemSetting;
 use App\Models\User;
+use Database\Seeders\Concerns\RunsOnlyInFixtureEnvironments;
 use Illuminate\Database\Seeder;
 
 class ScreenshotSeeder extends Seeder
 {
+    use RunsOnlyInFixtureEnvironments;
+
     /**
      * Seed the database with realistic demo data for screenshots.
      * Uses the E2E test user's organization so the authenticated user sees the data.
      */
     public function run(): void
     {
+        $this->ensureFixtureEnvironment();
+
         // Mark the app as installed so CheckInstallation middleware doesn't redirect
         SystemSetting::set('installed', true, 'boolean', 'Installation completed');
         SystemSetting::set('installed_at', now()->toDateTimeString(), 'string', 'Installation date');

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Middleware;
 
 use Closure;
+use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -14,6 +15,14 @@ use Symfony\Component\HttpFoundation\Response;
  */
 class EnsureTwoFactorVerified
 {
+    /**
+     * Session key holding the identifier of the user who passed the second
+     * factor in this session. Bound to the user (not a bare flag) so a marker
+     * left behind by another account, or by an earlier sign-in, never lets a
+     * different user skip the challenge.
+     */
+    public const SESSION_KEY = 'two_factor_verified';
+
     /**
      * Routes that should be excluded from the 2FA check.
      *
@@ -51,8 +60,8 @@ class EnsureTwoFactorVerified
             return $next($request);
         }
 
-        // Skip if already verified this session
-        if ($request->session()->get('two_factor_verified', false)) {
+        // Skip if this user already passed the second factor this session
+        if (self::isVerifiedFor($request, $user)) {
             return $next($request);
         }
 
@@ -63,5 +72,20 @@ class EnsureTwoFactorVerified
         }
 
         return redirect()->route('two-factor.challenge');
+    }
+
+    /**
+     * Whether the session passed the second factor as exactly this user.
+     */
+    public static function isVerifiedFor(Request $request, Authenticatable $user): bool
+    {
+        $verified = $request->session()->get(self::SESSION_KEY);
+
+        // Only an identifier counts; a legacy boolean marker does not.
+        if (! is_int($verified) && ! is_string($verified)) {
+            return false;
+        }
+
+        return (string) $verified === (string) $user->getAuthIdentifier();
     }
 }

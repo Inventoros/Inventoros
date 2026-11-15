@@ -335,6 +335,24 @@ test('verification, two-factor, restricted and installer states', async ({ brows
     const installed = (value: boolean) => execFileSync('php', ['artisan', 'tinker', `--execute=App\\Models\\System\\SystemSetting::set('installed', ${value ? 'true' : 'false'}, 'boolean');`]);
     try {
         installed(false);
+        // Locked: only the welcome page with its setup-token form is reachable.
+        for (const width of widths) {
+            await page.setViewportSize({ width, height: width < 768 ? 812 : 1080 });
+            await inspect(page, 'installer-unlock', '/install', width, width === 1440);
+        }
+        // The steps after it need the setup token (the configured one, or the
+        // file the installer generated on the first visit above). A database
+        // that still has accounts keeps setup closed and /install redirects,
+        // so unlock only when the form is shown.
+        await page.setViewportSize({ width: 1440, height: 1080 });
+        await page.goto('/install');
+        const tokenField = page.locator('#setup-token');
+        if (await tokenField.count()) {
+            const token = execFileSync('php', ['artisan', 'tinker', '--execute=echo app(App\\Support\\InstallerSetupToken::class)->expected();']).toString().trim();
+            await tokenField.fill(token);
+            await tokenField.press('Enter');
+            await page.waitForURL(u => u.pathname === '/install/requirements');
+        }
         for (const width of widths) {
             await page.setViewportSize({ width, height: width < 768 ? 812 : 1080 });
             for (const [name, url] of [['welcome', '/install'], ['requirements', '/install/requirements'], ['database', '/install/database'], ['admin', '/install/admin']]) {

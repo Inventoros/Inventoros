@@ -220,16 +220,19 @@ class OrderController extends Controller
             && $validated['status'] === 'cancelled'
             && $order->status !== OrderStatus::CANCELLED;
 
-        // A cancelled order's stock was already restored on cancel; reactivating
-        // it would oversell (a live order with its inventory handed back).
-        // Cancellation is terminal — create a new order instead.
-        if ($order->status === OrderStatus::CANCELLED
-            && isset($validated['status'])
-            && $validated['status'] !== 'cancelled') {
-            return response()->json([
-                'message' => 'A cancelled order cannot be reactivated. Create a new order instead.',
-                'error' => 'invalid_state_transition',
-            ], 422);
+        // Status only moves forward (see Order::statusTransitionError()): a
+        // cancelled order's stock was already restored, and a shipped or
+        // delivered order's goods have left, so neither can be moved back.
+        // Cancelling is checked below and by OrderService::cancel().
+        if (isset($validated['status']) && ! $cancelTransition) {
+            $transitionError = $order->transitionErrorTo($validated['status']);
+
+            if ($transitionError !== null) {
+                return response()->json([
+                    'message' => $transitionError,
+                    'error' => 'invalid_state_transition',
+                ], 422);
+            }
         }
 
         // An order waiting for approval cannot ship or be delivered yet.
@@ -272,7 +275,15 @@ class OrderController extends Controller
         }
 
         if ($validated !== []) {
-            $order->update($validated);
+            try {
+                $order->update($validated);
+            } catch (InvalidStateException $e) {
+                // The model's transition backstop (a concurrent status change).
+                return response()->json([
+                    'message' => $e->getMessage(),
+                    'error' => $e->errorCode,
+                ], 422);
+            }
         }
 
         if ($cancelTransition) {
@@ -367,6 +378,27 @@ class OrderController extends Controller
         return response()->json([
             'message' => 'Order rejected',
             'data' => new OrderResource($rejected->load(['items', 'approver'])),
+        ]);
+    }
+
+    /**
+     * Correct an order marked shipped by mistake back to processing.
+     *
+     * Admins only. Refused (422 `invalid_state_transition`) unless the order
+     * is shipped, none of its shipments has left the warehouse and it has no
+     * returns. Clears `shipped_at`; stock is untouched.
+     */
+    public function revertShipment(Request $request, Order $order): JsonResponse
+    {
+        try {
+            $order = $this->orderService->revertMistakenShipment($order, $request->user());
+        } catch (InvalidStateException $e) {
+            return response()->json(['message' => $e->getMessage(), 'error' => $e->errorCode], 422);
+        }
+
+        return response()->json([
+            'message' => 'Order moved back to processing',
+            'data' => new OrderResource($order->load('items')),
         ]);
     }
 

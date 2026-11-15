@@ -146,5 +146,7 @@
     "Payment recorded.": "Payment recorded.",
     "Cannot delete a supplier with open purchase orders.": "Cannot delete a supplier with open purchase orders.",
     "Stock adjustments created for discrepancies: :count.": "Stock adjustments created for discrepancies: :count.",
-    "No discrepancies found.": "No discrepancies found."
+    "No discrepancies found.": "No discrepancies found.",
+    "If that email belongs to an account, we have emailed a password reset link.": "If that email belongs to an account, we have emailed a password reset link.",
+    "This code was already used; wait for the next one.": "This code was already used; wait for the next one."
 }

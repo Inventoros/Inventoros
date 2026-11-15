@@ -4,8 +4,9 @@
 #
 # Create an Ubuntu 24.04 server (x86_64, 2 GB memory recommended), paste this
 # file into the User data field, and open http://SERVER-IP:8080/install a few
-# minutes after it boots. Progress: /opt/inventoros/install.log, or
-# /var/log/cloud-init-output.log on the server.
+# minutes after it boots. The installer asks for the setup token:
+# `sudo grep INVENTOROS_SETUP_TOKEN /opt/inventoros/.env` on the server.
+# Progress: /opt/inventoros/install.log, or /var/log/cloud-init-output.log.
 #
 # For HTTPS, point a DNS record at the server first and add
 # `--domain inventory.example.com` to the install command below. To pin a
