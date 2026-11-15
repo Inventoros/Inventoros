@@ -20,6 +20,7 @@ use App\Models\User;
 use App\Models\Warehouse;
 use App\Models\Webhook;
 use App\Services\StockAuditService;
+use Database\Seeders\Concerns\RunsOnlyInFixtureEnvironments;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -27,8 +28,12 @@ use Illuminate\Support\Str;
 /** Only invoked by the opt-in UI audit against its disposable database. */
 final class E2EUiAuditSeeder extends Seeder
 {
+    use RunsOnlyInFixtureEnvironments;
+
     public function run(): void
     {
+        $this->ensureFixtureEnvironment();
+
         $this->call(E2ELayoutSeeder::class);
         $user = User::where('email', E2ETestSeeder::TEST_EMAIL)->firstOrFail();
         $org = $user->organization_id;
