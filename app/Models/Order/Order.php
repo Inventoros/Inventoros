@@ -379,10 +379,68 @@ class Order extends Model
     protected static function booted(): void
     {
         static::saving(function (Order $order) {
+            if ($order->exists && $order->isDirty('status')) {
+                $from = OrderStatus::tryFrom((string) $order->getRawOriginal('status'));
+                $error = self::statusTransitionError($from, $order->status);
+
+                if ($error !== null) {
+                    throw new InvalidStateException($error, 'invalid_state_transition');
+                }
+            }
+
             if ($order->isDirty('status') && $order->approvalBlocks($order->status)) {
                 throw new InvalidStateException(self::APPROVAL_PENDING_MESSAGE, 'approval_pending');
             }
         });
+    }
+
+    /**
+     * Why an order may not move from $from to $to, or null when it may.
+     *
+     * Status only moves forward. A cancelled order already gave its stock
+     * back, so reviving it would oversell. Goods of a shipped order have left
+     * the warehouse: it can only be delivered, and a delivered order is
+     * final (goods coming back go through a return). Moving either back to
+     * pending/processing would let cancel, delete or a line edit restock
+     * goods that are no longer here. Enforced for every surface by the
+     * saving hook above; surfaces check it first for their own error shape.
+     */
+    public static function statusTransitionError(OrderStatus|string|null $from, OrderStatus|string|null $to): ?string
+    {
+        $from = $from instanceof OrderStatus ? $from : OrderStatus::tryFrom((string) $from);
+        $to = $to instanceof OrderStatus ? $to : OrderStatus::tryFrom((string) $to);
+
+        if ($from === null || $to === null || $from === $to) {
+            return null;
+        }
+
+        return match ($from) {
+            OrderStatus::CANCELLED => 'A cancelled order cannot be reactivated. Create a new order instead.',
+            OrderStatus::DELIVERED => 'A delivered order\'s status cannot be changed. Record a return for goods that come back.',
+            OrderStatus::SHIPPED => $to === OrderStatus::DELIVERED
+                ? null
+                : 'A shipped order can only be marked delivered. Record a return for goods that come back.',
+            default => null,
+        };
+    }
+
+    /**
+     * Why this order may not move to $status, or null when it may.
+     */
+    public function transitionErrorTo(OrderStatus|string|null $status): ?string
+    {
+        return self::statusTransitionError($this->status, $status);
+    }
+
+    /**
+     * Whether any of this order's goods are recorded as having left the
+     * warehouse: shipped or delivered, or stamped shipped_at (a row moved
+     * back to pending/processing before transitions were enforced).
+     */
+    public function hasShippedGoods(): bool
+    {
+        return $this->shipped_at !== null
+            || in_array($this->status, [OrderStatus::SHIPPED, OrderStatus::DELIVERED], true);
     }
 
     /**

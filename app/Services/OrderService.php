@@ -400,6 +400,15 @@ final class OrderService
                 );
             }
 
+            // Stamped shipped but moved back to pending/processing (rows from
+            // before status transitions were enforced): its goods left.
+            if ($locked->hasShippedGoods()) {
+                throw new InvalidStateException(
+                    'Cannot cancel an order whose goods have already shipped.',
+                    'invalid_state_transition'
+                );
+            }
+
             $this->releaseStock($locked, 'cancel', "Order {$locked->order_number} cancelled", $actor);
 
             $locked->update(['status' => OrderStatus::CANCELLED]);
@@ -542,8 +551,10 @@ final class OrderService
             }
 
             // Goods already gone (shipped/delivered) or already returned
-            // (cancelled) → deletion must not re-inject phantom stock.
-            if (in_array($locked->status, [OrderStatus::SHIPPED, OrderStatus::DELIVERED, OrderStatus::CANCELLED], true)) {
+            // (cancelled) → deletion must not re-inject phantom stock. A row
+            // stamped shipped_at but moved back to pending/processing before
+            // status transitions were enforced counts as shipped too.
+            if ($locked->status === OrderStatus::CANCELLED || $locked->hasShippedGoods()) {
                 return;
             }
 
@@ -846,6 +857,12 @@ final class OrderService
             throw new InvalidOrderItemException('A cancelled order\'s line items cannot be changed.');
         }
 
+        // A shipped or delivered order's goods have left: releasing its lines
+        // would restock them. Corrections go through a return.
+        if ($order->hasShippedGoods()) {
+            throw new InvalidOrderItemException('A shipped order\'s line items cannot be changed. Record a return instead.');
+        }
+
         // Shipments point at the order's line rows. Once any are open the
         // lines are frozen, so a shipment never loses the lines it packed.
         if (Shipment::withoutGlobalScopes()->where('order_id', $order->getKey())->active()->exists()) {
@@ -1079,7 +1096,8 @@ final class OrderService
      * inventory when the order was created. Cancelling has its own restocking
      * path, cancel().
      *
-     * @throws \RuntimeException When the order is cancelled.
+     * @throws \RuntimeException When the order is cancelled or delivered, or is
+     *                           shipped and $to is not delivered.
      *
      * @api
      */
@@ -1096,8 +1114,9 @@ final class OrderService
                 return $locked;
             }
 
-            if ($locked->status === OrderStatus::CANCELLED) {
-                throw new InvalidStateException('A cancelled order cannot be reactivated. Create a new order instead.', 'invalid_state_transition');
+            $error = $locked->transitionErrorTo($to);
+            if ($error !== null) {
+                throw new InvalidStateException($error, 'invalid_state_transition');
             }
 
             if ($locked->approvalBlocks($to)) {
