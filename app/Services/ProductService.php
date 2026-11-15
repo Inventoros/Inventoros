@@ -12,6 +12,7 @@ use App\Models\Inventory\Supplier;
 use App\Models\Inventory\SupplierPriceHistory;
 use App\Models\User;
 use App\Observers\ProductObserver;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -45,10 +46,19 @@ final class ProductService
     /**
      * Create a product (plus its options/variants) from validated data.
      *
+     * A warehouse-restricted user may only place the product, and book its
+     * opening stock, in a location of one of their warehouses.
+     *
      * @param  array<string, mixed>  $data
+     *
+     * @throws AuthorizationException
      */
     public function create(array $data): Product
     {
+        if (array_key_exists('location_id', $data) && $data['location_id'] !== null && $data['location_id'] !== '') {
+            $this->authorizeLocation((int) $data['location_id']);
+        }
+
         $data = $this->normaliseCurrencies($data);
         $data = $this->processStoreImages($data);
 
@@ -93,10 +103,28 @@ final class ProductService
     /**
      * Update a product (plus its options/variants) from validated data.
      *
+     * Moving the product's primary location (where receipts and returns are
+     * booked) needs a warehouse-restricted user to have access to both the
+     * current and the new location.
+     *
      * @param  array<string, mixed>  $data
+     *
+     * @throws AuthorizationException
      */
     public function update(Product $product, array $data): Product
     {
+        if (array_key_exists('location_id', $data)) {
+            $newLocation = $data['location_id'] === null || $data['location_id'] === '' ? null : (int) $data['location_id'];
+            $oldLocation = $product->location_id === null ? null : (int) $product->location_id;
+
+            if ($newLocation !== $oldLocation) {
+                if ($oldLocation !== null) {
+                    $this->authorizeLocation($oldLocation);
+                }
+                $this->authorizeLocation($newLocation);
+            }
+        }
+
         $oldImages = $product->images ?? [];
         $oldDisks = $product->image_disks ?? [];
         unset($data['image_disks']);
@@ -187,7 +215,11 @@ final class ProductService
      *
      * Call right after creating the product, inside the same transaction.
      * The row is attributed to $actor, falling back to the signed-in user;
-     * with neither (a console seeder) only the bin is seeded.
+     * with neither (a console seeder) only the bin is seeded. A
+     * warehouse-restricted user may only book it into one of their
+     * warehouses (stock with no location belongs to none).
+     *
+     * @throws AuthorizationException
      */
     public function recordOpeningStock(Product $product, ?User $actor = null): void
     {
@@ -195,6 +227,8 @@ final class ProductService
         if ($quantity <= 0) {
             return;
         }
+
+        $this->authorizeLocation($product->location_id === null ? null : (int) $product->location_id, $actor);
 
         $userId = $actor?->id ?? auth()->id();
         if ($userId !== null) {
@@ -216,8 +250,11 @@ final class ProductService
 
     /**
      * Record a newly created variant's starting stock as a ledger row
-     * (0 -> stock). Variant bins are seeded by its observer. Same attribution
-     * rules as recordOpeningStock().
+     * (0 -> stock). Variant bins are seeded by its observer, at the parent
+     * product's primary location. Same attribution and warehouse rules as
+     * recordOpeningStock().
+     *
+     * @throws AuthorizationException
      */
     public function recordOpeningVariantStock(ProductVariant $variant, ?User $actor = null): void
     {
@@ -226,6 +263,9 @@ final class ProductService
         if ($quantity <= 0 || $userId === null) {
             return;
         }
+
+        $locationId = Product::withoutGlobalScopes()->withTrashed()->whereKey($variant->product_id)->value('location_id');
+        $this->authorizeLocation($locationId === null ? null : (int) $locationId, $actor);
 
         StockAdjustment::create([
             'organization_id' => $variant->organization_id,
@@ -238,6 +278,22 @@ final class ProductService
             'adjustment_quantity' => $quantity,
             'reason' => 'Opening stock',
         ]);
+    }
+
+    /**
+     * Refuse a location outside the acting user's warehouses. The acting user
+     * is $actor, else the signed-in user; with neither (a console or system
+     * caller) nothing is narrowed.
+     *
+     * @throws AuthorizationException
+     */
+    private function authorizeLocation(?int $locationId, ?User $actor = null): void
+    {
+        $user = $actor ?? auth()->user();
+
+        if ($user instanceof User) {
+            app(WarehouseAccessService::class)->authorizeLocation($user, $locationId);
+        }
     }
 
     /**
