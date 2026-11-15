@@ -306,9 +306,18 @@ final class OrdersImport implements ToCollection, WithHeadingRow
             ];
         }
 
-        return Validator::make($data, $rules, [
+        $messages = Validator::make($data, $rules, [
             'product_sku.required_without' => 'Each line needs a product_sku or a variant_sku.',
         ])->errors()->all();
+
+        // A pending or processing order has not shipped: a shipped_at on it
+        // would mark goods as gone that the order still holds.
+        if ($withOrderRules && ($data['shipped_at'] ?? null) !== null
+            && in_array($data['status'] ?? OrderStatus::PENDING->value, [OrderStatus::PENDING->value, OrderStatus::PROCESSING->value], true)) {
+            $messages[] = 'shipped_at can only be set on a shipped, delivered or cancelled order.';
+        }
+
+        return $messages;
     }
 
     /**

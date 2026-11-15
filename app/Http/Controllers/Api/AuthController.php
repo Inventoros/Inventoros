@@ -13,15 +13,16 @@ use App\Models\User;
 use App\Services\Organizations\ActiveOrganization;
 use App\Services\Organizations\OrganizationMembershipService;
 use App\Services\SecurityEventLogger;
+use App\Services\TwoFactorVerifier;
 use Illuminate\Auth\Events\Failed;
 use Illuminate\Auth\Events\Login;
+use Illuminate\Http\Exceptions\ThrottleRequestsException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
-use PragmaRX\Google2FA\Google2FA;
 
 /**
  * @tags Authentication
@@ -51,6 +52,13 @@ class AuthController extends Controller
         ]);
 
         $user = User::where('email', $request->email)->first();
+
+        // An unknown email still costs one password hash, the same work as
+        // checking a wrong password, so response time does not reveal which
+        // emails have accounts.
+        if (! $user) {
+            Hash::make((string) $request->password);
+        }
 
         if (!$user || !Hash::check($request->password, $user->password)) {
             // Same event the web guard fires, so API sign-in failures reach the
@@ -110,6 +118,17 @@ class AuthController extends Controller
      */
     protected function verifyTwoFactor(Request $request, User $user): void
     {
+        $verifier = app(TwoFactorVerifier::class);
+
+        // One failure budget per account, shared with the web challenge, so
+        // spreading guesses over many client IPs does not help. A valid
+        // recovery code still works while locked out, so someone holding only
+        // the password cannot keep the owner out.
+        $lockedOut = $verifier->tooManyFailures($user);
+        $lockout = fn () => new ThrottleRequestsException($verifier->lockoutMessage($user), null, [
+            'Retry-After' => $verifier->secondsUntilUnlocked($user),
+        ]);
+
         if ($request->filled('recovery_code')) {
             $matched = false;
 
@@ -138,13 +157,24 @@ class AuthController extends Controller
 
             if (!$matched) {
                 app(SecurityEventLogger::class)->record(SecurityEvent::TWO_FACTOR_FAILED, $user, $user, ['method' => 'recovery_code', 'guard' => 'sanctum']);
+                $verifier->recordFailure($user);
+
+                if ($lockedOut) {
+                    throw $lockout();
+                }
 
                 throw ValidationException::withMessages([
                     'recovery_code' => ['The provided recovery code is invalid.'],
                 ]);
             }
 
+            $verifier->clearFailures($user);
+
             return;
+        }
+
+        if ($lockedOut) {
+            throw $lockout();
         }
 
         $code = $request->input('code');
@@ -154,15 +184,25 @@ class AuthController extends Controller
             ]);
         }
 
-        $secret = decrypt($user->two_factor_secret);
+        $result = $verifier->checkTotp($user, (string) $code);
 
-        if (!(new Google2FA())->verifyKey($secret, (string) $code)) {
+        // A code that was already used is not a guess: no failure is counted.
+        if ($result === TwoFactorVerifier::TOTP_REPLAYED) {
+            throw ValidationException::withMessages([
+                'code' => [TwoFactorVerifier::REPLAY_MESSAGE],
+            ]);
+        }
+
+        if ($result !== TwoFactorVerifier::TOTP_ACCEPTED) {
             app(SecurityEventLogger::class)->record(SecurityEvent::TWO_FACTOR_FAILED, $user, $user, ['method' => 'totp', 'guard' => 'sanctum']);
+            $verifier->recordFailure($user);
 
             throw ValidationException::withMessages([
                 'code' => ['The provided two-factor code is invalid.'],
             ]);
         }
+
+        $verifier->clearFailures($user);
     }
 
     /**

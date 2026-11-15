@@ -56,6 +56,22 @@ class SKUGeneratorServiceTest extends TestCase
         $this->assertSame('UNC-001', $sku);
     }
 
+    public function test_generate_ignores_another_organizations_category(): void
+    {
+        $other = Organization::create([
+            'name' => 'Other Org',
+            'email' => 'other@org.com',
+        ]);
+        $foreign = ProductCategory::create([
+            'organization_id' => $other->id,
+            'name' => 'Zeppelins',
+        ]);
+
+        $sku = $this->service->generate('{category}-001', $this->organization->id, null, $foreign->id);
+
+        $this->assertSame('UNC-001', $sku);
+    }
+
     public function test_generate_replaces_category_id_placeholder(): void
     {
         $sku = $this->service->generate('{category_id}XXX', $this->organization->id, null, 5);

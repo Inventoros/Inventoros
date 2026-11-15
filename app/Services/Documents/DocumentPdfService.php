@@ -43,8 +43,11 @@ class DocumentPdfService
      * The customer portal variant leaves payment references off: they are
      * staff-entered (transaction ids, cheque or bank references) and not
      * meant for the customer's self-service copy.
+     *
+     * $showPayments false leaves the payment rows, amount paid and balance
+     * due off entirely: the staff copy for a user without view_payments.
      */
-    public function orderInvoice(Order $order, bool $forCustomerPortal = false): DomPdf
+    public function orderInvoice(Order $order, bool $forCustomerPortal = false, bool $showPayments = true): DomPdf
     {
         // Issued plugin documents must not silently fall back to a different,
         // mutable invoice when their renderer is unavailable or deactivated.
@@ -57,7 +60,7 @@ class DocumentPdfService
             return Pdf::loadView($document['view'], $document['data']);
         }
 
-        return Pdf::loadView('pdf.invoice', $this->orderInvoiceViewData($order, $forCustomerPortal));
+        return Pdf::loadView('pdf.invoice', $this->orderInvoiceViewData($order, $forCustomerPortal, $showPayments));
     }
 
     /**
@@ -67,7 +70,7 @@ class DocumentPdfService
      *
      * @return array<string, mixed>
      */
-    public function orderInvoiceViewData(Order $order, bool $forCustomerPortal = false): array
+    public function orderInvoiceViewData(Order $order, bool $forCustomerPortal = false, bool $showPayments = true): array
     {
         $this->invoiceNumbers->ensureAssigned($order);
 
@@ -80,9 +83,12 @@ class DocumentPdfService
             'generatedDate' => now()->format('F j, Y'),
             'lineDiscountTotal' => $order->lineDiscountTotal(),
             'orderDiscountAmount' => $order->orderDiscountAmount(),
-            'payments' => $order->payments()->withoutGlobalScopes()->active()->orderBy('paid_at')->orderBy('id')->get(),
+            'payments' => $showPayments
+                ? $order->payments()->withoutGlobalScopes()->active()->orderBy('paid_at')->orderBy('id')->get()
+                : collect(),
             'balanceDue' => $order->balanceDue(),
-            'showPaymentReferences' => ! $forCustomerPortal,
+            'showPaymentReferences' => $showPayments && ! $forCustomerPortal,
+            'showPaymentPosition' => $showPayments,
         ];
     }
 

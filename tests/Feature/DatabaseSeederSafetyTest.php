@@ -68,7 +68,7 @@ final class DatabaseSeederSafetyTest extends TestCase
             $this->artisan('db:seed', ['--class' => $seeder, '--force' => true])->run();
         } catch (\RuntimeException $error) {
             $refused = true;
-            $this->assertSame('Demo data cannot be seeded in production.', $error->getMessage());
+            $this->assertStringContainsString('only runs in the local or testing environment', $error->getMessage());
         }
 
         $this->assertTrue($refused, 'A development demo seeder must refuse production, including --force.');

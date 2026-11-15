@@ -31,6 +31,10 @@ return [
     // Written by the installer so losing the database cannot reopen setup.
     'installed' => (bool) env('INVENTOROS_INSTALLED', false),
 
+    // One-time secret that unlocks the web installer before installation.
+    // When empty, the installer generates storage/app/private/setup-token.
+    'setup_token' => env('INVENTOROS_SETUP_TOKEN'),
+
     /*
     |--------------------------------------------------------------------------
     | Application Debug Mode

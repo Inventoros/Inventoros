@@ -2542,10 +2542,13 @@
     "server": {
       "alreadyInstalled": "Inventoros jest już zainstalowany.",
       "connectionSuccessful": "Połączono z bazą danych.",
-      "connectionFailed": "Nie udało się połączyć z bazą danych: {error}",
+      "connectionFailed": "Nie udało się połączyć z bazą danych. Sprawdź host, port, nazwę bazy danych, użytkownika i hasło.",
       "databaseInstalled": "Baza danych zainstalowana.",
       "unfinishedInstall": "Baza danych zawiera już tabele, prawdopodobnie z wcześniejszej, niedokończonej instalacji, a instalacja na nich się nie powiodła: {error}",
-      "adminCreated": "Utworzono konto administratora."
+      "adminCreated": "Utworzono konto administratora.",
+      "locked": "Najpierw odblokuj instalator tokenem instalacyjnym.",
+      "invalidToken": "Ten token instalacyjny jest nieprawidłowy.",
+      "unlocked": "Instalator odblokowany."
     },
     "welcome": {
       "title": "Witamy w Inventoros",
@@ -2564,7 +2567,18 @@
       "beforeBegin": "Zanim zaczniesz",
       "beforeBeginDesc": "Upewnij się, że masz zainstalowane PHP 8.4.1+, MySQL/PostgreSQL i wymagane rozszerzenia PHP.",
       "startInstallation": "Rozpocznij instalację",
-      "license": "Otwarte oprogramowanie na licencji AGPL-3.0"
+      "license": "Otwarte oprogramowanie na licencji AGPL-3.0",
+      "unlockTitle": "Odblokuj instalator",
+      "unlockDesc": "Wpisz token instalacyjny, aby kontynuować. Dzięki temu instalację może dokończyć tylko osoba z dostępem do serwera.",
+      "tokenEnv": "Instalacja skryptem instalacyjnym lub przez Docker: to INVENTOROS_SETUP_TOKEN w pliku .env.",
+      "tokenFile": "W pozostałych przypadkach (cPanel lub instalacja ręczna): znajduje się w pliku storage/app/private/setup-token w folderze Inventoros na serwerze.",
+      "tokenLabel": "Token instalacyjny",
+      "unlock": "Odblokuj",
+      "unlocking": "Odblokowywanie...",
+      "tooManyAttempts": "Zbyt wiele prób. Odczekaj minutę i spróbuj ponownie.",
+      "unlockFailed": "Nie udało się odblokować instalatora: {error}",
+      "tokenUnavailableTitle": "Brak dostępnego tokenu instalacyjnego",
+      "tokenUnavailable": "INVENTOROS_SETUP_TOKEN nie jest ustawiony, a instalator nie mógł zapisać storage/app/private/setup-token. Ustaw INVENTOROS_SETUP_TOKEN w pliku .env albo nadaj prawa zapisu do storage/app/private, a następnie odśwież tę stronę."
     },
     "requirements": {
       "title": "Wymagania systemowe",

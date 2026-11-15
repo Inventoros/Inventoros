@@ -9,6 +9,7 @@ use App\Http\Requests\Customer\StoreCustomerRequest;
 use App\Http\Requests\Customer\UpdateCustomerRequest;
 use App\Models\Customer;
 use App\Models\CustomerContact;
+use App\Support\PaymentVisibility;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -102,6 +103,7 @@ class CustomerController extends Controller
 
         // Newest first: the page lists the most recent orders.
         $customer->load(['orders' => fn ($query) => $query->latest('order_date')->latest('id')]);
+        PaymentVisibility::hideOnOrders($request->user(), $customer->orders);
 
         $organization = $customer->organization;
 

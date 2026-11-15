@@ -6,6 +6,7 @@ namespace Tests\Feature;
 
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use Tests\Feature\Concerns\UnlocksInstaller;
 use Tests\TestCase;
 
 /**
@@ -17,6 +18,8 @@ use Tests\TestCase;
  */
 final class InstallerFreshEnvironmentTest extends TestCase
 {
+    use UnlocksInstaller;
+
     /**
      * The shipped defaults, on a database with no tables at all (the suite's
      * in-memory SQLite; on MySQL and PostgreSQL the tables of other tests
@@ -36,6 +39,7 @@ final class InstallerFreshEnvironmentTest extends TestCase
         $this->useShippedDriversOnAnEmptyDatabase();
 
         $this->get('/install')->assertOk();
+        $this->unlockInstaller();
         $this->get('/install/requirements')->assertOk();
         $this->get('/install/database')->assertOk();
     }
@@ -62,9 +66,21 @@ final class InstallerFreshEnvironmentTest extends TestCase
         $this->get('/login')->assertRedirect(route('install.index'));
     }
 
+    public function test_the_installer_can_be_unlocked_before_the_cache_table_exists(): void
+    {
+        $this->useShippedDriversOnAnEmptyDatabase();
+        // In production the shared rate limiter is bound at boot to the
+        // configured store, here `database`, whose table does not exist yet.
+        $this->app->instance(\Illuminate\Cache\RateLimiter::class, new \Illuminate\Cache\RateLimiter(\Illuminate\Support\Facades\Cache::store('database')));
+
+        $this->unlockInstaller();
+        $this->get('/install/database')->assertOk();
+    }
+
     public function test_the_installer_keeps_its_session_between_steps(): void
     {
         $this->useShippedDriversOnAnEmptyDatabase();
+        $this->unlockInstaller();
 
         $first = $this->get('/install/database')->assertOk();
         $this->assertSame('file', config('session.driver'));

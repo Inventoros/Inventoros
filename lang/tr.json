@@ -146,5 +146,7 @@
     "Payment recorded.": "Ödeme kaydedildi.",
     "Cannot delete a supplier with open purchase orders.": "Açık satın alma siparişleri olan bir tedarikçi silinemez.",
     "Stock adjustments created for discrepancies: :count.": "Farklar için oluşturulan stok düzeltmeleri: :count.",
-    "No discrepancies found.": "Fark bulunamadı."
+    "No discrepancies found.": "Fark bulunamadı.",
+    "If that email belongs to an account, we have emailed a password reset link.": "Bu e-posta bir hesaba aitse, parola sıfırlama bağlantısı gönderdik.",
+    "This code was already used; wait for the next one.": "Bu kod zaten kullanıldı; bir sonrakini bekleyin."
 }
