@@ -13,10 +13,13 @@ use App\Models\Inventory\WorkOrderItem;
 use App\Models\SavedReport;
 use App\Models\User;
 use App\Models\Warehouse;
+use Database\Seeders\Concerns\RunsOnlyInFixtureEnvironments;
 use Illuminate\Database\Seeder;
 
 class DemoDataSeeder extends Seeder
 {
+    use RunsOnlyInFixtureEnvironments;
+
     /**
      * Seed the database with demo data for warehouses, kits, assemblies, work orders, and reports.
      *
@@ -25,9 +28,7 @@ class DemoDataSeeder extends Seeder
      */
     public function run(): void
     {
-        if (app()->environment('production')) {
-            throw new \RuntimeException('Demo data cannot be seeded in production.');
-        }
+        $this->ensureFixtureEnvironment();
 
         // Ensure base demo data exists
         $this->call(ScreenshotSeeder::class);

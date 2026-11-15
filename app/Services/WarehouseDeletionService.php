@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Enums\Permission;
 use App\Models\Inventory\ProductLocation;
 use App\Models\User;
 use App\Models\Warehouse;
+use App\Services\Organizations\ActiveOrganization;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\ValidationException;
@@ -18,7 +20,7 @@ final class WarehouseDeletionService
         abort_unless((int) $warehouse->organization_id === (int) $actor->organization_id, 403);
         app(WarehouseAccessService::class)->authorizeWarehouse($actor, (int) $warehouse->id);
 
-        DB::transaction(function () use ($warehouse): void {
+        DB::transaction(function () use ($warehouse, $actor): void {
             $locked = Warehouse::whereKey($warehouse->id)->lockForUpdate()->firstOrFail();
             if ($locked->is_default) {
                 throw ValidationException::withMessages(['warehouse' => 'Cannot delete the default warehouse. Set another warehouse as default first.']);
@@ -58,6 +60,7 @@ final class WarehouseDeletionService
             if ($transfers || $holds || $counts) {
                 throw ValidationException::withMessages(['warehouse' => 'Finish or cancel active transfers and stock counts, and release stock reservations before deleting this warehouse.']);
             }
+            $this->guardLastAssignments($actor, $locked);
             // Keep locations and their history usable; deleting an empty warehouse
             // must not require deleting zero-stock products or historical bin rows.
             foreach ($locations as $location) {
@@ -66,5 +69,68 @@ final class WarehouseDeletionService
             $locked->users()->detach();
             $locked->delete();
         });
+    }
+
+    /**
+     * Deleting a warehouse drops every assignment to it, and a user with no
+     * assignment is unrestricted unless the organization restricts
+     * unassigned users. A restricted actor may never delete their own last
+     * warehouse, and only admins or holders of access_all_warehouses may
+     * drop a colleague's last one. Same rule as editing a warehouse's users.
+     *
+     * @throws ValidationException
+     */
+    private function guardLastAssignments(User $actor, Warehouse $warehouse): void
+    {
+        $assigned = $warehouse->users()->pluck('users.id')->map(fn ($id) => (int) $id)->values();
+        if ($assigned->isEmpty()) {
+            return;
+        }
+
+        $access = app(WarehouseAccessService::class);
+        $losesLastAssignment = function (User $user) use ($access, $warehouse): bool {
+            $ids = $access->accessibleWarehouseIds($user);
+
+            return $ids !== null && array_values(array_diff($ids, [(int) $warehouse->id])) === [];
+        };
+
+        if ($assigned->contains((int) $actor->id) && $losesLastAssignment($actor)) {
+            $this->refuse(__('You cannot delete your own last assigned warehouse.'));
+        }
+
+        if ($actor->isAdmin() || $actor->hasPermission(Permission::ACCESS_ALL_WAREHOUSES)) {
+            return;
+        }
+
+        // With the organization setting on, an unassigned user sees no
+        // warehouse, so the deletion narrows access instead of widening it.
+        if ($access->organizationRestrictsToAssigned((int) $warehouse->organization_id)) {
+            return;
+        }
+
+        // Evaluate each user as a member of this warehouse's organization:
+        // their stored organization_id may be a different home organization.
+        $organization = app(ActiveOrganization::class);
+        $widened = User::query()
+            ->whereIn('id', $assigned->all())
+            ->get()
+            ->map(fn (User $user) => $organization->userIn($user, (int) $warehouse->organization_id))
+            ->filter(fn (?User $user) => $user !== null && $losesLastAssignment($user));
+
+        if ($widened->isNotEmpty()) {
+            $this->refuse(__('Deleting this warehouse would leave :names with no warehouse assignment, which would give them access to every warehouse. Assign them to another warehouse first, or ask an administrator.', [
+                'names' => $widened->pluck('name')->implode(', '),
+            ]));
+        }
+    }
+
+    /**
+     * The "assignments" key lets the REST API report a distinct error code.
+     *
+     * @throws ValidationException
+     */
+    private function refuse(string $message): never
+    {
+        throw ValidationException::withMessages(['warehouse' => $message, 'assignments' => $message]);
     }
 }

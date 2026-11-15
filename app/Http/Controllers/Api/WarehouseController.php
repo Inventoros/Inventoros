@@ -165,7 +165,11 @@ class WarehouseController extends Controller
         } catch (ValidationException $e) {
             return response()->json([
                 'message' => $e->errors()['warehouse'][0],
-                'error' => $warehouse->is_default ? 'cannot_delete_default' : 'has_products',
+                'error' => match (true) {
+                    isset($e->errors()['assignments']) => 'last_assignment',
+                    $warehouse->is_default => 'cannot_delete_default',
+                    default => 'has_products',
+                },
             ], 422);
         }
 

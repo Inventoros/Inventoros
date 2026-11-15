@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Inventory;
 use App\Http\Controllers\Controller;
 use App\Services\SKUGeneratorService;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 /**
  * Controller for SKU generation and validation.
@@ -42,7 +43,9 @@ class SKUController extends Controller
         $request->validate([
             'pattern' => 'required|string',
             'product_name' => 'nullable|string',
-            'category_id' => 'nullable|integer',
+            // Only a category of the user's own organization.
+            'category_id' => ['nullable', 'integer', Rule::exists('product_categories', 'id')
+                ->where('organization_id', $request->user()->organization_id)],
         ]);
 
         $sku = $this->skuGenerator->generateUnique(

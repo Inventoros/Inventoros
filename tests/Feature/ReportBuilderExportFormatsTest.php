@@ -62,6 +62,47 @@ class ReportBuilderExportFormatsTest extends TestCase
         $this->assertStringContainsString("'@SUM(A1)", $response->streamedContent());
     }
 
+    public function test_export_keeps_the_filename_shape(): void
+    {
+        $this->travelTo(now()->setDate(2026, 11, 15));
+
+        $response = $this->actingAs($this->owner)->get(route('reports.builder.export', $this->report));
+
+        $response->assertOk();
+        $this->assertStringContainsString(
+            'filename=stock_list_2026-11-15.csv',
+            (string) $response->headers->get('Content-Disposition'),
+        );
+    }
+
+    public function test_export_of_a_report_named_with_slashes_downloads_with_a_safe_filename(): void
+    {
+        $this->travelTo(now()->setDate(2026, 11, 15));
+        $this->report->update(['name' => 'Q1/Q2 Stock\Levels']);
+
+        $response = $this->actingAs($this->owner)->get(route('reports.builder.export', [$this->report, 'format' => 'xlsx']));
+
+        $response->assertOk();
+        $this->assertStringContainsString(
+            'filename=q1q2_stocklevels_2026-11-15.xlsx',
+            (string) $response->headers->get('Content-Disposition'),
+        );
+    }
+
+    public function test_export_of_a_report_whose_name_has_no_letters_falls_back_to_report(): void
+    {
+        $this->travelTo(now()->setDate(2026, 11, 15));
+        $this->report->update(['name' => '///']);
+
+        $response = $this->actingAs($this->owner)->get(route('reports.builder.export', $this->report));
+
+        $response->assertOk();
+        $this->assertStringContainsString(
+            'filename=report_2026-11-15.csv',
+            (string) $response->headers->get('Content-Disposition'),
+        );
+    }
+
     public function test_xlsx_export_keeps_numbers_numeric_and_neutralises_text(): void
     {
         $response = $this->actingAs($this->owner)->get(route('reports.builder.export', [$this->report, 'format' => 'xlsx']));

@@ -293,7 +293,14 @@ class PurchaseOrderController extends Controller
             ], 422);
         }
 
-        $purchaseOrder->cancel();
+        try {
+            $purchaseOrder->cancel();
+        } catch (InvalidStateException $e) {
+            return response()->json([
+                'message' => 'This purchase order cannot be cancelled',
+                'error' => $e->errorCode,
+            ], 422);
+        }
 
         return response()->json([
             'message' => 'Purchase order cancelled',
