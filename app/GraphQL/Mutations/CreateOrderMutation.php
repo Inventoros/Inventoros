@@ -105,6 +105,16 @@ class CreateOrderMutation extends Mutation
         ];
     }
 
+    /**
+     * Bound the line count, as on purchase orders and transfers.
+     */
+    protected function rules(array $args = []): array
+    {
+        return [
+            'items' => ['required', 'array', 'min:1', 'max:500'],
+        ];
+    }
+
     public function resolve($root, array $args, $context, ResolveInfo $resolveInfo, Closure $getSelectFields)
     {
         $user = auth()->user();
