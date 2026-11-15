@@ -10,6 +10,7 @@ use App\Http\Requests\SendDocumentEmailRequest;
 use App\Models\Order\Order;
 use App\Services\Documents\DocumentPdfService;
 use App\Services\OrderInvoiceEmailService;
+use App\Support\PaymentVisibility;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -33,7 +34,7 @@ class InvoiceController extends Controller
     {
         $this->authorizeOrder($request, $order);
 
-        $pdf = $this->pdfs->orderInvoice($order);
+        $pdf = $this->pdfs->orderInvoice($order, showPayments: PaymentVisibility::allows($request->user()));
 
         return $pdf->download($this->pdfs->orderInvoiceFilename($order));
     }
@@ -45,7 +46,7 @@ class InvoiceController extends Controller
     {
         $this->authorizeOrder($request, $order);
 
-        $pdf = $this->pdfs->orderInvoice($order);
+        $pdf = $this->pdfs->orderInvoice($order, showPayments: PaymentVisibility::allows($request->user()));
 
         return $pdf->stream($this->pdfs->orderInvoiceFilename($order));
     }

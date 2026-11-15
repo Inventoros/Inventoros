@@ -166,7 +166,7 @@ class SecurityEventLoggingTest extends TestCase
         $this->assertCount(1, $this->securityLogs(SecurityEvent::TWO_FACTOR_FAILED));
 
         $this->actingAs($this->user)
-            ->withSession(['two_factor_verified' => true])
+            ->withSession(['two_factor_verified' => $this->user->getKey()])
             ->post(route('two-factor.disable'), ['password' => 'password']);
 
         $this->assertCount(1, $this->securityLogs(SecurityEvent::TWO_FACTOR_DISABLED));

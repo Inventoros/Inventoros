@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Enums\SecurityEvent;
 use App\Http\Controllers\Controller;
+use App\Http\Middleware\EnsureTwoFactorVerified;
 use App\Services\SecurityEventLogger;
 use BaconQrCode\Renderer\Image\SvgImageBackEnd;
 use BaconQrCode\Renderer\ImageRenderer;
@@ -128,8 +129,8 @@ class TwoFactorController extends Controller
 
         app(SecurityEventLogger::class)->record(SecurityEvent::TWO_FACTOR_ENABLED, $request->user(), $enabledUser);
 
-        // Mark session as verified so middleware doesn't redirect
-        $request->session()->put('two_factor_verified', true);
+        // Mark session as verified for this user so middleware doesn't redirect
+        $request->session()->put(EnsureTwoFactorVerified::SESSION_KEY, $enabledUser->getAuthIdentifier());
 
         // Clean up session
         $request->session()->forget('two_factor_secret');
@@ -159,7 +160,7 @@ class TwoFactorController extends Controller
             'two_factor_recovery_codes' => null,
         ]);
 
-        $request->session()->forget('two_factor_verified');
+        $request->session()->forget(EnsureTwoFactorVerified::SESSION_KEY);
 
         app(SecurityEventLogger::class)->record(SecurityEvent::TWO_FACTOR_DISABLED, $request->user(), $request->user());
 
@@ -201,7 +202,7 @@ class TwoFactorController extends Controller
                 ->withErrors(['code' => __('The provided code is invalid.')]);
         }
 
-        $request->session()->put('two_factor_verified', true);
+        $this->markSessionVerified($request, $user);
 
         return redirect()->intended(route('dashboard'));
     }
@@ -234,9 +235,19 @@ class TwoFactorController extends Controller
                 ->withErrors(['code' => __('The provided recovery code is invalid.')]);
         }
 
-        $request->session()->put('two_factor_verified', true);
+        $this->markSessionVerified($request, $user);
 
         return redirect()->intended(route('dashboard'));
+    }
+
+    /**
+     * Record that this session passed the second factor as $user, under a
+     * fresh session id.
+     */
+    protected function markSessionVerified(Request $request, $user): void
+    {
+        $request->session()->regenerate();
+        $request->session()->put(EnsureTwoFactorVerified::SESSION_KEY, $user->getAuthIdentifier());
     }
 
     /**
