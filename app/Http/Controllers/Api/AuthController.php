@@ -52,6 +52,13 @@ class AuthController extends Controller
 
         $user = User::where('email', $request->email)->first();
 
+        // An unknown email still costs one password hash, the same work as
+        // checking a wrong password, so response time does not reveal which
+        // emails have accounts.
+        if (! $user) {
+            Hash::make((string) $request->password);
+        }
+
         if (!$user || !Hash::check($request->password, $user->password)) {
             // Same event the web guard fires, so API sign-in failures reach the
             // security log and failed-login alerts. Only the email is passed.
