@@ -255,7 +255,7 @@ class TwoFactorBruteForceAndReplayTest extends TestCase
 
         $this->actingAs($fresh)
             ->withSession(['two_factor_secret' => $secret])
-            ->post(route('two-factor.enable'), ['code' => $code])
+            ->post(route('two-factor.enable'), ['code' => $code, 'current_password' => 'password123'])
             ->assertRedirect(route('settings.account.index'));
         $this->assertTrue($fresh->fresh()->two_factor_enabled);
 
