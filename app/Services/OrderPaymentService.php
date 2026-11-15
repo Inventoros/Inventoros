@@ -119,11 +119,14 @@ final class OrderPaymentService
      * Void a payment or refund. The row stays, marked voided, and stops
      * counting towards what was paid.
      *
+     * Voiding a refund that would leave the order paid more than its total
+     * needs $allowOverpayment, like recording a payment above the balance.
+     *
      * @throws ValidationException
      */
-    public function void(OrderPayment $payment, User $actor, ?string $reason): OrderPayment
+    public function void(OrderPayment $payment, User $actor, ?string $reason, bool $allowOverpayment = false): OrderPayment
     {
-        [$voided, $locked] = DB::transaction(function () use ($payment, $actor, $reason) {
+        [$voided, $locked] = DB::transaction(function () use ($payment, $actor, $reason, $allowOverpayment) {
             $locked = $this->lock($payment->order()->withTrashed()->withoutGlobalScopes()->firstOrFail());
             $row = OrderPayment::withoutGlobalScopes()->whereKey($payment->getKey())->lockForUpdate()->firstOrFail();
 
@@ -140,11 +143,12 @@ final class OrderPaymentService
             }
 
             // Voiding a refund puts its money back on the order. Like a new
-            // payment, that may not overpay it: an overpayment is only ever
-            // recorded on purpose, as a payment with allow_overpayment.
-            if ($row->isRefund() && Money::compare(Money::add($locked->amount_paid, $row->amount), $locked->total) > 0) {
+            // payment, that may not overpay it unless the caller explicitly
+            // allows an overpayment (an order that was overpaid on purpose).
+            if ($row->isRefund() && ! $allowOverpayment
+                && Money::compare(Money::add($locked->amount_paid, $row->amount), $locked->total) > 0) {
                 throw ValidationException::withMessages([
-                    'payment' => "Voiding this refund would leave the order paid more than its {$locked->total} total. Record a payment that allows an overpayment instead if the money was kept.",
+                    'payment' => "Voiding this refund would leave the order paid more than its {$locked->total} total. Allow an overpayment and void it again if the order was overpaid on purpose.",
                 ]);
             }
 

@@ -141,6 +141,73 @@ final class OrderRefundVoidOverpaymentTest extends TestCase
         $this->assertNotNull($refund->fresh()->voided_at);
     }
 
+    /**
+     * Deliberately overpaid (120.00 against 100.00, recorded with the
+     * allowance), then a 20.00 refund recorded by mistake.
+     *
+     * @return array{0: Order, 1: OrderPayment}
+     */
+    private function overpaidOrderWithMistakenRefund(): array
+    {
+        $order = $this->order();
+        $this->payments()->record($order, $this->admin, ['amount' => '120.00', 'method' => 'card', 'allow_overpayment' => true]);
+        $refund = $this->payments()->refund($order, $this->admin, ['amount' => '20.00', 'method' => 'card']);
+        $this->assertSame('100.00', (string) $order->fresh()->amount_paid);
+
+        return [$order, $refund];
+    }
+
+    public function test_voiding_a_refund_on_a_deliberately_overpaid_order_needs_the_explicit_allowance(): void
+    {
+        [$order, $refund] = $this->overpaidOrderWithMistakenRefund();
+
+        try {
+            $this->payments()->void($refund, $this->admin, 'recorded by mistake');
+            $this->fail('Voiding the refund should need the overpayment allowance.');
+        } catch (ValidationException $e) {
+            $this->assertStringContainsString('overpayment', $e->errors()['payment'][0]);
+        }
+        $this->assertNull($refund->fresh()->voided_at);
+
+        $this->payments()->void($refund->fresh(), $this->admin, 'recorded by mistake', allowOverpayment: true);
+
+        $fresh = $order->fresh();
+        $this->assertNotNull($refund->fresh()->voided_at);
+        $this->assertSame('120.00', (string) $fresh->amount_paid);
+        $this->assertSame(PaymentStatus::OVERPAID, $fresh->payment_status);
+    }
+
+    public function test_the_api_takes_the_allowance_on_void(): void
+    {
+        [$order, $refund] = $this->overpaidOrderWithMistakenRefund();
+        Sanctum::actingAs($this->admin, ['*']);
+
+        $this->postJson("/api/v1/orders/{$order->id}/payments/{$refund->id}/void", ['reason' => 'mistake'])
+            ->assertStatus(422);
+        $this->postJson("/api/v1/orders/{$order->id}/payments/{$refund->id}/void", ['reason' => 'mistake', 'allow_overpayment' => true])
+            ->assertOk();
+
+        $this->assertNotNull($refund->fresh()->voided_at);
+        $this->assertSame('120.00', (string) $order->fresh()->amount_paid);
+    }
+
+    public function test_the_web_takes_the_allowance_on_void(): void
+    {
+        [$order, $refund] = $this->overpaidOrderWithMistakenRefund();
+
+        $this->actingAs($this->admin)
+            ->from(route('orders.show', $order))
+            ->post(route('orders.payments.void', [$order, $refund]), ['reason' => 'mistake'])
+            ->assertSessionHasErrors('payment');
+
+        $this->actingAs($this->admin)
+            ->post(route('orders.payments.void', [$order, $refund]), ['reason' => 'mistake', 'allow_overpayment' => '1'])
+            ->assertSessionHasNoErrors()
+            ->assertRedirect(route('orders.show', $order));
+
+        $this->assertNotNull($refund->fresh()->voided_at);
+    }
+
     public function test_voiding_payments_is_unaffected(): void
     {
         [$order] = $this->refundedThenCutOrder();
