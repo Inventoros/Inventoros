@@ -31,7 +31,7 @@ final class StorePurchaseOrderRequest extends FormRequest
             'shipping' => ['nullable', 'numeric', 'decimal:0,2', 'min:0'],
             'tax' => ['nullable', 'numeric', 'decimal:0,2', 'min:0'],
             'notes' => ['nullable', 'string'],
-            'items' => ['required', 'array', 'min:1'],
+            'items' => ['required', 'array', 'min:1', 'max:500'],
             'items.*.product_id' => ['required', Rule::exists('products', 'id')->where('organization_id', $organizationId)],
             'items.*.product_variant_id' => ['nullable', 'integer', Rule::exists('product_variants', 'id')->where('organization_id', $organizationId)->whereNull('deleted_at')],
             'items.*.quantity' => ['required', 'integer', 'min:1'],
