@@ -7,6 +7,7 @@ namespace Tests\Feature;
 use App\Http\Controllers\Install\InstallerController;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\File;
+use Tests\Feature\Concerns\UnlocksInstaller;
 use Tests\TestCase;
 
 /**
@@ -18,6 +19,7 @@ use Tests\TestCase;
 final class InstallerProductionSettingsTest extends TestCase
 {
     use RefreshDatabase;
+    use UnlocksInstaller;
 
     private string $envFile;
 
@@ -46,6 +48,8 @@ final class InstallerProductionSettingsTest extends TestCase
                 return $this->testEnvFile;
             }
         });
+
+        $this->unlockInstaller();
     }
 
     protected function tearDown(): void

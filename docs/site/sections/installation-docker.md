@@ -37,6 +37,7 @@ cat > .env <<EOF
 APP_KEY=base64:$(openssl rand -base64 32)
 APP_URL=https://inventory.example.com
 DB_PASSWORD=$(openssl rand -hex 24)
+INVENTOROS_SETUP_TOKEN=$(openssl rand -hex 24)
 INVENTOROS_IMAGE=ghcr.io/inventoros/inventoros:2.5.0
 EOF
 ```
@@ -49,7 +50,7 @@ Keep this file safe. `APP_KEY` encrypts sessions and stored secrets, so changing
 docker compose -f docker-compose.prod.yml up -d
 ```
 
-4. Open `APP_URL/install` (or http://localhost:8080/install) and complete the web installer. On the database step enter host `db`, port `5432`, database `inventoros`, user `inventoros` and the `DB_PASSWORD` from your `.env`.
+4. Open `APP_URL/install` (or http://localhost:8080/install) and complete the web installer. Unlock it with the `INVENTOROS_SETUP_TOKEN` from your `.env`. Without one, the app generates a token; show it with `docker compose -f docker-compose.prod.yml exec app cat storage/app/private/setup-token`. On the database step enter host `db`, port `5432`, database `inventoros`, user `inventoros` and the `DB_PASSWORD` from your `.env`.
 
 ## What runs where
 

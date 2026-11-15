@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Schema;
+use Tests\Feature\Concerns\UnlocksInstaller;
 use Tests\TestCase;
 
 /**
@@ -23,6 +24,8 @@ use Tests\TestCase;
  */
 final class InstallerInterruptedMigrationTest extends TestCase
 {
+    use UnlocksInstaller;
+
     private string $envFile;
 
     protected function setUp(): void
@@ -63,6 +66,8 @@ final class InstallerInterruptedMigrationTest extends TestCase
                 return $this->testSettings;
             }
         });
+
+        $this->unlockInstaller();
     }
 
     protected function tearDown(): void
