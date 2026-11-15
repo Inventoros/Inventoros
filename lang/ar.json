@@ -147,5 +147,6 @@
     "Cannot delete a supplier with open purchase orders.": "لا يمكن حذف مورد لديه أوامر شراء مفتوحة.",
     "Stock adjustments created for discrepancies: :count.": "عدد تسويات المخزون المنشأة للفروقات: :count.",
     "No discrepancies found.": "لم يتم العثور على فروقات.",
-    "If that email belongs to an account, we have emailed a password reset link.": "إذا كان هذا البريد الإلكتروني مرتبطًا بحساب، فقد أرسلنا رابط إعادة تعيين كلمة المرور."
+    "If that email belongs to an account, we have emailed a password reset link.": "إذا كان هذا البريد الإلكتروني مرتبطًا بحساب، فقد أرسلنا رابط إعادة تعيين كلمة المرور.",
+    "This code was already used; wait for the next one.": "تم استخدام هذا الرمز بالفعل؛ انتظر الرمز التالي."
 }
