@@ -18,6 +18,7 @@ use App\Models\Purchasing\PurchaseOrder;
 use App\Services\ApprovalService;
 use App\Services\PurchaseOrderEmailService;
 use App\Services\PurchaseOrderService;
+use App\Support\ListSortColumns;
 use Dedoc\Scramble\Attributes\QueryParameter;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -55,7 +56,7 @@ class PurchaseOrderController extends Controller
             });
 
         // Sorting (allowlist to prevent SQL injection)
-        $allowedSortColumns = ['created_at', 'updated_at', 'order_date', 'po_number', 'status', 'total'];
+        $allowedSortColumns = ListSortColumns::PURCHASE_ORDERS;
         $sortBy = in_array($request->input('sort_by'), $allowedSortColumns) ? $request->input('sort_by') : 'order_date';
         $sortDir = ($request->input('sort_dir') === 'asc') ? 'asc' : 'desc';
         $query->orderBy($sortBy, $sortDir);

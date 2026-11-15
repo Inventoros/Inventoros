@@ -11,6 +11,7 @@ use App\Http\Resources\ProductResource;
 use App\Models\Inventory\Product;
 use App\Services\ProductService;
 use App\Services\StockReservationService;
+use App\Support\ListSortColumns;
 use App\Support\ProductSearch;
 use Dedoc\Scramble\Attributes\QueryParameter;
 use Illuminate\Http\JsonResponse;
@@ -70,7 +71,7 @@ class ProductController extends Controller
             });
 
         // Sorting (allowlist to prevent SQL injection)
-        $allowedSortColumns = ['created_at', 'updated_at', 'name', 'sku', 'price', 'stock', 'status', 'is_active'];
+        $allowedSortColumns = ListSortColumns::PRODUCTS;
         $sortBy = in_array($request->input('sort_by'), $allowedSortColumns) ? $request->input('sort_by') : 'created_at';
         $sortDir = ($request->input('sort_dir') === 'asc') ? 'asc' : 'desc';
         $query->orderBy($sortBy, $sortDir);

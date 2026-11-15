@@ -7,10 +7,12 @@ namespace App\GraphQL\Queries;
 use App\GraphQL\Concerns\RequiresPermissions;
 use App\GraphQL\Support\ListResourceLimits;
 use App\Models\Purchasing\PurchaseOrder;
+use App\Support\ListSortColumns;
 use Closure;
 use GraphQL\Type\Definition\ResolveInfo;
 use GraphQL\Type\Definition\Type;
 use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Validation\Rule;
 use Rebing\GraphQL\Support\Facades\GraphQL;
 use Rebing\GraphQL\Support\Query;
 
@@ -54,10 +56,12 @@ class PurchaseOrdersQuery extends Query
             ],
             'sort_by' => [
                 'type' => Type::string(),
+                'rules' => ['nullable', 'string', Rule::in(ListSortColumns::PURCHASE_ORDERS)],
                 'description' => 'Sort field (default: created_at)',
             ],
             'sort_dir' => [
                 'type' => Type::string(),
+                'rules' => ['nullable', 'string', Rule::in(ListSortColumns::DIRECTIONS)],
                 'description' => 'Sort direction: asc or desc (default: desc)',
             ],
             'limit' => [
