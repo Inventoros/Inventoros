@@ -6,6 +6,7 @@ namespace App\Mcp\Tools;
 
 use App\Mcp\Concerns\AuthenticatesMcpRequest;
 use App\Models\Inventory\Product;
+use App\Support\PageSize;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
@@ -39,7 +40,7 @@ class SearchProductsTool extends Tool
         ]);
 
         $query = (string) $request->get('query');
-        $limit = max(1, min((int) ($request->get('limit') ?? 10), 25));
+        $limit = PageSize::resolve($request->get('limit'), 10, 25);
 
         $products = Product::query()
             ->forOrganization($this->organizationId())

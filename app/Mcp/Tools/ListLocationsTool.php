@@ -6,6 +6,7 @@ namespace App\Mcp\Tools;
 
 use App\Mcp\Concerns\AuthenticatesMcpRequest;
 use App\Models\Inventory\ProductLocation;
+use App\Support\PageSize;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
@@ -33,7 +34,7 @@ class ListLocationsTool extends Tool
     {
         $this->authorize(['manage_locations', 'view_products']);
 
-        $limit = max(1, min((int) ($request->get('limit') ?? 100), 500));
+        $limit = PageSize::resolve($request->get('limit'), 100, 500);
 
         $locations = ProductLocation::query()
             ->where('organization_id', $this->organizationId())

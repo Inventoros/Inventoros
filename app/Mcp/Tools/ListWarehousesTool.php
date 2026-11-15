@@ -6,6 +6,7 @@ namespace App\Mcp\Tools;
 
 use App\Mcp\Concerns\AuthenticatesMcpRequest;
 use App\Models\Warehouse;
+use App\Support\PageSize;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
@@ -32,7 +33,7 @@ class ListWarehousesTool extends Tool
     {
         $this->authorize(['view_warehouses', 'view_products']);
 
-        $limit = max(1, min((int) ($request->get('limit') ?? 100), 500));
+        $limit = PageSize::resolve($request->get('limit'), 100, 500);
 
         $warehouses = Warehouse::query()
             ->where('organization_id', $this->organizationId())

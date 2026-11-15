@@ -23,7 +23,9 @@ use App\Models\Inventory\ProductCategory;
 use App\Models\Role;
 use App\Models\System\SystemSetting;
 use App\Models\User;
+use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Laravel\Mcp\Server\Tool;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
@@ -84,17 +86,25 @@ class McpPageSizeLowerBoundTest extends TestCase
         ]);
     }
 
-    public function test_list_products_clamps_a_negative_per_page(): void
+    public function test_list_products_defaults_an_invalid_per_page(): void
     {
-        foreach (['Alpha', 'Bravo', 'Charlie'] as $name) {
-            $this->product($name);
+        foreach (range(1, 16) as $i) {
+            $this->product(sprintf('Item %02d', $i));
+        }
+
+        // Below 1 or non-numeric: the default page of 15, never everything.
+        foreach ([-1, 0, 'abc'] as $value) {
+            InventorosServer::actingAs($this->admin)
+                ->tool(ListProductsTool::class, ['per_page' => $value, 'sort_by' => 'name', 'sort_dir' => 'asc'])
+                ->assertOk()
+                ->assertSee(['"per_page":15,', '"total":16', 'Item 15'])
+                ->assertDontSee('Item 16');
         }
 
         InventorosServer::actingAs($this->admin)
-            ->tool(ListProductsTool::class, ['per_page' => -1, 'sort_by' => 'name', 'sort_dir' => 'asc'])
+            ->tool(ListProductsTool::class, ['per_page' => 1000])
             ->assertOk()
-            ->assertSee(['"per_page":1,', '"total":3', 'Alpha'])
-            ->assertDontSee(['Bravo', 'Charlie']);
+            ->assertSee('"per_page":100,');
     }
 
     public function test_list_products_still_honours_a_valid_per_page(): void
@@ -110,7 +120,7 @@ class McpPageSizeLowerBoundTest extends TestCase
             ->assertDontSee('Charlie');
     }
 
-    public function test_list_categories_clamps_a_negative_limit(): void
+    public function test_list_categories_defaults_an_invalid_limit_and_caps_a_large_one(): void
     {
         foreach (['Cat A', 'Cat B', 'Cat C'] as $name) {
             ProductCategory::create([
@@ -121,11 +131,21 @@ class McpPageSizeLowerBoundTest extends TestCase
             ]);
         }
 
-        InventorosServer::actingAs($this->admin)
-            ->tool(ListCategoriesTool::class, ['limit' => -1])
-            ->assertOk()
-            ->assertSee(['"count":1,', 'Cat A'])
-            ->assertDontSee(['Cat B', 'Cat C']);
+        $limits = [];
+        DB::listen(function (QueryExecuted $event) use (&$limits): void {
+            if (str_contains($event->sql, 'from "product_categories"') && preg_match('/limit (\d+)/', $event->sql, $m)) {
+                $limits[] = (int) $m[1];
+            }
+        });
+
+        foreach ([-1, 0, 'abc', 9999, 2] as $value) {
+            InventorosServer::actingAs($this->admin)
+                ->tool(ListCategoriesTool::class, ['limit' => $value])
+                ->assertOk();
+        }
+
+        // Default 100 for invalid values, capped at 500, valid values kept.
+        $this->assertSame([100, 100, 100, 500, 2], $limits);
     }
 
     /**

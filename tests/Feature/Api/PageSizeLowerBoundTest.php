@@ -77,14 +77,16 @@ class PageSizeLowerBoundTest extends TestCase
     public function test_negative_per_page_does_not_return_every_product(): void
     {
         Sanctum::actingAs($this->admin);
-        $this->product('PAGE-1');
-        $this->product('PAGE-2');
+        foreach (range(1, 19) as $i) {
+            $this->product("PAGE-{$i}");
+        }
 
+        // An invalid size falls back to the default page, never the whole table.
         $this->getJson('/api/v1/products?per_page=-1')
             ->assertOk()
-            ->assertJsonCount(1, 'data')
-            ->assertJsonPath('meta.per_page', 1)
-            ->assertJsonPath('meta.total', 3);
+            ->assertJsonCount(15, 'data')
+            ->assertJsonPath('meta.per_page', 15)
+            ->assertJsonPath('meta.total', 20);
     }
 
     public function test_valid_per_page_is_still_honoured(): void
@@ -101,6 +103,11 @@ class PageSizeLowerBoundTest extends TestCase
         $this->getJson('/api/v1/products?per_page=100000')
             ->assertOk()
             ->assertJsonPath('meta.per_page', 100);
+
+        $this->getJson('/api/v1/products?per_page=1')
+            ->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('meta.per_page', 1);
     }
 
     /**
@@ -125,7 +132,7 @@ class PageSizeLowerBoundTest extends TestCase
     }
 
     #[DataProvider('listEndpoints')]
-    public function test_every_list_endpoint_clamps_a_non_positive_per_page(string $path, string $perPageKey): void
+    public function test_every_list_endpoint_defaults_an_invalid_per_page_and_caps_a_large_one(string $path, string $perPageKey): void
     {
         Sanctum::actingAs($this->admin);
 
@@ -135,10 +142,15 @@ class PageSizeLowerBoundTest extends TestCase
             $path
         );
 
-        foreach (['-1', '0'] as $value) {
+        // Below 1, empty or non-numeric: the default of 15, as before the
+        // cap was added (paginate() treated 0 / empty as "use the default").
+        foreach (['-1', '0', '', 'abc'] as $value) {
             $this->getJson("{$path}?per_page={$value}")
                 ->assertOk()
-                ->assertJsonPath($perPageKey, 1);
+                ->assertJsonPath($perPageKey, 15);
         }
+
+        $this->getJson("{$path}?per_page=500")->assertOk()->assertJsonPath($perPageKey, 100);
+        $this->getJson("{$path}?per_page=7")->assertOk()->assertJsonPath($perPageKey, 7);
     }
 }
