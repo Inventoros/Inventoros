@@ -57,6 +57,8 @@ class ApiTokenController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'abilities' => ['required', 'array', 'min:1'],
             'abilities.*' => ['string', 'distinct', Rule::in($held)],
+            // A token outlives the session, so minting one needs the password.
+            'current_password' => ['required', 'string', 'current_password'],
         ], [
             'abilities.*.in' => __('You can only grant permissions you hold.'),
         ]);

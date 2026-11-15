@@ -85,8 +85,11 @@ class TwoFactorController extends Controller
      */
     public function enable(Request $request): RedirectResponse
     {
+        // Enrolling a second factor needs the current password, so a borrowed
+        // session cannot bind the account to someone else's authenticator.
         $request->validate([
             'code' => 'required|string|size:6',
+            'current_password' => ['required', 'string', 'current_password'],
         ]);
 
         $secret = $request->session()->get('two_factor_secret');
