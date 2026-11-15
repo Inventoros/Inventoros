@@ -73,6 +73,20 @@ final class VariantStockAuditTest extends TestCase
         $this->assertSame(10, $audit->items()->sole()->system_quantity);
     }
 
+    public function test_bin_stock_moved_after_start_is_not_booked_twice(): void
+    {
+        $audit = $this->create(['warehouse_id' => $this->warehouseA->id]);
+        $service = app(StockAuditService::class);
+        $service->start($audit, $this->restricted);
+        // Bin A held 13; three ship from it before the shelf is counted.
+        StockAdjustment::adjustVariant($this->variant->fresh(), -3, 'sale', actor: $this->admin, locationId: $this->locationA->id);
+        $line = $service->recordCount($audit, $audit->items()->sole(), $this->restricted, 10);
+        $this->assertSame(10, $line->system_quantity);
+        $this->assertSame(0, $service->complete($audit->fresh(), $this->restricted));
+        $this->assertSame(17, $this->variant->fresh()->stock);
+        $this->assertSame(10, app(ProductLocationStockService::class)->onHandAt($this->variant->fresh(), $this->locationA->id));
+    }
+
     public function test_whole_organization_count_uses_variant_totals_and_not_parent_stock(): void
     {
         $audit = $this->create([]);
