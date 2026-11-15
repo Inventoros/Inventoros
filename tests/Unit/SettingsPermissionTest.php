@@ -38,7 +38,8 @@ class SettingsPermissionTest extends TestCase
         $this->adminRole = Role::create([
             'name' => 'Administrator',
             'slug' => 'system-administrator',
-            'organization_id' => $this->organization->id,
+            // System roles belong to no organization (see RoleSeeder).
+            'organization_id' => null,
             'is_system' => true,
             'permissions' => [
                 'view_settings',
@@ -53,7 +54,8 @@ class SettingsPermissionTest extends TestCase
         $this->managerRole = Role::create([
             'name' => 'Manager',
             'slug' => 'system-manager',
-            'organization_id' => $this->organization->id,
+            // System roles belong to no organization (see RoleSeeder).
+            'organization_id' => null,
             'is_system' => true,
             'permissions' => [
                 'view_settings',
@@ -65,7 +67,8 @@ class SettingsPermissionTest extends TestCase
         $this->memberRole = Role::create([
             'name' => 'Member',
             'slug' => 'system-member',
-            'organization_id' => $this->organization->id,
+            // System roles belong to no organization (see RoleSeeder).
+            'organization_id' => null,
             'is_system' => true,
             'permissions' => [
                 'view_products',

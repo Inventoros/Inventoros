@@ -98,9 +98,9 @@ trait HasRolesAndPermissions
      *
      * @param  array<string>  $roleSlugs
      */
-    private function holdsSystemRole(array $roleSlugs): bool
+    public function holdsSystemRole(array $roleSlugs): bool
     {
-        return $this->roles()->whereIn('slug', $roleSlugs)->where('is_system', true)->exists();
+        return $this->roles()->whereIn('slug', $roleSlugs)->systemRole()->exists();
     }
 
     /**
@@ -145,7 +145,10 @@ trait HasRolesAndPermissions
 
         // Check base role (admin, manager, member) permissions
         if ($this->role) {
-            $systemRole = Role::where('slug', 'system-'.$this->role)->first();
+            // Only the built-in role: an organization's own role with the
+            // same slug must not grant its permissions to every user with
+            // this base role in every organization.
+            $systemRole = Role::systemBySlug('system-'.$this->role);
             if ($systemRole && $systemRole->hasPermission($permissionValue)) {
                 return true;
             }
@@ -229,7 +232,10 @@ trait HasRolesAndPermissions
 
         // Get permissions from base role (admin, manager, member)
         if ($this->role) {
-            $systemRole = Role::where('slug', 'system-'.$this->role)->first();
+            // Only the built-in role: an organization's own role with the
+            // same slug must not grant its permissions to every user with
+            // this base role in every organization.
+            $systemRole = Role::systemBySlug('system-'.$this->role);
             if ($systemRole && $systemRole->permissions) {
                 $permissions = array_merge($permissions, $systemRole->permissions);
             }

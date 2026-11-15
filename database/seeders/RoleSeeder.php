@@ -17,9 +17,7 @@ class RoleSeeder extends Seeder
         // These are system-wide and cannot be deleted
 
         // Administrator Role - Full system access
-        Role::updateOrCreate(
-            ['slug' => 'system-administrator'],
-            [
+        $this->systemRole('system-administrator', [
                 'name' => 'Administrator',
                 'description' => 'Full system access with all permissions.',
                 'organization_id' => null,
@@ -29,9 +27,7 @@ class RoleSeeder extends Seeder
         );
 
         // Manager Role - Can manage inventory, orders, and view reports
-        Role::updateOrCreate(
-            ['slug' => 'system-manager'],
-            [
+        $this->systemRole('system-manager', [
                 'name' => 'Manager',
                 'description' => 'Can manage inventory, orders, categories, and view reports.',
                 'organization_id' => null,
@@ -79,9 +75,7 @@ class RoleSeeder extends Seeder
         );
 
         // Member Role - Basic access
-        Role::updateOrCreate(
-            ['slug' => 'system-member'],
-            [
+        $this->systemRole('system-member', [
                 'name' => 'Member',
                 'description' => 'Basic access to view and manage assigned tasks.',
                 'organization_id' => null,
@@ -94,5 +88,36 @@ class RoleSeeder extends Seeder
         );
 
         $this->command->info('3 base system roles created successfully.');
+    }
+
+    /**
+     * Create or update a built-in role. Only a role that already is a system
+     * role (flagged, no organization) is updated: roles.slug is unique across
+     * all roles, and an organization's own role can hold the slug when it was
+     * created before the system role existed. Adopting that role would hand
+     * its organization's role to every organization, and leaving it would let
+     * its slug stand in for the system role, so it gets a new slug instead and
+     * keeps its name, organization, permissions and holders.
+     *
+     * @param  array<string, mixed>  $attributes
+     */
+    private function systemRole(string $slug, array $attributes): void
+    {
+        $role = Role::systemBySlug($slug);
+
+        if ($role === null) {
+            $holder = Role::where('slug', $slug)->first();
+
+            if ($holder !== null) {
+                $holder->slug = $holder->generateUniqueSlug($slug);
+                $holder->save();
+
+                $this->command?->warn("Role #{$holder->id} (organization {$holder->organization_id}) used the system slug '{$slug}'; its slug is now '{$holder->slug}'.");
+            }
+
+            $role = new Role(['slug' => $slug]);
+        }
+
+        $role->fill(array_merge($attributes, ['organization_id' => null, 'is_system' => true]))->save();
     }
 }

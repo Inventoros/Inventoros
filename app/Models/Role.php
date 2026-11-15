@@ -256,4 +256,27 @@ class Role extends Model
     {
         return $query->where('is_system', false);
     }
+
+    /**
+     * Scope a query to the built-in system roles: flagged is_system and owned
+     * by no organization (RoleSeeder creates them; an organization's own role
+     * is never flagged and always has an organization). Columns are
+     * qualified because role_user also has an organization_id.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder<static> $query
+     * @return \Illuminate\Database\Eloquent\Builder<static>
+     */
+    public function scopeSystemRole($query)
+    {
+        return $query->where('roles.is_system', true)->whereNull('roles.organization_id');
+    }
+
+    /**
+     * The built-in system role with this slug, never an organization's own
+     * role that happens to have the same slug.
+     */
+    public static function systemBySlug(string $slug): ?self
+    {
+        return static::query()->systemRole()->where('slug', $slug)->first();
+    }
 }
