@@ -4,9 +4,12 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Support\PluginAdministration;
+use App\Support\PublicHostGuard;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use RuntimeException;
 
 /**
  * Resolves the mailer an organization's email goes out through.
@@ -35,7 +38,8 @@ final class OrganizationMailer
     public static function for(int $organizationId): ?string
     {
         try {
-            $config = self::mailerConfig(SettingsService::getEmailConfig($organizationId));
+            $settings = SettingsService::getEmailConfig($organizationId);
+            $config = self::mailerConfig($settings);
         } catch (\Throwable $e) {
             Log::warning('Could not load organization mail settings; using the system mailer', [
                 'organization_id' => $organizationId,
@@ -49,12 +53,52 @@ final class OrganizationMailer
             return null;
         }
 
+        // Checked again before every connection: the host may have been
+        // stored before this check existed, or its DNS may have changed.
+        if (($settings['provider'] ?? null) === 'smtp' && ! self::smtpHostAllowed($organizationId, (string) $config['host'])) {
+            throw new RuntimeException('The organization SMTP host is not allowed.');
+        }
+
         $name = self::PREFIX.$organizationId;
 
         Config::set("mail.mailers.{$name}", $config);
         Mail::purge($name);
 
         return $name;
+    }
+
+    /**
+     * Whether this organization may send through this SMTP host.
+     *
+     * The app server opens the connection, so a tenant must not be able to
+     * point it at loopback, private or metadata addresses. The administrator
+     * organization (the only one on a single-tenant install) may use any
+     * host, such as a local relay; other organizations need a public host or
+     * one the operator listed in mail.organization_smtp_allowed_hosts.
+     */
+    public static function smtpHostAllowed(int $organizationId, string $host): bool
+    {
+        if ($organizationId === PluginAdministration::organizationId()) {
+            return true;
+        }
+
+        $allowed = array_map('strtolower', (array) config('mail.organization_smtp_allowed_hosts', []));
+        if (in_array(strtolower(trim($host)), $allowed, true)) {
+            return true;
+        }
+
+        try {
+            PublicHostGuard::assertPublicHost($host);
+        } catch (RuntimeException $e) {
+            Log::warning('Refused an organization SMTP host', [
+                'organization_id' => $organizationId,
+                'error' => $e->getMessage(),
+            ]);
+
+            return false;
+        }
+
+        return true;
     }
 
     /**

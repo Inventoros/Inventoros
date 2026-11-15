@@ -77,7 +77,13 @@ class SettingsController extends Controller
             'from_address' => 'required|email',
             'from_name' => 'required|string|max:255',
 
-            'smtp.host' => 'required_if:provider,smtp|nullable|string',
+            'smtp.host' => ['required_if:provider,smtp', 'nullable', 'string', 'max:255', function ($attribute, $value, $fail) use ($request) {
+                if ($request->input('provider') === 'smtp' && is_string($value)
+                    && ! OrganizationMailer::smtpHostAllowed((int) auth()->user()->organization_id, $value)
+                ) {
+                    $fail(__('The SMTP host must be a public mail server.'));
+                }
+            }],
             'smtp.port' => 'required_if:provider,smtp|nullable|integer|between:1,65535',
             'smtp.username' => 'nullable|string',
             'smtp.password' => 'nullable|string',
@@ -115,8 +121,9 @@ class SettingsController extends Controller
      * Send a test email to verify email configuration.
      *
      * The page calls this with axios, which follows redirects, so a JSON
-     * caller gets JSON: 200 with a message on success, 422 with the error
-     * message on failure. Other callers get the redirect with a flash.
+     * caller gets JSON: 200 with a message on success, 422 with a
+     * generic message on failure (the detail is logged). Other callers get
+     * the redirect with a flash.
      *
      * @param Request $request The incoming HTTP request containing test email address
      * @return \Illuminate\Http\RedirectResponse|\Illuminate\Http\JsonResponse
@@ -152,7 +159,9 @@ class SettingsController extends Controller
                 'organization_id' => auth()->user()->organization_id,
             ]);
 
-            $message = __('Failed to send test email: ') . $e->getMessage();
+            // The transport error can describe hosts and services reachable
+            // from this server, so it stays in the log.
+            $message = __('Failed to send test email. Check the email settings and try again.');
 
             return $request->expectsJson()
                 ? response()->json(['message' => $message], 422)

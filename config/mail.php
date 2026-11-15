@@ -115,4 +115,20 @@ return [
         'name' => env('MAIL_FROM_NAME', 'Example'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Organization SMTP Hosts
+    |--------------------------------------------------------------------------
+    |
+    | Organizations other than the administrator organization may only send
+    | through SMTP hosts that resolve to public addresses. List private or
+    | local relays (comma-separated host names or IPs) they may also use.
+    |
+    */
+
+    'organization_smtp_allowed_hosts' => array_values(array_filter(array_map(
+        'trim',
+        explode(',', (string) env('INVENTOROS_SMTP_ALLOWED_HOSTS', ''))
+    ))),
+
 ];

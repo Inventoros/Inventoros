@@ -25,6 +25,21 @@ final class PublicHostGuard
     }
 
     /**
+     * Throw unless a bare host (no scheme, port or path), such as an SMTP
+     * server, is a hostname or canonical IP whose every address is public.
+     * Unresolvable hosts fail closed in production, as assertPublic does.
+     */
+    public static function assertPublicHost(string $host): void
+    {
+        $host = strtolower(trim($host));
+        if (str_starts_with($host, '[') && str_ends_with($host, ']')) {
+            $host = substr($host, 1, -1);
+        }
+
+        self::checkedAddresses($host, app()->environment('production'));
+    }
+
+    /**
      * Require a direct cURL connection to this exact, checked DNS answer.
      * The URL remains unchanged, preserving Host, TLS SNI and certificate checks.
      *
@@ -62,6 +77,18 @@ final class PublicHostGuard
         if (! in_array($scheme, ['http', 'https'], true)) {
             throw new RuntimeException('Webhook URL must use HTTP or HTTPS');
         }
+
+        $ips = self::checkedAddresses($host, $requireDns);
+
+        return ['host' => $host, 'port' => $parts['port'] ?? ($scheme === 'https' ? 443 : 80), 'ips' => $ips];
+    }
+
+    /** @return array<int, string> */
+    private static function checkedAddresses(string $host, bool $requireDns): array
+    {
+        if ($host === '') {
+            throw new RuntimeException('Webhook URL has no resolvable host');
+        }
         if (! filter_var($host, FILTER_VALIDATE_IP)) {
             if (! filter_var($host, FILTER_VALIDATE_DOMAIN, FILTER_FLAG_HOSTNAME)
                 || preg_match('/^(?:0x[0-9a-f]+|[0-9]+)(?:\.(?:0x[0-9a-f]+|[0-9]+))*\.?$/i', $host)
@@ -94,7 +121,7 @@ final class PublicHostGuard
             }
         }
 
-        return ['host' => $host, 'port' => $parts['port'] ?? ($scheme === 'https' ? 443 : 80), 'ips' => $ips];
+        return $ips;
     }
 
     /**
