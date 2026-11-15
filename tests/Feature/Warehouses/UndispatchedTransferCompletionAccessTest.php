@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Warehouses;
 
+use App\Models\Inventory\ProductLocation;
 use App\Models\Inventory\StockTransfer;
 use App\Models\User;
 use App\Services\ProductLocationStockService;
 use App\Services\StockReservationService;
 use App\Services\StockTransferService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Inertia\Testing\AssertableInertia as Assert;
 use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
@@ -107,6 +109,43 @@ final class UndispatchedTransferCompletionAccessTest extends TestCase
 
         $this->assertSame('completed', $transfer->fresh()->status);
         $this->assertSame([45, 55], $this->bins());
+    }
+
+    public function test_show_page_tells_a_destination_only_user_they_cannot_dispatch_an_unwarehoused_source(): void
+    {
+        // A move from a bin outside any warehouse is not inter-warehouse, so
+        // the page offers one-step completion; that needs the source end.
+        $loose = ProductLocation::create([
+            'organization_id' => $this->organization->id, 'warehouse_id' => null,
+            'name' => 'Loose Bin', 'code' => 'LOOSE-1', 'is_active' => true,
+        ]);
+        $transfer = $this->makeTransfer($loose, $this->locationA, $this->productA);
+        $this->assertFalse((bool) $transfer->is_inter_warehouse);
+
+        $this->actingAs($this->restricted)
+            ->get(route('stock-transfers.show', $transfer))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('StockTransfers/Show')
+                ->where('canDispatch', false)
+                ->where('canReceive', true));
+
+        $this->actingAs($this->restricted)
+            ->post(route('stock-transfers.complete', $transfer))
+            ->assertForbidden();
+
+        $this->assertSame('pending', $transfer->fresh()->status);
+    }
+
+    public function test_show_page_only_offers_one_step_completion_to_the_source_end(): void
+    {
+        $source = (string) file_get_contents(resource_path('js/Pages/StockTransfers/Show.vue'));
+
+        $this->assertMatchesRegularExpression(
+            "/const canComplete = computed\\(\\(\\) => [^;]*props\\.canDispatch[^;]*\\['pending', 'prepared'\\]\\.includes\\(props\\.transfer\\.status\\)/s",
+            $source,
+            'The pending/prepared Complete button must require source access (canDispatch).',
+        );
     }
 
     public function test_receiving_a_shipped_transfer_still_needs_only_the_destination(): void
