@@ -27,7 +27,8 @@ final class PublicHostGuard
     /**
      * Throw unless a bare host (no scheme, port or path), such as an SMTP
      * server, is a hostname or canonical IP whose every address is public.
-     * Unresolvable hosts fail closed in production, as assertPublic does.
+     * A host that does not resolve fails closed (UnresolvedHostException):
+     * a mail server nobody can look up is never usable.
      */
     public static function assertPublicHost(string $host): void
     {
@@ -36,7 +37,7 @@ final class PublicHostGuard
             $host = substr($host, 1, -1);
         }
 
-        self::checkedAddresses($host, app()->environment('production'));
+        self::checkedAddresses($host, true);
     }
 
     /**
@@ -108,7 +109,7 @@ final class PublicHostGuard
         // Validation-only callers retain their local-development behavior;
         // actual delivery fails closed in every environment.
         if ($ips === [] && $requireDns) {
-            throw new RuntimeException(
+            throw new UnresolvedHostException(
                 "Webhook URL host '{$host}' did not resolve to any address"
             );
         }

@@ -1,5 +1,33 @@
 # Upgrade Guide
 
+## Organization SMTP hosts (security change after v2.5.0)
+
+Organizations other than the administrator organization can no longer send
+mail through an SMTP host on a loopback, private, link-local or otherwise
+non-public address, or through a host that does not resolve. The host is
+checked when email settings are saved and again before each message is sent.
+
+- **The administrator organization** is the one set by
+  `INVENTOROS_PLUGIN_ADMIN_ORG`, or, when that is unset, the organization with
+  the lowest id (the one the installer created). The same setting already
+  decides who may manage plugins, updates and storage; it now also decides
+  whose SMTP host is trusted. On a single-organization install nothing
+  changes: that organization may still use a local relay such as
+  `localhost:25` or Mailpit.
+- **A host saved before this change** that is now refused is not rejected
+  until mail is sent. That organization's mail then fails (queued mail lands
+  in `failed_jobs`) and each refusal is logged at error level with the
+  organization id and host. After upgrading, run
+  `php artisan inventoros:check-smtp-hosts` to list the affected
+  organizations; it exits with status 1 when it finds any.
+- **To allow a trusted internal relay** for every organization, list it in
+  `INVENTOROS_SMTP_ALLOWED_HOSTS` (comma-separated host names or IPs). The
+  production Compose file and the Coolify template pass it to the app, worker
+  and scheduler containers.
+- The settings page's "send test email" shows the transport error only to the
+  administrator organization; other organizations see a generic message, and
+  the detail is logged. It is limited to 6 attempts per minute.
+
 ## Upgrading from v2.0.0 to v2.1.0
 
 Use the signed package or pinned container image from the

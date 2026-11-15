@@ -6,6 +6,7 @@ namespace App\Services;
 
 use App\Support\PluginAdministration;
 use App\Support\PublicHostGuard;
+use App\Support\UnresolvedHostException;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
@@ -32,6 +33,12 @@ final class OrganizationMailer
 {
     public const PREFIX = 'organization_';
 
+    /** smtpHostRefusal(): the host resolves to a non-public address. */
+    public const REFUSED_NOT_PUBLIC = 'not_public';
+
+    /** smtpHostRefusal(): the host has no A or AAAA record. */
+    public const REFUSED_UNRESOLVED = 'unresolved';
+
     /**
      * The mailer name for this organization, or null for the system mailer.
      */
@@ -55,8 +62,21 @@ final class OrganizationMailer
 
         // Checked again before every connection: the host may have been
         // stored before this check existed, or its DNS may have changed.
-        if (($settings['provider'] ?? null) === 'smtp' && ! self::smtpHostAllowed($organizationId, (string) $config['host'])) {
-            throw new RuntimeException('The organization SMTP host is not allowed.');
+        if (($settings['provider'] ?? null) === 'smtp') {
+            $host = (string) $config['host'];
+            $refusal = self::smtpHostRefusal($organizationId, $host);
+
+            if ($refusal !== null) {
+                // Error level: this organization's mail is not being sent.
+                // `php artisan inventoros:check-smtp-hosts` lists them all.
+                Log::error('Organization SMTP host refused; its mail is not sent', [
+                    'organization_id' => $organizationId,
+                    'host' => $host,
+                    'reason' => $refusal,
+                ]);
+
+                throw new RuntimeException('The organization SMTP host is not allowed.');
+            }
         }
 
         $name = self::PREFIX.$organizationId;
@@ -69,36 +89,43 @@ final class OrganizationMailer
 
     /**
      * Whether this organization may send through this SMTP host.
-     *
-     * The app server opens the connection, so a tenant must not be able to
-     * point it at loopback, private or metadata addresses. The administrator
-     * organization (the only one on a single-tenant install) may use any
-     * host, such as a local relay; other organizations need a public host or
-     * one the operator listed in mail.organization_smtp_allowed_hosts.
      */
     public static function smtpHostAllowed(int $organizationId, string $host): bool
     {
+        return self::smtpHostRefusal($organizationId, $host) === null;
+    }
+
+    /**
+     * Why this organization may not send through this SMTP host
+     * (REFUSED_NOT_PUBLIC or REFUSED_UNRESOLVED), or null when it may.
+     *
+     * The app server opens the connection, so a tenant must not be able to
+     * point it at loopback, private or metadata addresses. The administrator
+     * organization (INVENTOROS_PLUGIN_ADMIN_ORG, else the lowest organization
+     * id; the only one on a single-tenant install) may use any host, such as
+     * a local relay. Other organizations need a host that resolves only to
+     * public addresses, or one listed in mail.organization_smtp_allowed_hosts.
+     */
+    public static function smtpHostRefusal(int $organizationId, string $host): ?string
+    {
         if ($organizationId === PluginAdministration::organizationId()) {
-            return true;
+            return null;
         }
 
         $allowed = array_map('strtolower', (array) config('mail.organization_smtp_allowed_hosts', []));
         if (in_array(strtolower(trim($host)), $allowed, true)) {
-            return true;
+            return null;
         }
 
         try {
             PublicHostGuard::assertPublicHost($host);
-        } catch (RuntimeException $e) {
-            Log::warning('Refused an organization SMTP host', [
-                'organization_id' => $organizationId,
-                'error' => $e->getMessage(),
-            ]);
-
-            return false;
+        } catch (UnresolvedHostException) {
+            return self::REFUSED_UNRESOLVED;
+        } catch (RuntimeException) {
+            return self::REFUSED_NOT_PUBLIC;
         }
 
-        return true;
+        return null;
     }
 
     /**

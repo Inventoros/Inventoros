@@ -7,6 +7,7 @@ namespace App\Http\Controllers;
 use App\Mail\TestEmail;
 use App\Services\OrganizationMailer;
 use App\Services\SettingsService;
+use App\Support\PluginAdministration;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use Inertia\Inertia;
@@ -78,9 +79,14 @@ class SettingsController extends Controller
             'from_name' => 'required|string|max:255',
 
             'smtp.host' => ['required_if:provider,smtp', 'nullable', 'string', 'max:255', function ($attribute, $value, $fail) use ($request) {
-                if ($request->input('provider') === 'smtp' && is_string($value)
-                    && ! OrganizationMailer::smtpHostAllowed((int) auth()->user()->organization_id, $value)
-                ) {
+                if ($request->input('provider') !== 'smtp' || ! is_string($value)) {
+                    return;
+                }
+
+                $refusal = OrganizationMailer::smtpHostRefusal((int) auth()->user()->organization_id, $value);
+                if ($refusal === OrganizationMailer::REFUSED_UNRESOLVED) {
+                    $fail(__('The SMTP host could not be found. Check the host name.'));
+                } elseif ($refusal !== null) {
                     $fail(__('The SMTP host must be a public mail server.'));
                 }
             }],
@@ -121,9 +127,8 @@ class SettingsController extends Controller
      * Send a test email to verify email configuration.
      *
      * The page calls this with axios, which follows redirects, so a JSON
-     * caller gets JSON: 200 with a message on success, 422 with a
-     * generic message on failure (the detail is logged). Other callers get
-     * the redirect with a flash.
+     * caller gets JSON: 200 with a message on success, 422 with an error
+     * message on failure. Other callers get the redirect with a flash.
      *
      * @param Request $request The incoming HTTP request containing test email address
      * @return \Illuminate\Http\RedirectResponse|\Illuminate\Http\JsonResponse
@@ -160,8 +165,12 @@ class SettingsController extends Controller
             ]);
 
             // The transport error can describe hosts and services reachable
-            // from this server, so it stays in the log.
-            $message = __('Failed to send test email. Check the email settings and try again.');
+            // from this server. Only the administrator organization, whose
+            // admins are trusted with the server, sees it; for everyone else
+            // it stays in the log.
+            $message = (int) auth()->user()->organization_id === PluginAdministration::organizationId()
+                ? __('Failed to send test email: ').$e->getMessage()
+                : __('Failed to send test email. Check the email settings and try again.');
 
             return $request->expectsJson()
                 ? response()->json(['message' => $message], 422)
