@@ -20,25 +20,38 @@ final class ProfileUpdateRequest extends FormRequest
      *
      * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
      */
+    /**
+     * A new address is stored lowercase. An untouched address (ignoring case)
+     * is left exactly as stored, because sign-in matches the stored address.
+     */
+    protected function prepareForValidation(): void
+    {
+        if ($this->changesEmail() && is_string($this->input('email'))) {
+            $this->merge(['email' => mb_strtolower(trim($this->input('email')))]);
+        }
+    }
+
     public function rules(): array
     {
         return [
             'name' => ['required', 'string', 'max:255'],
-            'email' => [
+            'email' => $this->changesEmail() ? [
                 'required',
                 'string',
                 'lowercase',
                 'email',
                 'max:255',
                 Rule::unique(User::class)->ignore($this->user()->id),
-            ],
+            ] : ['required', 'string', 'email', 'max:255'],
             // Changing the sign-in email needs the current password.
             'current_password' => $this->changesEmail() ? ['required', 'string', 'current_password'] : ['exclude'],
         ];
     }
 
-    private function changesEmail(): bool
+    public function changesEmail(): bool
     {
-        return mb_strtolower((string) $this->input('email')) !== mb_strtolower((string) $this->user()->email);
+        $email = $this->input('email');
+
+        return ! is_string($email) || mb_strtolower(trim($email)) !== mb_strtolower((string) $this->user()->email);
     }
 }

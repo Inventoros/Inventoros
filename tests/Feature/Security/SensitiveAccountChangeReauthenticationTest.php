@@ -208,4 +208,74 @@ class SensitiveAccountChangeReauthenticationTest extends TestCase
 
         $this->assertSame(1, $this->tokenCount());
     }
+
+    // ── Existing mixed-case addresses ─────────────────────────────────
+
+    private function mixedCaseUser(): User
+    {
+        // Accounts created before addresses were normalised may be stored
+        // with capitals; sign-in matches the stored address exactly.
+        $user = User::create([
+            'name' => 'John', 'email' => 'John.Doe@Example.com', 'password' => Hash::make('password'),
+            'organization_id' => $this->user->organization_id, 'role' => 'member',
+        ]);
+        $user->forceFill(['email_verified_at' => now()])->save();
+
+        return $user;
+    }
+
+    private function assertCanStillSignInAs(User $user, string $email): void
+    {
+        $this->post(route('logout'));
+        $this->app['auth']->forgetGuards();
+
+        $this->post('/login', ['email' => $email, 'password' => 'password']);
+        $this->assertAuthenticatedAs($user->fresh());
+    }
+
+    public function test_account_settings_name_only_save_keeps_a_mixed_case_email_and_sign_in(): void
+    {
+        $user = $this->mixedCaseUser();
+
+        $this->actingAs($user)
+            ->patch(route('settings.account.update.profile'), ['name' => 'Johnny', 'email' => 'John.Doe@Example.com'])
+            ->assertSessionHasNoErrors();
+
+        $fresh = $user->fresh();
+        $this->assertSame('Johnny', $fresh->name);
+        $this->assertSame('John.Doe@Example.com', $fresh->email);
+        $this->assertNotNull($fresh->email_verified_at);
+
+        $this->assertCanStillSignInAs($user, 'John.Doe@Example.com');
+    }
+
+    public function test_profile_name_only_save_keeps_a_mixed_case_email_and_sign_in(): void
+    {
+        $user = $this->mixedCaseUser();
+
+        $this->actingAs($user)
+            ->patch(route('profile.update'), ['name' => 'Johnny', 'email' => 'John.Doe@Example.com'])
+            ->assertSessionHasNoErrors();
+
+        $fresh = $user->fresh();
+        $this->assertSame('Johnny', $fresh->name);
+        $this->assertSame('John.Doe@Example.com', $fresh->email);
+        $this->assertNotNull($fresh->email_verified_at);
+
+        $this->assertCanStillSignInAs($user, 'John.Doe@Example.com');
+    }
+
+    public function test_a_mixed_case_user_changing_their_email_gets_the_new_address_lowercase(): void
+    {
+        $user = $this->mixedCaseUser();
+
+        $this->actingAs($user)
+            ->patch(route('settings.account.update.profile'), [
+                'name' => 'John', 'email' => 'Jane.Doe@Example.com', 'current_password' => 'password',
+            ])
+            ->assertSessionHasNoErrors();
+
+        $this->assertSame('jane.doe@example.com', $user->fresh()->email);
+        $this->assertNull($user->fresh()->email_verified_at);
+    }
 }

@@ -47,27 +47,30 @@ class AccountSettingsController extends Controller
     {
         $user = $request->user();
 
-        // Addresses are stored lowercase, as on the profile page.
-        if (is_string($request->input('email'))) {
-            $request->merge(['email' => mb_strtolower(trim($request->input('email')))]);
-        }
+        // Only a real change of address (ignoring case) is normalised and
+        // written. An untouched address stays exactly as stored, even with
+        // capitals, because sign-in matches the stored address.
+        $submitted = $request->input('email');
+        $changesEmail = ! is_string($submitted)
+            || mb_strtolower(trim($submitted)) !== mb_strtolower((string) $user->email);
 
-        // Changing the sign-in email needs the current password.
-        $changesEmail = $request->input('email') !== mb_strtolower((string) $user->email);
+        // New addresses are stored lowercase, as on the profile page.
+        if ($changesEmail && is_string($submitted)) {
+            $request->merge(['email' => mb_strtolower(trim($submitted))]);
+        }
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|max:255|unique:users,email,' . $user->id,
+            // Changing the sign-in email needs the current password.
             'current_password' => $changesEmail ? ['required', 'string', 'current_password'] : ['exclude'],
         ]);
 
-        $user->fill([
-            'name' => $validated['name'],
-            'email' => $validated['email'],
-        ]);
+        $user->name = $validated['name'];
 
-        // A new address is unverified until its owner confirms it.
         if ($changesEmail) {
+            $user->email = $validated['email'];
+            // A new address is unverified until its owner confirms it.
             $user->email_verified_at = null;
         }
 
