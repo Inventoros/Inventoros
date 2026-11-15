@@ -85,7 +85,7 @@ const submitPayment = () => {
 
 // Void
 const voidingPayment = ref(null);
-const voidForm = useForm({ reason: '' });
+const voidForm = useForm({ reason: '', allow_overpayment: false });
 
 const openVoidModal = (payment) => {
     voidForm.reset();
@@ -752,6 +752,10 @@ const formatOrderDate = (date, long = false) =>
                     </p>
                     <label for="void_reason" :class="fieldLabel">{{ t('payments.voidReason') }}</label>
                     <input id="void_reason" v-model="voidForm.reason" type="text" maxlength="255" :class="fieldInput" />
+                    <label v-if="voidingPayment.type === 'refund'" class="mt-3 flex items-start gap-2 text-sm text-text-secondary">
+                        <input v-model="voidForm.allow_overpayment" type="checkbox" class="mt-0.5 rounded border-border-subtle ds-focus-ring" />
+                        <span>{{ t('payments.allowOverpayment') }}</span>
+                    </label>
                     <p v-if="voidForm.errors.payment" :class="fieldError">{{ voidForm.errors.payment }}</p>
                     <p v-if="voidForm.errors.reason" :class="fieldError">{{ voidForm.errors.reason }}</p>
 

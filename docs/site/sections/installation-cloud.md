@@ -22,7 +22,7 @@ runcmd:
 ```
 
 3. Create the server and wait about five minutes after it boots.
-4. Open `http://SERVER-IP:8080/install` and complete the web installer. The database password is `DB_PASSWORD` in `/opt/inventoros/.env` on the server.
+4. Open `http://SERVER-IP:8080/install` and complete the web installer. It asks for the setup token, `INVENTOROS_SETUP_TOKEN` in `/opt/inventoros/.env` on the server (`sudo grep INVENTOROS_SETUP_TOKEN /opt/inventoros/.env`). The database password is `DB_PASSWORD` in the same file.
 
 The same file is in the repository as [`deploy/cloud-init.yaml`](https://github.com/Inventoros/Inventoros/blob/main/deploy/cloud-init.yaml).
 
@@ -40,7 +40,7 @@ Progress is written to `/opt/inventoros/install.log` and `/var/log/cloud-init-ou
 1. In your Coolify project, choose **+ New**, then **Docker Compose Empty**.
 2. Paste the contents of [`deploy/coolify/docker-compose.yml`](https://github.com/Inventoros/Inventoros/blob/main/deploy/coolify/docker-compose.yml).
 3. Optionally change the generated domain for the `app` service under its settings.
-4. Deploy. When the `app` service is healthy, open its URL with `/install` added and complete the web installer. On the database step, use the password shown as `SERVICE_PASSWORD_64_POSTGRES` in the resource's environment variables.
+4. Deploy. When the `app` service is healthy, open its URL with `/install` added and complete the web installer. Unlock it with the setup token shown as `SERVICE_PASSWORD_64_SETUPTOKEN` in the resource's environment variables. On the database step, use the password shown as `SERVICE_PASSWORD_64_POSTGRES`.
 
 The template runs the app, the queue worker, the scheduler and PostgreSQL 17, with named volumes for the database, storage and plugins. Generated values stay the same across redeploys.
 

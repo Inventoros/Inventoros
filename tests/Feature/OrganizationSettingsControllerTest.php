@@ -258,6 +258,27 @@ class OrganizationSettingsControllerTest extends TestCase
             );
     }
 
+    public function test_settings_page_does_not_send_the_user_directory(): void
+    {
+        $viewerRole = Role::create([
+            'name' => 'Settings viewer',
+            'slug' => 'settings-viewer',
+            'organization_id' => $this->organization->id,
+            'permissions' => ['view_settings'],
+        ]);
+        $this->member->roles()->sync([$viewerRole->id]);
+
+        $response = $this->actingAs($this->member->fresh())
+            ->get(route('settings.organization.index'));
+
+        $response->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->where('organization.id', $this->organization->id)
+                ->missing('organization.users')
+            );
+        $this->assertStringNotContainsString('admin@test.com', $response->getContent());
+    }
+
     public function test_non_admin_role_with_manage_organization_can_save_settings_and_portal(): void
     {
         $managerRole = Role::create([
