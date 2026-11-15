@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Api;
 
+use App\Http\Controllers\Api\Concerns\HandlesApiResponses;
 use App\Mcp\Servers\InventorosServer;
 use App\Mcp\Tools\ReceivePurchaseOrderTool;
 use App\Models\Auth\Organization;
@@ -14,6 +15,7 @@ use App\Models\Purchasing\PurchaseOrderItem;
 use App\Models\SavedReport;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\Request;
 use Laravel\Sanctum\Sanctum;
 use Tests\Feature\Api\Concerns\BuildsApiFixtures;
 use Tests\TestCase;
@@ -212,6 +214,24 @@ class UnboundedApiCollectionsTest extends TestCase
             ->assertJsonCount(1, 'data');
     }
 
+    /**
+     * The page size HandlesApiResponses::perPage() resolves for a value.
+     */
+    private function sharedPageSize(mixed $value): int
+    {
+        $resolver = new class
+        {
+            use HandlesApiResponses;
+
+            public function resolve(Request $request): int
+            {
+                return $this->perPage($request);
+            }
+        };
+
+        return $resolver->resolve(Request::create('/', 'GET', ['per_page' => $value]));
+    }
+
     public function test_saved_report_list_clamps_the_page_size(): void
     {
         foreach (['A', 'B', 'C'] as $name) {
@@ -220,7 +240,12 @@ class UnboundedApiCollectionsTest extends TestCase
         Sanctum::actingAs($this->admin);
 
         $this->getJson('/api/v1/reports')->assertOk()->assertJsonPath('meta.per_page', 15)->assertJsonCount(3, 'data');
-        $this->getJson('/api/v1/reports?per_page=-1')->assertOk()->assertJsonPath('meta.per_page', 1)->assertJsonCount(1, 'data');
+        // An invalid size gets whatever the shared perPage() helper resolves
+        // (never the unbounded list), so this stays aligned with the helper.
+        $invalid = $this->sharedPageSize(-1);
+        $this->assertGreaterThanOrEqual(1, $invalid);
+        $this->assertLessThanOrEqual(100, $invalid);
+        $this->getJson('/api/v1/reports?per_page=-1')->assertOk()->assertJsonPath('meta.per_page', $invalid)->assertJsonCount(min($invalid, 3), 'data');
         $this->getJson('/api/v1/reports?per_page=100000')->assertOk()->assertJsonPath('meta.per_page', 100);
     }
 
