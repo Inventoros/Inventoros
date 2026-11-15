@@ -110,17 +110,20 @@ class CycleCountScheduleWarehouseAccessTest extends TestCase
 
     public function test_restricted_user_cannot_create_a_schedule_outside_their_warehouses(): void
     {
+        // Refused as a field error, not a 403 page: the scope id for a
+        // warehouse or location, the scope type for scopes spanning every
+        // warehouse (the form has no scope id field for "all").
         $refused = [
-            ['warehouse', $this->warehouseB->id],
-            ['location', $this->locationB->id],
-            ['category', $this->category->id],
-            ['all', null],
+            ['warehouse', $this->warehouseB->id, 'scope_id'],
+            ['location', $this->locationB->id, 'scope_id'],
+            ['category', $this->category->id, 'scope_type'],
+            ['all', null, 'scope_type'],
         ];
 
-        foreach ($refused as [$scopeType, $scopeId]) {
+        foreach ($refused as [$scopeType, $scopeId, $field]) {
             $this->actingAs($this->restricted)
                 ->post(route('cycle-counts.store'), $this->payload($scopeType, $scopeId))
-                ->assertForbidden();
+                ->assertSessionHasErrors($field);
         }
 
         $this->assertSame(0, CycleCountSchedule::count());
@@ -137,6 +140,35 @@ class CycleCountScheduleWarehouseAccessTest extends TestCase
             ->assertRedirect(route('cycle-counts.index'));
 
         $this->assertSame(2, CycleCountSchedule::count());
+    }
+
+    public function test_form_only_offers_the_restricted_users_warehouses_and_locations(): void
+    {
+        $mine = $this->schedule('Alpha warehouse', 'warehouse', $this->warehouseA->id);
+
+        foreach ([route('cycle-counts.create'), route('cycle-counts.edit', $mine)] as $url) {
+            $this->actingAs($this->restricted)->get($url)
+                ->assertOk()
+                ->assertInertia(fn (Assert $page) => $page
+                    ->component('StockAudits/CycleCounts/Form')
+                    ->where('warehouses', fn ($warehouses) => collect($warehouses)->pluck('id')->all() === [$this->warehouseA->id])
+                    ->where('locations', fn ($locations) => collect($locations)->pluck('id')->all() === [$this->locationA->id])
+                    ->where('categories', [])
+                    ->where('scopes', ['location', 'warehouse']));
+        }
+    }
+
+    public function test_form_offers_every_scope_to_unrestricted_users(): void
+    {
+        foreach ([$this->admin, $this->unassigned] as $user) {
+            $this->actingAs($user)->get(route('cycle-counts.create'))
+                ->assertOk()
+                ->assertInertia(fn (Assert $page) => $page
+                    ->has('warehouses', 2)
+                    ->has('locations', 2)
+                    ->has('categories', 1)
+                    ->where('scopes', CycleCountSchedule::SCOPES));
+        }
     }
 
     public function test_admin_can_create_category_and_whole_organization_schedules(): void
@@ -175,10 +207,10 @@ class CycleCountScheduleWarehouseAccessTest extends TestCase
     {
         $mine = $this->schedule('Alpha warehouse', 'warehouse', $this->warehouseA->id);
 
-        foreach ([['warehouse', $this->warehouseB->id], ['location', $this->locationB->id], ['all', null]] as [$scopeType, $scopeId]) {
+        foreach ([['warehouse', $this->warehouseB->id, 'scope_id'], ['location', $this->locationB->id, 'scope_id'], ['all', null, 'scope_type']] as [$scopeType, $scopeId, $field]) {
             $this->actingAs($this->restricted)
                 ->put(route('cycle-counts.update', $mine), $this->payload($scopeType, $scopeId, 'Retargeted'))
-                ->assertForbidden();
+                ->assertSessionHasErrors($field);
         }
 
         $mine->refresh();

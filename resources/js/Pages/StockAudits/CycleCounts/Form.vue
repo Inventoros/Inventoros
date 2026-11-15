@@ -25,7 +25,8 @@ const editing = computed(() => !!props.schedule);
 const form = useForm({
     name: props.schedule?.name ?? '',
     frequency: props.schedule?.frequency ?? 'weekly',
-    scope_type: props.schedule?.scope_type ?? 'all',
+    // A restricted user is not offered "all", so start on a scope they have.
+    scope_type: props.schedule?.scope_type ?? (props.scopes.includes('all') ? 'all' : (props.scopes[0] ?? 'all')),
     scope_id: props.schedule?.scope_id ?? null,
     products_per_run: props.schedule?.products_per_run ?? 20,
     assigned_to: props.schedule?.assigned_to ?? null,
