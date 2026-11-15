@@ -1323,6 +1323,19 @@ paths:
         '404': { $ref: '#/components/responses/NotFound' }
         '422': { description: "Validation error, or already approved or rejected (`already_processed`)" }
 
+  /orders/{order}/revert-shipment:
+    parameters:
+      - { name: order, in: path, required: true, schema: { type: integer } }
+    post:
+      tags: [Orders]
+      summary: Correct an order marked shipped by mistake back to processing
+      description: "Requires `edit_orders` and an admin user. Allowed only when the order is shipped, none of its shipments has left the warehouse (pending or label created only) and it has no returns. Clears `shipped_at`; stock is untouched. Every other status change only moves forward."
+      responses:
+        '200': { description: Moved back to processing, content: { application/json: { schema: { type: object, properties: { data: { $ref: '#/components/schemas/Order' } } } } } }
+        '403': { description: The user is not an admin }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { description: "Not shipped, a shipment has left, or the order has returns (`invalid_state_transition`)" }
+
   /orders/{order}/invoice/email:
     parameters:
       - { name: order, in: path, required: true, schema: { type: integer } }
