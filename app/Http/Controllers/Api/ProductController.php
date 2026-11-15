@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api;
 
+use App\Http\Controllers\Api\Concerns\HandlesApiResponses;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Product\StoreProductRequest;
 use App\Http\Requests\Api\Product\UpdateProductRequest;
@@ -22,6 +23,8 @@ use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
  */
 class ProductController extends Controller
 {
+    use HandlesApiResponses;
+
     public function __construct(protected ProductService $productService) {}
 
     /**
@@ -75,7 +78,7 @@ class ProductController extends Controller
         $sortDir = ($request->input('sort_dir') === 'asc') ? 'asc' : 'desc';
         $query->orderBy($sortBy, $sortDir);
 
-        $perPage = min($request->input('per_page', 15), 100);
+        $perPage = $this->perPage($request);
         $products = $query->paginate($perPage);
 
         // reserved_stock / available_stock for the page in one query.

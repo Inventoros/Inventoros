@@ -33,7 +33,7 @@ class ListProductsTool extends Tool
             'sort_by' => $schema->string()->enum(['created_at', 'updated_at', 'name', 'sku', 'price', 'stock'])->description('Sort column.'),
             'sort_dir' => $schema->string()->enum(['asc', 'desc'])->description('Sort direction (default: desc).'),
             'page' => $schema->integer()->description('1-indexed page number.'),
-            'per_page' => $schema->integer()->description('Items per page (default 15, max 100).'),
+            'per_page' => $schema->integer()->min(1)->max(100)->description('Items per page (default 15, max 100).'),
         ];
     }
 
@@ -65,7 +65,7 @@ class ListProductsTool extends Tool
         $sortDir = $request->get('sort_dir') === 'asc' ? 'asc' : 'desc';
         $query->orderBy($sortBy, $sortDir);
 
-        $perPage = min((int) ($request->get('per_page') ?? 15), 100);
+        $perPage = max(1, min((int) ($request->get('per_page') ?? 15), 100));
         $page = max((int) ($request->get('page') ?? 1), 1);
 
         $paginator = $query->paginate(perPage: $perPage, page: $page);

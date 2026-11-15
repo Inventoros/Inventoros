@@ -25,7 +25,7 @@ class SearchProductsTool extends Tool
     {
         return [
             'query' => $schema->string()->required()->min(1)->description('Substring to match against name, SKU, or barcode.'),
-            'limit' => $schema->integer()->description('Max results (default 10, max 25).'),
+            'limit' => $schema->integer()->min(1)->max(25)->description('Max results (default 10, max 25).'),
         ];
     }
 
@@ -39,7 +39,7 @@ class SearchProductsTool extends Tool
         ]);
 
         $query = (string) $request->get('query');
-        $limit = min((int) ($request->get('limit') ?? 10), 25);
+        $limit = max(1, min((int) ($request->get('limit') ?? 10), 25));
 
         $products = Product::query()
             ->forOrganization($this->organizationId())

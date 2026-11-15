@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Api;
 
 use App\Exceptions\InsufficientStockException;
+use App\Http\Controllers\Api\Concerns\HandlesApiResponses;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\StockAdjustment\StoreStockAdjustmentRequest;
 use App\Http\Resources\StockAdjustmentResource;
@@ -24,6 +25,8 @@ use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
  */
 class StockAdjustmentController extends Controller
 {
+    use HandlesApiResponses;
+
     /**
      * List stock adjustments.
      */
@@ -60,7 +63,7 @@ class StockAdjustmentController extends Controller
         $sortDir = ($request->input('sort_dir') === 'asc') ? 'asc' : 'desc';
         $query->orderBy($sortBy, $sortDir);
 
-        $perPage = min($request->input('per_page', 15), 100);
+        $perPage = $this->perPage($request);
         $adjustments = $query->paginate($perPage);
 
         return StockAdjustmentResource::collection($adjustments);

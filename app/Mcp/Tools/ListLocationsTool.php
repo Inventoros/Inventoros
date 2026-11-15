@@ -25,7 +25,7 @@ class ListLocationsTool extends Tool
     {
         return [
             'warehouse_id' => $schema->integer()->description('Restrict to one warehouse.'),
-            'limit' => $schema->integer()->description('Max results (default 100, max 500).'),
+            'limit' => $schema->integer()->min(1)->max(500)->description('Max results (default 100, max 500).'),
         ];
     }
 
@@ -33,7 +33,7 @@ class ListLocationsTool extends Tool
     {
         $this->authorize(['manage_locations', 'view_products']);
 
-        $limit = min((int) ($request->get('limit') ?? 100), 500);
+        $limit = max(1, min((int) ($request->get('limit') ?? 100), 500));
 
         $locations = ProductLocation::query()
             ->where('organization_id', $this->organizationId())

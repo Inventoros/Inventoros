@@ -28,7 +28,7 @@ class ListShipmentsTool extends Tool
             'order_id' => $schema->integer()->description('Restrict to one sales order.'),
             'status' => $schema->string()->enum(ShipmentStatus::values())->description('Restrict to a status.'),
             'page' => $schema->integer()->description('1-indexed page.'),
-            'per_page' => $schema->integer()->description('Default 15, max 100.'),
+            'per_page' => $schema->integer()->min(1)->max(100)->description('Default 15, max 100.'),
         ];
     }
 

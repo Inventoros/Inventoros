@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api;
 
+use App\Http\Controllers\Api\Concerns\HandlesApiResponses;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Supplier\StoreSupplierRequest;
 use App\Http\Requests\Api\Supplier\UpdateSupplierRequest;
@@ -19,6 +20,8 @@ use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
  */
 class SupplierController extends Controller
 {
+    use HandlesApiResponses;
+
     /**
      * List suppliers.
      */
@@ -46,7 +49,7 @@ class SupplierController extends Controller
         $sortDir = ($request->input('sort_dir') === 'asc') ? 'asc' : 'desc';
         $query->orderBy($sortBy, $sortDir);
 
-        $perPage = min($request->input('per_page', 15), 100);
+        $perPage = $this->perPage($request);
         $suppliers = $query->paginate($perPage);
 
         return SupplierResource::collection($suppliers);
