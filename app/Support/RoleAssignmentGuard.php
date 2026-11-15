@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Support;
 
+use App\Http\Middleware\CheckApiPermission;
 use App\Models\Role;
 use App\Models\User;
 use App\Services\Organizations\OrganizationMembershipService;
@@ -16,6 +17,10 @@ use App\Services\Organizations\OrganizationMembershipService;
  * another user. A non-admin may only assign roles that (a) belong to their own
  * organization (or are system roles), (b) are not admin/manager-conferring,
  * and (c) carry no permission the actor does not already hold.
+ *
+ * An administrator acting through a personal access token scoped to specific
+ * abilities is held to the same rules, with "holds" meaning their roles grant
+ * the permission AND the token allows it.
  *
  * Shared by the user form (which aborts with 403) and the user CSV import
  * (which reports the violation as a row error), so both enforce exactly the
@@ -38,7 +43,7 @@ final class RoleAssignmentGuard
             }
         }
 
-        if ($actor->isAdmin()) {
+        if (self::isUnrestrictedAdmin($actor)) {
             return null;
         }
 
@@ -58,13 +63,40 @@ final class RoleAssignmentGuard
             }
 
             foreach ($role->getAllPermissions() as $permission) {
-                if (! $actor->hasPermission($permission)) {
+                if (! self::actorHolds($actor, $permission)) {
                     return 'You cannot assign a role with more permissions than you hold.';
                 }
             }
         }
 
         return null;
+    }
+
+    /**
+     * Whether the actor is an administrator acting with their full authority.
+     *
+     * A request authenticated by a personal access token that declares a
+     * specific ability set is limited to those abilities, so an administrator
+     * acting through it is treated like any other delegated user: route
+     * middleware checks only the route's own permission, and without this a
+     * narrowly scoped token could mint or take over an administrator.
+     * Session auth, a token with no declared scope and a `*` token stay
+     * unrestricted (see CheckApiPermission::tokenAllows()).
+     */
+    private static function isUnrestrictedAdmin(User $actor): bool
+    {
+        return $actor->isAdmin()
+            && CheckApiPermission::declaredAbilities($actor->currentAccessToken()) === null;
+    }
+
+    /**
+     * Whether the actor holds the permission through their roles AND the
+     * acting token allows it.
+     */
+    private static function actorHolds(User $actor, string $permission): bool
+    {
+        return $actor->hasPermission($permission)
+            && CheckApiPermission::tokenAllows($actor->currentAccessToken())($permission);
     }
 
     /**
@@ -88,7 +120,9 @@ final class RoleAssignmentGuard
     {
         $outside = self::outsideMembers($target, $actor->organization_id === null ? null : (int) $actor->organization_id);
 
-        if (! $actor->isAdmin()) {
+        $unrestrictedToken = CheckApiPermission::declaredAbilities($actor->currentAccessToken()) === null;
+
+        if (! self::isUnrestrictedAdmin($actor)) {
             foreach (array_merge([$target], array_values($outside)) as $member) {
                 if ($member->isAdmin()) {
                     return 'You do not have permission to manage an administrator.';
@@ -99,7 +133,7 @@ final class RoleAssignmentGuard
                 }
 
                 foreach ($member->getAllPermissions() as $permission) {
-                    if (! $actor->hasPermission($permission)) {
+                    if (! self::actorHolds($actor, $permission)) {
                         return 'You cannot manage a user who holds permissions you do not.';
                     }
                 }
@@ -110,7 +144,7 @@ final class RoleAssignmentGuard
             foreach (array_keys($outside) as $organizationId) {
                 $actorThere = self::memberIn($actor, $organizationId);
 
-                if ($actorThere === null || ! $actorThere->isAdmin()) {
+                if ($actorThere === null || ! $actorThere->isAdmin() || ! $unrestrictedToken) {
                     return 'This user also works in other organizations. Only an administrator of each of them can change their email or password or delete the account.';
                 }
             }
