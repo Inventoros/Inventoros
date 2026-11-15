@@ -381,7 +381,10 @@ class Order extends Model
         static::saving(function (Order $order) {
             if ($order->exists && $order->isDirty('status')) {
                 $from = OrderStatus::tryFrom((string) $order->getRawOriginal('status'));
-                $error = self::statusTransitionError($from, $order->status);
+                // The one sanctioned step back: OrderService::revertMistakenShipment().
+                $error = $order->mistakenShipmentRevertPermitted && $from === OrderStatus::SHIPPED && $order->status === OrderStatus::PROCESSING
+                    ? null
+                    : self::statusTransitionError($from, $order->status);
 
                 if ($error !== null) {
                     throw new InvalidStateException($error, 'invalid_state_transition');
@@ -391,6 +394,10 @@ class Order extends Model
             if ($order->isDirty('status') && $order->approvalBlocks($order->status)) {
                 throw new InvalidStateException(self::APPROVAL_PENDING_MESSAGE, 'approval_pending');
             }
+        });
+
+        static::saved(function (Order $order) {
+            $order->mistakenShipmentRevertPermitted = false;
         });
     }
 
@@ -422,6 +429,21 @@ class Order extends Model
                 : 'A shipped order can only be marked delivered. Record a return for goods that come back.',
             default => null,
         };
+    }
+
+    /** Set by OrderService::revertMistakenShipment() for its one save. */
+    private bool $mistakenShipmentRevertPermitted = false;
+
+    /**
+     * Let this instance's next save move it from shipped back to processing.
+     * Only OrderService::revertMistakenShipment() calls this, after checking
+     * the actor is an admin and nothing actually left or came back.
+     *
+     * @internal
+     */
+    public function permitMistakenShipmentRevert(): void
+    {
+        $this->mistakenShipmentRevertPermitted = true;
     }
 
     /**

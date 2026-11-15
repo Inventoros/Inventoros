@@ -13,6 +13,7 @@ use App\Exceptions\BusinessRuleException;
 use App\Exceptions\InsufficientStockException;
 use App\Exceptions\InvalidOrderItemException;
 use App\Exceptions\InvalidStateException;
+use App\Models\ActivityLog;
 use App\Models\Auth\Organization;
 use App\Models\Inventory\Product;
 use App\Models\Inventory\ProductVariant;
@@ -1134,6 +1135,65 @@ final class OrderService
             }
 
             $locked->update($attributes);
+
+            return $locked;
+        });
+    }
+
+    /**
+     * Correct an order marked shipped by mistake: move it back to processing
+     * and clear shipped_at. The only step back the status rules allow (see
+     * Order::statusTransitionError()), and only when:
+     *
+     *  - the actor is an admin of the order's organization;
+     *  - the order is shipped (not delivered);
+     *  - none of its shipments has left the warehouse (pending or label
+     *    created only), so no goods are actually gone;
+     *  - it has no returns.
+     *
+     * Stock is untouched. The correction is written to the activity log.
+     *
+     * @throws AuthorizationException When the actor is not an admin there.
+     * @throws InvalidStateException When the conditions above do not hold.
+     *
+     * @api
+     */
+    public function revertMistakenShipment(Order $order, User $actor): Order
+    {
+        if (! $actor->isAdmin() || (int) $actor->organization_id !== (int) $order->organization_id) {
+            throw new AuthorizationException('Only an administrator can correct a mistaken shipped status.');
+        }
+
+        return DB::transaction(function () use ($order, $actor) {
+            $locked = Order::withoutGlobalScopes()->whereKey($order->getKey())->lockForUpdate()->firstOrFail();
+
+            if ($locked->status !== OrderStatus::SHIPPED) {
+                throw new InvalidStateException('Only an order marked shipped can be moved back to processing.', 'invalid_state_transition');
+            }
+
+            if (Shipment::withoutGlobalScopes()->where('order_id', $locked->getKey())->leftWarehouse()->exists()) {
+                throw new InvalidStateException('This order has a shipment that left the warehouse, so it really shipped. Record a return for goods that come back.', 'invalid_state_transition');
+            }
+
+            if (ReturnOrder::withoutGlobalScopes()->where('order_id', $locked->getKey())->exists()) {
+                throw new InvalidStateException('This order has returns recorded against it, so its shipped status cannot be corrected.', 'invalid_state_transition');
+            }
+
+            $shippedAt = $locked->shipped_at?->toIso8601String();
+            $locked->permitMistakenShipmentRevert();
+            $locked->update(['status' => OrderStatus::PROCESSING, 'shipped_at' => null]);
+
+            ActivityLog::create([
+                'organization_id' => $locked->organization_id,
+                'user_id' => $actor->id,
+                'subject_type' => Order::class,
+                'subject_id' => $locked->getKey(),
+                'action' => 'shipment_reverted',
+                'description' => "Corrected order {$locked->order_number} from shipped back to processing (marked shipped by mistake)",
+                'properties' => ['previous_status' => OrderStatus::SHIPPED->value, 'previous_shipped_at' => $shippedAt],
+                'ip_address' => request()?->ip(),
+                'user_agent' => request()?->userAgent(),
+            ]);
 
             return $locked;
         });

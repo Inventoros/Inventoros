@@ -381,6 +381,27 @@ class OrderController extends Controller
     }
 
     /**
+     * Correct an order marked shipped by mistake back to processing.
+     *
+     * Admins only. Refused (422 `invalid_state_transition`) unless the order
+     * is shipped, none of its shipments has left the warehouse and it has no
+     * returns. Clears `shipped_at`; stock is untouched.
+     */
+    public function revertShipment(Request $request, Order $order): JsonResponse
+    {
+        try {
+            $order = $this->orderService->revertMistakenShipment($order, $request->user());
+        } catch (InvalidStateException $e) {
+            return response()->json(['message' => $e->getMessage(), 'error' => $e->errorCode], 422);
+        }
+
+        return response()->json([
+            'message' => 'Order moved back to processing',
+            'data' => new OrderResource($order->load('items')),
+        ]);
+    }
+
+    /**
      * Email the order's invoice to the customer.
      *
      * Queues an email with the invoice PDF attached to the customer (or `to`,
