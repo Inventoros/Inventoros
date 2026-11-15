@@ -6,12 +6,14 @@ namespace Tests\Feature\Approvals;
 
 use App\Enums\OrderApprovalStatus;
 use App\Enums\OrderStatus;
+use App\Enums\ShipmentStatus;
 use App\Models\Auth\Organization;
 use App\Models\Inventory\Product;
 use App\Models\Notification as InAppNotification;
 use App\Models\Order\Order;
 use App\Models\User;
 use App\Services\OrderService;
+use App\Services\Shipping\ShipmentService;
 use App\Support\ApprovalSettings;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
@@ -259,6 +261,53 @@ final class OrderReapprovalTest extends TestCase
 
         $this->assertSame(OrderApprovalStatus::APPROVED, $order->fresh()->approval_status);
         $this->assertSame(OrderStatus::DELIVERED, $order->fresh()->status);
+    }
+
+    public function test_an_order_with_an_open_shipment_is_not_sent_back_and_tracking_still_works(): void
+    {
+        // A shipment (label bought or not) already holds the order's lines:
+        // holding the order for approval would make the next carrier update
+        // fail when it moves the order to shipped.
+        $order = $this->approvedOrder();
+        $shipment = app(ShipmentService::class)->create($order, ['carrier' => 'manual'], $this->creator);
+        Sanctum::actingAs($this->creator, ['*']);
+
+        $this->putJson("/api/v1/orders/{$order->id}", ['customer_address' => '9 New Dock Rd'])->assertOk();
+        $this->assertSame(OrderApprovalStatus::APPROVED, $order->fresh()->approval_status);
+
+        app(ShipmentService::class)->applyTrackingStatus($shipment->fresh(), ShipmentStatus::IN_TRANSIT, 'Scanned');
+
+        $this->assertSame(OrderStatus::SHIPPED, $order->fresh()->status);
+        $this->assertSame(ShipmentStatus::IN_TRANSIT, $shipment->fresh()->status);
+        $this->assertSame(OrderApprovalStatus::APPROVED, $order->fresh()->approval_status);
+    }
+
+    public function test_a_partially_shipped_order_is_not_sent_back_for_approval(): void
+    {
+        $order = $this->approvedOrder(4);
+        $line = $order->items->first();
+        $first = app(ShipmentService::class)->create($order, ['carrier' => 'manual', 'items' => [['order_item_id' => $line->id, 'quantity' => 2]]], $this->creator);
+        app(ShipmentService::class)->markShipped($first, $this->creator);
+        $this->assertSame(OrderStatus::PROCESSING, $order->fresh()->status);
+        $this->assertNull($order->fresh()->shipped_at);
+        Sanctum::actingAs($this->creator, ['*']);
+
+        $this->putJson("/api/v1/orders/{$order->id}", ['customer_name' => 'Someone Else'])->assertOk();
+
+        $this->assertSame(OrderApprovalStatus::APPROVED, $order->fresh()->approval_status);
+    }
+
+    public function test_approvers_are_notified_even_when_no_requester_is_known(): void
+    {
+        $order = $this->approvedOrder();
+        // The creator has left and the change comes from a background job.
+        DB::table('orders')->where('id', $order->id)->update(['created_by' => null]);
+        auth()->forgetGuards();
+
+        app(OrderService::class)->changeOrderDiscount($order->fresh(), 'fixed', 5);
+
+        $this->assertBackToPending($order);
+        $this->assertApproversNotified();
     }
 
     public function test_the_order_can_be_approved_again_after_a_change(): void

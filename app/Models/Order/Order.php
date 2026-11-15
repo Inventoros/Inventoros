@@ -430,9 +430,10 @@ class Order extends Model
      * persists them and notifies the approvers once committed.
      *
      * Only while approval is required by the organization and the order is
-     * still open: a cancelled order cannot ship, and once its goods have left
-     * there is nothing for approval to hold (and holding it would block its
-     * delivery).
+     * still open with no shipment under way: a cancelled order cannot ship,
+     * and once a shipment exists (pending, label bought, or partly sent) or
+     * its goods have left, holding the order would make the next carrier
+     * update fail when it moves the order to shipped or delivered.
      */
     public function requireReapprovalIfDecided(): bool
     {
@@ -448,6 +449,14 @@ class Order extends Model
         $status = OrderStatus::tryFrom((string) $this->getRawOriginal('status'));
         if (! in_array($status, [OrderStatus::PENDING, OrderStatus::PROCESSING], true)
             || $this->getRawOriginal('shipped_at') !== null) {
+            return false;
+        }
+
+        $hasShipment = \App\Models\Shipping\Shipment::withoutGlobalScopes()
+            ->where('order_id', $this->getKey())
+            ->active()
+            ->exists();
+        if ($hasShipment) {
             return false;
         }
 
