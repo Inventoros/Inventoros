@@ -19,6 +19,7 @@ use App\Models\Inventory\WorkOrderOutput;
 use App\Models\Scopes\OrganizationScope;
 use App\Models\User;
 use App\Support\SequenceNumberRetry;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -39,6 +40,12 @@ use Illuminate\Support\Facades\DB;
  * then tracking rows (serials, batches) per product. Product locks come first
  * because order creation, transfers and adjustments all lock the product
  * before its bins or tracking rows.
+ *
+ * Every operation takes the acting user ($actor, falling back to the
+ * signed-in user) and enforces their warehouse assignments
+ * (WarehouseAccessService): the work order's warehouse, the bins components
+ * are drawn from and the location the output is booked into. Unrestricted
+ * users and system callers with no user are not narrowed.
  */
 final class WorkOrderService
 {
@@ -113,6 +120,7 @@ final class WorkOrderService
      */
     public function create(User $creator, array $data): WorkOrder
     {
+        app(WarehouseAccessService::class)->authorizeWarehouse($creator, $this->intOrNull($data['warehouse_id'] ?? null));
         $organizationId = (int) $creator->organization_id;
         $quantity = (int) $data['quantity'];
 
@@ -179,13 +187,16 @@ final class WorkOrderService
      * stock and, for a tracked product, its available serials or batch
      * quantity. Nothing is reserved; completion checks again under lock.
      *
-     * @throws InvalidStateException|InsufficientStockException
+     * @throws InvalidStateException|InsufficientStockException|AuthorizationException
      */
-    public function start(WorkOrder $workOrder): void
+    public function start(WorkOrder $workOrder, ?User $actor = null): void
     {
-        DB::transaction(function () use ($workOrder): void {
+        $actor = $this->actor($actor);
+
+        DB::transaction(function () use ($workOrder, $actor): void {
             InventoryWorkflowLock::acquire((int) $workOrder->organization_id);
             $locked = WorkOrder::whereKey($workOrder->getKey())->lockForUpdate()->firstOrFail();
+            $this->authorizeWorkOrder($locked, $actor);
 
             if (! in_array($locked->status, ['draft', 'pending'], true)) {
                 throw new InvalidStateException('Only draft or pending work orders can be started.', 'invalid_status');
@@ -231,14 +242,17 @@ final class WorkOrderService
      * @param  array{quantity_produced?:int|null, allocations?:list<array{work_order_item_id:int, serial_ids?:list<int>|null, batches?:list<array{product_batch_id:int, quantity:int}>|null}>|null, output?:array{serial_numbers?:list<string>|null, batch_number?:string|null, expiry_date?:string|null, manufactured_date?:string|null}|null}  $input
      * @return int the quantity produced
      *
-     * @throws InvalidStateException|InsufficientStockException
+     * @throws InvalidStateException|InsufficientStockException|AuthorizationException
      */
-    public function complete(WorkOrder $workOrder, array $input = []): int
+    public function complete(WorkOrder $workOrder, array $input = [], ?User $actor = null): int
     {
-        return DB::transaction(function () use ($workOrder, $input): int {
+        $actor = $this->actor($actor);
+
+        return DB::transaction(function () use ($workOrder, $input, $actor): int {
             // Lock and re-read so a concurrent or stale complete/cancel cannot
             // pass on an old status and move stock twice.
             $locked = WorkOrder::whereKey($workOrder->getKey())->lockForUpdate()->firstOrFail();
+            $this->authorizeWorkOrder($locked, $actor);
 
             if ($locked->status !== 'in_progress') {
                 throw new InvalidStateException('Only in-progress work orders can be completed.', 'invalid_status');
@@ -255,6 +269,8 @@ final class WorkOrderService
             $output = $products->get($locked->product_id);
             $outputVariant = $locked->product_variant_id !== null ? $variants->get($locked->product_variant_id) : null;
             $this->assertOutputSupported($locked, $output, $outputVariant);
+            // The output is booked into the product's primary location.
+            $this->authorizeStockAt($output, $actor);
 
             $allocations = $this->allocationsByItem($locked, $input['allocations'] ?? null);
 
@@ -277,11 +293,11 @@ final class WorkOrderService
                     continue;
                 }
 
-                $this->consumeLine($locked, $item, $product, $variant, $consume, $choice);
+                $this->consumeLine($locked, $item, $product, $variant, $consume, $choice, $actor);
                 $item->update(['quantity_consumed' => $target]);
             }
 
-            $this->receiveOutput($locked, $output, $outputVariant, $produced, $input['output'] ?? []);
+            $this->receiveOutput($locked, $output, $outputVariant, $produced, $input['output'] ?? [], $actor);
 
             $locked->update([
                 'status' => 'completed',
@@ -301,12 +317,15 @@ final class WorkOrderService
      * batch quantities it consumed. A completed work order cannot be
      * cancelled; its stock movements are final.
      *
-     * @throws InvalidStateException
+     * @throws InvalidStateException|AuthorizationException
      */
-    public function cancel(WorkOrder $workOrder): void
+    public function cancel(WorkOrder $workOrder, ?User $actor = null): void
     {
-        DB::transaction(function () use ($workOrder): void {
+        $actor = $this->actor($actor);
+
+        DB::transaction(function () use ($workOrder, $actor): void {
             $locked = WorkOrder::whereKey($workOrder->getKey())->lockForUpdate()->firstOrFail();
+            $this->authorizeWorkOrder($locked, $actor);
 
             if (! in_array($locked->status, ['draft', 'pending', 'in_progress'], true)) {
                 throw new InvalidStateException('Only draft, pending, or in-progress work orders can be cancelled.', 'invalid_status');
@@ -320,6 +339,8 @@ final class WorkOrderService
                     [$products, $variants] = $this->lockStock($locked, $consumed, withTrashed: true);
 
                     foreach ($consumed as $item) {
+                        // Consumed units return to the product's primary location.
+                        $this->authorizeStockAt($products->get($item->product_id), $actor);
                         $this->reverseLine($locked, $item, $products->get($item->product_id), $item->product_variant_id !== null ? $variants->get($item->product_variant_id) : null);
                     }
                 }
@@ -333,13 +354,17 @@ final class WorkOrderService
      * Delete a draft or cancelled work order and its component lines.
      *
      * @throws InvalidStateException when the work order has started, completed or otherwise moved stock
+     * @throws AuthorizationException
      */
-    public function delete(WorkOrder $workOrder): void
+    public function delete(WorkOrder $workOrder, ?User $actor = null): void
     {
-        DB::transaction(function () use ($workOrder) {
+        $actor = $this->actor($actor);
+
+        DB::transaction(function () use ($workOrder, $actor) {
             // Lock and re-check so a concurrent start cannot slip in between
             // the guard and the delete.
             $locked = WorkOrder::whereKey($workOrder->getKey())->lockForUpdate()->firstOrFail();
+            $this->authorizeWorkOrder($locked, $actor);
 
             if (! in_array($locked->status, self::DELETABLE_STATUSES, true)) {
                 throw new InvalidStateException('Only draft or cancelled work orders can be deleted.', 'invalid_status');
@@ -578,7 +603,7 @@ final class WorkOrderService
      *
      * @throws InvalidStateException|InsufficientStockException
      */
-    private function consumeLine(WorkOrder $workOrder, WorkOrderItem $item, Product $product, ?ProductVariant $variant, int $quantity, ?array $choice): void
+    private function consumeLine(WorkOrder $workOrder, WorkOrderItem $item, Product $product, ?ProductVariant $variant, int $quantity, ?array $choice, ?User $actor): void
     {
         $type = $this->trackingType($product);
         $chosenSerials = $choice['serial_ids'] ?? null;
@@ -596,19 +621,24 @@ final class WorkOrderService
         $notes = "Assembly of {$this->outputName($workOrder)}";
 
         if ($variant !== null) {
-            StockAdjustment::adjustVariant($variant, -$quantity, 'assembly_consumption', $reason, $notes, $workOrder, allowNegative: false);
+            // Draw the bins first (a restricted actor only from their own
+            // warehouses), then the total.
+            $this->bins->consume($variant, $quantity, actor: $actor);
+            StockAdjustment::adjustVariant($variant, -$quantity, 'assembly_consumption', $reason, $notes, $workOrder, allowNegative: false, actor: $actor, syncBins: false);
 
             return;
         }
 
+        $this->authorizeTrackedStock($product, $actor);
         $this->tracked->consumeForProduction($product, $quantity, $item, $chosenSerials, $chosenBatches);
 
         // Draw the units out of the bins before the total drops (an unbinned
         // product seeds from its pre-consumption stock), then refuse to drive
-        // the total negative.
-        $this->bins->consume($product, $quantity);
+        // the total negative. A restricted actor draws only from their
+        // warehouses' bins.
+        $this->bins->consume($product, $quantity, actor: $actor);
 
-        StockAdjustment::adjust($product, -$quantity, 'assembly_consumption', $reason, $notes, $workOrder, allowNegative: false, syncBins: false);
+        StockAdjustment::adjust($product, -$quantity, 'assembly_consumption', $reason, $notes, $workOrder, allowNegative: false, actor: $actor, syncBins: false);
     }
 
     /**
@@ -619,7 +649,7 @@ final class WorkOrderService
      *
      * @throws InvalidStateException
      */
-    private function receiveOutput(WorkOrder $workOrder, Product $product, ?ProductVariant $variant, int $quantity, ?array $input): void
+    private function receiveOutput(WorkOrder $workOrder, Product $product, ?ProductVariant $variant, int $quantity, ?array $input, ?User $actor): void
     {
         $input ??= [];
         $type = $variant === null ? $this->trackingType($product) : null;
@@ -646,13 +676,13 @@ final class WorkOrderService
         ];
 
         if ($variant !== null) {
-            StockAdjustment::adjustVariant($variant, $quantity, 'assembly_production', $reason, $notes, $workOrder);
+            StockAdjustment::adjustVariant($variant, $quantity, 'assembly_production', $reason, $notes, $workOrder, actor: $actor);
             WorkOrderOutput::create($record + ['product_variant_id' => $variant->id, 'quantity' => $quantity]);
 
             return;
         }
 
-        StockAdjustment::adjust($product, $quantity, 'assembly_production', $reason, $notes, $workOrder, syncBins: false);
+        StockAdjustment::adjust($product, $quantity, 'assembly_production', $reason, $notes, $workOrder, actor: $actor, syncBins: false);
         $this->bins->receive($product, $quantity);
 
         match ($type) {
@@ -775,6 +805,66 @@ final class WorkOrderService
         }
 
         $item->update(['quantity_consumed' => 0]);
+    }
+
+    /**
+     * The acting user: the caller's, else the signed-in user, else none (a
+     * system caller, which is not narrowed).
+     */
+    private function actor(?User $actor): ?User
+    {
+        $signedIn = auth()->user();
+
+        return $actor ?? ($signedIn instanceof User ? $signedIn : null);
+    }
+
+    /**
+     * A restricted actor may only act on a work order in one of their
+     * warehouses; one bound to no warehouse is for unrestricted users.
+     *
+     * @throws AuthorizationException
+     */
+    private function authorizeWorkOrder(WorkOrder $workOrder, ?User $actor): void
+    {
+        if ($actor !== null) {
+            app(WarehouseAccessService::class)->authorizeWarehouse($actor, $this->intOrNull($workOrder->warehouse_id));
+        }
+    }
+
+    /**
+     * Units received (the output, or a reversal) land in the product's
+     * primary location, which must be in one of a restricted actor's
+     * warehouses.
+     *
+     * @throws AuthorizationException
+     */
+    private function authorizeStockAt(?Product $product, ?User $actor): void
+    {
+        if ($actor !== null && $product !== null) {
+            app(WarehouseAccessService::class)->authorizeLocation($actor, $this->intOrNull($product->location_id));
+        }
+    }
+
+    /**
+     * Serials and batches have no location of their own, so a restricted
+     * actor may consume them only when every bin of the product is in one of
+     * their warehouses (the rule order fulfilment applies).
+     *
+     * @throws AuthorizationException
+     */
+    private function authorizeTrackedStock(Product $product, ?User $actor): void
+    {
+        $access = app(WarehouseAccessService::class);
+        if ($actor === null || $this->trackingType($product) === TrackingType::NONE || ! $access->isRestricted($actor)) {
+            return;
+        }
+
+        $access->authorizeLocation($actor, $this->intOrNull($product->location_id));
+        foreach ($this->bins->breakdown($product) as $bin) {
+            if (! $access->canAccessLocation($actor, (int) $bin->location_id)) {
+                throw new AuthorizationException('Tracked stock spans warehouses you cannot access; an unrestricted user must complete this work order.');
+            }
+        }
     }
 
     private function trackingType(Product $product): TrackingType

@@ -10,8 +10,10 @@ use App\Exceptions\InvalidStateException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\WorkOrder\StoreWorkOrderRequest;
 use App\Models\Inventory\WorkOrder;
+use App\Services\WarehouseAccessService;
 use App\Services\WorkOrderService;
 use Dedoc\Scramble\Attributes\QueryParameter;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -34,6 +36,8 @@ class WorkOrderController extends Controller
 
         $query = WorkOrder::with(['product:id,name,sku,thumbnail', 'creator:id,name'])
             ->forOrganization($organizationId)
+            // A restricted user sees only their warehouses' work orders.
+            ->tap(fn ($query) => app(WarehouseAccessService::class)->scopeWarehouses($query, $request->user(), 'warehouse_id'))
             ->when($request->input('search'), function ($query, $search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('work_order_number', 'like', "%{$search}%")
@@ -106,6 +110,8 @@ class WorkOrderController extends Controller
             ], 404);
         }
 
+        $this->authorizeWarehouse($request, $workOrder);
+
         $workOrder->load([
             'product:id,name,sku,thumbnail,type,tracking_type',
             'variant:id,product_id,title,sku,stock',
@@ -144,8 +150,10 @@ class WorkOrderController extends Controller
             ], 404);
         }
 
+        $this->authorizeWarehouse($request, $workOrder);
+
         try {
-            app(WorkOrderService::class)->start($workOrder);
+            app(WorkOrderService::class)->start($workOrder, $request->user());
         } catch (BusinessRuleException $e) {
             return $this->refusal($e);
         }
@@ -182,6 +190,8 @@ class WorkOrderController extends Controller
             ], 404);
         }
 
+        $this->authorizeWarehouse($request, $workOrder);
+
         if ($workOrder->status !== 'in_progress') {
             return response()->json([
                 'message' => 'Only in-progress work orders can be completed.',
@@ -192,7 +202,7 @@ class WorkOrderController extends Controller
         $validated = $request->validate(WorkOrderService::completionRules($workOrder->quantity));
 
         try {
-            $quantityProduced = app(WorkOrderService::class)->complete($workOrder, $validated);
+            $quantityProduced = app(WorkOrderService::class)->complete($workOrder, $validated, $request->user());
         } catch (BusinessRuleException $e) {
             return $this->refusal($e);
         }
@@ -224,6 +234,8 @@ class WorkOrderController extends Controller
             ], 404);
         }
 
+        $this->authorizeWarehouse($request, $workOrder);
+
         if (! in_array($workOrder->status, ['draft', 'pending', 'in_progress'])) {
             return response()->json([
                 'message' => 'Only draft, pending, or in-progress work orders can be cancelled.',
@@ -232,7 +244,7 @@ class WorkOrderController extends Controller
         }
 
         try {
-            app(WorkOrderService::class)->cancel($workOrder);
+            app(WorkOrderService::class)->cancel($workOrder, $request->user());
         } catch (BusinessRuleException $e) {
             return $this->refusal($e);
         }
@@ -260,13 +272,25 @@ class WorkOrderController extends Controller
             ], 404);
         }
 
+        $this->authorizeWarehouse($request, $workOrder);
+
         try {
-            $workOrders->delete($workOrder);
+            $workOrders->delete($workOrder, $request->user());
         } catch (InvalidStateException $e) {
             return response()->json(['message' => $e->getMessage(), 'error' => $e->errorCode], 422);
         }
 
         return response()->json(['message' => 'Work order deleted successfully']);
+    }
+
+    /**
+     * A restricted user may only reach work orders in their own warehouses.
+     *
+     * @throws AuthorizationException
+     */
+    private function authorizeWarehouse(Request $request, WorkOrder $workOrder): void
+    {
+        app(WarehouseAccessService::class)->authorizeWarehouse($request->user(), $workOrder->warehouse_id === null ? null : (int) $workOrder->warehouse_id);
     }
 
     /**
