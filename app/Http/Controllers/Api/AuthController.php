@@ -121,12 +121,13 @@ class AuthController extends Controller
         $verifier = app(TwoFactorVerifier::class);
 
         // One failure budget per account, shared with the web challenge, so
-        // spreading guesses over many client IPs does not help.
-        if ($verifier->tooManyFailures($user)) {
-            throw new ThrottleRequestsException($verifier->lockoutMessage($user), null, [
-                'Retry-After' => $verifier->secondsUntilUnlocked($user),
-            ]);
-        }
+        // spreading guesses over many client IPs does not help. A valid
+        // recovery code still works while locked out, so someone holding only
+        // the password cannot keep the owner out.
+        $lockedOut = $verifier->tooManyFailures($user);
+        $lockout = fn () => new ThrottleRequestsException($verifier->lockoutMessage($user), null, [
+            'Retry-After' => $verifier->secondsUntilUnlocked($user),
+        ]);
 
         if ($request->filled('recovery_code')) {
             $matched = false;
@@ -158,6 +159,10 @@ class AuthController extends Controller
                 app(SecurityEventLogger::class)->record(SecurityEvent::TWO_FACTOR_FAILED, $user, $user, ['method' => 'recovery_code', 'guard' => 'sanctum']);
                 $verifier->recordFailure($user);
 
+                if ($lockedOut) {
+                    throw $lockout();
+                }
+
                 throw ValidationException::withMessages([
                     'recovery_code' => ['The provided recovery code is invalid.'],
                 ]);
@@ -168,6 +173,10 @@ class AuthController extends Controller
             return;
         }
 
+        if ($lockedOut) {
+            throw $lockout();
+        }
+
         $code = $request->input('code');
         if (!$code) {
             throw ValidationException::withMessages([
@@ -175,7 +184,16 @@ class AuthController extends Controller
             ]);
         }
 
-        if (! $verifier->verifyTotp($user, (string) $code)) {
+        $result = $verifier->checkTotp($user, (string) $code);
+
+        // A code that was already used is not a guess: no failure is counted.
+        if ($result === TwoFactorVerifier::TOTP_REPLAYED) {
+            throw ValidationException::withMessages([
+                'code' => [TwoFactorVerifier::REPLAY_MESSAGE],
+            ]);
+        }
+
+        if ($result !== TwoFactorVerifier::TOTP_ACCEPTED) {
             app(SecurityEventLogger::class)->record(SecurityEvent::TWO_FACTOR_FAILED, $user, $user, ['method' => 'totp', 'guard' => 'sanctum']);
             $verifier->recordFailure($user);
 

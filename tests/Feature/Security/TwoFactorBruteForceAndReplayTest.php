@@ -111,17 +111,54 @@ class TwoFactorBruteForceAndReplayTest extends TestCase
         $this->assertSame(0, $this->tokenCount($this->user));
     }
 
-    public function test_recovery_code_guesses_count_towards_the_same_budget_and_do_not_consume_codes_while_locked(): void
+    public function test_recovery_code_guesses_count_towards_the_same_budget(): void
     {
         for ($i = 0; $i < 5; $i++) {
             $this->apiLogin(['recovery_code' => 'wrong-'.$i])->assertStatus(422);
         }
 
-        $this->apiLogin(['recovery_code' => 'recovery-aaaa-1111'])->assertStatus(429);
+        // Locked: TOTP and wrong recovery codes are refused without a check.
+        $this->apiLogin(['code' => $this->codeAt(0)])->assertStatus(429);
+        $this->apiLogin(['recovery_code' => 'wrong-again'])->assertStatus(429);
 
         $stored = json_decode(decrypt($this->user->fresh()->two_factor_recovery_codes), true);
         $this->assertCount(2, $stored);
         $this->assertSame(0, $this->tokenCount($this->user));
+    }
+
+    public function test_a_valid_recovery_code_signs_the_owner_in_during_an_api_lockout(): void
+    {
+        // Someone holding only the password must not be able to keep the
+        // owner locked out: the owner's recovery code still works.
+        for ($i = 0; $i < 5; $i++) {
+            $this->apiLogin(['code' => $this->wrongCode()])->assertStatus(422);
+        }
+        $this->apiLogin(['code' => $this->codeAt(0)])->assertStatus(429);
+
+        $this->apiLogin(['recovery_code' => 'recovery-aaaa-1111'])->assertOk()->assertJsonStructure(['token']);
+
+        $stored = json_decode(decrypt($this->user->fresh()->two_factor_recovery_codes), true);
+        $this->assertCount(1, $stored);
+
+        // The successful recovery also lifts the lockout.
+        $this->apiLogin(['code' => $this->codeAt(0)])->assertOk();
+    }
+
+    public function test_a_valid_recovery_code_passes_the_web_challenge_during_a_lockout(): void
+    {
+        for ($i = 0; $i < 5; $i++) {
+            $this->apiLogin(['code' => $this->wrongCode()])->assertStatus(422);
+        }
+
+        $this->actingAs($this->user)
+            ->post(route('two-factor.challenge.verify'), ['code' => $this->codeAt(0)])
+            ->assertSessionHasErrors('code');
+
+        $this->post(route('two-factor.challenge.verify'), ['recovery_code' => 'recovery-aaaa-1111'])
+            ->assertSessionHasNoErrors()
+            ->assertRedirect(route('dashboard'));
+
+        $this->get(route('dashboard'))->assertOk();
     }
 
     public function test_api_failures_lock_the_web_challenge_too(): void
@@ -232,6 +269,39 @@ class TwoFactorBruteForceAndReplayTest extends TestCase
             ->assertSessionHasErrors('code');
     }
 
+    public function test_an_api_replay_is_reported_as_already_used_and_not_counted_as_a_failure(): void
+    {
+        $code = $this->codeAt(0);
+        $this->apiLogin(['code' => $code])->assertOk();
+
+        for ($i = 0; $i < 6; $i++) {
+            $response = $this->apiLogin(['code' => $code])->assertStatus(422)->assertJsonValidationErrors(['code']);
+            $this->assertStringContainsString('already used', $response->json('errors.code.0'));
+        }
+
+        // Six replays spent none of the failure budget.
+        $this->apiLogin(['code' => $this->codeAt(1)])->assertOk();
+    }
+
+    public function test_a_web_replay_is_reported_as_already_used_and_not_counted_as_a_failure(): void
+    {
+        $code = $this->codeAt(0);
+        $this->actingAs($this->user)
+            ->post(route('two-factor.challenge.verify'), ['code' => $code])
+            ->assertRedirect(route('dashboard'));
+
+        $this->flushSession();
+        $this->actingAs($this->user)
+            ->post(route('two-factor.challenge.verify'), ['code' => $code])
+            ->assertSessionHasErrors(['code' => __('This code was already used; wait for the next one.')]);
+
+        // The replay was not a failure: five genuine mistakes still fit.
+        $this->app['auth']->forgetGuards();
+        for ($i = 0; $i < 5; $i++) {
+            $this->apiLogin(['code' => $this->wrongCode()])->assertStatus(422);
+        }
+    }
+
     public function test_a_newer_code_is_accepted_after_an_older_one(): void
     {
         $this->apiLogin(['code' => $this->codeAt(0)])->assertOk();
@@ -261,5 +331,40 @@ class TwoFactorBruteForceAndReplayTest extends TestCase
 
         $this->app['auth']->forgetGuards();
         $this->apiLogin(['code' => $code], 'fresh@example.com')->assertStatus(422)->assertJsonValidationErrors(['code']);
+    }
+
+    // ── Administrator unlock ──────────────────────────────────────────
+
+    public function test_an_administrator_can_clear_one_users_lockout_from_the_console(): void
+    {
+        for ($i = 0; $i < 5; $i++) {
+            $this->apiLogin(['code' => $this->wrongCode()])->assertStatus(422);
+        }
+        $otherSecret = decrypt($this->otherUser->two_factor_secret);
+        for ($i = 0; $i < 5; $i++) {
+            $this->apiLogin(['code' => '000000'], 'other@example.com');
+        }
+
+        $this->artisan('inventoros:2fa-unlock', ['email' => 'user@example.com'])->assertSuccessful();
+
+        $this->apiLogin(['code' => $this->codeAt(0)])->assertOk();
+        // Only that user was unlocked.
+        $this->apiLogin(['code' => $this->google2fa->getCurrentOtp($otherSecret)], 'other@example.com')->assertStatus(429);
+    }
+
+    public function test_the_unlock_command_fails_for_an_unknown_email(): void
+    {
+        $this->artisan('inventoros:2fa-unlock', ['email' => 'nobody@example.com'])->assertFailed();
+    }
+
+    // ── Serialization ─────────────────────────────────────────────────
+
+    public function test_the_replay_marker_is_never_serialized_to_the_browser(): void
+    {
+        $this->apiLogin(['code' => $this->codeAt(0)])->assertOk();
+        $user = $this->user->fresh();
+        $this->assertNotNull($user->two_factor_last_used_timestep);
+
+        $this->assertArrayNotHasKey('two_factor_last_used_timestep', $user->toArray());
     }
 }

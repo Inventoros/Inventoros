@@ -184,22 +184,31 @@ class TwoFactorController extends Controller
         $user = $request->user();
         $verifier = app(TwoFactorVerifier::class);
 
+        // Check if using recovery code. A valid one works even while the
+        // account is locked out, so someone holding only the password cannot
+        // keep the owner out.
+        if ($request->filled('recovery_code')) {
+            return $this->verifyRecoveryCode($request, $user);
+        }
+
         // One failure budget per account, shared with the API login.
         if ($verifier->tooManyFailures($user)) {
             return redirect()->back()
                 ->withErrors(['code' => $verifier->lockoutMessage($user)]);
         }
 
-        // Check if using recovery code
-        if ($request->filled('recovery_code')) {
-            return $this->verifyRecoveryCode($request, $user);
-        }
-
         $request->validate([
             'code' => 'required|string|size:6',
         ]);
 
-        if (! $verifier->verifyTotp($user, (string) $request->input('code'))) {
+        $result = $verifier->checkTotp($user, (string) $request->input('code'));
+
+        if ($result === TwoFactorVerifier::TOTP_REPLAYED) {
+            return redirect()->back()
+                ->withErrors(['code' => __(TwoFactorVerifier::REPLAY_MESSAGE)]);
+        }
+
+        if ($result !== TwoFactorVerifier::TOTP_ACCEPTED) {
             app(SecurityEventLogger::class)->record(SecurityEvent::TWO_FACTOR_FAILED, $user, $user, ['method' => 'totp']);
             $verifier->recordFailure($user);
 
@@ -219,6 +228,8 @@ class TwoFactorController extends Controller
     protected function verifyRecoveryCode(Request $request, $user): RedirectResponse
     {
         $recoveryCode = (string) $request->input('recovery_code');
+        $verifier = app(TwoFactorVerifier::class);
+        $lockedOut = $verifier->tooManyFailures($user);
 
         try {
             DB::transaction(function () use ($user, $recoveryCode) {
@@ -236,13 +247,13 @@ class TwoFactorController extends Controller
             });
         } catch (\RuntimeException $e) {
             app(SecurityEventLogger::class)->record(SecurityEvent::TWO_FACTOR_FAILED, $user, $user, ['method' => 'recovery_code']);
-            app(TwoFactorVerifier::class)->recordFailure($user);
+            $verifier->recordFailure($user);
 
             return redirect()->back()
-                ->withErrors(['code' => __('The provided recovery code is invalid.')]);
+                ->withErrors(['code' => $lockedOut ? $verifier->lockoutMessage($user) : __('The provided recovery code is invalid.')]);
         }
 
-        app(TwoFactorVerifier::class)->clearFailures($user);
+        $verifier->clearFailures($user);
         $this->markSessionVerified($request, $user);
 
         return redirect()->intended(route('dashboard'));

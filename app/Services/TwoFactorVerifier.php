@@ -25,6 +25,16 @@ final class TwoFactorVerifier
 
     public const DECAY_SECONDS = 900;
 
+    /** checkTotp() results. */
+    public const TOTP_ACCEPTED = 'accepted';
+
+    /** A real code that was already accepted (or is older than one that was). Not a failure. */
+    public const TOTP_REPLAYED = 'replayed';
+
+    public const TOTP_INVALID = 'invalid';
+
+    public const REPLAY_MESSAGE = 'This code was already used; wait for the next one.';
+
     public function tooManyFailures(User $user): bool
     {
         return RateLimiter::tooManyAttempts($this->key($user), self::MAX_FAILURES);
@@ -53,33 +63,35 @@ final class TwoFactorVerifier
     }
 
     /**
-     * Verify a TOTP code against the user's stored secret. An accepted code's
-     * timestep is persisted, so neither it nor an older code is accepted again.
+     * Check a TOTP code against the user's stored secret. An accepted code's
+     * timestep is persisted, so neither it nor an older code is accepted
+     * again; such a code is reported as replayed (the owner just has to wait
+     * for the next code) rather than invalid, so it is not a failure.
+     *
+     * @return self::TOTP_*
      */
-    public function verifyTotp(User $user, string $code): bool
+    public function checkTotp(User $user, string $code): string
     {
-        return DB::transaction(function () use ($user, $code): bool {
+        return DB::transaction(function () use ($user, $code): string {
             $locked = $user->newQuery()->lockForUpdate()->findOrFail($user->getKey());
 
             if (! $locked->two_factor_secret) {
-                return false;
+                return self::TOTP_INVALID;
             }
 
-            $timestep = (new Google2FA)->verifyKeyNewer(
-                decrypt($locked->two_factor_secret),
-                $code,
-                (int) ($locked->two_factor_last_used_timestep ?? 0),
-            );
+            $google2fa = new Google2FA;
+            $secret = decrypt($locked->two_factor_secret);
+            $timestep = $google2fa->verifyKeyNewer($secret, $code, (int) ($locked->two_factor_last_used_timestep ?? 0));
 
             if (! is_int($timestep)) {
-                return false;
+                return $google2fa->verifyKey($secret, $code) ? self::TOTP_REPLAYED : self::TOTP_INVALID;
             }
 
             // Bookkeeping only: no model events, so a sign-in does not show
             // up as a profile change in the activity log.
             $locked->forceFill(['two_factor_last_used_timestep' => $timestep])->saveQuietly();
 
-            return true;
+            return self::TOTP_ACCEPTED;
         });
     }
 
