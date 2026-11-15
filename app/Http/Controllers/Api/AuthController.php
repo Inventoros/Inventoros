@@ -13,15 +13,16 @@ use App\Models\User;
 use App\Services\Organizations\ActiveOrganization;
 use App\Services\Organizations\OrganizationMembershipService;
 use App\Services\SecurityEventLogger;
+use App\Services\TwoFactorVerifier;
 use Illuminate\Auth\Events\Failed;
 use Illuminate\Auth\Events\Login;
+use Illuminate\Http\Exceptions\ThrottleRequestsException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
-use PragmaRX\Google2FA\Google2FA;
 
 /**
  * @tags Authentication
@@ -110,6 +111,16 @@ class AuthController extends Controller
      */
     protected function verifyTwoFactor(Request $request, User $user): void
     {
+        $verifier = app(TwoFactorVerifier::class);
+
+        // One failure budget per account, shared with the web challenge, so
+        // spreading guesses over many client IPs does not help.
+        if ($verifier->tooManyFailures($user)) {
+            throw new ThrottleRequestsException($verifier->lockoutMessage($user), null, [
+                'Retry-After' => $verifier->secondsUntilUnlocked($user),
+            ]);
+        }
+
         if ($request->filled('recovery_code')) {
             $matched = false;
 
@@ -138,11 +149,14 @@ class AuthController extends Controller
 
             if (!$matched) {
                 app(SecurityEventLogger::class)->record(SecurityEvent::TWO_FACTOR_FAILED, $user, $user, ['method' => 'recovery_code', 'guard' => 'sanctum']);
+                $verifier->recordFailure($user);
 
                 throw ValidationException::withMessages([
                     'recovery_code' => ['The provided recovery code is invalid.'],
                 ]);
             }
+
+            $verifier->clearFailures($user);
 
             return;
         }
@@ -154,15 +168,16 @@ class AuthController extends Controller
             ]);
         }
 
-        $secret = decrypt($user->two_factor_secret);
-
-        if (!(new Google2FA())->verifyKey($secret, (string) $code)) {
+        if (! $verifier->verifyTotp($user, (string) $code)) {
             app(SecurityEventLogger::class)->record(SecurityEvent::TWO_FACTOR_FAILED, $user, $user, ['method' => 'totp', 'guard' => 'sanctum']);
+            $verifier->recordFailure($user);
 
             throw ValidationException::withMessages([
                 'code' => ['The provided two-factor code is invalid.'],
             ]);
         }
+
+        $verifier->clearFailures($user);
     }
 
     /**

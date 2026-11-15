@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Auth;
 use App\Enums\SecurityEvent;
 use App\Http\Controllers\Controller;
 use App\Services\SecurityEventLogger;
+use App\Services\TwoFactorVerifier;
 use BaconQrCode\Renderer\Image\SvgImageBackEnd;
 use BaconQrCode\Renderer\ImageRenderer;
 use BaconQrCode\Renderer\RendererStyle\RendererStyle;
@@ -94,9 +95,10 @@ class TwoFactorController extends Controller
                 ->withErrors(['code' => __('Please start the setup process again.')]);
         }
 
-        $valid = $this->google2fa->verifyKey($secret, $request->input('code'));
+        // The timestep is stored so this code cannot be replayed at sign-in.
+        $timestep = app(TwoFactorVerifier::class)->timestepOf($secret, (string) $request->input('code'));
 
-        if (! $valid) {
+        if ($timestep === null) {
             return redirect()->back()
                 ->withErrors(['code' => __('The provided code is invalid.')]);
         }
@@ -105,7 +107,7 @@ class TwoFactorController extends Controller
 
         // Two setup requests may have started before either enabled MFA.
         // Serialize activation and re-read the authoritative factor state.
-        $enabledUser = DB::transaction(function () use ($request, $secret, $recoveryCodes) {
+        $enabledUser = DB::transaction(function () use ($request, $secret, $recoveryCodes, $timestep) {
             $user = $request->user()->newQuery()->lockForUpdate()->findOrFail($request->user()->getKey());
 
             if ($user->two_factor_enabled) {
@@ -114,11 +116,12 @@ class TwoFactorController extends Controller
                 ]);
             }
 
-            $user->update([
+            $user->forceFill([
                 'two_factor_secret' => encrypt($secret),
                 'two_factor_enabled' => true,
                 'two_factor_recovery_codes' => encrypt(json_encode(static::hashRecoveryCodes($recoveryCodes))),
-            ]);
+                'two_factor_last_used_timestep' => $timestep,
+            ])->save();
 
             return $user;
         });
@@ -178,6 +181,13 @@ class TwoFactorController extends Controller
     public function verifyChallenge(Request $request): RedirectResponse
     {
         $user = $request->user();
+        $verifier = app(TwoFactorVerifier::class);
+
+        // One failure budget per account, shared with the API login.
+        if ($verifier->tooManyFailures($user)) {
+            return redirect()->back()
+                ->withErrors(['code' => $verifier->lockoutMessage($user)]);
+        }
 
         // Check if using recovery code
         if ($request->filled('recovery_code')) {
@@ -188,15 +198,15 @@ class TwoFactorController extends Controller
             'code' => 'required|string|size:6',
         ]);
 
-        $secret = decrypt($user->two_factor_secret);
-        $valid = $this->google2fa->verifyKey($secret, $request->input('code'));
-
-        if (! $valid) {
+        if (! $verifier->verifyTotp($user, (string) $request->input('code'))) {
             app(SecurityEventLogger::class)->record(SecurityEvent::TWO_FACTOR_FAILED, $user, $user, ['method' => 'totp']);
+            $verifier->recordFailure($user);
 
             return redirect()->back()
                 ->withErrors(['code' => __('The provided code is invalid.')]);
         }
+
+        $verifier->clearFailures($user);
 
         $request->session()->put('two_factor_verified', true);
 
@@ -226,10 +236,13 @@ class TwoFactorController extends Controller
             });
         } catch (\RuntimeException $e) {
             app(SecurityEventLogger::class)->record(SecurityEvent::TWO_FACTOR_FAILED, $user, $user, ['method' => 'recovery_code']);
+            app(TwoFactorVerifier::class)->recordFailure($user);
 
             return redirect()->back()
                 ->withErrors(['code' => __('The provided recovery code is invalid.')]);
         }
+
+        app(TwoFactorVerifier::class)->clearFailures($user);
 
         $request->session()->put('two_factor_verified', true);
 

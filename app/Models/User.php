@@ -39,6 +39,7 @@ use Laravel\Sanctum\NewAccessToken;
  * @property string|null $two_factor_secret
  * @property bool $two_factor_enabled
  * @property string|null $two_factor_recovery_codes
+ * @property int|null $two_factor_last_used_timestep
  * @property string|null $remember_token
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
@@ -112,6 +113,7 @@ class User extends Authenticatable
             'password' => 'hashed',
             'notification_preferences' => 'array',
             'two_factor_enabled' => 'boolean',
+            'two_factor_last_used_timestep' => 'integer',
             'dashboard_widgets' => 'array',
         ];
     }
