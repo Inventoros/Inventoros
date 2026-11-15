@@ -49,13 +49,18 @@ out="$(bash /src/scripts/install.sh --version 2.4.0 --dir /tmp/inv --port 8090 -
 echo "$out" | grep -q "Inventoros 2.4.0 is ready" || { echo "$out"; fail "fresh install did not finish"; }
 grep -q '^APP_KEY=base64:' /tmp/inv/.env || fail "APP_KEY not generated"
 grep -q '^DB_PASSWORD=' /tmp/inv/.env || fail "DB_PASSWORD not generated"
+grep -Eq '^INVENTOROS_SETUP_TOKEN=[0-9a-f]{48}$' /tmp/inv/.env || fail "setup token not generated"
+echo "$out" | grep -q "sudo grep INVENTOROS_SETUP_TOKEN /tmp/inv/.env" || { echo "$out"; fail "setup token instructions"; }
+if echo "$out" | grep -q "$(grep '^INVENTOROS_SETUP_TOKEN=' /tmp/inv/.env | cut -d= -f2)"; then fail "setup token printed"; fi
 grep -q '^APP_PORT=8090$' /tmp/inv/.env || fail "APP_PORT not set"
 grep -q '^INVENTOROS_IMAGE=ghcr.io/inventoros/inventoros:2.4.0$' /tmp/inv/.env || fail "image not pinned"
 key="$(grep '^APP_KEY=' /tmp/inv/.env)"
+setup_token="$(grep '^INVENTOROS_SETUP_TOKEN=' /tmp/inv/.env)"
 
 # Re-run upgrades and keeps secrets
 bash /src/scripts/install.sh --version 2.5.0 --dir /tmp/inv --yes >/dev/null 2>&1 || fail "upgrade"
 [ "$(grep '^APP_KEY=' /tmp/inv/.env)" = "$key" ] || fail "APP_KEY changed on re-run"
+[ "$(grep '^INVENTOROS_SETUP_TOKEN=' /tmp/inv/.env)" = "$setup_token" ] || fail "setup token changed on re-run"
 grep -q ':2.5.0$' /tmp/inv/.env || fail "upgrade did not pin 2.5.0"
 
 # Downgrade is refused
