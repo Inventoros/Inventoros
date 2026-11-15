@@ -304,6 +304,10 @@ class RoleController extends Controller
                 ->withErrors(['role' => __('System roles cannot be deleted.')]);
         }
 
+        // Deleting a role is managing it: a delegated role manager may not
+        // remove a role that holds permissions they do not hold themselves.
+        $this->authorizePermissions($currentUser, [], $role);
+
         // Check if role is assigned to any users
         if ($role->users()->count() > 0) {
             return redirect()->back()
