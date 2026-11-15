@@ -1497,7 +1497,7 @@ paths:
     post:
       tags: [Order Payments]
       summary: Void a payment or refund
-      description: "Requires `record_payments`. The row is kept, marked voided, and stops counting toward what was paid. A payment cannot be voided while refunds against it still stand."
+      description: "Requires `record_payments`. The row is kept, marked voided, and stops counting toward what was paid. A payment cannot be voided while refunds against it still stand. Voiding a refund that would leave the order paid more than its total needs `allow_overpayment`."
       requestBody:
         content:
           application/json:
@@ -1505,11 +1505,12 @@ paths:
               type: object
               properties:
                 reason: { type: string, maxLength: 255 }
+                allow_overpayment: { type: boolean, description: "Void a refund even if the order ends up overpaid. Default false." }
       responses:
         '200': { description: Voided, content: { application/json: { schema: { $ref: '#/components/schemas/OrderPaymentResult' } } } }
         '403': { $ref: '#/components/responses/Forbidden' }
         '404': { $ref: '#/components/responses/NotFound' }
-        '422': { description: "Validation error: already voided, or refunds would exceed what was paid (`payment`)" }
+        '422': { description: "Validation error: already voided, refunds would exceed what was paid, or voiding a refund would overpay the order without `allow_overpayment` (`payment`)" }
 
   /customers:
     get:
