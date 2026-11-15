@@ -31,8 +31,9 @@ use Illuminate\Validation\ValidationException;
  *  - a payment larger than the balance due is rejected unless the caller
  *    explicitly allows an overpayment;
  *  - a cancelled order takes no new payments (refunds are still allowed);
- *  - a refund never exceeds what is currently paid, and voiding a payment may
- *    not leave refunds standing against money that was never received;
+ *  - a refund never exceeds what is currently paid, voiding a payment may
+ *    not leave refunds standing against money that was never received, and
+ *    voiding a refund may not leave the order paid more than its total;
  *  - rows are never edited or deleted, only voided, so the history is an
  *    audit trail.
  *
@@ -135,6 +136,15 @@ final class OrderPaymentService
             if (! $row->isRefund() && Money::compare($row->amount, $locked->amount_paid) > 0) {
                 throw ValidationException::withMessages([
                     'payment' => 'Voiding this payment would leave refunds larger than what was paid. Void the refunds first.',
+                ]);
+            }
+
+            // Voiding a refund puts its money back on the order. Like a new
+            // payment, that may not overpay it: an overpayment is only ever
+            // recorded on purpose, as a payment with allow_overpayment.
+            if ($row->isRefund() && Money::compare(Money::add($locked->amount_paid, $row->amount), $locked->total) > 0) {
+                throw ValidationException::withMessages([
+                    'payment' => "Voiding this refund would leave the order paid more than its {$locked->total} total. Record a payment that allows an overpayment instead if the money was kept.",
                 ]);
             }
 
