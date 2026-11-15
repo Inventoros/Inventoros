@@ -47,12 +47,31 @@ class AccountSettingsController extends Controller
     {
         $user = $request->user();
 
+        // Addresses are stored lowercase, as on the profile page.
+        if (is_string($request->input('email'))) {
+            $request->merge(['email' => mb_strtolower(trim($request->input('email')))]);
+        }
+
+        // Changing the sign-in email needs the current password.
+        $changesEmail = $request->input('email') !== mb_strtolower((string) $user->email);
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|max:255|unique:users,email,' . $user->id,
+            'current_password' => $changesEmail ? ['required', 'string', 'current_password'] : ['exclude'],
         ]);
 
-        $user->update($validated);
+        $user->fill([
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+        ]);
+
+        // A new address is unverified until its owner confirms it.
+        if ($changesEmail) {
+            $user->email_verified_at = null;
+        }
+
+        $user->save();
 
         return redirect()->back()->with('success', __('Profile updated successfully.'));
     }

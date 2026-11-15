@@ -32,6 +32,13 @@ final class ProfileUpdateRequest extends FormRequest
                 'max:255',
                 Rule::unique(User::class)->ignore($this->user()->id),
             ],
+            // Changing the sign-in email needs the current password.
+            'current_password' => $this->changesEmail() ? ['required', 'string', 'current_password'] : ['exclude'],
         ];
+    }
+
+    private function changesEmail(): bool
+    {
+        return mb_strtolower((string) $this->input('email')) !== mb_strtolower((string) $this->user()->email);
     }
 }
