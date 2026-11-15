@@ -13,15 +13,18 @@ namespace App\Support;
  */
 final class ListSortColumns
 {
-    public const DIRECTIONS = ['asc', 'desc'];
+    /**
+     * Validation rule for a sort direction, in any letter case.
+     */
+    public const DIRECTION_RULE = 'regex:/\A(asc|desc)\z/i';
 
-    public const PRODUCTS = ['created_at', 'updated_at', 'name', 'sku', 'price', 'stock', 'is_active'];
+    public const PRODUCTS = ['id', 'created_at', 'updated_at', 'name', 'sku', 'price', 'stock', 'is_active'];
 
-    public const ORDERS = ['created_at', 'updated_at', 'order_number', 'customer_name', 'total', 'status', 'order_date'];
+    public const ORDERS = ['id', 'created_at', 'updated_at', 'order_number', 'customer_name', 'total', 'status', 'order_date'];
 
-    public const SUPPLIERS = ['created_at', 'updated_at', 'name', 'email', 'phone'];
+    public const SUPPLIERS = ['id', 'created_at', 'updated_at', 'name', 'email', 'phone'];
 
-    public const STOCK_ADJUSTMENTS = ['created_at', 'updated_at', 'type', 'adjustment_quantity'];
+    public const STOCK_ADJUSTMENTS = ['id', 'created_at', 'updated_at', 'type', 'adjustment_quantity'];
 
-    public const PURCHASE_ORDERS = ['created_at', 'updated_at', 'order_date', 'po_number', 'status', 'total'];
+    public const PURCHASE_ORDERS = ['id', 'created_at', 'updated_at', 'order_date', 'po_number', 'status', 'total'];
 }

@@ -82,6 +82,58 @@ final class GraphQLSortAllowlistTest extends TestCase
         $this->assertIsArray($response->json("data.{$field}"));
     }
 
+    #[DataProvider('listQueries')]
+    public function test_direction_is_case_insensitive_and_id_is_sortable(string $field): void
+    {
+        foreach (['ASC', 'Desc', 'desc'] as $direction) {
+            $response = $this->postJson('/graphql', [
+                'query' => "{ {$field}(sort_by: \"id\", sort_dir: \"{$direction}\") { id } }",
+            ]);
+
+            $this->assertNull($response->json('errors'), (string) $response->getContent());
+            $this->assertIsArray($response->json("data.{$field}"));
+        }
+    }
+
+    public function test_graphql_sorts_by_id_in_an_upper_case_direction(): void
+    {
+        $ids = collect(['A', 'B', 'C'])->map(fn (string $name) => Product::create([
+            'organization_id' => $this->org->id, 'sku' => 'ID-'.$name, 'name' => $name,
+            'price' => 1, 'currency' => 'USD', 'stock' => 1, 'is_active' => true,
+        ])->id);
+
+        $this->assertSame(
+            $ids->sortDesc()->values()->all(),
+            array_map('intval', $this->postJson('/graphql', ['query' => '{ products(sort_by: "id", sort_dir: "DESC") { id } }'])->json('data.products.*.id'))
+        );
+    }
+
+    public function test_rest_lists_accept_id_and_an_upper_case_direction(): void
+    {
+        $ids = collect(['A', 'B', 'C'])->map(fn (string $name) => Product::create([
+            'organization_id' => $this->org->id, 'sku' => 'R-'.$name, 'name' => $name,
+            'price' => 1, 'currency' => 'USD', 'stock' => 1, 'is_active' => true,
+        ])->id);
+
+        $this->assertSame(
+            $ids->sort()->values()->all(),
+            $this->getJson('/api/v1/products?sort_by=id&sort_dir=ASC')->assertOk()->json('data.*.id')
+        );
+    }
+
+    public function test_graphql_argument_descriptions_list_the_allowed_columns(): void
+    {
+        $args = $this->postJson('/graphql', ['query' => '{ __type(name: "Query") { fields { name args { name description } } } }'])
+            ->json('data.__type.fields');
+
+        $products = collect($args)->firstWhere('name', 'products');
+        $sortBy = collect($products['args'])->firstWhere('name', 'sort_by');
+
+        foreach (['created_at', 'name', 'sku', 'id'] as $column) {
+            $this->assertStringContainsString($column, $sortBy['description']);
+        }
+    }
+
     public function test_products_are_ordered_by_the_requested_allowlisted_column(): void
     {
         foreach (['Charlie', 'Alpha', 'Bravo'] as $name) {

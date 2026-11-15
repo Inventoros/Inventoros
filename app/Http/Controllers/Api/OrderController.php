@@ -94,7 +94,7 @@ class OrderController extends Controller
         // Sorting (allowlist to prevent SQL injection)
         $allowedSortColumns = ListSortColumns::ORDERS;
         $sortBy = in_array($request->input('sort_by'), $allowedSortColumns) ? $request->input('sort_by') : 'created_at';
-        $sortDir = ($request->input('sort_dir') === 'asc') ? 'asc' : 'desc';
+        $sortDir = strtolower((string) $request->input('sort_dir')) === 'asc' ? 'asc' : 'desc';
         $query->orderBy($sortBy, $sortDir);
 
         $perPage = min($request->input('per_page', 15), 100);

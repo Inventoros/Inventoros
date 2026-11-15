@@ -61,12 +61,12 @@ class StockAdjustmentsQuery extends Query
             'sort_by' => [
                 'type' => Type::string(),
                 'rules' => ['nullable', 'string', Rule::in(ListSortColumns::STOCK_ADJUSTMENTS)],
-                'description' => 'Sort field (default: created_at)',
+                'description' => 'Sort field: '.implode(', ', ListSortColumns::STOCK_ADJUSTMENTS).' (default: created_at)',
             ],
             'sort_dir' => [
                 'type' => Type::string(),
-                'rules' => ['nullable', 'string', Rule::in(ListSortColumns::DIRECTIONS)],
-                'description' => 'Sort direction: asc or desc (default: desc)',
+                'rules' => ['nullable', 'string', ListSortColumns::DIRECTION_RULE],
+                'description' => 'Sort direction: asc or desc, in any case (default: desc)',
             ],
             'limit' => [
                 'type' => Type::int(),
