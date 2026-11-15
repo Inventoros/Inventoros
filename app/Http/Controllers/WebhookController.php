@@ -161,11 +161,13 @@ class WebhookController extends Controller
 
         $testEvent = $webhook->events[0] ?? 'test';
 
-        WebhookService::dispatch($testEvent, [
+        // Only the webhook being tested: the organization's other endpoints
+        // would otherwise receive a validly signed fake event.
+        WebhookService::dispatchTo($webhook, $testEvent, [
             'test' => true,
             'message' => 'This is a test webhook delivery',
             'timestamp' => now()->toIso8601String(),
-        ], $webhook->organization_id);
+        ]);
 
         return redirect()->route('webhooks.show', $webhook)->with('success', __('Test webhook dispatched'));
     }

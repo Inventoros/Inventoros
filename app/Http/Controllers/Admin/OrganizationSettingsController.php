@@ -30,7 +30,9 @@ class OrganizationSettingsController extends Controller
     public function index(Request $request): Response
     {
         $user = $request->user();
-        $organization = Organization::with(['users'])->find($user->organization_id);
+        // The page needs no member list; users are listed at /users for
+        // those who may view them.
+        $organization = Organization::find($user->organization_id);
         $canManage = $user->hasPermission(Permission::MANAGE_ORGANIZATION);
 
         return Inertia::render('Settings/Organization/Index', [

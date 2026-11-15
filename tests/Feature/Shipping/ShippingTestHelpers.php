@@ -14,6 +14,7 @@ use App\Models\System\SystemSetting;
 use App\Models\User;
 use App\Models\Warehouse;
 use App\Services\OrderService;
+use App\Support\PublicHostResolver;
 
 /**
  * Shared fixtures for the shipping tests: an organization with an admin, a
@@ -35,6 +36,10 @@ trait ShippingTestHelpers
     protected function setUpShipping(): void
     {
         SystemSetting::set('installed', true, 'boolean');
+
+        // Label downloads check the host's DNS answer first; never do a real
+        // lookup in tests. Tests that need another answer mock it again.
+        $this->mock(PublicHostResolver::class)->shouldReceive('resolve')->andReturn(['8.8.8.8']);
 
         $this->organization = Organization::create([
             'name' => 'Ship Org', 'email' => 'ship@org.test', 'currency' => 'USD', 'timezone' => 'UTC',

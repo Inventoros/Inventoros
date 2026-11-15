@@ -248,12 +248,31 @@ INVENTOROS_PLUGIN_SIGNATURE_REQUIRED=true
 INVENTOROS_PLUGIN_PUBLIC_KEY=<base64 Ed25519 public key>
 ```
 
-This is **off by default** (there is no public Inventoros plugin registry yet, and requiring signatures unconditionally would block local plugin development). When on, it **fails closed**: an upload with a missing/invalid signature — or a missing public key — is rejected before extraction. Sign a plugin archive with the same tooling used for release signing:
+This is **off by default** (there is no public Inventoros plugin registry yet, and requiring signatures unconditionally would block local plugin development). When on, it **fails closed**: an upload with a missing/invalid signature — or a missing public key — is rejected before extraction.
+
+**Use a dedicated plugin signing key, never the release (update) key.** Uploaded plugins and core updates use the same signature format: a detached Ed25519 signature over the raw ZIP bytes, checked by `App\Support\ReleaseSignatureVerifier`. Nothing in the signature says which kind of archive it is. The only thing that keeps the two apart is the key each check trusts:
+
+| Check | Trusted public key | Signed message |
+|---|---|---|
+| Core in-app updater (`UpdateService`) | `INVENTOROS_UPDATE_PUBLIC_KEY` (`update.signature.public_key`) | raw ZIP bytes |
+| Plugin upload with `INVENTOROS_PLUGIN_SIGNATURE_REQUIRED=true` (`PluginService`) | `INVENTOROS_PLUGIN_PUBLIC_KEY` (`plugins.signature.public_key`) | raw ZIP bytes |
+| Marketplace installs and updates (`MarketplaceInstaller`) | `INVENTOROS_MARKETPLACE_PUBLIC_KEY` (`marketplace.public_key`) | a statement binding slug, version and the ZIP's sha256 (`PackageSignature`) |
+
+If a plugin is signed with the update key, that signature is also a valid update signature, so the core updater would accept that archive as a genuine release if it were ever served from an allowed update URL. Mint a separate keypair for plugins, and configure only its public key as `INVENTOROS_PLUGIN_PUBLIC_KEY`:
 
 ```bash
-INVENTOROS_UPDATE_SECRET_KEY=... php artisan update:sign my-plugin.zip
+# Once: generate a plugin keypair. The command prints the keys under the
+# update variable names; use the PUBLIC key as INVENTOROS_PLUGIN_PUBLIC_KEY
+# and keep the SECRET key wherever you sign plugins, apart from the release key.
+php artisan update:signing-keypair
+
+# Per plugin: update:sign reads its secret from INVENTOROS_UPDATE_SECRET_KEY,
+# so pass the PLUGIN secret key in that variable for this one command.
+INVENTOROS_UPDATE_SECRET_KEY=<plugin secret key> php artisan update:sign my-plugin.zip
 # upload my-plugin.zip and paste the contents of my-plugin.zip.sig into the signature field
 ```
+
+Marketplace packages are signed by the marketplace with its own key, over a different message, so a marketplace signature does not pass the updater or the plugin upload check, and neither of their signatures passes the marketplace check.
 
 ## In-app updates and backup restore
 

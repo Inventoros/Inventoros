@@ -92,6 +92,13 @@ final class UserManagementService
         DB::transaction(function () use ($user, $actor, $updateData, $data) {
             $user->update($updateData);
 
+            // An administrator setting someone else's password is a reset on
+            // their behalf: that user's API tokens are revoked too. (A user
+            // changing their own password keeps their integrations.)
+            if (isset($updateData['password']) && ! $actor->is($user)) {
+                $user->tokens()->get()->each->delete();
+            }
+
             // Sync roles if provided
             if (isset($data['role_ids'])) {
                 $this->logRoleSync($user, $actor, $user->roles()->sync($data['role_ids']));
