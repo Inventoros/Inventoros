@@ -10,15 +10,16 @@ class DatabaseSeeder extends Seeder
     /**
      * Seed the application's database with a development login.
      *
-     * Only outside production, and only when Faker (a dev dependency) is
-     * installed: release packages are built with `composer install --no-dev`,
-     * and a known test login must never exist on a live install. Create real
-     * users with the web installer instead.
+     * Only in the local and testing environments, and only when Faker (a dev
+     * dependency) is installed: release packages are built with `composer
+     * install --no-dev`, and a known test login must never exist on a live
+     * install, staging included. Create real users with the web installer
+     * instead.
      */
     public function run(): void
     {
-        if (app()->environment('production')) {
-            $this->command?->warn('Nothing to seed in production. Create the first admin with the web installer (/install).');
+        if (! app()->environment(['local', 'testing'])) {
+            $this->command?->warn('Nothing to seed outside the local and testing environments. Create the first admin with the web installer (/install).');
 
             return;
         }

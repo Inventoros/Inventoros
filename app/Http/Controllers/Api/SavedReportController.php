@@ -15,6 +15,7 @@ use Dedoc\Scramble\Attributes\QueryParameter;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
@@ -320,7 +321,9 @@ class SavedReportController extends Controller
             ], 500);
         }
 
-        $filename = str_replace(' ', '_', strtolower($report->name)).'_'.now()->format('Y-m-d').'.'.$format;
+        // The name reduced to a slug, as the web export does: "/" or "\" in
+        // a filename makes the download fail.
+        $filename = (Str::slug($report->name, '_') ?: 'report').'_'.now()->format('Y-m-d').'.'.$format;
 
         return response()->streamDownload(function () use ($rendered): void {
             echo $rendered->content;

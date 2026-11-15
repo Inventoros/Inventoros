@@ -122,14 +122,14 @@ class ImportExportControllerTest extends TestCase
             ]
         );
 
-        // Export only role
+        // Export only role (a product export also needs view_products)
         $exportRole = Role::firstOrCreate(
             ['slug' => 'export-role'],
             [
                 'name' => 'Export Role',
                 'description' => 'Export access only',
                 'is_system' => true,
-                'permissions' => ['export_data'],
+                'permissions' => ['export_data', 'view_products'],
             ]
         );
 

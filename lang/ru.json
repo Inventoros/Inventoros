@@ -146,5 +146,6 @@
     "Payment recorded.": "Платёж зарегистрирован.",
     "Cannot delete a supplier with open purchase orders.": "Нельзя удалить поставщика с открытыми заказами на закупку.",
     "Stock adjustments created for discrepancies: :count.": "Корректировки запасов, созданные для расхождений: :count.",
-    "No discrepancies found.": "Расхождений не найдено."
+    "No discrepancies found.": "Расхождений не найдено.",
+    "If that email belongs to an account, we have emailed a password reset link.": "Если этот адрес электронной почты связан с учётной записью, мы отправили ссылку для сброса пароля."
 }
