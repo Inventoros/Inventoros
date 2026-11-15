@@ -70,8 +70,9 @@ class ProductVariantController extends Controller
         $validated['is_active'] = $validated['is_active'] ?? true;
         $validated['position'] = $validated['position'] ?? $product->variants()->count();
 
-        $variant = DB::transaction(function () use ($product, $validated) {
+        $variant = DB::transaction(function () use ($product, $validated, $request) {
             $variant = ProductVariant::create($validated);
+            app(ProductService::class)->authorizeNewVariantStock($product, $variant, 'stock', $request->user());
             app(ProductService::class)->recordOpeningVariantStock($variant);
 
             // Mark product as having variants
@@ -272,11 +273,11 @@ class ProductVariantController extends Controller
             'variants.*.is_active' => ['nullable', 'boolean'],
         ]);
 
-        $variants = DB::transaction(function () use ($product, $validated) {
+        $variants = DB::transaction(function () use ($product, $validated, $request) {
             $created = [];
             $position = $product->variants()->count();
 
-            foreach ($validated['variants'] as $variantData) {
+            foreach ($validated['variants'] as $index => $variantData) {
                 $variantData['product_id'] = $product->id;
                 $variantData['organization_id'] = $product->organization_id;
                 $variantData['stock'] = $variantData['stock'] ?? 0;
@@ -284,6 +285,7 @@ class ProductVariantController extends Controller
                 $variantData['position'] = $position++;
 
                 $variant = ProductVariant::create($variantData);
+                app(ProductService::class)->authorizeNewVariantStock($product, $variant, "variants.{$index}.stock", $request->user());
                 app(ProductService::class)->recordOpeningVariantStock($variant);
                 $created[] = $variant;
             }
