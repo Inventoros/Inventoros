@@ -149,6 +149,38 @@ final class OrderApprovalWarehouseAccessTest extends TestCase
         $this->assertSame(OrderStatus::CANCELLED, $order->fresh()->status);
     }
 
+    public function test_a_restricted_approver_can_approve_an_order_with_no_warehouse(): void
+    {
+        // REST, GraphQL and MCP create orders without a warehouse; restricted
+        // approvers must still be able to decide them.
+        $this->actingAs($this->admin);
+        $order = app(OrderService::class)->create([
+            'customer_name' => 'Buyer', 'status' => 'pending', 'order_date' => now()->toDateString(),
+            'items' => [['product_id' => $this->productA->id, 'quantity' => 1, 'unit_price' => 10]],
+        ], $this->admin);
+        $other = app(OrderService::class)->create([
+            'customer_name' => 'Buyer', 'status' => 'pending', 'order_date' => now()->toDateString(),
+            'items' => [['product_id' => $this->productA->id, 'quantity' => 1, 'unit_price' => 10]],
+        ], $this->admin);
+        $this->app['auth']->forgetGuards();
+        $this->assertNull($order->fresh()->warehouse_id);
+
+        $this->actingAs($this->approverA)
+            ->post(route('orders.approve', $order), ['notes' => 'ok'])
+            ->assertSessionHas('success');
+        $this->assertSame(OrderApprovalStatus::APPROVED, $order->fresh()->approval_status);
+
+        Sanctum::actingAs($this->approverA, ['*']);
+        $this->postJson("/api/v1/orders/{$other->id}/approve", ['notes' => 'ok'])->assertOk();
+        $this->assertSame(OrderApprovalStatus::APPROVED, $other->fresh()->approval_status);
+
+        // An order in a warehouse they are not assigned to stays out of reach.
+        $inB = $this->pendingOrderInB();
+        Sanctum::actingAs($this->approverA, ['*']);
+        $this->postJson("/api/v1/orders/{$inB->id}/approve", ['notes' => 'ok'])->assertForbidden();
+        $this->assertStillPending($inB);
+    }
+
     public function test_an_unrestricted_admin_can_still_approve(): void
     {
         $order = $this->pendingOrderInB();
