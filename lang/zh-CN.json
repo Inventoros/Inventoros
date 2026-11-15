@@ -147,5 +147,6 @@
     "Cannot delete a supplier with open purchase orders.": "无法删除有未完成采购订单的供应商。",
     "Stock adjustments created for discrepancies: :count.": "因差异而创建的库存调整数量：:count。",
     "No discrepancies found.": "未发现差异。",
-    "If that email belongs to an account, we have emailed a password reset link.": "如果该邮箱属于某个账户，我们已发送密码重置链接。"
+    "If that email belongs to an account, we have emailed a password reset link.": "如果该邮箱属于某个账户，我们已发送密码重置链接。",
+    "This code was already used; wait for the next one.": "此验证码已被使用，请等待下一个。"
 }
