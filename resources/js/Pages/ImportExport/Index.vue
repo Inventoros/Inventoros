@@ -2,6 +2,8 @@
 import TableViewport from '@/Components/ui/TableViewport.vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import PageHeader from '@/Components/ui/PageHeader.vue';
+import SectionTabs from '@/Components/ui/SectionTabs.vue';
+import SectionPanel from '@/Components/ui/SectionPanel.vue';
 import Card from '@/Components/ui/Card.vue';
 import Button from '@/Components/ui/Button.vue';
 import Badge from '@/Components/ui/Badge.vue';
@@ -211,30 +213,9 @@ const code = 'rounded bg-surface-overlay px-1 py-0.5 font-mono text-xs text-text
 
             <ImportResult v-if="importResult" :result="importResult" class="mt-6" @dismiss="importResult = null" />
 
-            <!-- Tabs -->
-            <div class="mt-6 border-b border-border-subtle">
-                <nav class="ds-tabs -mb-px gap-6 sm:gap-8" role="tablist">
-                    <button
-                        v-for="tab in tabs"
-                        :key="tab.key"
-                        type="button"
-                        role="tab"
-                        :aria-selected="activeTab === tab.key"
-                        :class="[
-                            'border-b-2 px-1 py-3 text-sm font-medium transition-colors ds-focus-ring',
-                            activeTab === tab.key
-                                ? 'border-brand text-brand'
-                                : 'border-transparent text-text-tertiary hover:border-border-strong hover:text-text-secondary'
-                        ]"
-                        @click="activeTab = tab.key"
-                    >
-                        {{ tab.label }}
-                    </button>
-                </nav>
-            </div>
-
+            <SectionTabs v-model="activeTab" :tabs="tabs" :label="t('importExport.title')" class="mt-6">
             <!-- ============================ PRODUCTS ============================ -->
-            <div v-show="activeTab === 'products'">
+            <SectionPanel tab="products">
                 <div class="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-2">
                     <!-- Export Section -->
                     <Card v-if="canExportProducts">
@@ -444,10 +425,10 @@ const code = 'rounded bg-surface-overlay px-1 py-0.5 font-mono text-xs text-text
                         </div>
                     </div>
                 </Card>
-            </div>
+            </SectionPanel>
 
             <!-- ============================= ORDERS ============================= -->
-            <div v-show="activeTab === 'orders'">
+            <SectionPanel tab="orders">
                 <div class="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-2">
                     <Card v-if="canExportOrders">
                         <div class="mb-4 flex items-center gap-3">
@@ -595,10 +576,10 @@ const code = 'rounded bg-surface-overlay px-1 py-0.5 font-mono text-xs text-text
                         </div>
                     </div>
                 </Card>
-            </div>
+            </SectionPanel>
 
             <!-- ============================== USERS ============================= -->
-            <div v-show="activeTab === 'users'">
+            <SectionPanel tab="users">
                 <div class="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-2">
                     <Card v-if="canExportUsers">
                         <div class="mb-4 flex items-center gap-3">
@@ -678,7 +659,7 @@ const code = 'rounded bg-surface-overlay px-1 py-0.5 font-mono text-xs text-text
                         <li class="flex items-start gap-2"><Info :size="16" class="mt-0.5 shrink-0 text-brand" /><span>{{ t('importExport.users.ruleEscalation') }}</span></li>
                     </ul>
                 </Card>
-            </div>
+            </SectionPanel>
 
             <!-- Recent Exports (queued downloads) -->
             <section v-if="props.exports.length" class="mt-8">
@@ -736,6 +717,7 @@ const code = 'rounded bg-surface-overlay px-1 py-0.5 font-mono text-xs text-text
                     </table>
                 </TableViewport>
             </section>
+            </SectionTabs>
         </div>
     </AppLayout>
 </template>

@@ -1,5 +1,7 @@
 <script setup>
-import { computed, ref, watch } from 'vue';
+import { computed, ref } from 'vue';
+import SectionTabs from './ui/SectionTabs.vue';
+import SectionPanel from './ui/SectionPanel.vue';
 import { usePage } from '@inertiajs/vue3';
 import { useI18n } from 'vue-i18n';
 import { pluginLabel } from '@/plugins/pluginI18n';
@@ -58,93 +60,20 @@ const tabs = computed(() => {
 
 const active = ref(OVERVIEW);
 
-// If the active plugin tab disappears (plugin bundle reloaded, navigation),
-// fall back to the core content.
-watch(tabs, (list) => {
-    if (active.value !== OVERVIEW && !list.some((tab) => tab.key === active.value)) {
-        active.value = OVERVIEW;
-    }
-});
-
-const order = computed(() => [OVERVIEW, ...tabs.value.map((tab) => tab.key)]);
-const tabRefs = ref({});
-
-const focusSibling = (event, step) => {
-    const keys = order.value;
-    const next = keys[(keys.indexOf(active.value) + step + keys.length) % keys.length];
-    active.value = next;
-    tabRefs.value[next]?.focus();
-    event.preventDefault();
-};
-
-const tabClass = (key) => [
-    'ds-focus-ring -mb-px whitespace-nowrap border-b-2 px-3 py-2 text-sm font-medium transition-colors',
-    active.value === key
-        ? 'border-brand text-text-primary'
-        : 'border-transparent text-text-secondary hover:text-text-primary',
-];
+const sections = computed(() => [
+    { key: OVERVIEW, label: t('plugins.overviewTab') },
+    ...tabs.value.map(({ key, label }) => ({ key, label })),
+]);
 </script>
 
 <template>
     <slot v-if="tabs.length === 0" />
-
-    <div v-else>
-        <div
-            role="tablist"
-            :aria-label="t('plugins.pageSections')"
-            class="mt-6 flex gap-1 overflow-x-auto overflow-y-hidden border-b border-border-subtle"
-            @keydown.right="focusSibling($event, 1)"
-            @keydown.left="focusSibling($event, -1)"
-        >
-            <button
-                :ref="(el) => (tabRefs[OVERVIEW] = el)"
-                id="plugin-tab-overview"
-                type="button"
-                role="tab"
-                :aria-selected="active === OVERVIEW"
-                aria-controls="plugin-tabpanel-overview"
-                :tabindex="active === OVERVIEW ? 0 : -1"
-                :class="tabClass(OVERVIEW)"
-                @click="active = OVERVIEW"
-            >
-                {{ t('plugins.overviewTab') }}
-            </button>
-            <button
-                v-for="tab in tabs"
-                :key="tab.key"
-                :ref="(el) => (tabRefs[tab.key] = el)"
-                :id="`plugin-tab-${tab.key}`"
-                type="button"
-                role="tab"
-                :aria-selected="active === tab.key"
-                :aria-controls="`plugin-tabpanel-${tab.key}`"
-                :tabindex="active === tab.key ? 0 : -1"
-                :class="tabClass(tab.key)"
-                @click="active = tab.key"
-            >
-                {{ tab.label }}
-            </button>
-        </div>
-
-        <!-- v-show keeps the core content mounted, so its state survives a tab switch. -->
-        <div
-            v-show="active === OVERVIEW"
-            id="plugin-tabpanel-overview"
-            role="tabpanel"
-            aria-labelledby="plugin-tab-overview"
-        >
+    <SectionTabs v-else v-model="active" :tabs="sections" :label="t('plugins.pageSections')" class="mt-6">
+        <SectionPanel :tab="OVERVIEW">
             <slot />
-        </div>
-        <div
-            v-for="tab in tabs"
-            v-show="active === tab.key"
-            :key="tab.key"
-            :id="`plugin-tabpanel-${tab.key}`"
-            role="tabpanel"
-            :aria-labelledby="`plugin-tab-${tab.key}`"
-            class="mt-6"
-        >
+        </SectionPanel>
+        <SectionPanel v-for="tab in tabs" :key="tab.key" :tab="tab.key" class="mt-6">
             <component :is="tab.is" v-if="active === tab.key" v-bind="tab.props" />
-        </div>
-    </div>
+        </SectionPanel>
+    </SectionTabs>
 </template>
