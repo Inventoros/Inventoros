@@ -3113,15 +3113,15 @@
       "expiryDate": "Data ważności"
     },
     "setup": {
-      "title": "Najpierw skonfiguruj produkt monta?owy",
-      "description": "Zlecenia wymagaj? aktywnego produktu monta?owego z zestawieniem materia??w. Utw?rz produkt, a nast?pnie dodaj komponenty i ilo?ci.",
-      "createAssembly": "Utw?rz produkt monta?owy",
-      "requestSetup": "Popro? osob? zarz?dzaj?c? produktami o skonfigurowanie produktu monta?owego i jego komponent?w.",
-      "chooseAssembly": "Wybierz produkt monta?owy, aby sprawdzi? materia?y przed utworzeniem wersji roboczej.",
-      "reviewHint": "Sprawd? zestawienie materia??w przed utworzeniem zlecenia.",
-      "reviewComponents": "Sprawd? zestawienie materia??w",
-      "draftHint": "Powstanie wersja robocza. Stan magazynowy zostanie ponownie sprawdzony przy rozpocz?ciu produkcji.",
-      "productHint": "Po zapisaniu otw?rz produkt i dodaj komponenty w zestawieniu materia??w."
+      "title": "Najpierw skonfiguruj produkt montażowy",
+      "description": "Zlecenia wymagają aktywnego produktu montażowego z zestawieniem materiałów. Utwórz produkt, a następnie dodaj komponenty i ilości.",
+      "createAssembly": "Utwórz produkt montażowy",
+      "requestSetup": "Poproś osobę zarządzającą produktami o skonfigurowanie produktu montażowego i jego komponentów.",
+      "chooseAssembly": "Wybierz produkt montażowy, aby sprawdzić materiały przed utworzeniem wersji roboczej.",
+      "reviewHint": "Sprawdź zestawienie materiałów przed utworzeniem zlecenia.",
+      "reviewComponents": "Sprawdź zestawienie materiałów",
+      "draftHint": "Powstanie wersja robocza. Stan magazynowy zostanie ponownie sprawdzony przy rozpoczęciu produkcji.",
+      "productHint": "Po zapisaniu otwórz produkt i dodaj komponenty w zestawieniu materiałów."
     }
   },
   "reportBuilder": {

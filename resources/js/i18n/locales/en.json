@@ -2989,7 +2989,7 @@
       "createAssembly": "Create assembly product",
       "requestSetup": "Ask someone who manages products to set up an assembly and its components.",
       "chooseAssembly": "Choose an assembly to review the materials needed before creating a draft.",
-      "reviewHint": "Review this assembly?s bill of materials before creating a work order.",
+      "reviewHint": "Review this assembly’s bill of materials before creating a work order.",
       "reviewComponents": "Review bill of materials",
       "draftHint": "This creates a draft. Stock is checked again when production starts.",
       "productHint": "After saving, open the product and add components in Bill of Materials."

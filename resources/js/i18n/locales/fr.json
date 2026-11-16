@@ -3113,15 +3113,15 @@
       "expiryDate": "Date d'expiration"
     },
     "setup": {
-      "title": "Configurez d?abord un assemblage",
-      "description": "Un ordre de fabrication n?cessite un produit assembl? actif avec une nomenclature. Cr?ez le produit, puis ajoutez ses composants et quantit?s.",
-      "createAssembly": "Cr?er un produit assembl?",
+      "title": "Configurez d’abord un assemblage",
+      "description": "Un ordre de fabrication nécessite un produit assemblé actif avec une nomenclature. Créez le produit, puis ajoutez ses composants et quantités.",
+      "createAssembly": "Créer un produit assemblé",
       "requestSetup": "Demandez au responsable des produits de configurer un assemblage et ses composants.",
-      "chooseAssembly": "Choisissez un assemblage pour v?rifier les mat?riaux n?cessaires avant de cr?er un brouillon.",
-      "reviewHint": "V?rifiez la nomenclature de cet assemblage avant de cr?er un ordre de fabrication.",
-      "reviewComponents": "V?rifier la nomenclature",
-      "draftHint": "Un brouillon sera cr??. Le stock sera v?rifi? au lancement de la production.",
-      "productHint": "Apr?s l?enregistrement, ouvrez le produit et ajoutez les composants dans la nomenclature."
+      "chooseAssembly": "Choisissez un assemblage pour vérifier les matériaux nécessaires avant de créer un brouillon.",
+      "reviewHint": "Vérifiez la nomenclature de cet assemblage avant de créer un ordre de fabrication.",
+      "reviewComponents": "Vérifier la nomenclature",
+      "draftHint": "Un brouillon sera créé. Le stock sera vérifié au lancement de la production.",
+      "productHint": "Après l’enregistrement, ouvrez le produit et ajoutez les composants dans la nomenclature."
     }
   },
   "reportBuilder": {

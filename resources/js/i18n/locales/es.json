@@ -3114,14 +3114,14 @@
     },
     "setup": {
       "title": "Configura primero un ensamblaje",
-      "description": "Las ?rdenes de fabricaci?n necesitan un producto de ensamblaje activo con una lista de materiales. Crea el producto y a?ade sus componentes y cantidades.",
+      "description": "Las órdenes de fabricación necesitan un producto de ensamblaje activo con una lista de materiales. Crea el producto y añade sus componentes y cantidades.",
       "createAssembly": "Crear producto de ensamblaje",
       "requestSetup": "Pide a quien gestiona los productos que configure un ensamblaje y sus componentes.",
       "chooseAssembly": "Elige un ensamblaje para revisar los materiales antes de crear un borrador.",
-      "reviewHint": "Revisa la lista de materiales antes de crear una orden de fabricaci?n.",
+      "reviewHint": "Revisa la lista de materiales antes de crear una orden de fabricación.",
       "reviewComponents": "Revisar lista de materiales",
-      "draftHint": "Se crear? un borrador. Las existencias se comprobar?n al iniciar la producci?n.",
-      "productHint": "Despu?s de guardar, abre el producto y a?ade componentes en la lista de materiales."
+      "draftHint": "Se creará un borrador. Las existencias se comprobarán al iniciar la producción.",
+      "productHint": "Después de guardar, abre el producto y añade componentes en la lista de materiales."
     }
   },
   "reportBuilder": {
