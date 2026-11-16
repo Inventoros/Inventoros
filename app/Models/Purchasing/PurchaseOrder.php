@@ -215,8 +215,9 @@ class PurchaseOrder extends Model
         });
 
         static::updating(function (PurchaseOrder $po): void {
-            // Leaving draft (sent to the supplier) finalizes the PO: its
-            // exchange rate, when it has one, is locked from here on.
+            // Leaving draft (emailed to the supplier, or marked as sent)
+            // finalizes the PO: its exchange rate, when it has one, is
+            // locked from here on, whichever path made the change.
             if ($po->isDirty('status')
                 && $po->getOriginal('status') === self::STATUS_DRAFT
                 && ! in_array($po->status, [self::STATUS_DRAFT, self::STATUS_CANCELLED], true)

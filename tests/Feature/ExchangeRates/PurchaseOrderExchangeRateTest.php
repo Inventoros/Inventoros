@@ -21,6 +21,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Notification;
+use Laravel\Sanctum\Sanctum;
 use LogicException;
 use Tests\TestCase;
 
@@ -224,6 +225,33 @@ final class PurchaseOrderExchangeRateTest extends TestCase
         $this->assertSame(PurchaseOrder::STATUS_SENT, $po->status);
         $this->assertNotNull($po->exchange_rate_locked_at);
         $this->assertTrue($po->exchangeRateSummary()['locked']);
+    }
+
+    public function test_marking_a_po_sent_without_emailing_also_locks_the_rate(): void
+    {
+        $this->fakeFrankfurter(364.35);
+        $po = $this->create($this->admin);
+
+        $this->actingAs($this->admin)
+            ->post(route('purchase-orders.mark-sent', $po))
+            ->assertRedirect();
+
+        $po->refresh();
+        $this->assertSame(PurchaseOrder::STATUS_SENT, $po->status);
+        $this->assertNotNull($po->exchange_rate_locked_at);
+        Mail::assertNothingQueued();
+
+        // Over REST as well.
+        $other = $this->create($this->admin);
+        Sanctum::actingAs($this->admin, ['*']);
+        $this->postJson("/api/v1/purchase-orders/{$other->id}/mark-sent")
+            ->assertOk()
+            ->assertJsonPath('data.exchange_rate', '364.35')
+            ->assertJsonPath('data.status', 'sent');
+        $this->assertNotNull($other->fresh()->exchange_rate_locked_at);
+
+        $this->expectException(LogicException::class);
+        $other->fresh()->forceFill(['exchange_rate' => '1'])->save();
     }
 
     public function test_later_rate_updates_never_change_a_sent_po(): void
