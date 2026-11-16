@@ -175,7 +175,7 @@ final class PluginAssetPublisher
 
     private function destination(string $slug): string
     {
-        if (preg_match('/^[A-Za-z0-9][A-Za-z0-9._-]*$/', $slug) !== 1 || str_contains($slug, '..')) {
+        if (preg_match('/^[A-Za-z0-9][A-Za-z0-9._-]*\z/', $slug) !== 1 || str_contains($slug, '..')) {
             throw new RuntimeException('Invalid plugin slug.');
         }
 

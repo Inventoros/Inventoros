@@ -19,7 +19,7 @@ use InvalidArgumentException;
  */
 final class PluginPermissionRegistry
 {
-    public const NAME_PATTERN = '/^[a-z0-9][a-z0-9-]*\.[a-z0-9][a-z0-9_]*$/';
+    public const NAME_PATTERN = '/^[a-z0-9][a-z0-9-]*\.[a-z0-9][a-z0-9_]*\z/';
 
     public const DEFAULT_CATEGORY = 'Plugins';
 

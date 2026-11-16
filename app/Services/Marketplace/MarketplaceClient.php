@@ -24,7 +24,7 @@ final class MarketplaceClient
 {
     private const API_PATH = '/api/v1/marketplace';
 
-    private const SLUG_PATTERN = '/^[a-z0-9][a-z0-9_-]{0,99}$/i';
+    private const SLUG_PATTERN = '/^[a-z0-9][a-z0-9_-]{0,99}\z/i';
 
     private const TOO_LARGE = 'marketplace download exceeds the size limit';
 

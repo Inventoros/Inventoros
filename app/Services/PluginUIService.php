@@ -78,7 +78,7 @@ final class PluginUIService
 
         $prefix = $this->loadingPlugin !== null ? 'plugins.'.$this->loadingPlugin.'.' : 'plugins.';
 
-        if (! is_string($key) || ! str_starts_with($key, $prefix) || ! preg_match('/^plugins\.[a-z0-9][a-z0-9-]*\.[A-Za-z0-9_.-]+$/', $key)) {
+        if (! is_string($key) || ! str_starts_with($key, $prefix) || ! preg_match('/^plugins\.[a-z0-9][a-z0-9-]*\.[A-Za-z0-9_.-]+\z/', $key)) {
             Log::warning('Plugin UI translation key ignored: it must be a string under '.$prefix, [
                 'plugin' => $this->loadingPlugin,
                 'key' => is_scalar($key) ? (string) $key : get_debug_type($key),

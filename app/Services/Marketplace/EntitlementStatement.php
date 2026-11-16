@@ -25,9 +25,9 @@ final class EntitlementStatement
 {
     public const CONTEXT = 'inventoros-marketplace-entitlement-v1';
 
-    private const INSTALL_ID_PATTERN = '/^[A-Za-z0-9][A-Za-z0-9:._-]{0,127}$/';
+    private const INSTALL_ID_PATTERN = '/^[A-Za-z0-9][A-Za-z0-9:._-]{0,127}\z/';
 
-    private const EXPIRES_AT_PATTERN = '/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/';
+    private const EXPIRES_AT_PATTERN = '/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z\z/';
 
     public static function message(string $installId, string $slug, string $expiresAt): string
     {

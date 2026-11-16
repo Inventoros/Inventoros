@@ -22,9 +22,9 @@ final class PackageSignature
 {
     public const CONTEXT = 'inventoros-marketplace-package-v1';
 
-    private const VERSION_PATTERN = '/^[0-9A-Za-z][0-9A-Za-z.+-]{0,63}$/';
+    private const VERSION_PATTERN = '/^[0-9A-Za-z][0-9A-Za-z.+-]{0,63}\z/';
 
-    private const SHA256_PATTERN = '/^[0-9a-f]{64}$/';
+    private const SHA256_PATTERN = '/^[0-9a-f]{64}\z/';
 
     public static function message(string $slug, string $version, string $sha256): string
     {

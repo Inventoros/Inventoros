@@ -183,7 +183,7 @@ class UpdateController extends Controller
         }
 
         $validated = $request->validate([
-            'backup_file' => ['required', 'string', 'regex:/^[A-Za-z0-9._-]+\.zip$/'],
+            'backup_file' => ['required', 'string', 'regex:/^[A-Za-z0-9._-]+\.zip\z/'],
         ]);
 
         $knownBackups = array_column($this->updateService->listBackups(), 'filename');
@@ -227,7 +227,7 @@ class UpdateController extends Controller
         }
 
         $validated = $request->validate([
-            'backup_file' => ['required', 'string', 'regex:/^[A-Za-z0-9._-]+\.zip$/'],
+            'backup_file' => ['required', 'string', 'regex:/^[A-Za-z0-9._-]+\.zip\z/'],
         ]);
 
         $knownBackups = array_column($this->updateService->listBackups(), 'filename');
