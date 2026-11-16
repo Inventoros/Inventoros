@@ -1,0 +1,34 @@
+{
+  "currency": "USD",
+  "totalProducts": 16,
+  "totalValue": 94390.62,
+  "lowStock": [
+    {
+      "id": 2,
+      "sku": "SKU-10001",
+      "name": "Wireless Bluetooth Keyboard",
+      "stock": 0,
+      "minimum": 20,
+      "shortfall": 20
+    },
+    {
+      "id": 15,
+      "sku": "SKU-10014",
+      "name": "Laptop Stand Aluminum",
+      "stock": 3,
+      "minimum": 10,
+      "shortfall": 7
+    },
+    {
+      "id": 11,
+      "sku": "SKU-10010",
+      "name": "Corrugated Shipping Box (L)",
+      "stock": 125,
+      "minimum": 500,
+      "shortfall": 375
+    }
+  ],
+  "totalOrders": 9,
+  "pendingOrders": 3,
+  "revenueThisMonth": 2721.85
+}
