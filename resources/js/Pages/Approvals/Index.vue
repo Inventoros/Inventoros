@@ -1,6 +1,8 @@
 <script setup>
 import AppLayout from '@/Layouts/AppLayout.vue';
 import PageHeader from '@/Components/ui/PageHeader.vue';
+import SectionTabs from '@/Components/ui/SectionTabs.vue';
+import SectionPanel from '@/Components/ui/SectionPanel.vue';
 import Card from '@/Components/ui/Card.vue';
 import Button from '@/Components/ui/Button.vue';
 import Badge from '@/Components/ui/Badge.vue';
@@ -18,6 +20,11 @@ const props = defineProps({
 });
 
 const tab = ref(props.pending.length > 0 || props.mine.length === 0 ? 'pending' : 'mine');
+
+const tabs = computed(() => [
+    { key: 'pending', label: t('approvals.tabs.pending') },
+    { key: 'mine', label: t('approvals.tabs.mine') },
+]);
 
 const items = computed(() => (tab.value === 'pending' ? props.pending : props.mine));
 
@@ -80,23 +87,13 @@ const decide = (item) => {
 
         <PageHeader :title="t('approvals.title')" :description="t('approvals.description')" />
 
-        <div class="mt-6 flex gap-2 border-b border-border-subtle" role="tablist">
-            <button
-                v-for="key in ['pending', 'mine']"
-                :key="key"
-                type="button"
-                role="tab"
-                :aria-selected="tab === key"
-                class="-mb-px inline-flex min-h-11 items-center gap-2 border-b-2 px-3 text-sm font-medium transition-colors ds-focus-ring"
-                :class="tab === key ? 'border-brand text-brand' : 'border-transparent text-text-tertiary hover:text-text-secondary'"
-                @click="tab = key"
-            >
-                {{ key === 'pending' ? t('approvals.tabs.pending') : t('approvals.tabs.mine') }}
-                <Badge v-if="key === 'pending' && pending.length" variant="warning" size="sm">{{ pending.length }}</Badge>
-            </button>
-        </div>
+        <SectionTabs v-model="tab" :tabs="tabs" :label="t('approvals.title')" class="mt-6">
+            <template #badge="{ tab: section }">
+                <Badge v-if="section.key === 'pending' && pending.length" variant="warning" size="sm">{{ pending.length }}</Badge>
+            </template>
 
-        <div class="mt-4 space-y-3">
+        <SectionPanel v-for="section in tabs" :key="section.key" :tab="section.key" class="mt-4 space-y-3">
+            <template v-if="tab === section.key">
             <Card v-if="items.length === 0">
                 <div class="flex flex-col items-center gap-2 py-10 text-center">
                     <Inbox :size="32" class="text-text-tertiary" />
@@ -180,6 +177,8 @@ const decide = (item) => {
                     </div>
                 </form>
             </Card>
-        </div>
+            </template>
+            </SectionPanel>
+        </SectionTabs>
     </AppLayout>
 </template>

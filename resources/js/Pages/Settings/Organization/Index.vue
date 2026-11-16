@@ -1,6 +1,8 @@
 <script setup>
 import AppLayout from '@/Layouts/AppLayout.vue';
 import PageHeader from '@/Components/ui/PageHeader.vue';
+import SectionTabs from '@/Components/ui/SectionTabs.vue';
+import SectionPanel from '@/Components/ui/SectionPanel.vue';
 import Card from '@/Components/ui/Card.vue';
 import Button from '@/Components/ui/Button.vue';
 import Badge from '@/Components/ui/Badge.vue';
@@ -116,10 +118,13 @@ const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface
 const fieldArea = 'w-full rounded-md border border-border-subtle bg-surface-canvas px-3 py-2 text-sm text-text-primary placeholder:text-text-tertiary ds-focus-ring';
 const fieldError = 'mt-1 text-xs text-status-danger';
 
-const tabs = computed(() => ([
+const tabs = computed(() => [
     { key: 'general', label: t('settings.organization.generalInfo') },
     { key: 'regional', label: t('settings.organization.regionalSettings') },
-]));
+    { key: 'approvals', label: t('approvals.settings.tab') },
+    ...(canViewUsers.value ? [{ key: 'users', label: t('settings.organization.userManagement') }] : []),
+    { key: 'portal', label: t('portal.settings.tab') },
+]);
 </script>
 
 <template>
@@ -138,70 +143,9 @@ const tabs = computed(() => ([
 
         <PageHeader :title="t('settings.organization.title')" :description="t('settings.organization.description')" />
 
-        <!-- Tabs -->
-        <div class="mt-6 border-b border-border-subtle">
-            <nav class="ds-tabs -mb-px gap-6 sm:gap-8">
-                <button
-                    @click="activeTab = 'general'"
-                    :class="[
-                        'border-b-2 px-1 py-3 text-sm font-medium transition-colors',
-                        activeTab === 'general'
-                            ? 'border-brand text-brand'
-                            : 'border-transparent text-text-tertiary hover:border-border-strong hover:text-text-secondary'
-                    ]"
-                >
-                    {{ t('settings.organization.generalInfo') }}
-                </button>
-                <button
-                    @click="activeTab = 'regional'"
-                    :class="[
-                        'border-b-2 px-1 py-3 text-sm font-medium transition-colors',
-                        activeTab === 'regional'
-                            ? 'border-brand text-brand'
-                            : 'border-transparent text-text-tertiary hover:border-border-strong hover:text-text-secondary'
-                    ]"
-                >
-                    {{ t('settings.organization.regionalSettings') }}
-                </button>
-                <button
-                    @click="activeTab = 'approvals'"
-                    :class="[
-                        'border-b-2 px-1 py-3 text-sm font-medium transition-colors',
-                        activeTab === 'approvals'
-                            ? 'border-brand text-brand'
-                            : 'border-transparent text-text-tertiary hover:border-border-strong hover:text-text-secondary'
-                    ]"
-                >
-                    {{ t('approvals.settings.tab') }}
-                </button>
-                <button
-                    v-if="canViewUsers"
-                    @click="activeTab = 'users'"
-                    :class="[
-                        'border-b-2 px-1 py-3 text-sm font-medium transition-colors',
-                        activeTab === 'users'
-                            ? 'border-brand text-brand'
-                            : 'border-transparent text-text-tertiary hover:border-border-strong hover:text-text-secondary'
-                    ]"
-                >
-                    {{ t('settings.organization.userManagement') }}
-                </button>
-                <button
-                    @click="activeTab = 'portal'"
-                    :class="[
-                        'border-b-2 px-1 py-3 text-sm font-medium transition-colors',
-                        activeTab === 'portal'
-                            ? 'border-brand text-brand'
-                            : 'border-transparent text-text-tertiary hover:border-border-strong hover:text-text-secondary'
-                    ]"
-                >
-                    {{ t('portal.settings.tab') }}
-                </button>
-            </nav>
-        </div>
-
+        <SectionTabs v-model="activeTab" :tabs="tabs" :label="t('settings.organization.title')" class="mt-6">
         <!-- General Information Tab -->
-        <div v-show="activeTab === 'general'" class="mt-6">
+        <SectionPanel tab="general" class="mt-6">
             <Card class="mb-4">
                 <form @submit.prevent="uploadLogo" class="space-y-3">
                     <label for="organization-logo" :class="fieldLabel">{{ t('settings.organization.logoTitle') }}</label>
@@ -322,10 +266,10 @@ const tabs = computed(() => ([
                     </div>
                 </form>
             </Card>
-        </div>
+        </SectionPanel>
 
         <!-- Regional Settings Tab -->
-        <div v-show="activeTab === 'regional'" class="mt-6">
+        <SectionPanel tab="regional" class="mt-6">
             <Card :padded="false">
                 <form @submit.prevent="submitRegional">
                     <div class="px-5 pt-5">
@@ -391,10 +335,10 @@ const tabs = computed(() => ([
                     </div>
                 </form>
             </Card>
-        </div>
+        </SectionPanel>
 
         <!-- Approvals Tab -->
-        <div v-show="activeTab === 'approvals'" class="mt-6">
+        <SectionPanel tab="approvals" class="mt-6">
             <Card :padded="false">
                 <form @submit.prevent="submitApprovals">
                     <div class="px-5 pt-5">
@@ -477,10 +421,10 @@ const tabs = computed(() => ([
                     </div>
                 </form>
             </Card>
-        </div>
+        </SectionPanel>
 
         <!-- Customer Portal Tab -->
-        <div v-show="activeTab === 'portal'" class="mt-6">
+        <SectionPanel tab="portal" class="mt-6">
             <Card :padded="false">
                 <div class="flex items-start justify-between gap-4 px-5 pt-5">
                     <div>
@@ -523,10 +467,10 @@ const tabs = computed(() => ([
                     </div>
                 </div>
             </Card>
-        </div>
+        </SectionPanel>
 
         <!-- User Management Tab -->
-        <div v-show="activeTab === 'users' && canViewUsers" class="mt-6">
+        <SectionPanel tab="users" v-if="canViewUsers" class="mt-6">
             <Card>
                 <div class="flex flex-col items-center gap-3 py-12 text-center">
                     <Users :size="40" class="text-text-tertiary" />
@@ -539,6 +483,7 @@ const tabs = computed(() => ([
                     </Button>
                 </div>
             </Card>
-        </div>
+        </SectionPanel>
+        </SectionTabs>
     </AppLayout>
 </template>

@@ -29,7 +29,7 @@ test('saved organization currency follows navigation into new forms', async ({ p
     await page.setViewportSize({ width: 1280, height: 900 });
     await signIn(page);
     await page.goto('/settings/organization');
-    await page.getByRole('button', { name: 'Regional Settings', exact: true }).click();
+    await page.getByRole('tab', { name: 'Regional Settings', exact: true }).click();
     const original = await page.locator('#currency').inputValue();
     await page.locator('#currency').selectOption('JPY');
     const save = page.locator('form').filter({ has: page.locator('#currency') }).getByRole('button', { name: 'Save Changes' });
@@ -55,7 +55,7 @@ test('saved organization currency follows navigation into new forms', async ({ p
         await expect(page.locator('#currency')).toHaveValue('USD');
     } finally {
         await page.goto('/settings/organization');
-        await page.getByRole('button', { name: 'Regional Settings', exact: true }).click();
+        await page.getByRole('tab', { name: 'Regional Settings', exact: true }).click();
         await page.locator('#currency').selectOption(original);
         await page.locator('form').filter({ has: page.locator('#currency') }).getByRole('button', { name: 'Save Changes' }).click();
         await expect(page.getByText('Regional settings updated successfully.')).toBeVisible();
