@@ -877,8 +877,8 @@
       "cannotUndo": "Tej operacji nie można cofnąć."
     },
     "receive": {
-      "fillAll": "Wpisz wszystkie pozosta?e ilo?ci",
-      "fillRemaining": "Wpisz pozosta?? ilo??",
+      "fillAll": "Wypełnij wszystkie pozostałe ilości",
+      "fillRemaining": "Wypełnij pozostałą ilość",
       "title": "Odbiór towarów - {poNumber}",
       "orderTotal": "Suma zamówienia: {total}",
       "itemsToReceive": "Towary do odbioru",
@@ -943,7 +943,7 @@
     "hint": "Tworzy jeden szkic zamówienia zakupu dla każdego głównego dostawcy. Produkty bez dostawcy są pomijane.",
     "chooseVariants": "Wybierz warianty",
     "variantHint": "Wybierz SKU wariantów w zamówieniu zakupu, aby uzupełnić ten produkt.",
-    "createFailed": "Nie uda?o si? utworzy? wersji roboczej zam?wienia zakupu. Spr?buj ponownie."
+    "createFailed": "Nie udało się utworzyć wersji roboczej zamówienia zakupu. Spróbuj ponownie."
   },
   "suppliers": {
     "title": "Dostawcy",
@@ -2821,7 +2821,7 @@
       "heading": "Zmień organizację"
     },
     "emptyState": {
-      "filteredHint": "Spr?buj innego wyszukiwania lub wyczy?? filtry."
+      "filteredHint": "Spróbuj innego wyszukiwania lub wyczyść filtry."
     },
     "dataTable": {
       "noData": "Brak danych."
@@ -3983,8 +3983,8 @@
       "from": "Z",
       "to": "Do",
       "items": "Pozycje",
-      "empty": "Brak przesuni?? magazynowych",
-      "emptyHint": "Utw?rz przesuni?cie, aby przenie?? zapasy mi?dzy lokalizacjami.",
+      "empty": "Brak przesunięć magazynowych",
+      "emptyHint": "Utwórz przesunięcie, aby przenieść zapasy między lokalizacjami.",
       "itemCount": "Pozycje: {count} | Pozycje: {count}",
       "showingTransfers": "Wyświetlanie {from} do {to} z {total} przesunięć"
     },

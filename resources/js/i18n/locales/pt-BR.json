@@ -943,7 +943,7 @@
     "hint": "Cria uma ordem de compra em rascunho por fornecedor principal. Produtos sem fornecedor são ignorados.",
     "chooseVariants": "Escolher variantes",
     "variantHint": "Selecione os SKUs das variantes em um pedido de compra para repor este produto.",
-    "createFailed": "N?o foi poss?vel criar o rascunho do pedido de compra. Tente novamente."
+    "createFailed": "Não foi possível criar o rascunho do pedido de compra. Tente novamente."
   },
   "suppliers": {
     "title": "Fornecedores",
@@ -3983,8 +3983,8 @@
       "from": "De",
       "to": "Para",
       "items": "Itens",
-      "empty": "Ainda n?o h? transfer?ncias de estoque",
-      "emptyHint": "Crie uma transfer?ncia para mover o estoque entre locais.",
+      "empty": "Nenhuma transferência de estoque ainda",
+      "emptyHint": "Crie uma transferência para mover o estoque entre locais.",
       "itemCount": "{count} item | {count} itens",
       "showingTransfers": "Exibindo {from} até {to} de {total} transferências"
     },

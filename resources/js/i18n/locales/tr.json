@@ -480,7 +480,7 @@
       "reviewSystem": "Sistemi incele",
       "saveError": "Tercihler kaydedilemedi. Tekrar deneyin.",
       "shortfallHelp": "Eksik miktar, minimum stokla aradaki farktır. Satın almadan önce tedarikçiyi ve yeniden sipariş ayarlarını kontrol edin.",
-      "viewProduct": "?r?n? g?r?nt?le"
+      "viewProduct": "Ürünü görüntüle"
     }
   },
   "products": {
@@ -877,8 +877,8 @@
       "cannotUndo": "Bu işlem geri alınamaz."
     },
     "receive": {
-      "fillAll": "Kalan t?m miktarlar? doldur",
-      "fillRemaining": "Kalan miktar? doldur",
+      "fillAll": "Kalan tüm miktarları doldur",
+      "fillRemaining": "Kalan miktarı doldur",
       "title": "Ürün Teslim Al - {poNumber}",
       "orderTotal": "Sipariş Toplamı: {total}",
       "itemsToReceive": "Teslim Alınacak Ürünler",
@@ -943,7 +943,7 @@
     "hint": "Her birincil tedarikçi için bir taslak satın alma siparişi oluşturur. Tedarikçisi olmayan ürünler atlanır.",
     "chooseVariants": "Varyant seç",
     "variantHint": "Bu ürünü tedarik etmek için satın alma siparişinde varyant SKU’larını seçin.",
-    "createFailed": "Sat?n alma sipari?i tasla?? olu?turulamad?. Tekrar deneyin."
+    "createFailed": "Satın alma siparişi taslağı oluşturulamadı. Tekrar deneyin."
   },
   "suppliers": {
     "title": "Tedarikçiler",
@@ -2821,7 +2821,7 @@
       "heading": "Kuruluş değiştir"
     },
     "emptyState": {
-      "filteredHint": "Ba?ka bir arama deneyin veya filtreleri temizleyin."
+      "filteredHint": "Başka bir arama deneyin veya filtreleri temizleyin."
     },
     "dataTable": {
       "noData": "Veri yok."
@@ -3983,8 +3983,8 @@
       "from": "Kaynak",
       "to": "Hedef",
       "items": "Kalemler",
-      "empty": "Hen?z stok transferi yok",
-      "emptyHint": "Konumlar aras?nda stok ta??mak i?in bir transfer olu?turun.",
+      "empty": "Henüz stok transferi yok",
+      "emptyHint": "Konumlar arasında stok taşımak için bir transfer oluşturun.",
       "itemCount": "{count} kalem | {count} kalem",
       "showingTransfers": "{from} ile {to} arası, toplam {total} transfer"
     },

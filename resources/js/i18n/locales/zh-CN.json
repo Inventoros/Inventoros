@@ -480,7 +480,7 @@
       "reviewSystem": "检查系统",
       "saveError": "无法保存偏好设置。请重试。",
       "shortfallHelp": "缺口是当前库存与最低库存的差额。采购前请检查供应商和补货设置。",
-      "viewProduct": "????"
+      "viewProduct": "查看产品"
     }
   },
   "products": {
@@ -877,8 +877,8 @@
       "cannotUndo": "此操作无法撤销。"
     },
     "receive": {
-      "fillAll": "????????",
-      "fillRemaining": "??????",
+      "fillAll": "填入所有剩余数量",
+      "fillRemaining": "填入剩余数量",
       "title": "收货 - {poNumber}",
       "orderTotal": "订单合计：{total}",
       "itemsToReceive": "待收货商品",
@@ -943,7 +943,7 @@
     "hint": "为每个主要供应商创建一张采购订单草稿。没有供应商的产品将被跳过。",
     "chooseVariants": "选择变体",
     "variantHint": "请在采购单中选择具体的变体 SKU，以补充此产品。",
-    "createFailed": "???????????????"
+    "createFailed": "无法创建采购订单草稿。请重试。"
   },
   "suppliers": {
     "title": "供应商",
@@ -2821,7 +2821,7 @@
       "heading": "切换组织"
     },
     "emptyState": {
-      "filteredHint": "???????????????"
+      "filteredHint": "请尝试其他搜索条件或清除筛选。"
     },
     "dataTable": {
       "noData": "暂无数据。"
@@ -3983,8 +3983,8 @@
       "from": "调出",
       "to": "调入",
       "items": "商品",
-      "empty": "??????",
-      "emptyHint": "???????????????",
+      "empty": "暂无库存调拨",
+      "emptyHint": "创建调拨以在库位之间移动库存。",
       "itemCount": "{count} 件商品 | {count} 件商品",
       "showingTransfers": "显示第 {from} 至 {to} 条，共 {total} 条调拨"
     },

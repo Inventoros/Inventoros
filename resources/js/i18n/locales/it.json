@@ -877,8 +877,8 @@
       "cannotUndo": "Questa azione non può essere annullata."
     },
     "receive": {
-      "fillAll": "Compila tutte le quantit? rimanenti",
-      "fillRemaining": "Compila la quantit? rimanente",
+      "fillAll": "Compila tutte le quantità rimanenti",
+      "fillRemaining": "Compila quantità rimanente",
       "title": "Ricevi articoli - {poNumber}",
       "orderTotal": "Totale ordine: {total}",
       "itemsToReceive": "Articoli da ricevere",
@@ -943,7 +943,7 @@
     "hint": "Crea una bozza di ordine di acquisto per ogni fornitore principale. I prodotti senza fornitore vengono ignorati.",
     "chooseVariants": "Scegli varianti",
     "variantHint": "Seleziona gli SKU delle varianti in un ordine di acquisto per rifornire questo prodotto.",
-    "createFailed": "Impossibile creare la bozza dell?ordine di acquisto. Riprova."
+    "createFailed": "Impossibile creare la bozza dell’ordine di acquisto. Riprova."
   },
   "suppliers": {
     "title": "Fornitori",
@@ -2821,7 +2821,7 @@
       "heading": "Cambia organizzazione"
     },
     "emptyState": {
-      "filteredHint": "Prova un?altra ricerca o cancella i filtri."
+      "filteredHint": "Prova un’altra ricerca o cancella i filtri."
     },
     "dataTable": {
       "noData": "Nessun dato."

@@ -877,8 +877,8 @@
       "cannotUndo": "Cette action est irréversible."
     },
     "receive": {
-      "fillAll": "Remplir toutes les quantit?s restantes",
-      "fillRemaining": "Remplir la quantit? restante",
+      "fillAll": "Remplir toutes les quantités restantes",
+      "fillRemaining": "Remplir la quantité restante",
       "title": "Réceptionner les articles - {poNumber}",
       "orderTotal": "Total de la commande : {total}",
       "itemsToReceive": "Articles à réceptionner",
@@ -943,7 +943,7 @@
     "hint": "Crée un bon de commande brouillon par fournisseur principal. Les produits sans fournisseur sont ignorés.",
     "chooseVariants": "Choisir les variantes",
     "variantHint": "Sélectionnez les références des variantes sur un bon de commande pour réapprovisionner ce produit.",
-    "createFailed": "Impossible de cr?er le brouillon du bon de commande. R?essayez."
+    "createFailed": "Impossible de créer le brouillon de commande fournisseur. Réessayez."
   },
   "suppliers": {
     "title": "Fournisseurs",
@@ -3984,7 +3984,7 @@
       "to": "Vers",
       "items": "Articles",
       "empty": "Aucun transfert de stock pour le moment",
-      "emptyHint": "Cr?ez un transfert pour d?placer le stock entre les emplacements.",
+      "emptyHint": "Créez un transfert pour déplacer le stock entre les emplacements.",
       "itemCount": "{count} article | {count} articles",
       "showingTransfers": "Affichage de {from} à {to} sur {total} transferts"
     },

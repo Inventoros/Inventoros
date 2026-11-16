@@ -877,8 +877,8 @@
       "cannotUndo": "Esta acción no se puede deshacer."
     },
     "receive": {
-      "fillAll": "Rellenar todas las cantidades restantes",
-      "fillRemaining": "Rellenar cantidad restante",
+      "fillAll": "Completar todas las cantidades restantes",
+      "fillRemaining": "Completar cantidad restante",
       "title": "Recibir artículos - {poNumber}",
       "orderTotal": "Total del pedido: {total}",
       "itemsToReceive": "Artículos por recibir",
@@ -943,7 +943,7 @@
     "hint": "Crea un borrador de orden de compra por cada proveedor principal. Los productos sin proveedor se omiten.",
     "chooseVariants": "Elegir variantes",
     "variantHint": "Seleccione los SKU de las variantes en una orden de compra para reponer este producto.",
-    "createFailed": "No se pudo crear el borrador del pedido de compra. Int?ntalo de nuevo."
+    "createFailed": "No se pudo crear el borrador de la orden de compra. Inténtalo de nuevo."
   },
   "suppliers": {
     "title": "Proveedores",
@@ -2821,7 +2821,7 @@
       "heading": "Cambiar de organización"
     },
     "emptyState": {
-      "filteredHint": "Prueba otra b?squeda o borra los filtros."
+      "filteredHint": "Prueba otra búsqueda o borra los filtros."
     },
     "dataTable": {
       "noData": "Sin datos."
@@ -3983,8 +3983,8 @@
       "from": "Origen",
       "to": "Destino",
       "items": "Artículos",
-      "empty": "A?n no hay transferencias de inventario",
-      "emptyHint": "Crea una transferencia para mover inventario entre ubicaciones.",
+      "empty": "Aún no hay transferencias de stock",
+      "emptyHint": "Crea una transferencia para mover existencias entre ubicaciones.",
       "itemCount": "{count} artículo | {count} artículos",
       "showingTransfers": "Mostrando {from} a {to} de {total} transferencias"
     },
