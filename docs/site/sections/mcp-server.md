@@ -128,7 +128,7 @@ Sales:
 - `list_orders` (`view_orders`). Paginated orders with status, source, warehouse, and date filters.
 - `get_order` (`view_orders`). Single order with line items.
 - `create_order` (`create_orders`). Create an order; decrements stock; fails if any line is short. Accepts optional line and order discounts (applied before tax). Destructive.
-- `email_order_invoice` (`edit_orders`). Email the order's invoice PDF to the customer, or to `to`, with optional CC and message. Destructive.
+- `email_order_invoice` (`edit_orders`). Email the order's invoice PDF to the customer, with optional CC and message. `to` and CC must be addresses on file for the order's customer or users of the organization; pass a customer contact as `to` to reach someone else at the customer, and use the web UI for anyone else. Destructive.
 - `record_payment` (`record_payments`). Record a payment against an order. Partial payments are fine; a payment above the balance due needs `allow_overpayment`; cancelled orders are refused. Destructive.
 - `list_shipments` (`view_shipments`). Paginated shipments with carrier, tracking and status; filter by order or status.
 - `create_shipment` (`create_shipments`). Record a shipment with manual tracking, optionally marking it shipped. Destructive.
@@ -139,7 +139,7 @@ Purchasing:
 - `list_purchase_orders` (`view_purchase_orders`). Paginated POs with status and supplier filters.
 - `get_purchase_order` (`view_purchase_orders`). Single PO with supplier and line items.
 - `create_purchase_order` (`create_purchase_orders`). Create a draft PO. Does not affect stock until received. Destructive.
-- `send_purchase_order` (`edit_purchase_orders`). Email the PO to the supplier with the PO PDF attached (or to `to`) and mark a draft as sent. A PO that is already sent or partly received can be re-sent; its status is unchanged. Destructive.
+- `send_purchase_order` (`edit_purchase_orders`). Email the PO to the supplier's address on file with the PO PDF attached (to or CC may also be users of the organization; use the web UI for anyone else, and note that a supplier without an email address cannot be sent through MCP) and mark a draft as sent. A PO that is already sent or partly received can be re-sent; its status is unchanged. Destructive.
 - `receive_purchase_order` (`receive_purchase_orders`). Receive items; writes stock; transitions to partial or received. Destructive.
 - `submit_purchase_order_for_approval` (`edit_purchase_orders`). Put a draft PO in front of the approvers when the organization requires approval. Approvers are notified, and the PO cannot be edited or sent until one of them decides.
 

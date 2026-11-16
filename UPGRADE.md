@@ -36,6 +36,24 @@ restore that pair and the previous application artifact while writers and
 workers remain stopped; do not use blanket migration rollback as a substitute
 for restoring inventory data.
 
+### API token scopes
+
+A personal access token's abilities now also limit user management and
+saved reports, not only the route it calls:
+
+- Managing administrators or managers (creating, promoting, or changing their
+  email or password) needs a full-access token: one created with every
+  permission selected in Settings > API tokens, or a `*` token. A narrower
+  token gets a 403 explaining that it is scoped.
+- A narrower token can only grant roles and build permission sets from the
+  permissions it includes.
+- Running a saved report needs the token to include the data source's view
+  permission as well as `view_reports`: `view_products`, `view_orders`,
+  `view_customers`, `view_suppliers` or `view_purchase_orders`. Re-create
+  report-only integration tokens with the matching `view_*` abilities.
+
+Signed-in web sessions are unaffected.
+
 ## Upgrading from v1.0.x to v2.0.0
 
 v2.0.0 is a major release: MCP tool names, the plugin asset path, access to `/docs/api` and the license all change. Read this whole section before you start. The full list of changes is in [CHANGELOG.md](CHANGELOG.md).

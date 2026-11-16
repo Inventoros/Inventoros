@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Mcp\Tools;
 
 use App\Mcp\Concerns\AuthenticatesMcpRequest;
+use App\Mcp\Support\UntrustedText;
 use App\Models\Order\Order;
 use App\Support\PaymentVisibility;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
@@ -49,7 +50,7 @@ class GetOrderTool extends Tool
             'order_number' => $order->order_number,
             'customer_name' => $order->customer_name,
             'customer_email' => $order->customer_email,
-            'customer_address' => $order->customer_address,
+            'customer_address' => UntrustedText::wrap($order->customer_address),
             'status' => $order->status,
             'subtotal' => $order->subtotal,
             'discount_type' => $order->discount_type?->value,
@@ -62,7 +63,7 @@ class GetOrderTool extends Tool
             'order_date' => $order->order_date?->toIso8601String(),
             'shipped_at' => $order->shipped_at?->toIso8601String(),
             'delivered_at' => $order->delivered_at?->toIso8601String(),
-            'notes' => $order->notes,
+            'notes' => UntrustedText::wrap($order->notes),
             'items' => $order->items->map(fn ($item) => [
                 'id' => $item->id,
                 'product_id' => $item->product_id,
@@ -83,6 +84,8 @@ class GetOrderTool extends Tool
             $payload['balance_due'] = $order->balanceDue();
             $payload['payment_status'] = $order->payment_status?->value;
         }
+
+        $payload[UntrustedText::NOTICE_KEY] = UntrustedText::NOTICE;
 
         return Response::json($payload);
     }

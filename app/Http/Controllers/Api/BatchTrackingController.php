@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Api;
 
 use App\Enums\TrackingType;
+use App\Http\Controllers\Api\Concerns\HandlesApiResponses;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\ProductBatchResource;
 use App\Models\Inventory\Product;
@@ -18,6 +19,8 @@ use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
  */
 class BatchTrackingController extends Controller
 {
+    use HandlesApiResponses;
+
     /**
      * List batches for a product.
      */
@@ -29,7 +32,7 @@ class BatchTrackingController extends Controller
 
         $batches = $product->batches()
             ->latest()
-            ->paginate(min((int) $request->input('per_page', 15), 100));
+            ->paginate($this->perPage($request));
 
         return ProductBatchResource::collection($batches);
     }

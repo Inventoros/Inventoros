@@ -8,6 +8,8 @@ use App\Mail\OrderInvoiceEmail;
 use App\Mcp\Servers\InventorosServer;
 use App\Mcp\Tools\EmailOrderInvoiceTool;
 use App\Models\Auth\Organization;
+use App\Models\Customer;
+use App\Models\CustomerContact;
 use App\Models\Order\Order;
 use App\Models\User;
 use App\Services\OrderInvoiceEmailService;
@@ -111,7 +113,11 @@ class OrderInvoiceEmailApiTest extends TestCase
     public function test_mcp_tool_emails_the_invoice(): void
     {
         Mail::fake();
-        $order = $this->order();
+        // Through MCP the override must be an address on file for the
+        // order's customer (here a customer contact).
+        $customer = Customer::create(['organization_id' => $this->org->id, 'name' => 'Casey Co']);
+        CustomerContact::create(['organization_id' => $this->org->id, 'customer_id' => $customer->id, 'name' => 'AP', 'email' => 'ap@customer.test']);
+        $order = $this->order(['customer_id' => $customer->id]);
 
         InventorosServer::actingAs($this->editor)
             ->tool(EmailOrderInvoiceTool::class, ['id' => $order->id, 'to' => 'ap@customer.test'])

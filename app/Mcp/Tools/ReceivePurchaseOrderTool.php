@@ -28,7 +28,7 @@ class ReceivePurchaseOrderTool extends Tool
     {
         return [
             'id' => $schema->integer()->required()->description('Purchase order id.'),
-            'items' => $schema->array()->required()->description('Items to receive: [{id: po_item_id, quantity_to_receive: int, receiving_location_id?: int|null}]. Quantities must be >= 0. The optional bin applies only to this receipt; null keeps the existing destination. Planned receipts must stay in their planned warehouse.'),
+            'items' => $schema->array()->required()->max(500)->description('Up to 500 items to receive:[{id: po_item_id, quantity_to_receive: int, receiving_location_id?: int|null}]. Quantities must be >= 0. The optional bin applies only to this receipt; null keeps the existing destination. Planned receipts must stay in their planned warehouse.'),
         ];
     }
 
@@ -52,7 +52,7 @@ class ReceivePurchaseOrderTool extends Tool
 
         $validated = $request->validate([
             'id' => ['required', 'integer'],
-            'items' => ['required', 'array', 'min:1'],
+            'items' => ['required', 'array', 'min:1', 'max:500'],
             'items.*.id' => [
                 'required',
                 'integer',
