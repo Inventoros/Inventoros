@@ -13,8 +13,8 @@ use Illuminate\Support\Facades\DB;
  * Recipient policy for documents emailed by MCP tools. An agent can be
  * steered by text planted in the records it reads, so through MCP an invoice
  * or purchase order may only go to an address already on file for the
- * order's customer or the purchase order's supplier, with CC limited to
- * those addresses and to the organization's own users. Sending anywhere else
+ * order's customer or the purchase order's supplier, or to the
+ * organization's own users; CC follows the same rule. Sending anywhere else
  * stays possible from the web UI (and the REST API), where a person chooses
  * the recipient.
  */
@@ -63,10 +63,10 @@ final class McpRecipients
     {
         $to = mb_strtolower(trim((string) $to));
 
-        if ($to !== '' && ! in_array($to, $onFile, true)) {
+        if ($to !== '' && ! in_array($to, $onFile, true) && self::staff([$to], $organizationId) === []) {
             return "Through MCP, a {$document} can only be emailed to an address on file ("
                 .($onFile === [] ? 'none recorded' : implode(', ', $onFile))
-                .'). To send it to any other address, use the web UI.';
+                .') or to a user of this organization. To send it to any other address, use the web UI.';
         }
 
         $cc = array_values(array_diff(self::normalize($cc), $onFile));
@@ -75,14 +75,7 @@ final class McpRecipients
             return null;
         }
 
-        $staff = User::query()
-            ->memberOf($organizationId)
-            ->whereIn(DB::raw('LOWER(users.email)'), $cc)
-            ->pluck('users.email')
-            ->map(fn ($email) => mb_strtolower(trim((string) $email)))
-            ->all();
-
-        $outside = array_values(array_diff($cc, $staff));
+        $outside = array_values(array_diff($cc, self::staff($cc, $organizationId)));
 
         if ($outside !== []) {
             return 'Through MCP, CC is limited to addresses on file and users of this organization; not allowed: '
@@ -90,6 +83,24 @@ final class McpRecipients
         }
 
         return null;
+    }
+
+    /**
+     * Which of these (lower-cased) addresses belong to users of the
+     * organization. Staff are the organization's own people, not an
+     * exfiltration target.
+     *
+     * @param  array<int, string>  $addresses
+     * @return array<int, string>
+     */
+    private static function staff(array $addresses, int $organizationId): array
+    {
+        return User::query()
+            ->memberOf($organizationId)
+            ->whereIn(DB::raw('LOWER(users.email)'), $addresses)
+            ->pluck('users.email')
+            ->map(fn ($email) => mb_strtolower(trim((string) $email)))
+            ->all();
     }
 
     /**

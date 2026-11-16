@@ -7,6 +7,7 @@ namespace App\Mcp\Tools;
 use App\Exceptions\DocumentEmailException;
 use App\Mcp\Concerns\AuthenticatesMcpRequest;
 use App\Mcp\Support\McpRecipients;
+use App\Mcp\Support\UntrustedText;
 use App\Models\Purchasing\PurchaseOrder;
 use App\Services\Documents\DocumentRecipients;
 use App\Services\PurchaseOrderEmailService;
@@ -23,20 +24,23 @@ class SendPurchaseOrderTool extends Tool
 
     protected string $name = 'send_purchase_order';
 
-    protected string $description = 'Email a purchase order to its supplier with the PO PDF attached, and mark a draft as sent. A PO that is already sent (or partly received) can be re-sent; its status is unchanged. Only sends to the supplier\'s address on file; other recipients need the web UI. Fails, leaving the status unchanged, when the supplier has no email address.';
+    protected string $description = 'Email a purchase order to its supplier with the PO PDF attached, and mark a draft as sent. A PO that is already sent (or partly received) can be re-sent; its status is unchanged. Only sends to the supplier\'s email on file or to users of this organization; any other recipient needs the web UI. A supplier without an email address cannot be sent through MCP: add the address in the web UI first. Fails, leaving the status unchanged, when the supplier has no email address and no "to" is given.';
 
     public function schema(JsonSchema $schema): array
     {
         return [
             'id' => $schema->integer()->required()->description('Purchase order id.'),
-            'to' => $schema->string()->description('Must be the supplier email on file, which is also the default.'),
-            'cc' => $schema->array()->items($schema->string())->description('Up to '.DocumentRecipients::MAX_CC.' CC addresses: users of this organization.'),
+            'to' => $schema->string()->description('The supplier email on file (the default) or a user of this organization.'),
+            'cc' => $schema->array()->items($schema->string())->description('Up to '.DocumentRecipients::MAX_CC.' CC addresses: the supplier email or users of this organization.'),
             'message' => $schema->string()->description('Optional note included in the email body.'),
         ];
     }
 
     public function handle(Request $request): Response
     {
+        // Agents copy tool output into write calls; never store the envelope.
+        UntrustedText::stripArguments($request);
+
         $this->authorize(['edit_purchase_orders']);
 
         $request->validate([

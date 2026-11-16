@@ -6,6 +6,7 @@ namespace App\Mcp\Tools;
 
 use App\Exceptions\ShippingException;
 use App\Mcp\Concerns\AuthenticatesMcpRequest;
+use App\Mcp\Support\UntrustedText;
 use App\Models\Order\Order;
 use App\Services\Shipping\ShipmentService;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
@@ -40,6 +41,9 @@ class CreateShipmentTool extends Tool
 
     public function handle(Request $request): Response
     {
+        // Agents copy tool output into write calls; never store the envelope.
+        UntrustedText::stripArguments($request);
+
         $this->authorize(['create_shipments']);
 
         $validated = $request->validate([

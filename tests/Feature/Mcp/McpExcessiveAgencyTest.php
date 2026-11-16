@@ -7,6 +7,10 @@ namespace Tests\Feature\Mcp;
 use App\Mail\OrderInvoiceEmail;
 use App\Mail\PurchaseOrderEmail;
 use App\Mcp\Servers\InventorosServer;
+use App\Mcp\Tools\AdjustStockTool;
+use App\Mcp\Tools\CreateOrderTool;
+use App\Mcp\Tools\CreateProductTool;
+use App\Mcp\Tools\CreatePurchaseOrderTool;
 use App\Mcp\Tools\EmailOrderInvoiceTool;
 use App\Mcp\Tools\GetOrderTool;
 use App\Mcp\Tools\GetProductTool;
@@ -16,13 +20,16 @@ use App\Mcp\Tools\SendPurchaseOrderTool;
 use App\Models\Auth\Organization;
 use App\Models\Customer;
 use App\Models\CustomerContact;
+use App\Models\Inventory\Product;
 use App\Models\Inventory\ProductCategory;
+use App\Models\Inventory\StockAdjustment;
 use App\Models\Inventory\Supplier;
 use App\Models\Order\Order;
 use App\Models\Purchasing\PurchaseOrder;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
+use Laravel\Mcp\Server\Testing\TestResponse;
 use Laravel\Sanctum\Sanctum;
 use Tests\Feature\Api\Concerns\BuildsApiFixtures;
 use Tests\TestCase;
@@ -264,6 +271,114 @@ class McpExcessiveAgencyTest extends TestCase
             ->tool(GetOrderTool::class, ['id' => $order->id])
             ->assertOk()
             ->assertSee('"notes":null');
+    }
+
+    /**
+     * The text content of an MCP tool response.
+     */
+    private function contentOf(TestResponse $response): string
+    {
+        return implode("\n", (fn () => $this->content())->call($response));
+    }
+
+    public function test_an_order_read_through_mcp_can_be_copied_into_create_order_without_envelope_tags(): void
+    {
+        $this->operator->roles()->first()->update(['permissions' => array_merge(
+            $this->operator->roles()->first()->permissions, ['create_orders', 'manage_stock']
+        )]);
+        $source = $this->order(['notes' => 'Leave at the side door', 'customer_address' => '1 Main St']);
+        $product = $this->makeProduct($this->org, ['stock' => 10]);
+
+        $read = json_decode($this->contentOf(
+            InventorosServer::actingAs($this->operator)->tool(GetOrderTool::class, ['id' => $source->id])->assertOk()
+        ), true);
+        $this->assertStringContainsString('<untrusted-data>', $read['notes']);
+
+        InventorosServer::actingAs($this->operator)
+            ->tool(CreateOrderTool::class, [
+                'customer_name' => $read['customer_name'],
+                'customer_address' => $read['customer_address'],
+                'notes' => $read['notes'],
+                'items' => [['product_id' => $product->id, 'quantity' => 1, 'unit_price' => 5]],
+            ])
+            ->assertOk();
+
+        $copy = Order::withoutGlobalScopes()->whereKeyNot($source->id)->latest('id')->firstOrFail();
+        $this->assertSame('Leave at the side door', $copy->notes);
+        $this->assertSame('1 Main St', $copy->customer_address);
+    }
+
+    public function test_write_tools_strip_envelope_tags_from_free_text_and_nested_lines(): void
+    {
+        $role = $this->operator->roles()->first();
+        $role->update(['permissions' => array_merge($role->permissions, ['create_products', 'manage_stock', 'create_purchase_orders'])]);
+        $product = $this->makeProduct($this->org, ['stock' => 10]);
+        $supplier = Supplier::create([
+            'organization_id' => $this->org->id, 'name' => 'Nuts Ltd', 'email' => 'sales@nuts.test', 'is_active' => true,
+        ]);
+
+        InventorosServer::actingAs($this->operator)
+            ->tool(CreateProductTool::class, [
+                'sku' => 'ENV-1', 'name' => '<untrusted-data>Washer</untrusted-data>',
+                'description' => '<untrusted-data>Flat washer</untrusted-data>',
+            ])
+            ->assertOk();
+        $created = Product::withoutGlobalScopes()->where('sku', 'ENV-1')->firstOrFail();
+        $this->assertSame(['Washer', 'Flat washer'], [$created->name, $created->description]);
+
+        InventorosServer::actingAs($this->operator)
+            ->tool(AdjustStockTool::class, [
+                'product_id' => $product->id, 'quantity' => 1, 'type' => 'manual',
+                'reason' => '<untrusted-data>Recount</untrusted-data>', 'notes' => '< UNTRUSTED-DATA >Shelf B</untrusted-data >',
+            ])
+            ->assertOk();
+        $adjustment = StockAdjustment::withoutGlobalScopes()->where('product_id', $product->id)->latest('id')->firstOrFail();
+        $this->assertSame(['Recount', 'Shelf B'], [$adjustment->reason, $adjustment->notes]);
+
+        InventorosServer::actingAs($this->operator)
+            ->tool(CreatePurchaseOrderTool::class, [
+                'supplier_id' => $supplier->id,
+                'order_date' => now()->toDateString(),
+                'currency' => 'USD',
+                'notes' => '<untrusted-data>Rush</untrusted-data>',
+                'items' => [['product_id' => $product->id, 'quantity' => 2, 'unit_cost' => 1, 'supplier_sku' => '<untrusted-data>NL-9</untrusted-data>']],
+            ])
+            ->assertOk();
+        $po = PurchaseOrder::withoutGlobalScopes()->where('supplier_id', $supplier->id)->latest('id')->firstOrFail();
+        $this->assertSame('Rush', $po->notes);
+        $this->assertSame('NL-9', $po->items()->value('supplier_sku'));
+    }
+
+    public function test_invoice_tool_may_send_to_a_user_of_the_organization(): void
+    {
+        Mail::fake();
+        $order = $this->order();
+        $colleague = $this->makeMember($this->org);
+
+        InventorosServer::actingAs($this->operator)
+            ->tool(EmailOrderInvoiceTool::class, ['id' => $order->id, 'to' => $colleague->email])
+            ->assertOk();
+
+        Mail::assertQueued(OrderInvoiceEmail::class, fn (OrderInvoiceEmail $m) => $m->hasTo($colleague->email));
+    }
+
+    public function test_purchase_order_tool_may_send_to_a_user_of_the_organization(): void
+    {
+        Mail::fake();
+        $po = $this->purchaseOrder();
+        $colleague = $this->makeMember($this->org);
+
+        InventorosServer::actingAs($this->operator)
+            ->tool(SendPurchaseOrderTool::class, ['id' => $po->id, 'to' => $colleague->email])
+            ->assertOk();
+
+        Mail::assertQueued(PurchaseOrderEmail::class, fn (PurchaseOrderEmail $m) => $m->hasTo($colleague->email));
+    }
+
+    public function test_tool_descriptions_explain_the_recipient_rules(): void
+    {
+        $this->assertStringContainsString('pass a customer contact as `to`', app(EmailOrderInvoiceTool::class)->description());
+        $this->assertStringContainsString('supplier without an email address cannot be sent through MCP', app(SendPurchaseOrderTool::class)->description());
     }
 
     public function test_category_descriptions_in_lists_are_enveloped(): void
