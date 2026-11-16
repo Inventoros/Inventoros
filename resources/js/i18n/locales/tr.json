@@ -3127,6 +3127,17 @@
       "batchNumber": "Parti numarası",
       "batchNumberHint": "Otomatik oluşturmak için boş bırakın. Bu ürünün aynı numaralı mevcut partisine eklenir.",
       "expiryDate": "Son kullanma tarihi"
+    },
+    "setup": {
+      "title": "Önce bir montaj ürünü oluşturun",
+      "description": "İş emirleri, malzeme listesi olan etkin bir montaj ürünü gerektirir. Ürünü oluşturun, ardından bileşenleri ve miktarlarını ekleyin.",
+      "createAssembly": "Montaj ürünü oluştur",
+      "requestSetup": "Ürün yöneticisinden bir montaj ürünü ve bileşenlerini oluşturmasını isteyin.",
+      "chooseAssembly": "Taslak oluşturmadan önce malzemeleri incelemek için bir montaj ürünü seçin.",
+      "reviewHint": "İş emri oluşturmadan önce malzeme listesini inceleyin.",
+      "reviewComponents": "Malzeme listesini incele",
+      "draftHint": "Bir taslak oluşturulur. Üretim başlarken stok yeniden kontrol edilir.",
+      "productHint": "Kaydettikten sonra ürünü açın ve malzeme listesine bileşenleri ekleyin."
     }
   },
   "reportBuilder": {

@@ -3127,6 +3127,17 @@
       "batchNumber": "Número do lote",
       "batchNumberHint": "Deixe em branco para gerar um. Um lote existente deste produto com o mesmo número é complementado.",
       "expiryDate": "Data de validade"
+    },
+    "setup": {
+      "title": "Configure uma montagem primeiro",
+      "description": "Ordens de produção precisam de um produto de montagem ativo com lista de materiais. Crie o produto e adicione componentes e quantidades.",
+      "createAssembly": "Criar produto de montagem",
+      "requestSetup": "Peça ao responsável pelos produtos para configurar uma montagem e seus componentes.",
+      "chooseAssembly": "Escolha uma montagem para revisar os materiais antes de criar um rascunho.",
+      "reviewHint": "Revise a lista de materiais antes de criar uma ordem de produção.",
+      "reviewComponents": "Revisar lista de materiais",
+      "draftHint": "Isso cria um rascunho. O estoque será verificado novamente ao iniciar a produção.",
+      "productHint": "Após salvar, abra o produto e adicione componentes na lista de materiais."
     }
   },
   "reportBuilder": {

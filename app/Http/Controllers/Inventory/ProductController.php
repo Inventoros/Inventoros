@@ -18,8 +18,8 @@ use App\Models\Inventory\VariantLocationStock;
 use App\Services\ProductLocationStockService;
 use App\Services\ProductService;
 use App\Services\StockReservationService;
-use App\Services\WarehouseStockLevelService;
 use App\Services\WarehouseAccessService;
+use App\Services\WarehouseStockLevelService;
 use App\Support\PluginQueryGuard;
 use App\Support\ProductSearch;
 use Illuminate\Http\RedirectResponse;
@@ -168,6 +168,7 @@ class ProductController extends Controller
             'currencies' => $currencies,
             'defaultCurrency' => $defaultCurrency,
             'productTypes' => $productTypes,
+            'initialType' => in_array($request->input('type'), array_column($productTypes, 'value'), true) ? $request->input('type') : 'standard',
             'barcodeTypes' => BarcodeType::options(),
             'pluginComponents' => [
                 'header' => get_page_components('products.create', 'header'),

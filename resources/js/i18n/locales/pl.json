@@ -3127,6 +3127,17 @@
       "batchNumber": "Numer partii",
       "batchNumberHint": "Zostaw puste, aby go wygenerować. Istniejąca partia tego produktu o tym samym numerze zostanie uzupełniona.",
       "expiryDate": "Data ważności"
+    },
+    "setup": {
+      "title": "Najpierw skonfiguruj produkt montażowy",
+      "description": "Zlecenia wymagają aktywnego produktu montażowego z zestawieniem materiałów. Utwórz produkt, a następnie dodaj komponenty i ilości.",
+      "createAssembly": "Utwórz produkt montażowy",
+      "requestSetup": "Poproś osobę zarządzającą produktami o skonfigurowanie produktu montażowego i jego komponentów.",
+      "chooseAssembly": "Wybierz produkt montażowy, aby sprawdzić materiały przed utworzeniem wersji roboczej.",
+      "reviewHint": "Sprawdź zestawienie materiałów przed utworzeniem zlecenia.",
+      "reviewComponents": "Sprawdź zestawienie materiałów",
+      "draftHint": "Powstanie wersja robocza. Stan magazynowy zostanie ponownie sprawdzony przy rozpoczęciu produkcji.",
+      "productHint": "Po zapisaniu otwórz produkt i dodaj komponenty w zestawieniu materiałów."
     }
   },
   "reportBuilder": {

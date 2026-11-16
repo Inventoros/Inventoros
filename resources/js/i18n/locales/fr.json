@@ -3127,6 +3127,17 @@
       "batchNumber": "Numéro de lot",
       "batchNumberHint": "Laissez vide pour en générer un. Un lot existant de ce produit portant le même numéro est complété.",
       "expiryDate": "Date d'expiration"
+    },
+    "setup": {
+      "title": "Configurez d’abord un assemblage",
+      "description": "Un ordre de fabrication nécessite un produit assemblé actif avec une nomenclature. Créez le produit, puis ajoutez ses composants et quantités.",
+      "createAssembly": "Créer un produit assemblé",
+      "requestSetup": "Demandez au responsable des produits de configurer un assemblage et ses composants.",
+      "chooseAssembly": "Choisissez un assemblage pour vérifier les matériaux nécessaires avant de créer un brouillon.",
+      "reviewHint": "Vérifiez la nomenclature de cet assemblage avant de créer un ordre de fabrication.",
+      "reviewComponents": "Vérifier la nomenclature",
+      "draftHint": "Un brouillon sera créé. Le stock sera vérifié au lancement de la production.",
+      "productHint": "Après l’enregistrement, ouvrez le produit et ajoutez les composants dans la nomenclature."
     }
   },
   "reportBuilder": {

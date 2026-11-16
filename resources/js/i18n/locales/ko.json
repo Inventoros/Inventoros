@@ -3127,6 +3127,17 @@
       "batchNumber": "배치 번호",
       "batchNumberHint": "비워 두면 자동으로 생성됩니다. 같은 번호의 이 제품 기존 배치가 있으면 수량이 추가됩니다.",
       "expiryDate": "유효기간"
+    },
+    "setup": {
+      "title": "먼저 조립 제품을 설정하세요",
+      "description": "작업 지시에는 자재 명세서가 있는 활성 조립 제품이 필요합니다. 제품을 만든 다음 구성품과 수량을 추가하세요.",
+      "createAssembly": "조립 제품 만들기",
+      "requestSetup": "제품 관리자에게 조립 제품과 구성품 설정을 요청하세요.",
+      "chooseAssembly": "조립 제품을 선택하여 초안 작성 전에 필요한 자재를 확인하세요.",
+      "reviewHint": "작업 지시를 만들기 전에 이 제품의 자재 명세서를 확인하세요.",
+      "reviewComponents": "자재 명세서 검토",
+      "draftHint": "초안이 생성됩니다. 생산 시작 시 재고를 다시 확인합니다.",
+      "productHint": "저장한 뒤 제품을 열고 자재 명세서에서 구성품을 추가하세요."
     }
   },
   "reportBuilder": {

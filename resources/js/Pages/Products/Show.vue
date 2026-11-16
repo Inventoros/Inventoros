@@ -638,7 +638,7 @@ const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface
                     </Card>
 
                     <!-- Components (BOM) for Kits/Assemblies -->
-                    <Card v-if="isKitOrAssembly" :padded="false">
+                    <Card v-if="isKitOrAssembly" id="product-components" class="scroll-mt-28" :padded="false">
                         <div class="flex items-center justify-between px-5 pt-5">
                             <div class="flex items-center gap-3">
                                 <h3 class="text-sm font-semibold text-text-primary">{{ t('products.show.bom.title') }}</h3>

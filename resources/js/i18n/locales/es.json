@@ -3127,6 +3127,17 @@
       "batchNumber": "Número de lote",
       "batchNumberHint": "Déjelo en blanco para generar uno. Un lote existente de este producto con el mismo número se incrementa.",
       "expiryDate": "Fecha de vencimiento"
+    },
+    "setup": {
+      "title": "Configura primero un ensamblaje",
+      "description": "Las órdenes de fabricación necesitan un producto de ensamblaje activo con una lista de materiales. Crea el producto y añade sus componentes y cantidades.",
+      "createAssembly": "Crear producto de ensamblaje",
+      "requestSetup": "Pide a quien gestiona los productos que configure un ensamblaje y sus componentes.",
+      "chooseAssembly": "Elige un ensamblaje para revisar los materiales antes de crear un borrador.",
+      "reviewHint": "Revisa la lista de materiales antes de crear una orden de fabricación.",
+      "reviewComponents": "Revisar lista de materiales",
+      "draftHint": "Se creará un borrador. Las existencias se comprobarán al iniciar la producción.",
+      "productHint": "Después de guardar, abre el producto y añade componentes en la lista de materiales."
     }
   },
   "reportBuilder": {

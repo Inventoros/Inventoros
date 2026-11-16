@@ -291,6 +291,16 @@ class ProductControllerTest extends TestCase
         $response->assertStatus(200);
     }
 
+    public function test_create_product_type_preset_is_allowed_and_defaults_safely(): void
+    {
+        foreach (['assembly' => 'assembly', 'kit' => 'kit', 'unsupported' => 'standard'] as $requested => $expected) {
+            $this->actingAs($this->admin)->get(route('products.create', ['type' => $requested]))
+                ->assertOk()->assertInertia(fn ($page) => $page->where('initialType', $expected));
+        }
+        $this->actingAs($this->admin)->get(route('products.create', ['type' => ['assembly']]))
+            ->assertOk()->assertInertia(fn ($page) => $page->where('initialType', 'standard'));
+    }
+
     public function test_view_only_user_cannot_view_create_product_form(): void
     {
         $response = $this->actingAs($this->viewOnlyUser)

@@ -5,12 +5,15 @@ import PageHeader from '@/Components/ui/PageHeader.vue';
 import Card from '@/Components/ui/Card.vue';
 import Button from '@/Components/ui/Button.vue';
 import Badge from '@/Components/ui/Badge.vue';
+import EmptyState from '@/Components/ui/EmptyState.vue';
+import { usePermissions } from '@/composables/usePermissions';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import { computed, reactive, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { ArrowLeft, AlertTriangle } from '@lucide/vue';
+import { ArrowLeft, AlertTriangle, Layers } from '@lucide/vue';
 
 const { t } = useI18n();
+const { canVisit, hasPermission } = usePermissions();
 
 const props = defineProps({
     assemblyProducts: Array,
@@ -20,7 +23,7 @@ const props = defineProps({
 
 const form = useForm({
     product_id: props.preselectedProductId || '',
-    product_variant_id: null,
+    product_variant_id: '',
     quantity: 1,
     warehouse_id: '',
     notes: '',
@@ -36,7 +39,7 @@ const selectedProduct = computed(() => {
 
 // Picking another assembly clears the variant choices made for the old one.
 watch(() => form.product_id, () => {
-    form.product_variant_id = null;
+    form.product_variant_id = '';
     Object.keys(componentVariants).forEach(key => delete componentVariants[key]);
 });
 
@@ -75,6 +78,7 @@ const trackingLabel = (type) => ({
 }[type] ?? null);
 
 const submit = () => {
+    if (!selectedProduct.value || !requiredComponents.value.length || form.processing) return;
     form
         .transform(data => ({
             ...data,
@@ -116,7 +120,15 @@ const fieldError = 'mt-1 text-xs text-status-danger';
             </template>
         </PageHeader>
 
-        <form @submit.prevent="submit" class="mt-6">
+        <Card v-if="!assemblyProducts.length" class="mt-6" :padded="false">
+            <EmptyState :title="t('workOrders.setup.title')" :description="t('workOrders.setup.description')" :icon="Layers">
+                <template #actions>
+                    <Button v-if="canVisit('products.create')" as="Link" :href="route('products.create', { type: 'assembly' })">{{ t('workOrders.setup.createAssembly') }}</Button>
+                    <p v-else class="max-w-prose text-sm text-text-secondary">{{ t('workOrders.setup.requestSetup') }}</p>
+                </template>
+            </EmptyState>
+        </Card>
+        <form v-else @submit.prevent="submit" class="mt-6">
             <Card :padded="false">
                 <div class="space-y-6 p-5">
                     <!-- Assembly Product -->
@@ -135,6 +147,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                 {{ product.name }} ({{ product.sku }})
                             </option>
                         </select>
+                        <p v-if="!selectedProduct" class="mt-2 text-sm text-text-secondary">{{ t('workOrders.setup.chooseAssembly') }}</p>
                         <p v-if="form.errors.product_id" :class="fieldError">
                             {{ form.errors.product_id }}
                         </p>
@@ -151,7 +164,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                             :class="fieldInput"
                             required
                         >
-                            <option :value="null">{{ t('orders.create.chooseVariant') }}</option>
+                            <option value="">{{ t('orders.create.chooseVariant') }}</option>
                             <option v-for="variant in selectedProduct.variants" :key="variant.id" :value="variant.id">
                                 {{ variant.title }}<template v-if="variant.sku"> ({{ variant.sku }})</template>
                             </option>
@@ -171,6 +184,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                             v-model.number="form.quantity"
                             type="number"
                             min="1"
+                            max="999999"
                             :class="fieldInput"
                             required
                         />
@@ -208,6 +222,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                             id="notes"
                             v-model="form.notes"
                             rows="3"
+                            maxlength="2000"
                             :class="fieldArea"
                             :placeholder="t('workOrders.fields.notesPlaceholder')"
                         ></textarea>
@@ -262,7 +277,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                                 :class="fieldInput"
                                                 required
                                             >
-                                                <option :value="undefined">{{ t('orders.create.chooseVariant') }}</option>
+                                                <option value="">{{ t('orders.create.chooseVariant') }}</option>
                                                 <option v-for="variant in comp.variants" :key="variant.id" :value="variant.id">
                                                     {{ variant.title }}<template v-if="variant.sku"> ({{ variant.sku }})</template>
                                                 </option>
@@ -307,15 +322,19 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                             <AlertTriangle :size="16" class="me-2" />
                             {{ t('workOrders.components.noComponentsDefined') }}
                         </p>
+                        <p class="mt-2 text-sm text-text-secondary">{{ t('workOrders.setup.reviewHint') }}</p>
+                        <Button v-if="canVisit('products.show') && hasPermission('edit_products')" class="mt-3" variant="secondary" as="Link" :href="route('products.show', selectedProduct.id) + '#product-components'">{{ t('workOrders.setup.reviewComponents') }}</Button>
+                        <p v-else class="mt-2 text-sm text-text-secondary">{{ t('workOrders.setup.requestSetup') }}</p>
                     </div>
                 </div>
 
                 <!-- Form Actions -->
-                <div class="flex items-center justify-end gap-3 border-t border-border-subtle px-5 py-4">
+                <div class="flex flex-wrap items-center justify-end gap-3 border-t border-border-subtle px-5 py-4">
+                    <p class="me-auto w-full text-xs text-text-secondary sm:w-auto sm:max-w-xs">{{ t('workOrders.setup.draftHint') }}</p>
                     <Button variant="secondary" as="Link" :href="route('work-orders.index')">
                         {{ t('common.cancel') }}
                     </Button>
-                    <Button type="submit" variant="default" :loading="form.processing" :disabled="form.processing">
+                    <Button type="submit" variant="default" :loading="form.processing" :disabled="form.processing || !selectedProduct || !requiredComponents.length">
                         {{ t('workOrders.createWorkOrder') }}
                     </Button>
                 </div>

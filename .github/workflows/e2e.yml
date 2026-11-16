@@ -86,6 +86,7 @@ jobs:
             e2e/tests/warehouse-stock.spec.ts \
             e2e/tests/storage-settings.spec.ts \
             e2e/tests/stock-reset.spec.ts \
+            e2e/tests/assembly-setup.spec.ts \
             e2e/tests/stock-audit-history.spec.ts \
             e2e/tests/audit-review.spec.ts \
             e2e/tests/audit-pagination.spec.ts \
