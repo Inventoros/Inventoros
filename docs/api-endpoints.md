@@ -28,7 +28,7 @@ The REST API is available at `/api/v1/` with Sanctum token authentication.
 | Stock Adjustments | `GET`, `POST`, `GET/{id}` |
 | Stock Audits | `GET`, `POST`, `GET/{id}`, `POST/start`, `POST/items/{item}/count`, `POST/complete` |
 | Suppliers | `GET`, `POST`, `GET/{id}`, `PUT/{id}`, `DELETE/{id}` |
-| Purchase Orders | `GET`, `POST`, `GET/{id}`, `PUT/{id}`, `DELETE/{id}`, `POST/receive`, `POST/send`, `POST/cancel`, `POST/submit-for-approval` |
+| Purchase Orders | `GET`, `POST`, `GET/{id}`, `PUT/{id}`, `DELETE/{id}`, `POST/receive`, `POST/send`, `POST/mark-sent`, `POST/cancel`, `POST/submit-for-approval` |
 | Work Orders | `GET`, `POST`, `GET/{id}`, `DELETE/{id}`, `POST/start`, `POST/complete`, `POST/cancel` |
 | Webhooks | `GET`, `POST`, `GET/{id}`, `PUT/{id}`, `DELETE/{id}`, `POST/regenerate-secret`, `GET/deliveries` |
 | Users | `GET`, `POST`, `GET/{id}`, `PUT/{id}` |

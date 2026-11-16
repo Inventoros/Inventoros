@@ -112,6 +112,7 @@
     "Purchase order submitted for approval.": "発注書を承認申請しました。",
     "This purchase order cannot be cancelled.": "この発注書はキャンセルできません。",
     "Purchase order cancelled.": "発注書をキャンセルしました。",
+    "Purchase order marked as sent.": "発注書を送信済みにしました。",
     "Report schedule created.": "レポートのスケジュールを作成しました。",
     "Report schedule updated.": "レポートのスケジュールを更新しました。",
     "Report schedule deleted.": "レポートのスケジュールを削除しました。",

@@ -21,6 +21,7 @@ export const ACTION_KEYS = [
     'payment_voided',
     'invoice_emailed',
     'emailed',
+    'marked_sent',
     'auto_reorder',
     'quick_reorder',
     'return.lines_updated',

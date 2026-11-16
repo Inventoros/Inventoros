@@ -112,6 +112,7 @@
     "Purchase order submitted for approval.": "أُرسل أمر الشراء للموافقة.",
     "This purchase order cannot be cancelled.": "لا يمكن إلغاء أمر الشراء هذا.",
     "Purchase order cancelled.": "تم إلغاء أمر الشراء.",
+    "Purchase order marked as sent.": "تم تعيين أمر الشراء كمُرسل.",
     "Report schedule created.": "تم إنشاء جدول التقرير.",
     "Report schedule updated.": "تم تحديث جدول التقرير.",
     "Report schedule deleted.": "تم حذف جدول التقرير.",

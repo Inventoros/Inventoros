@@ -1064,6 +1064,18 @@ paths:
         '422': { description: Cannot send in current status }
         '429': { description: "Document email rate limit reached (`rate_limited`)" }
 
+  /purchase-orders/{purchaseOrder}/mark-sent:
+    parameters:
+      - { name: purchaseOrder, in: path, required: true, schema: { type: integer } }
+    post:
+      tags: [Purchase Orders]
+      summary: Mark a draft PO as sent without emailing the supplier
+      description: "Requires `edit_purchase_orders`. For orders placed with the supplier some other way. Nothing is emailed. Same approval gate as `send`."
+      responses:
+        '200': { description: Marked sent }
+        '404': { description: Not found }
+        '422': { description: "Needs approval (`approval_required`), or not a draft or has no items (`cannot_send`)" }
+
   /purchase-orders/{purchaseOrder}/cancel:
     parameters:
       - { name: purchaseOrder, in: path, required: true, schema: { type: integer } }

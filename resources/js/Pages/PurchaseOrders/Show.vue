@@ -13,10 +13,10 @@ import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { displayCalendarDate, displayDate } from '@/lib/dates';
 import { formatMoney } from '@/lib/money';
-import { ArrowLeft, Pencil, Download, Eye, Send, PackageCheck, Ban, Trash2 } from '@lucide/vue';
+import { ArrowLeft, Pencil, Download, Eye, Send, PackageCheck, Ban, Trash2, CircleCheck } from '@lucide/vue';
 import { usePermissions } from '@/composables/usePermissions';
 
-const { canVisit } = usePermissions();
+const { canVisit, hasPermission } = usePermissions();
 
 const { t } = useI18n();
 
@@ -71,6 +71,27 @@ const showSendModal = ref(false);
 // Drafts are sent for the first time; orders already with the supplier can be re-sent.
 const canSend = computed(() => ['draft', 'sent', 'partial'].includes(props.purchaseOrder.status) && !awaitingApproval.value);
 const isResend = computed(() => props.purchaseOrder.status !== 'draft');
+
+// An order placed some other way (the supplier's website, a phone call) can be
+// marked sent without an email, under the same approval rules as sending.
+const canMarkSent = computed(() =>
+    props.purchaseOrder.status === 'draft'
+    && (props.purchaseOrder.items?.length || 0) > 0
+    && !awaitingApproval.value
+    && hasPermission('edit_purchase_orders')
+);
+const markingSent = ref(false);
+
+const markSent = () => {
+    if (markingSent.value || !confirm(t('purchaseOrders.show.confirmMarkSent', { number: props.purchaseOrder.po_number }))) {
+        return;
+    }
+    router.post(route('purchase-orders.mark-sent', props.purchaseOrder.id), {}, {
+        preserveScroll: true,
+        onStart: () => { markingSent.value = true; },
+        onFinish: () => { markingSent.value = false; },
+    });
+};
 
 // queued_at is stamped when the email is queued, sent_at when it is delivered;
 // a queued_at newer than sent_at means the latest send has not gone out yet.
@@ -432,6 +453,20 @@ const thClass = 'px-4 py-2.5 text-start text-xs font-medium tracking-tight text-
                             <Send :size="16" />
                             {{ isResend ? t('documentEmail.resendPo') : t('documentEmail.sendPo') }}
                         </Button>
+                        <template v-if="canMarkSent">
+                            <Button
+                                variant="secondary"
+                                class="w-full"
+                                :disabled="markingSent"
+                                @click="markSent"
+                            >
+                                <CircleCheck :size="16" />
+                                {{ t('purchaseOrders.show.markSent') }}
+                            </Button>
+                            <p class="text-xs text-text-tertiary">
+                                {{ t('purchaseOrders.show.markSentHint') }}
+                            </p>
+                        </template>
                         <p v-if="awaitingApproval" class="text-xs text-text-tertiary">
                             {{ t('approvals.poSendBlocked') }}
                         </p>

@@ -459,7 +459,9 @@ class PurchaseOrder extends Model
     }
 
     /**
-     * Mark as sent.
+     * Set the status to sent, with no checks. User actions go through
+     * PurchaseOrderEmailService (send() or markSent()), which enforce the
+     * approval gate and lock the row.
      */
     public function markAsSent(): void
     {
