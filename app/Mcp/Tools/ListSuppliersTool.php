@@ -6,6 +6,7 @@ namespace App\Mcp\Tools;
 
 use App\Mcp\Concerns\AuthenticatesMcpRequest;
 use App\Models\Inventory\Supplier;
+use App\Support\PageSize;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
@@ -26,7 +27,7 @@ class ListSuppliersTool extends Tool
         return [
             'search' => $schema->string()->description('Substring of name or code.'),
             'is_active' => $schema->boolean()->description('Restrict to active or inactive.'),
-            'limit' => $schema->integer()->description('Max results (default 50, max 200).'),
+            'limit' => $schema->integer()->min(1)->max(200)->description('Max results (default 50, max 200).'),
         ];
     }
 
@@ -39,7 +40,7 @@ class ListSuppliersTool extends Tool
             'search' => ['nullable', 'string', 'max:255'],
         ]);
 
-        $limit = min((int) ($request->get('limit') ?? 50), 200);
+        $limit = PageSize::resolve($request->get('limit'), 50, 200);
 
         $suppliers = Supplier::query()
             ->where('organization_id', $this->organizationId())

@@ -12,6 +12,7 @@ use App\Exceptions\DocumentEmailException;
 use App\Exceptions\InsufficientStockException;
 use App\Exceptions\InvalidOrderItemException;
 use App\Exceptions\InvalidStateException;
+use App\Http\Controllers\Api\Concerns\HandlesApiResponses;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Order\ApproveOrderRequest;
 use App\Http\Requests\Api\Order\RejectOrderRequest;
@@ -35,6 +36,8 @@ use Illuminate\Validation\ValidationException;
  */
 class OrderController extends Controller
 {
+    use HandlesApiResponses;
+
     public function __construct(
         protected OrderService $orderService,
     ) {}
@@ -97,7 +100,7 @@ class OrderController extends Controller
         $sortDir = strtolower((string) $request->input('sort_dir')) === 'asc' ? 'asc' : 'desc';
         $query->orderBy($sortBy, $sortDir);
 
-        $perPage = min($request->input('per_page', 15), 100);
+        $perPage = $this->perPage($request);
         $orders = $query->paginate($perPage);
 
         return OrderResource::collection($orders);

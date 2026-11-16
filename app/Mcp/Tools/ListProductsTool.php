@@ -7,6 +7,7 @@ namespace App\Mcp\Tools;
 use App\Mcp\Concerns\AuthenticatesMcpRequest;
 use App\Models\Inventory\Product;
 use App\Services\StockReservationService;
+use App\Support\PageSize;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
@@ -33,7 +34,7 @@ class ListProductsTool extends Tool
             'sort_by' => $schema->string()->enum(['created_at', 'updated_at', 'name', 'sku', 'price', 'stock'])->description('Sort column.'),
             'sort_dir' => $schema->string()->enum(['asc', 'desc'])->description('Sort direction (default: desc).'),
             'page' => $schema->integer()->description('1-indexed page number.'),
-            'per_page' => $schema->integer()->description('Items per page (default 15, max 100).'),
+            'per_page' => $schema->integer()->min(1)->max(100)->description('Items per page (default 15, max 100).'),
         ];
     }
 
@@ -65,7 +66,7 @@ class ListProductsTool extends Tool
         $sortDir = $request->get('sort_dir') === 'asc' ? 'asc' : 'desc';
         $query->orderBy($sortBy, $sortDir);
 
-        $perPage = min((int) ($request->get('per_page') ?? 15), 100);
+        $perPage = PageSize::resolve($request->get('per_page'), 15, 100);
         $page = max((int) ($request->get('page') ?? 1), 1);
 
         $paginator = $query->paginate(perPage: $perPage, page: $page);

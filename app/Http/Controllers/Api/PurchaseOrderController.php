@@ -8,6 +8,7 @@ use App\Exceptions\ApprovalException;
 use App\Exceptions\BusinessRuleException;
 use App\Exceptions\DocumentEmailException;
 use App\Exceptions\InvalidStateException;
+use App\Http\Controllers\Api\Concerns\HandlesApiResponses;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\PurchaseOrder\ReceivePurchaseOrderRequest;
 use App\Http\Requests\Api\PurchaseOrder\StorePurchaseOrderRequest;
@@ -29,6 +30,8 @@ use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
  */
 class PurchaseOrderController extends Controller
 {
+    use HandlesApiResponses;
+
     /**
      * List purchase orders.
      */
@@ -61,7 +64,7 @@ class PurchaseOrderController extends Controller
         $sortDir = strtolower((string) $request->input('sort_dir')) === 'asc' ? 'asc' : 'desc';
         $query->orderBy($sortBy, $sortDir);
 
-        $perPage = min($request->input('per_page', 15), 100);
+        $perPage = $this->perPage($request);
         $purchaseOrders = $query->paginate($perPage);
 
         return PurchaseOrderResource::collection($purchaseOrders);
