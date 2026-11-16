@@ -510,7 +510,9 @@ final class ProductsImport extends ProductSpreadsheetValueBinder implements Skip
         } else {
             // Create new product; its stock is an opening ledger row.
             $product = Product::create($productData);
-            app(ProductService::class)->recordOpeningStock($product, $this->actor);
+            // The row's location was authorized above against the warehouse
+            // ids memoized for this import, so don't look them up again.
+            app(ProductService::class)->recordOpeningStock($product, $this->actor, locationAuthorized: $this->actingUser() !== null);
             $created = true;
         }
 
