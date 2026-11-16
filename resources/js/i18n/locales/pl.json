@@ -242,6 +242,10 @@
     }
   },
   "common": {
+    "sortBy": "Sortuj wed?ug",
+    "sortDirection": "Kierunek",
+    "ascending": "Rosn?co",
+    "descending": "Malej?co",
     "pagination": "Stronicowanie",
     "save": "Zapisz",
     "saveChanges": "Zapisz zmiany",
@@ -4011,6 +4015,7 @@
     "rateHint": "Opcjonalnie: wpisz stawkę podatku, aby obliczyć kwotę od sumy częściowej po rabatach. Zapisywana jest tylko kwota."
   },
   "warehouseStock": {
+    "onHand": "Stan fizyczny",
     "title": "Stan według magazynu",
     "includeZero": "Uwzględnij stany zerowe"
   },

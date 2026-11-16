@@ -113,6 +113,10 @@
     "showing": "Showing {from} to {to} of {total}"
   },
   "common": {
+    "sortBy": "Sort by",
+    "sortDirection": "Direction",
+    "ascending": "Ascending",
+    "descending": "Descending",
     "pagination": "Pagination",
     "save": "Save",
     "saveChanges": "Save Changes",
@@ -4011,6 +4015,7 @@
     "rateHint": "Optional: enter a tax rate to calculate the amount from the subtotal after discounts. Only the amount is saved."
   },
   "warehouseStock": {
+    "onHand": "On hand",
     "title": "Stock by warehouse",
     "includeZero": "Include zero balances"
   },

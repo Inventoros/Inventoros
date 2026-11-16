@@ -242,6 +242,10 @@
     }
   },
   "common": {
+    "sortBy": "Sortieren nach",
+    "sortDirection": "Richtung",
+    "ascending": "Aufsteigend",
+    "descending": "Absteigend",
     "pagination": "Seitennavigation",
     "save": "Speichern",
     "saveChanges": "Änderungen speichern",
@@ -4011,6 +4015,7 @@
     "rateHint": "Optional: Geben Sie einen Steuersatz ein, um den Betrag aus der Zwischensumme nach Rabatten zu berechnen. Gespeichert wird nur der Betrag."
   },
   "warehouseStock": {
+    "onHand": "Physischer Bestand",
     "title": "Bestand nach Lager",
     "includeZero": "Nullbestände anzeigen"
   },

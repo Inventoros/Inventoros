@@ -242,6 +242,10 @@
     }
   },
   "common": {
+    "sortBy": "Trier par",
+    "sortDirection": "Sens",
+    "ascending": "Croissant",
+    "descending": "D?croissant",
     "pagination": "Pagination",
     "save": "Enregistrer",
     "saveChanges": "Enregistrer les modifications",
@@ -4011,6 +4015,7 @@
     "rateHint": "Facultatif : saisissez un taux de taxe pour calculer le montant à partir du sous-total après remises. Seul le montant est enregistré."
   },
   "warehouseStock": {
+    "onHand": "Stock physique",
     "title": "Stock par entrepôt",
     "includeZero": "Inclure les stocks nuls"
   },

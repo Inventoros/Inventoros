@@ -242,6 +242,10 @@
     }
   },
   "common": {
+    "sortBy": "Ordina per",
+    "sortDirection": "Direzione",
+    "ascending": "Crescente",
+    "descending": "Decrescente",
     "pagination": "Paginazione",
     "save": "Salva",
     "saveChanges": "Salva modifiche",
@@ -4011,6 +4015,7 @@
     "rateHint": "Facoltativo: inserisci un'aliquota per calcolare l'importo dal subtotale dopo gli sconti. Viene salvato solo l'importo."
   },
   "warehouseStock": {
+    "onHand": "Scorte fisiche",
     "title": "Scorte per magazzino",
     "includeZero": "Includi saldi a zero"
   },

@@ -242,6 +242,10 @@
     }
   },
   "common": {
+    "sortBy": "S?ralama ?l??t?",
+    "sortDirection": "Y?n",
+    "ascending": "Artan",
+    "descending": "Azalan",
     "pagination": "Sayfalama",
     "save": "Kaydet",
     "saveChanges": "Değişiklikleri Kaydet",
@@ -4011,6 +4015,7 @@
     "rateHint": "İsteğe bağlı: tutarı indirimlerden sonraki ara toplamdan hesaplamak için bir vergi oranı girin. Yalnızca tutar kaydedilir."
   },
   "warehouseStock": {
+    "onHand": "Fiziksel stok",
     "title": "Depoya göre stok",
     "includeZero": "Sıfır bakiyeleri dahil et"
   },
