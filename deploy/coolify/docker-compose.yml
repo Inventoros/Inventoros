@@ -40,6 +40,7 @@ services:
       - MAIL_PASSWORD=${MAIL_PASSWORD:-}
       - MAIL_FROM_ADDRESS=${MAIL_FROM_ADDRESS:-inventory@example.com}
       - MAIL_FROM_NAME=${MAIL_FROM_NAME:-Inventoros}
+      - INVENTOROS_SMTP_ALLOWED_HOSTS=${INVENTOROS_SMTP_ALLOWED_HOSTS:-}
       - RUN_MIGRATIONS=true
     volumes:
       - inventoros-storage:/app/storage
@@ -83,6 +84,7 @@ services:
       - MAIL_PASSWORD=${MAIL_PASSWORD:-}
       - MAIL_FROM_ADDRESS=${MAIL_FROM_ADDRESS:-inventory@example.com}
       - MAIL_FROM_NAME=${MAIL_FROM_NAME:-Inventoros}
+      - INVENTOROS_SMTP_ALLOWED_HOSTS=${INVENTOROS_SMTP_ALLOWED_HOSTS:-}
       - RUN_MIGRATIONS=false
     volumes:
       - inventoros-storage:/app/storage
@@ -121,6 +123,7 @@ services:
       - MAIL_PASSWORD=${MAIL_PASSWORD:-}
       - MAIL_FROM_ADDRESS=${MAIL_FROM_ADDRESS:-inventory@example.com}
       - MAIL_FROM_NAME=${MAIL_FROM_NAME:-Inventoros}
+      - INVENTOROS_SMTP_ALLOWED_HOSTS=${INVENTOROS_SMTP_ALLOWED_HOSTS:-}
       - RUN_MIGRATIONS=false
     volumes:
       - inventoros-storage:/app/storage

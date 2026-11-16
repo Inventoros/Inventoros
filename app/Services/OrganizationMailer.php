@@ -4,9 +4,13 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Support\PluginAdministration;
+use App\Support\PublicHostGuard;
+use App\Support\UnresolvedHostException;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use RuntimeException;
 
 /**
  * Resolves the mailer an organization's email goes out through.
@@ -29,13 +33,20 @@ final class OrganizationMailer
 {
     public const PREFIX = 'organization_';
 
+    /** smtpHostRefusal(): the host resolves to a non-public address. */
+    public const REFUSED_NOT_PUBLIC = 'not_public';
+
+    /** smtpHostRefusal(): the host has no A or AAAA record. */
+    public const REFUSED_UNRESOLVED = 'unresolved';
+
     /**
      * The mailer name for this organization, or null for the system mailer.
      */
     public static function for(int $organizationId): ?string
     {
         try {
-            $config = self::mailerConfig(SettingsService::getEmailConfig($organizationId));
+            $settings = SettingsService::getEmailConfig($organizationId);
+            $config = self::mailerConfig($settings);
         } catch (\Throwable $e) {
             Log::warning('Could not load organization mail settings; using the system mailer', [
                 'organization_id' => $organizationId,
@@ -49,12 +60,72 @@ final class OrganizationMailer
             return null;
         }
 
+        // Checked again before every connection: the host may have been
+        // stored before this check existed, or its DNS may have changed.
+        if (($settings['provider'] ?? null) === 'smtp') {
+            $host = (string) $config['host'];
+            $refusal = self::smtpHostRefusal($organizationId, $host);
+
+            if ($refusal !== null) {
+                // Error level: this organization's mail is not being sent.
+                // `php artisan inventoros:check-smtp-hosts` lists them all.
+                Log::error('Organization SMTP host refused; its mail is not sent', [
+                    'organization_id' => $organizationId,
+                    'host' => $host,
+                    'reason' => $refusal,
+                ]);
+
+                throw new RuntimeException('The organization SMTP host is not allowed.');
+            }
+        }
+
         $name = self::PREFIX.$organizationId;
 
         Config::set("mail.mailers.{$name}", $config);
         Mail::purge($name);
 
         return $name;
+    }
+
+    /**
+     * Whether this organization may send through this SMTP host.
+     */
+    public static function smtpHostAllowed(int $organizationId, string $host): bool
+    {
+        return self::smtpHostRefusal($organizationId, $host) === null;
+    }
+
+    /**
+     * Why this organization may not send through this SMTP host
+     * (REFUSED_NOT_PUBLIC or REFUSED_UNRESOLVED), or null when it may.
+     *
+     * The app server opens the connection, so a tenant must not be able to
+     * point it at loopback, private or metadata addresses. The administrator
+     * organization (INVENTOROS_PLUGIN_ADMIN_ORG, else the lowest organization
+     * id; the only one on a single-tenant install) may use any host, such as
+     * a local relay. Other organizations need a host that resolves only to
+     * public addresses, or one listed in mail.organization_smtp_allowed_hosts.
+     */
+    public static function smtpHostRefusal(int $organizationId, string $host): ?string
+    {
+        if ($organizationId === PluginAdministration::organizationId()) {
+            return null;
+        }
+
+        $allowed = array_map('strtolower', (array) config('mail.organization_smtp_allowed_hosts', []));
+        if (in_array(strtolower(trim($host)), $allowed, true)) {
+            return null;
+        }
+
+        try {
+            PublicHostGuard::assertPublicHost($host);
+        } catch (UnresolvedHostException) {
+            return self::REFUSED_UNRESOLVED;
+        } catch (RuntimeException) {
+            return self::REFUSED_NOT_PUBLIC;
+        }
+
+        return null;
     }
 
     /**

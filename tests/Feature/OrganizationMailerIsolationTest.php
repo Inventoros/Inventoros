@@ -15,6 +15,7 @@ use App\Models\Customer;
 use App\Models\CustomerContact;
 use App\Models\Setting;
 use App\Models\System\SystemSetting;
+use App\Support\PublicHostResolver;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Mail\Mailable;
 use Illuminate\Support\Facades\Config;
@@ -49,6 +50,10 @@ class OrganizationMailerIsolationTest extends TestCase
         Config::set('mail.from.address', 'noreply@system.test');
         Config::set('mail.from.name', 'System');
         app('mail.manager')->forgetMailers();
+
+        // The second organization's SMTP host is checked against DNS before
+        // each connection; answer with a public address, never a real lookup.
+        $this->mock(PublicHostResolver::class)->shouldReceive('resolve')->andReturn(['8.8.8.8']);
 
         $this->orgA = $this->orgWithSmtp('Acme', 'smtp.acme.test', 'store@acme.test');
         $this->orgB = $this->orgWithSmtp('Globex', 'smtp.globex.test', 'shop@globex.test');

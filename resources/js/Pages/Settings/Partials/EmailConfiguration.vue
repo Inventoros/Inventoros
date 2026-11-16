@@ -137,6 +137,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                             :class="fieldInput"
                             placeholder="smtp.gmail.com"
                         />
+                        <p v-if="form.errors['smtp.host']" :class="fieldError">{{ form.errors['smtp.host'] }}</p>
                     </div>
 
                     <div>

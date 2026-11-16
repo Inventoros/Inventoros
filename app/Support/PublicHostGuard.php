@@ -25,6 +25,22 @@ final class PublicHostGuard
     }
 
     /**
+     * Throw unless a bare host (no scheme, port or path), such as an SMTP
+     * server, is a hostname or canonical IP whose every address is public.
+     * A host that does not resolve fails closed (UnresolvedHostException):
+     * a mail server nobody can look up is never usable.
+     */
+    public static function assertPublicHost(string $host): void
+    {
+        $host = strtolower(trim($host));
+        if (str_starts_with($host, '[') && str_ends_with($host, ']')) {
+            $host = substr($host, 1, -1);
+        }
+
+        self::checkedAddresses($host, true);
+    }
+
+    /**
      * Require a direct cURL connection to this exact, checked DNS answer.
      * The URL remains unchanged, preserving Host, TLS SNI and certificate checks.
      *
@@ -62,6 +78,18 @@ final class PublicHostGuard
         if (! in_array($scheme, ['http', 'https'], true)) {
             throw new RuntimeException('Webhook URL must use HTTP or HTTPS');
         }
+
+        $ips = self::checkedAddresses($host, $requireDns);
+
+        return ['host' => $host, 'port' => $parts['port'] ?? ($scheme === 'https' ? 443 : 80), 'ips' => $ips];
+    }
+
+    /** @return array<int, string> */
+    private static function checkedAddresses(string $host, bool $requireDns): array
+    {
+        if ($host === '') {
+            throw new RuntimeException('Webhook URL has no resolvable host');
+        }
         if (! filter_var($host, FILTER_VALIDATE_IP)) {
             // A trailing dot names the same host, but cURL would not match
             // it to the pinned DNS answer and would resolve it again.
@@ -84,7 +112,7 @@ final class PublicHostGuard
         // Validation-only callers retain their local-development behavior;
         // actual delivery fails closed in every environment.
         if ($ips === [] && $requireDns) {
-            throw new RuntimeException(
+            throw new UnresolvedHostException(
                 "Webhook URL host '{$host}' did not resolve to any address"
             );
         }
@@ -97,7 +125,7 @@ final class PublicHostGuard
             }
         }
 
-        return ['host' => $host, 'port' => $parts['port'] ?? ($scheme === 'https' ? 443 : 80), 'ips' => $ips];
+        return $ips;
     }
 
     /**

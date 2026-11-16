@@ -122,7 +122,7 @@ Route::prefix('settings')->name('settings.')->group(function () {
     Route::middleware('permission:manage_organization')->group(function () {
         Route::get('/email', [SettingsController::class, 'email'])->name('email.index');
         Route::post('/email', [SettingsController::class, 'updateEmail'])->name('email.update');
-        Route::post('/email/test', [SettingsController::class, 'testEmail'])->name('email.test');
+        Route::post('/email/test', [SettingsController::class, 'testEmail'])->middleware('throttle:6,1')->name('email.test');
 
         // Shipping (EasyPost credentials, ship-from defaults)
         Route::get('/shipping', [ShippingSettingsController::class, 'index'])->name('shipping.index');
