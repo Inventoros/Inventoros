@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Api;
 
+use App\Enums\Permission;
 use App\Models\Auth\Organization;
 use App\Models\Customer;
 use App\Models\Role;
 use App\Models\SavedReport;
 use App\Models\User;
+use App\Support\RoleAssignmentGuard;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Tests\Feature\Api\Concerns\BuildsApiFixtures;
@@ -180,6 +182,62 @@ class ScopedTokenServiceAuthorizationTest extends TestCase
             ->assertCreated();
 
         $this->assertDatabaseHas('permission_sets', ['name' => 'Narrow', 'organization_id' => $this->org->id]);
+    }
+
+    public function test_a_token_granted_every_permission_counts_as_full_access(): void
+    {
+        // Settings > API tokens has no `*` option: "select all" grants the
+        // full permission list, which must keep administrator management.
+        $otherAdmin = $this->makeAdmin($this->org);
+        $token = $this->token(Permission::values());
+
+        $this->withToken($token)
+            ->postJson('/api/v1/users', $this->newUser(['email' => 'second@acme.test', 'role' => 'admin']))
+            ->assertCreated()
+            ->assertJsonPath('data.role', 'admin');
+
+        $this->withToken($token)
+            ->putJson("/api/v1/users/{$otherAdmin->id}", [
+                'name' => $otherAdmin->name,
+                'email' => $otherAdmin->email,
+                'role' => 'admin',
+                'password' => 'N3w!Passw0rd#Taken',
+                'password_confirmation' => 'N3w!Passw0rd#Taken',
+            ])
+            ->assertOk();
+
+        $this->withToken($token)
+            ->postJson('/api/v1/permission-sets', ['name' => 'Everything', 'permissions' => ['delete_users', 'manage_organization']])
+            ->assertCreated();
+    }
+
+    public function test_a_token_missing_one_permission_is_still_scoped(): void
+    {
+        $abilities = array_values(array_diff(Permission::values(), ['delete_products']));
+
+        $this->withToken($this->token($abilities))
+            ->postJson('/api/v1/users', $this->newUser(['email' => 'minted@acme.test', 'role' => 'admin']))
+            ->assertForbidden();
+
+        $this->assertDatabaseMissing('users', ['email' => 'minted@acme.test']);
+    }
+
+    public function test_the_refusal_to_assign_says_the_token_is_scoped(): void
+    {
+        $this->withToken($this->token(['create_users']))
+            ->postJson('/api/v1/users', $this->newUser(['role' => 'admin']))
+            ->assertForbidden()
+            ->assertJsonPath('message', RoleAssignmentGuard::SCOPED_TOKEN_MESSAGE);
+    }
+
+    public function test_the_refusal_to_manage_an_administrator_says_the_token_is_scoped(): void
+    {
+        $otherAdmin = $this->makeAdmin($this->org);
+
+        $this->withToken($this->token(['edit_users']))
+            ->putJson("/api/v1/users/{$otherAdmin->id}", ['name' => 'X', 'email' => $otherAdmin->email, 'role' => 'admin'])
+            ->assertForbidden()
+            ->assertJsonPath('message', RoleAssignmentGuard::SCOPED_TOKEN_MESSAGE);
     }
 
     private function customerReport(): SavedReport

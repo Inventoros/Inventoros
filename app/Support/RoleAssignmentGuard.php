@@ -28,6 +28,10 @@ use App\Services\Organizations\OrganizationMembershipService;
  */
 final class RoleAssignmentGuard
 {
+    public const SCOPED_TOKEN_MESSAGE = 'This API token is scoped; a full-access token is required to manage administrators or managers.';
+
+    public const SCOPED_PERMISSION_MESSAGE = 'This API token is scoped; it cannot grant or manage permissions it does not include.';
+
     /**
      * The reason the actor may not assign these roles, or null when allowed.
      *
@@ -47,6 +51,9 @@ final class RoleAssignmentGuard
             return null;
         }
 
+        // Past this point an administrator is acting through a scoped token.
+        $scopedAdmin = $actor->isAdmin();
+
         // isAdmin() is derived from the base `role` column (role === 'admin'),
         // so the base role is the primary escalation vector. A non-admin may
         // only assign the plain `member` base role (never admin/manager), and
@@ -54,17 +61,19 @@ final class RoleAssignmentGuard
         // early return on empty role_ids once let a delegated user-manager
         // mint a full admin with `role: admin` and no role_ids.
         if ($baseRole !== null && $baseRole !== 'member') {
-            return 'You do not have permission to assign this role.';
+            return $scopedAdmin ? self::SCOPED_TOKEN_MESSAGE : 'You do not have permission to assign this role.';
         }
 
         foreach ($roles as $role) {
             if (in_array($role->slug, ['system-administrator', 'system-manager'], true)) {
-                return 'You do not have permission to assign this role.';
+                return $scopedAdmin ? self::SCOPED_TOKEN_MESSAGE : 'You do not have permission to assign this role.';
             }
 
             foreach ($role->getAllPermissions() as $permission) {
                 if (! self::actorHolds($actor, $permission)) {
-                    return 'You cannot assign a role with more permissions than you hold.';
+                    return $scopedAdmin
+                        ? self::SCOPED_PERMISSION_MESSAGE
+                        : 'You cannot assign a role with more permissions than you hold.';
                 }
             }
         }
@@ -80,13 +89,14 @@ final class RoleAssignmentGuard
      * acting through it is treated like any other delegated user: route
      * middleware checks only the route's own permission, and without this a
      * narrowly scoped token could mint or take over an administrator.
-     * Session auth, a token with no declared scope and a `*` token stay
-     * unrestricted (see CheckApiPermission::tokenAllows()).
+     * Session auth, a token with no declared scope, a `*` token and a token
+     * declaring every permission stay unrestricted (see
+     * CheckApiPermission::grantsFullAccess()).
      */
     private static function isUnrestrictedAdmin(User $actor): bool
     {
         return $actor->isAdmin()
-            && CheckApiPermission::declaredAbilities($actor->currentAccessToken()) === null;
+            && CheckApiPermission::grantsFullAccess($actor->currentAccessToken());
     }
 
     /**
@@ -120,21 +130,26 @@ final class RoleAssignmentGuard
     {
         $outside = self::outsideMembers($target, $actor->organization_id === null ? null : (int) $actor->organization_id);
 
-        $unrestrictedToken = CheckApiPermission::declaredAbilities($actor->currentAccessToken()) === null;
+        $fullAccessToken = CheckApiPermission::grantsFullAccess($actor->currentAccessToken());
 
         if (! self::isUnrestrictedAdmin($actor)) {
+            // An administrator here is acting through a scoped token.
+            $scopedAdmin = $actor->isAdmin();
+
             foreach (array_merge([$target], array_values($outside)) as $member) {
                 if ($member->isAdmin()) {
-                    return 'You do not have permission to manage an administrator.';
+                    return $scopedAdmin ? self::SCOPED_TOKEN_MESSAGE : 'You do not have permission to manage an administrator.';
                 }
 
                 if ($member->role === 'manager' || $member->hasRole('system-manager')) {
-                    return 'You do not have permission to manage a manager.';
+                    return $scopedAdmin ? self::SCOPED_TOKEN_MESSAGE : 'You do not have permission to manage a manager.';
                 }
 
                 foreach ($member->getAllPermissions() as $permission) {
                     if (! self::actorHolds($actor, $permission)) {
-                        return 'You cannot manage a user who holds permissions you do not.';
+                        return $scopedAdmin
+                            ? self::SCOPED_PERMISSION_MESSAGE
+                            : 'You cannot manage a user who holds permissions you do not.';
                     }
                 }
             }
@@ -144,7 +159,11 @@ final class RoleAssignmentGuard
             foreach (array_keys($outside) as $organizationId) {
                 $actorThere = self::memberIn($actor, $organizationId);
 
-                if ($actorThere === null || ! $actorThere->isAdmin() || ! $unrestrictedToken) {
+                if ($actorThere !== null && $actorThere->isAdmin() && ! $fullAccessToken) {
+                    return self::SCOPED_TOKEN_MESSAGE;
+                }
+
+                if ($actorThere === null || ! $actorThere->isAdmin()) {
                     return 'This user also works in other organizations. Only an administrator of each of them can change their email or password or delete the account.';
                 }
             }

@@ -212,9 +212,10 @@ class PermissionSetController extends Controller
     {
         // An administrator acting through a token scoped to specific abilities
         // is limited to what the token allows, like any delegated user.
-        $declared = CheckApiPermission::declaredAbilities($actor->currentAccessToken());
+        $token = $actor->currentAccessToken();
+        $declared = CheckApiPermission::declaredAbilities($token);
 
-        if (($actor->isAdmin() && $declared === null) || $requested === []) {
+        if (($actor->isAdmin() && CheckApiPermission::grantsFullAccess($token)) || $requested === []) {
             return null;
         }
 
