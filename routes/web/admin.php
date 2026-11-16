@@ -14,6 +14,7 @@ use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\StorageSettingsController;
 use App\Http\Controllers\Admin\UpdateController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\ExchangeRateSettingsController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\ShippingSettingsController;
 use App\Http\Controllers\WebhookController;
@@ -116,6 +117,16 @@ Route::prefix('settings')->name('settings.')->group(function () {
         Route::get('/', [ApiTokenController::class, 'index'])->name('index');
         Route::post('/', [ApiTokenController::class, 'store'])->name('store');
         Route::delete('/{tokenId}', [ApiTokenController::class, 'destroy'])->whereNumber('tokenId')->name('destroy');
+    });
+
+    // Exchange rates (provider, sync, manual rates) for purchase orders in
+    // a supplier's currency.
+    Route::prefix('exchange-rates')->name('exchange-rates.')->middleware('permission:manage_exchange_rates')->group(function () {
+        Route::get('/', [ExchangeRateSettingsController::class, 'index'])->name('index');
+        Route::patch('/', [ExchangeRateSettingsController::class, 'update'])->name('update');
+        Route::post('/sync', [ExchangeRateSettingsController::class, 'sync'])->middleware('throttle:6,1')->name('sync');
+        Route::post('/rates', [ExchangeRateSettingsController::class, 'storeRate'])->name('rates.store');
+        Route::delete('/rates/{rate}', [ExchangeRateSettingsController::class, 'destroyRate'])->whereNumber('rate')->name('rates.destroy');
     });
 
     // Email Settings (admin only)

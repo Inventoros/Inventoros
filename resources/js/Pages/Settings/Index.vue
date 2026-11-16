@@ -16,6 +16,7 @@ import {
     Mail,
     Webhook,
     Truck,
+    ArrowLeftRight,
     RefreshCw,
     HardDrive,
     ChevronRight,
@@ -89,6 +90,13 @@ const allSections = computed(() => ([
         title: t('shipping.settings.title'),
         description: t('shipping.settings.description'),
         perm: 'manage_organization',
+    },
+    {
+        href: route('settings.exchange-rates.index'),
+        icon: ArrowLeftRight,
+        title: t('exchangeRates.settings.title'),
+        description: t('exchangeRates.settings.hubDescription'),
+        perm: 'manage_exchange_rates',
     },
     {
         href: route('webhooks.index'),

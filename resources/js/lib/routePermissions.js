@@ -163,6 +163,9 @@ export const ROUTE_PERMISSIONS = {
     "purchase-orders.edit": [
         "edit_purchase_orders"
     ],
+    "purchase-orders.exchange-rate": [
+        "create_purchase_orders|edit_purchase_orders"
+    ],
     "purchase-orders.index": [
         "view_purchase_orders"
     ],
@@ -265,6 +268,9 @@ export const ROUTE_PERMISSIONS = {
     ],
     "settings.email.index": [
         "manage_organization"
+    ],
+    "settings.exchange-rates.index": [
+        "manage_exchange_rates"
     ],
     "settings.organization.index": [
         "view_settings"
