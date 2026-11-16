@@ -120,6 +120,7 @@
     "The Administrator role cannot be edited.": "The Administrator role cannot be edited.",
     "System roles cannot be deleted.": "System roles cannot be deleted.",
     "Cannot delete a role that is assigned to users. Please reassign users first.": "Cannot delete a role that is assigned to users. Please reassign users first.",
+    "You cannot delete a role with permissions you do not hold.": "You cannot delete a role with permissions you do not hold.",
     "You cannot delete your own account.": "You cannot delete your own account.",
     "Cannot delete the last administrator.": "Cannot delete the last administrator.",
     "Please start the setup process again.": "Please start the setup process again.",
@@ -149,5 +150,7 @@
     "Payment recorded.": "Payment recorded.",
     "Cannot delete a supplier with open purchase orders.": "Cannot delete a supplier with open purchase orders.",
     "Stock adjustments created for discrepancies: :count.": "Stock adjustments created for discrepancies: :count.",
-    "No discrepancies found.": "No discrepancies found."
+    "No discrepancies found.": "No discrepancies found.",
+    "If that email belongs to an account, we have emailed a password reset link.": "If that email belongs to an account, we have emailed a password reset link.",
+    "This code was already used; wait for the next one.": "This code was already used; wait for the next one."
 }

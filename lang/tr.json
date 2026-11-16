@@ -120,6 +120,7 @@
     "The Administrator role cannot be edited.": "Yönetici rolü düzenlenemez.",
     "System roles cannot be deleted.": "Sistem rolleri silinemez.",
     "Cannot delete a role that is assigned to users. Please reassign users first.": "Kullanıcılara atanmış bir rol silinemez. Önce kullanıcıların rollerini yeniden atayın.",
+    "You cannot delete a role with permissions you do not hold.": "Sahip olmadığınız izinleri içeren bir rolü silemezsiniz.",
     "You cannot delete your own account.": "Kendi hesabınızı silemezsiniz.",
     "Cannot delete the last administrator.": "Son yönetici silinemez.",
     "Please start the setup process again.": "Lütfen kurulum işlemini yeniden başlatın.",
@@ -149,5 +150,7 @@
     "Payment recorded.": "Ödeme kaydedildi.",
     "Cannot delete a supplier with open purchase orders.": "Açık satın alma siparişleri olan bir tedarikçi silinemez.",
     "Stock adjustments created for discrepancies: :count.": "Farklar için oluşturulan stok düzeltmeleri: :count.",
-    "No discrepancies found.": "Fark bulunamadı."
+    "No discrepancies found.": "Fark bulunamadı.",
+    "If that email belongs to an account, we have emailed a password reset link.": "Bu e-posta bir hesaba aitse, parola sıfırlama bağlantısı gönderdik.",
+    "This code was already used; wait for the next one.": "Bu kod zaten kullanıldı; bir sonrakini bekleyin."
 }

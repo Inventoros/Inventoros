@@ -120,6 +120,7 @@
     "The Administrator role cannot be edited.": "管理者ロールは編集できません。",
     "System roles cannot be deleted.": "システムロールは削除できません。",
     "Cannot delete a role that is assigned to users. Please reassign users first.": "ユーザーに割り当てられているロールは削除できません。先にユーザーのロールを変更してください。",
+    "You cannot delete a role with permissions you do not hold.": "自分が持っていない権限を含むロールは削除できません。",
     "You cannot delete your own account.": "自分のアカウントは削除できません。",
     "Cannot delete the last administrator.": "最後の管理者は削除できません。",
     "Please start the setup process again.": "設定を最初からやり直してください。",
@@ -149,5 +150,7 @@
     "Payment recorded.": "支払いを記録しました。",
     "Cannot delete a supplier with open purchase orders.": "未完了の発注がある仕入先は削除できません。",
     "Stock adjustments created for discrepancies: :count.": "差異に対して作成した在庫調整の件数：:count。",
-    "No discrepancies found.": "差異はありませんでした。"
+    "No discrepancies found.": "差異はありませんでした。",
+    "If that email belongs to an account, we have emailed a password reset link.": "そのメールアドレスのアカウントが存在する場合、パスワード再設定用のリンクを送信しました。",
+    "This code was already used; wait for the next one.": "このコードはすでに使用されています。次のコードをお待ちください。"
 }

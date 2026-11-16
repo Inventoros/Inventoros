@@ -288,7 +288,8 @@ class StockAuditController extends Controller
                 'audit_type' => $validated['audit_type'],
                 'warehouse_location_id' => $validated['warehouse_location_id'] ?? null,
                 'notes' => $validated['notes'] ?? null,
-                'require_variance_approval' => (bool) ($validated['require_variance_approval'] ?? $locked->require_variance_approval),
+                'require_variance_approval' => (bool) ($validated['require_variance_approval'] ?? $locked->require_variance_approval)
+                    || StockAuditService::organizationRequiresReview((int) $locked->organization_id),
             ]);
         }, 3);
 

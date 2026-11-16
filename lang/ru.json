@@ -120,6 +120,7 @@
     "The Administrator role cannot be edited.": "Роль администратора нельзя изменить.",
     "System roles cannot be deleted.": "Системные роли нельзя удалить.",
     "Cannot delete a role that is assigned to users. Please reassign users first.": "Нельзя удалить роль, назначенную пользователям. Сначала назначьте пользователям другие роли.",
+    "You cannot delete a role with permissions you do not hold.": "Вы не можете удалить роль с разрешениями, которых у вас нет.",
     "You cannot delete your own account.": "Вы не можете удалить собственную учётную запись.",
     "Cannot delete the last administrator.": "Нельзя удалить последнего администратора.",
     "Please start the setup process again.": "Начните процесс настройки заново.",
@@ -149,5 +150,7 @@
     "Payment recorded.": "Платёж зарегистрирован.",
     "Cannot delete a supplier with open purchase orders.": "Нельзя удалить поставщика с открытыми заказами на закупку.",
     "Stock adjustments created for discrepancies: :count.": "Корректировки запасов, созданные для расхождений: :count.",
-    "No discrepancies found.": "Расхождений не найдено."
+    "No discrepancies found.": "Расхождений не найдено.",
+    "If that email belongs to an account, we have emailed a password reset link.": "Если этот адрес электронной почты связан с учётной записью, мы отправили ссылку для сброса пароля.",
+    "This code was already used; wait for the next one.": "Этот код уже использован; дождитесь следующего."
 }

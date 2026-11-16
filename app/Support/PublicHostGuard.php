@@ -91,7 +91,10 @@ final class PublicHostGuard
             throw new RuntimeException('Webhook URL has no resolvable host');
         }
         if (! filter_var($host, FILTER_VALIDATE_IP)) {
-            if (! filter_var($host, FILTER_VALIDATE_DOMAIN, FILTER_FLAG_HOSTNAME)
+            // A trailing dot names the same host, but cURL would not match
+            // it to the pinned DNS answer and would resolve it again.
+            if (str_ends_with($host, '.')
+                || ! filter_var($host, FILTER_VALIDATE_DOMAIN, FILTER_FLAG_HOSTNAME)
                 || preg_match('/^(?:0x[0-9a-f]+|[0-9]+)(?:\.(?:0x[0-9a-f]+|[0-9]+))*\.?$/i', $host)
             ) {
                 throw new RuntimeException('Webhook URL host must be a hostname or canonical IP address');
@@ -149,6 +152,19 @@ final class PublicHostGuard
     {
         $binary = @inet_pton($ip);
         if ($binary === false) {
+            return false;
+        }
+
+        // NAT64 addresses reach the IPv4 address they carry through a
+        // translator: judge the well-known prefix 64:ff9b::/96 (RFC 6052) by
+        // its embedded IPv4, and never accept the local-use 64:ff9b:1::/48
+        // (RFC 8215). PHP's global-range filter accepts both. IPv4-mapped
+        // (::ffff:0:0/96) and 6to4 (2002::/16) are already rejected by it.
+        if (strlen($binary) === 16 && str_starts_with($binary, "\x00\x64\xff\x9b")) {
+            if (substr($binary, 4, 8) === str_repeat("\x00", 8)) {
+                return self::isPublicIp((string) inet_ntop(substr($binary, 12)));
+            }
+
             return false;
         }
 

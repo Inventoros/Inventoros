@@ -4,12 +4,15 @@
 #        APP_KEY=base64:...        (echo "base64:$(openssl rand -base64 32)")
 #        APP_URL=https://inventory.example.com   (the address people type)
 #        DB_PASSWORD=a-long-random-password
+#        INVENTOROS_SETUP_TOKEN=another-long-random-value   (unlocks /install)
 #      Optional: APP_PORT=8088 publishes the app on another host port
 #      (default 8080). Change APP_PORT only; the container keeps listening
 #      on 8080 inside, and SERVER_NAME stays as it is.
 #      For direct HTTPS on 80/443, also use docker-compose.https.yml.
 #   2. docker compose -f docker-compose.prod.yml up -d
-#   3. Open APP_URL/install to create the first organization and admin.
+#   3. Open APP_URL/install, enter INVENTOROS_SETUP_TOKEN, and create the
+#      first organization and admin. Without INVENTOROS_SETUP_TOKEN the app
+#      writes a token to storage/app/private/setup-token in the app container.
 #
 # The image is pulled from GHCR (ghcr.io/inventoros/inventoros, published for
 # every release; pin one with INVENTOROS_IMAGE=ghcr.io/inventoros/inventoros:2.0.0).
@@ -44,6 +47,9 @@ x-inventoros: &inventoros
     DB_DATABASE: ${DB_DATABASE:-inventoros}
     DB_USERNAME: ${DB_USERNAME:-inventoros}
     DB_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in .env}
+    # Unlocks the web installer until setup is finished. Empty: a generated
+    # token in storage/app/private/setup-token is used instead.
+    INVENTOROS_SETUP_TOKEN: ${INVENTOROS_SETUP_TOKEN:-}
     SESSION_DRIVER: database
     # "null" (the default) marks the session cookie Secure exactly when the
     # request arrived over https, directly or via a trusted proxy. A forced

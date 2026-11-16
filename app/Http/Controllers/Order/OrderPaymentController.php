@@ -47,9 +47,10 @@ class OrderPaymentController extends Controller
 
         $validated = $request->validate([
             'reason' => ['nullable', 'string', 'max:255'],
+            'allow_overpayment' => ['sometimes', 'boolean'],
         ]);
 
-        $this->payments->void($payment, $request->user(), $validated['reason'] ?? null);
+        $this->payments->void($payment, $request->user(), $validated['reason'] ?? null, $request->boolean('allow_overpayment'));
 
         return redirect()->route('orders.show', $order)
             ->with('success', $payment->isRefund() ? 'Refund voided.' : 'Payment voided.');

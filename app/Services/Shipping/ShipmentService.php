@@ -18,6 +18,8 @@ use App\Models\Warehouse;
 use App\Services\FileStorageService;
 use App\Services\OrderService;
 use App\Services\WarehouseAccessService;
+use App\Support\PublicHostGuard;
+use GuzzleHttp\Handler\CurlHandler;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
@@ -26,6 +28,7 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
+use Psr\Http\Message\ResponseInterface;
 
 /**
  * The single home for shipment state. Every surface (web, REST, MCP, the
@@ -53,6 +56,9 @@ use Illuminate\Support\Facades\Storage;
 final class ShipmentService
 {
     public const LABEL_DISK = 'local';
+
+    /** Largest carrier label file that is downloaded and stored. */
+    public const LABEL_MAX_BYTES = 10 * 1024 * 1024;
 
     public function __construct(
         private readonly OrderService $orders,
@@ -212,8 +218,8 @@ final class ShipmentService
                 'carrier_name' => $label->carrierName,
                 'service' => $label->service,
                 'tracking_number' => $label->trackingNumber,
-                'tracking_url' => $label->trackingUrl ?? TrackingUrls::guess($label->carrierName, $label->trackingNumber),
-                'label_url' => $label->labelUrl,
+                'tracking_url' => $this->httpUrl($label->trackingUrl) ?? TrackingUrls::guess($label->carrierName, $label->trackingNumber),
+                'label_url' => $this->httpUrl($label->labelUrl),
                 'carrier_tracker_id' => $label->carrierTrackerId,
                 'cost' => $label->cost,
                 'currency' => $label->currency,
@@ -405,7 +411,7 @@ final class ShipmentService
     {
         $extra = array_filter([
             'carrier_tracker_id' => $shipment->carrier_tracker_id === null ? $update->carrierTrackerId : null,
-            'tracking_url' => $shipment->tracking_url === null ? $update->trackingUrl : null,
+            'tracking_url' => $shipment->tracking_url === null ? $this->httpUrl($update->trackingUrl) : null,
         ]);
 
         if ($extra !== []) {
@@ -595,10 +601,30 @@ final class ShipmentService
         }
 
         try {
-            $response = Http::timeout(30)->get($shipment->label_url);
+            // The URL comes from the carrier: only public hosts, pinned to the
+            // checked DNS answer, no redirects, and a bounded body.
+            $tooLarge = fn () => new \RuntimeException('The shipping label exceeds the size limit.');
+            $response = Http::withOptions(PublicHostGuard::connectionOptions($shipment->label_url) + [
+                'on_headers' => function (ResponseInterface $headers) use ($tooLarge): void {
+                    if ((int) $headers->getHeaderLine('Content-Length') > self::LABEL_MAX_BYTES) {
+                        throw $tooLarge();
+                    }
+                },
+                'progress' => function ($expected, int|float $downloaded) use ($tooLarge): void {
+                    if ($downloaded > self::LABEL_MAX_BYTES) {
+                        throw $tooLarge();
+                    }
+                },
+            ])
+                ->setHandler(new CurlHandler)
+                ->timeout(30)
+                ->get($shipment->label_url);
 
             if (! $response->successful() || $response->body() === '') {
                 throw new \RuntimeException("Label download returned HTTP {$response->status()}.");
+            }
+            if (strlen($response->body()) > self::LABEL_MAX_BYTES) {
+                throw $tooLarge();
             }
 
             $extension = str_contains((string) $response->header('Content-Type'), 'pdf') || str_ends_with(strtolower(parse_url($shipment->label_url, PHP_URL_PATH) ?? ''), '.pdf')
@@ -768,6 +794,20 @@ final class ShipmentService
         }
 
         return array_filter($normalised) === [] ? null : $normalised;
+    }
+
+    /**
+     * A carrier-supplied link, kept only when it is an absolute http(s) URL.
+     */
+    private function httpUrl(?string $url): ?string
+    {
+        $url = $this->clean($url);
+
+        if ($url === null || strlen($url) > 2048 || ! parse_url($url, PHP_URL_HOST)) {
+            return null;
+        }
+
+        return in_array(strtolower((string) parse_url($url, PHP_URL_SCHEME)), ['http', 'https'], true) ? $url : null;
     }
 
     private function clean(mixed $value): ?string

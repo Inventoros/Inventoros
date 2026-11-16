@@ -8,7 +8,6 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Password;
-use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -20,6 +19,12 @@ use Inertia\Response;
  */
 class PasswordResetLinkController extends Controller
 {
+    /**
+     * The one answer to every reset request, so the response never reveals
+     * whether an email belongs to an account (mirrors the customer portal).
+     */
+    public const GENERIC_STATUS = 'If that email belongs to an account, we have emailed a password reset link.';
+
     /**
      * Display the password reset link request view.
      *
@@ -37,7 +42,6 @@ class PasswordResetLinkController extends Controller
      *
      * @param Request $request The incoming HTTP request containing email
      * @return RedirectResponse
-     * @throws ValidationException
      */
     public function store(Request $request): RedirectResponse
     {
@@ -45,19 +49,13 @@ class PasswordResetLinkController extends Controller
             'email' => 'required|email',
         ]);
 
-        // We will send the password reset link to this user. Once we have attempted
-        // to send the link, we will examine the response then see the message we
-        // need to show to the user. Finally, we'll send out a proper response.
-        $status = Password::sendResetLink(
+        // Unknown emails and the broker's own per-account throttle (which only
+        // refuses real accounts) get the same answer as a sent link, so the
+        // response cannot be used to find out which emails have accounts.
+        Password::sendResetLink(
             $request->only('email')
         );
 
-        if ($status == Password::RESET_LINK_SENT) {
-            return back()->with('status', __($status));
-        }
-
-        throw ValidationException::withMessages([
-            'email' => [trans($status)],
-        ]);
+        return back()->with('status', __(self::GENERIC_STATUS));
     }
 }

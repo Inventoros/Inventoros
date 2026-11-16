@@ -120,6 +120,7 @@
     "The Administrator role cannot be edited.": "Il ruolo Amministratore non può essere modificato.",
     "System roles cannot be deleted.": "I ruoli di sistema non possono essere eliminati.",
     "Cannot delete a role that is assigned to users. Please reassign users first.": "Non è possibile eliminare un ruolo assegnato a utenti. Riassegnare prima gli utenti.",
+    "You cannot delete a role with permissions you do not hold.": "Non è possibile eliminare un ruolo con autorizzazioni che non si possiedono.",
     "You cannot delete your own account.": "Non è possibile eliminare il proprio account.",
     "Cannot delete the last administrator.": "Non è possibile eliminare l’ultimo amministratore.",
     "Please start the setup process again.": "Riavviare la procedura di configurazione.",
@@ -149,5 +150,7 @@
     "Payment recorded.": "Pagamento registrato.",
     "Cannot delete a supplier with open purchase orders.": "Non è possibile eliminare un fornitore con ordini di acquisto aperti.",
     "Stock adjustments created for discrepancies: :count.": "Rettifiche di magazzino create per le discrepanze: :count.",
-    "No discrepancies found.": "Nessuna discrepanza rilevata."
+    "No discrepancies found.": "Nessuna discrepanza rilevata.",
+    "If that email belongs to an account, we have emailed a password reset link.": "Se questa email appartiene a un account, abbiamo inviato un link per reimpostare la password.",
+    "This code was already used; wait for the next one.": "Questo codice è già stato usato; attendi il prossimo."
 }
