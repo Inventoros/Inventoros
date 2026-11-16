@@ -291,6 +291,36 @@ policy applies. Local testing should use HTTP fakes and an injected
 | Work order | `work_order.completed` |
 | Stock audit | `stock_audit.completed` |
 
+### Verifying deliveries and refusing replays
+
+Every delivery attempt also carries:
+
+| Header | Value |
+| --- | --- |
+| `X-Webhook-Timestamp` | Unix time in seconds when this attempt was signed. Each retry gets a new one. |
+| `X-Webhook-Signature-V2` | Hex HMAC-SHA256 of `{timestamp}.{body}`: the `X-Webhook-Timestamp` value, a literal `.`, then the raw request body, keyed with the webhook's secret. |
+
+`X-Webhook-Signature` is unchanged (HMAC-SHA256 of the body alone), so existing receivers keep working. It does not cover a time, so a captured delivery would still verify if sent again. To refuse replays, verify the V2 signature instead:
+
+1. Read the raw request body before any JSON parsing.
+2. Reject the request if `X-Webhook-Timestamp` is not an integer or is more than 5 minutes from your clock.
+3. Compute `HMAC-SHA256(secret, timestamp + "." + body)` as lowercase hex and compare it with `X-Webhook-Signature-V2` in constant time.
+4. Optionally remember `X-Webhook-Delivery` ids seen within the window and ignore repeats. Retries of one delivery share its id.
+
+```php
+$body = file_get_contents('php://input');
+$timestamp = $_SERVER['HTTP_X_WEBHOOK_TIMESTAMP'] ?? '';
+$signature = $_SERVER['HTTP_X_WEBHOOK_SIGNATURE_V2'] ?? '';
+
+$fresh = ctype_digit($timestamp) && abs(time() - (int) $timestamp) <= 300;
+$expected = hash_hmac('sha256', $timestamp.'.'.$body, $secret);
+
+if (! $fresh || ! hash_equals($expected, $signature)) {
+    http_response_code(401);
+    exit;
+}
+```
+
 ## GraphQL
 
 The same data is available via GraphQL at `POST /graphql` (`GET` is accepted too), powered by `rebing/graphql-laravel`. Authentication is the same Sanctum bearer token. Use any GraphQL client (Apollo, urql, graphql-request, and so on).

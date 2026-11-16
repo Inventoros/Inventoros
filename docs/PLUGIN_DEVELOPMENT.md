@@ -707,7 +707,7 @@ Tools are registered while the plugin is active. On Inventoros versions without 
 
 ## Outbound webhook events
 
-Users subscribe webhooks to events in Settings > Webhooks. A plugin can add its own events and send them through core's delivery, which signs every payload (`X-Webhook-Signature`), retries failures with back-off, refuses private and loopback targets, and logs each delivery:
+Users subscribe webhooks to events in Settings > Webhooks. A plugin can add its own events and send them through core's delivery, which signs every payload (`X-Webhook-Signature`, plus `X-Webhook-Timestamp` and `X-Webhook-Signature-V2`), retries failures with back-off, refuses private and loopback targets, and logs each delivery:
 
 ```php
 register_webhook_event(string $event, string $description, ?string $group = null): void
@@ -760,7 +760,7 @@ add_action('webhook_delivery_attempted', function ($delivery, $webhook, array $r
 });
 ```
 
-- `webhook_delivery_request` may not set `X-Webhook-Signature`, `X-Webhook-Event`, `X-Webhook-Delivery`, `Host`, `Content-Type`, `Content-Length` or other transport headers; header names must be tokens and values may not contain line breaks (anything else is dropped), at most 20 extra headers. A body that is not a string is ignored. The timeout is clamped to 1 to 30 seconds.
+- `webhook_delivery_request` may not set `X-Webhook-Signature`, `X-Webhook-Signature-V2`, `X-Webhook-Timestamp`, `X-Webhook-Event`, `X-Webhook-Delivery`, `Host`, `Content-Type`, `Content-Length` or other transport headers; header names must be tokens and values may not contain line breaks (anything else is dropped), at most 20 extra headers. A body that is not a string is ignored. The timeout is clamped to 1 to 30 seconds.
 - `webhook_delivery_retry_policy` allows at most 10 tries, each back-off between 1 second and 24 hours; malformed values keep the default (5 tries: 1 minute, 5 minutes, 30 minutes, 2 hours, 24 hours).
 - A filter or listener that throws is logged and ignored: the delivery goes ahead as if it were not there.
 
