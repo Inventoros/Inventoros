@@ -55,8 +55,10 @@ final class ProductOpeningStockLocationAccessTest extends TestCase
     public function test_web_cannot_create_a_product_with_opening_stock_in_an_unassigned_warehouse(): void
     {
         $this->actingAs($this->restricted)
+            ->from(route('products.create'))
             ->post(route('products.store'), $this->webPayload('WEB-B', $this->locationB, 5))
-            ->assertForbidden();
+            ->assertRedirect(route('products.create'))
+            ->assertSessionHasErrors('location_id');
 
         $this->assertNoProduct('WEB-B');
         $this->assertSame(50, $this->bin($this->productB, $this->locationB));
@@ -66,7 +68,7 @@ final class ProductOpeningStockLocationAccessTest extends TestCase
     {
         $this->actingAs($this->restricted)
             ->post(route('products.store'), $this->webPayload('WEB-B0', $this->locationB, 0))
-            ->assertForbidden();
+            ->assertSessionHasErrors('location_id');
 
         $this->assertNoProduct('WEB-B0');
     }
@@ -77,7 +79,7 @@ final class ProductOpeningStockLocationAccessTest extends TestCase
         // restricted user's warehouses.
         $this->actingAs($this->restricted)
             ->post(route('products.store'), $this->webPayload('WEB-NONE', null, 5))
-            ->assertForbidden();
+            ->assertSessionHasErrors('location_id');
 
         $this->assertNoProduct('WEB-NONE');
     }
@@ -102,8 +104,8 @@ final class ProductOpeningStockLocationAccessTest extends TestCase
                 'min_stock' => 5, 'location_id' => $location->id,
             ]);
 
-        $update($this->productA, $this->locationB)->assertForbidden();
-        $update($this->productB, $this->locationA)->assertForbidden();
+        $update($this->productA, $this->locationB)->assertSessionHasErrors('location_id');
+        $update($this->productB, $this->locationA)->assertSessionHasErrors('location_id');
 
         $this->assertSame($this->locationA->id, $this->productA->fresh()->location_id);
         $this->assertSame($this->locationB->id, $this->productB->fresh()->location_id);
@@ -136,8 +138,12 @@ final class ProductOpeningStockLocationAccessTest extends TestCase
         Sanctum::actingAs($this->restricted, ['*']);
 
         $this->postJson('/api/v1/products', ['sku' => 'API-B', 'name' => 'Api B', 'price' => 10, 'stock' => 5, 'location_id' => $this->locationB->id])
-            ->assertForbidden();
-        $this->putJson("/api/v1/products/{$this->productA->id}", ['location_id' => $this->locationB->id])->assertForbidden();
+            ->assertUnprocessable()->assertJsonValidationErrors('location_id');
+        $this->putJson("/api/v1/products/{$this->productA->id}", ['location_id' => $this->locationB->id])
+            ->assertUnprocessable()->assertJsonValidationErrors('location_id');
+        $this->postJson('/api/v1/products', ['sku' => 'API-NONE', 'name' => 'Api None', 'price' => 10, 'stock' => 5])
+            ->assertUnprocessable()->assertJsonValidationErrors('location_id');
+        $this->assertNoProduct('API-NONE');
 
         $this->assertNoProduct('API-B');
         $this->assertSame($this->locationA->id, $this->productA->fresh()->location_id);
