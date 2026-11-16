@@ -261,14 +261,6 @@ async function orderToShipFlow(page) {
     await pause(2800);
 }
 
-/** The full text of the <option> whose label starts with the product name. */
-async function optionLabel(select, name) {
-    const labels = await select.locator('option').allTextContents();
-    const match = labels.map((l) => l.trim()).find((l) => l.startsWith(name));
-    if (!match) throw new Error(`No product option for ${name}`);
-    return match;
-}
-
 const FLOWS = {
     'receive-stock': { start: '/dashboard', run: receiveStockFlow },
     'order-to-ship': { start: '/dashboard', run: orderToShipFlow },
