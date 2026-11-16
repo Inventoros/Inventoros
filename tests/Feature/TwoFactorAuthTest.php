@@ -76,6 +76,7 @@ class TwoFactorAuthTest extends TestCase
             ->withSession(['two_factor_secret' => $secret])
             ->post(route('two-factor.enable'), [
                 'code' => $google2fa->getCurrentOtp($secret),
+                'current_password' => 'password',
             ]);
 
         $response->assertRedirect(route('settings.account.index'));
@@ -95,6 +96,7 @@ class TwoFactorAuthTest extends TestCase
             ->withSession(['two_factor_secret' => $secret])
             ->post(route('two-factor.enable'), [
                 'code' => '000000',
+                'current_password' => 'password',
             ]);
 
         $response->assertSessionHasErrors('code');
@@ -331,6 +333,7 @@ class TwoFactorAuthTest extends TestCase
             ->withSession(['two_factor_secret' => $secret])
             ->post(route('two-factor.enable'), [
                 'code' => $google2fa->getCurrentOtp($secret),
+                'current_password' => 'password',
             ]);
 
         $this->user->refresh();
@@ -389,7 +392,7 @@ class TwoFactorAuthTest extends TestCase
         $this->actingAs($this->user)->withSession([
             'two_factor_verified' => $this->user->getKey(), 'two_factor_secret' => $replacement,
             'two_factor_recovery_codes' => ['attacker-code'],
-        ])->post(route('two-factor.enable'), ['code' => $google2fa->getCurrentOtp($replacement)])
+        ])->post(route('two-factor.enable'), ['code' => $google2fa->getCurrentOtp($replacement), 'current_password' => 'password'])
             ->assertSessionHasErrors('code');
         $this->assertSame($original, $this->user->fresh()->only(['two_factor_secret', 'two_factor_recovery_codes']));
     }
@@ -404,7 +407,7 @@ class TwoFactorAuthTest extends TestCase
         $replacement = $google2fa->generateSecretKey();
         $this->assertFalse($stale->two_factor_enabled);
         $this->actingAs($stale)->withSession(['two_factor_secret' => $replacement])
-            ->post(route('two-factor.enable'), ['code' => $google2fa->getCurrentOtp($replacement)])
+            ->post(route('two-factor.enable'), ['code' => $google2fa->getCurrentOtp($replacement), 'current_password' => 'password'])
             ->assertSessionHasErrors('code');
         $this->assertSame($original, $this->user->fresh()->two_factor_secret);
     }
@@ -418,7 +421,7 @@ class TwoFactorAuthTest extends TestCase
             ->assertSessionHasNoErrors()->assertRedirect(route('settings.account.index'));
         $this->get(route('two-factor.setup'))->assertOk();
         $secret = session('two_factor_secret');
-        $this->post(route('two-factor.enable'), ['code' => (new Google2FA)->getCurrentOtp($secret)])
+        $this->post(route('two-factor.enable'), ['code' => (new Google2FA)->getCurrentOtp($secret), 'current_password' => 'password'])
             ->assertSessionHasNoErrors()->assertRedirect(route('settings.account.index'));
         $this->assertTrue($this->user->fresh()->two_factor_enabled);
         $this->assertNotSame($original, $this->user->fresh()->two_factor_secret);

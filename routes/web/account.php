@@ -58,7 +58,10 @@ Route::prefix('import-export')->name('import-export.')->group(function () {
     Route::get('/export-users', [ImportExportController::class, 'exportUsers'])->middleware(['permission:export_data', 'permission:view_users'])->name('export-users');
     Route::get('/downloads/{dataExport}', [ImportExportController::class, 'download'])->middleware('permission:export_data')->name('download');
     Route::get('/download-template', [ImportExportController::class, 'downloadTemplate'])->middleware('permission:import_data')->name('download-template');
-    Route::post('/import-products', [ImportExportController::class, 'importProducts'])->middleware('permission:import_data')->name('import-products');
+    // Product import creates and updates products, so it needs a product
+    // permission too; each row is held to the specific one (and to
+    // manage_stock for a stock change) by ProductsImport.
+    Route::post('/import-products', [ImportExportController::class, 'importProducts'])->middleware(['permission:import_data', 'permission:create_products|edit_products'])->name('import-products');
     // Order import creates orders (and customers), so it needs create_orders too.
     Route::get('/download-order-template', [ImportExportController::class, 'downloadOrderTemplate'])->middleware(['permission:import_data', 'permission:create_orders'])->name('download-order-template');
     Route::post('/import-orders', [ImportExportController::class, 'importOrders'])->middleware(['permission:import_data', 'permission:create_orders'])->name('import-orders');

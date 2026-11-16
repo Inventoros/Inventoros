@@ -14,6 +14,8 @@ use App\Models\Concerns\BelongsToOrganization;
 use App\Models\Customer;
 use App\Models\User;
 use App\Models\Warehouse;
+use App\Services\ApprovalService;
+use App\Support\ApprovalSettings;
 use App\Support\Money;
 use App\Support\SequenceNumber;
 use App\Traits\LogsActivity;
@@ -25,6 +27,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Represents an order in the system.
@@ -46,6 +49,7 @@ use Illuminate\Support\Carbon;
  * @property string|null $customer_address
  * @property string $status
  * @property string $approval_status
+ * @property int|null $approval_requested_by Who sent the order back for approval by changing its terms
  * @property int|null $approved_by
  * @property Carbon|null $approved_at
  * @property string|null $approval_notes
@@ -119,6 +123,7 @@ class Order extends Model
         'customer_address',
         'status',
         'approval_status',
+        'approval_requested_by',
         'approved_by',
         'approved_at',
         'approval_notes',
@@ -208,6 +213,16 @@ class Order extends Model
     public function approver(): BelongsTo
     {
         return $this->belongsTo(User::class, 'approved_by');
+    }
+
+    /**
+     * Get the user who sent the order back for approval.
+     *
+     * @return BelongsTo<User, $this>
+     */
+    public function approvalRequester(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'approval_requested_by');
     }
 
     /**
@@ -379,10 +394,183 @@ class Order extends Model
     protected static function booted(): void
     {
         static::saving(function (Order $order) {
+            if ($order->exists && $order->isDirty('status')) {
+                $from = OrderStatus::tryFrom((string) $order->getRawOriginal('status'));
+                // The one sanctioned step back: OrderService::revertMistakenShipment().
+                $error = $order->mistakenShipmentRevertPermitted && $from === OrderStatus::SHIPPED && $order->status === OrderStatus::PROCESSING
+                    ? null
+                    : self::statusTransitionError($from, $order->status);
+
+                if ($error !== null) {
+                    throw new InvalidStateException($error, 'invalid_state_transition');
+                }
+            }
+
+            // Before the approval check below, so terms changed in the same
+            // save as a ship/deliver are held for approval too.
+            if ($order->exists && $order->isDirty(self::APPROVED_TERMS)) {
+                $order->requireReapprovalIfDecided();
+            }
+
             if ($order->isDirty('status') && $order->approvalBlocks($order->status)) {
                 throw new InvalidStateException(self::APPROVAL_PENDING_MESSAGE, 'approval_pending');
             }
         });
+
+        static::updated(function (Order $order) {
+            if (! $order->reapprovalRequested) {
+                return;
+            }
+
+            $order->reapprovalRequested = false;
+            $editor = $order->approval_requested_by !== null
+                ? User::query()->find($order->approval_requested_by)
+                : null;
+
+            DB::afterCommit(fn () => app(ApprovalService::class)->requestOrderReapproval($order, $editor));
+        });
+
+        static::saved(function (Order $order) {
+            $order->mistakenShipmentRevertPermitted = false;
+        });
+    }
+
+    /**
+     * Fields that change what an approval decision covered: who the order is
+     * for and what it costs. Line changes are caught by
+     * OrderService::replaceItems(), which also calls
+     * requireReapprovalIfDecided().
+     *
+     * @var array<int, string>
+     */
+    public const APPROVED_TERMS = [
+        'customer_id', 'customer_name', 'customer_email', 'customer_address',
+        'subtotal', 'discount_type', 'discount_value', 'discount_amount',
+        'tax', 'shipping', 'total', 'currency',
+    ];
+
+    /** Set when this save sent a decided order back for approval. */
+    private bool $reapprovalRequested = false;
+
+    /**
+     * Send an approved (or rejected) order back to pending approval because
+     * its terms are changing, the way an approved purchase order goes back
+     * for approval. Sets the attributes without saving; the caller's save
+     * persists them and notifies the approvers once committed.
+     *
+     * Only while approval is required by the organization and the order is
+     * still open with no shipment under way: a cancelled order cannot ship,
+     * and once a shipment exists (pending, label bought, or partly sent) or
+     * its goods have left, holding the order would make the next carrier
+     * update fail when it moves the order to shipped or delivered.
+     *
+     * $editor (default: the signed-in user) is recorded as the requester of
+     * the new decision, so they cannot approve or reject it themselves (see
+     * OrderApprovalGate).
+     */
+    public function requireReapprovalIfDecided(?User $editor = null): bool
+    {
+        if (! $this->exists || $this->isDirty('approval_status')) {
+            return false;
+        }
+
+        $decision = OrderApprovalStatus::tryFrom((string) $this->getRawOriginal('approval_status'));
+        if (! in_array($decision, [OrderApprovalStatus::APPROVED, OrderApprovalStatus::REJECTED], true)) {
+            return false;
+        }
+
+        $status = OrderStatus::tryFrom((string) $this->getRawOriginal('status'));
+        if (! in_array($status, [OrderStatus::PENDING, OrderStatus::PROCESSING], true)
+            || $this->getRawOriginal('shipped_at') !== null) {
+            return false;
+        }
+
+        $hasShipment = \App\Models\Shipping\Shipment::withoutGlobalScopes()
+            ->where('order_id', $this->getKey())
+            ->active()
+            ->exists();
+        if ($hasShipment) {
+            return false;
+        }
+
+        if (! ApprovalSettings::forOrganization((int) $this->organization_id)->ordersEnabled) {
+            return false;
+        }
+
+        $editor ??= auth()->user() instanceof User ? auth()->user() : null;
+
+        $this->approval_status = OrderApprovalStatus::PENDING;
+        $this->approval_requested_by = $editor?->id;
+        $this->approved_by = null;
+        $this->approved_at = null;
+        $this->approval_notes = null;
+        $this->reapprovalRequested = true;
+
+        return true;
+    }
+
+    /**
+     * Why an order may not move from $from to $to, or null when it may.
+     *
+     * Status only moves forward. A cancelled order already gave its stock
+     * back, so reviving it would oversell. Goods of a shipped order have left
+     * the warehouse: it can only be delivered, and a delivered order is
+     * final (goods coming back go through a return). Moving either back to
+     * pending/processing would let cancel, delete or a line edit restock
+     * goods that are no longer here. Enforced for every surface by the
+     * saving hook above; surfaces check it first for their own error shape.
+     */
+    public static function statusTransitionError(OrderStatus|string|null $from, OrderStatus|string|null $to): ?string
+    {
+        $from = $from instanceof OrderStatus ? $from : OrderStatus::tryFrom((string) $from);
+        $to = $to instanceof OrderStatus ? $to : OrderStatus::tryFrom((string) $to);
+
+        if ($from === null || $to === null || $from === $to) {
+            return null;
+        }
+
+        return match ($from) {
+            OrderStatus::CANCELLED => 'A cancelled order cannot be reactivated. Create a new order instead.',
+            OrderStatus::DELIVERED => 'A delivered order\'s status cannot be changed. Record a return for goods that come back.',
+            OrderStatus::SHIPPED => $to === OrderStatus::DELIVERED
+                ? null
+                : 'A shipped order can only be marked delivered. Record a return for goods that come back.',
+            default => null,
+        };
+    }
+
+    /** Set by OrderService::revertMistakenShipment() for its one save. */
+    private bool $mistakenShipmentRevertPermitted = false;
+
+    /**
+     * Let this instance's next save move it from shipped back to processing.
+     * Only OrderService::revertMistakenShipment() calls this, after checking
+     * the actor is an admin and nothing actually left or came back.
+     *
+     * @internal
+     */
+    public function permitMistakenShipmentRevert(): void
+    {
+        $this->mistakenShipmentRevertPermitted = true;
+    }
+
+    /**
+     * Why this order may not move to $status, or null when it may.
+     */
+    public function transitionErrorTo(OrderStatus|string|null $status): ?string
+    {
+        return self::statusTransitionError($this->status, $status);
+    }
+
+    /**
+     * Whether any of this order's goods are recorded as having left the
+     * warehouse: shipped or delivered, or stamped shipped_at (a row moved
+     * back to pending/processing before transitions were enforced).
+     */
+    public function hasShippedGoods(): bool
+    {
+        return $this->shipped_at !== null
+            || in_array($this->status, [OrderStatus::SHIPPED, OrderStatus::DELIVERED], true);
     }
 
     /**

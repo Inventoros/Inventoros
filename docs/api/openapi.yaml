@@ -234,7 +234,7 @@ paths:
         - { name: warehouse_id, in: query, schema: { type: integer } }
         - { name: is_active, in: query, schema: { type: boolean } }
         - { name: low_stock, in: query, schema: { type: boolean } }
-        - { name: sort_by, in: query, schema: { type: string, enum: [created_at, updated_at, name, sku, price, stock, status, is_active] } }
+        - { name: sort_by, in: query, schema: { type: string, enum: [id, created_at, updated_at, name, sku, price, stock, is_active] } }
         - { name: sort_dir, in: query, schema: { type: string, enum: [asc, desc] } }
         - $ref: '#/components/parameters/PerPage'
         - $ref: '#/components/parameters/Page'
@@ -799,7 +799,7 @@ paths:
         - { name: warehouse_id, in: query, schema: { type: integer } }
         - { name: date_from, in: query, schema: { type: string, format: date } }
         - { name: date_to, in: query, schema: { type: string, format: date } }
-        - { name: sort_by, in: query, schema: { type: string, enum: [created_at, updated_at, order_number, customer_name, total, status, order_date] } }
+        - { name: sort_by, in: query, schema: { type: string, enum: [id, created_at, updated_at, order_number, customer_name, total, status, order_date] } }
         - { name: sort_dir, in: query, schema: { type: string, enum: [asc, desc] } }
         - $ref: '#/components/parameters/PerPage'
         - $ref: '#/components/parameters/Page'
@@ -879,7 +879,7 @@ paths:
         - { name: type, in: query, schema: { type: string, enum: [manual, count, damage, return, transfer] } }
         - { name: date_from, in: query, schema: { type: string, format: date } }
         - { name: date_to, in: query, schema: { type: string, format: date } }
-        - { name: sort_by, in: query, schema: { type: string, enum: [created_at, updated_at, type, adjustment_quantity] } }
+        - { name: sort_by, in: query, schema: { type: string, enum: [id, created_at, updated_at, type, adjustment_quantity] } }
         - { name: sort_dir, in: query, schema: { type: string, enum: [asc, desc] } }
         - $ref: '#/components/parameters/PerPage'
         - $ref: '#/components/parameters/Page'
@@ -957,7 +957,7 @@ paths:
       parameters:
         - { name: search, in: query, schema: { type: string } }
         - { name: is_active, in: query, schema: { type: boolean } }
-        - { name: sort_by, in: query, schema: { type: string, enum: [created_at, updated_at, name, email, phone] } }
+        - { name: sort_by, in: query, schema: { type: string, enum: [id, created_at, updated_at, name, email, phone] } }
         - { name: sort_dir, in: query, schema: { type: string, enum: [asc, desc] } }
         - $ref: '#/components/parameters/PerPage'
         - $ref: '#/components/parameters/Page'
@@ -996,7 +996,7 @@ paths:
         - { name: search, in: query, schema: { type: string } }
         - { name: status, in: query, schema: { type: string, enum: [draft, sent, partial, received, cancelled] } }
         - { name: supplier_id, in: query, schema: { type: integer } }
-        - { name: sort_by, in: query, schema: { type: string, enum: [created_at, updated_at, order_date, po_number, status, total] } }
+        - { name: sort_by, in: query, schema: { type: string, enum: [id, created_at, updated_at, order_date, po_number, status, total] } }
         - { name: sort_dir, in: query, schema: { type: string, enum: [asc, desc] } }
         - $ref: '#/components/parameters/PerPage'
         - $ref: '#/components/parameters/Page'
@@ -1323,6 +1323,19 @@ paths:
         '404': { $ref: '#/components/responses/NotFound' }
         '422': { description: "Validation error, or already approved or rejected (`already_processed`)" }
 
+  /orders/{order}/revert-shipment:
+    parameters:
+      - { name: order, in: path, required: true, schema: { type: integer } }
+    post:
+      tags: [Orders]
+      summary: Correct an order marked shipped by mistake back to processing
+      description: "Requires `edit_orders` and an admin user. Allowed only when the order is shipped, none of its shipments has left the warehouse (pending or label created only) and it has no returns. Clears `shipped_at`; stock is untouched. Every other status change only moves forward."
+      responses:
+        '200': { description: Moved back to processing, content: { application/json: { schema: { type: object, properties: { data: { $ref: '#/components/schemas/Order' } } } } } }
+        '403': { description: The user is not an admin }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { description: "Not shipped, a shipment has left, or the order has returns (`invalid_state_transition`)" }
+
   /orders/{order}/invoice/email:
     parameters:
       - { name: order, in: path, required: true, schema: { type: integer } }
@@ -1497,7 +1510,7 @@ paths:
     post:
       tags: [Order Payments]
       summary: Void a payment or refund
-      description: "Requires `record_payments`. The row is kept, marked voided, and stops counting toward what was paid. A payment cannot be voided while refunds against it still stand."
+      description: "Requires `record_payments`. The row is kept, marked voided, and stops counting toward what was paid. A payment cannot be voided while refunds against it still stand. Voiding a refund that would leave the order paid more than its total needs `allow_overpayment`."
       requestBody:
         content:
           application/json:
@@ -1505,11 +1518,12 @@ paths:
               type: object
               properties:
                 reason: { type: string, maxLength: 255 }
+                allow_overpayment: { type: boolean, description: "Void a refund even if the order ends up overpaid. Default false." }
       responses:
         '200': { description: Voided, content: { application/json: { schema: { $ref: '#/components/schemas/OrderPaymentResult' } } } }
         '403': { $ref: '#/components/responses/Forbidden' }
         '404': { $ref: '#/components/responses/NotFound' }
-        '422': { description: "Validation error: already voided, or refunds would exceed what was paid (`payment`)" }
+        '422': { description: "Validation error: already voided, refunds would exceed what was paid, or voiding a refund would overpay the order without `allow_overpayment` (`payment`)" }
 
   /customers:
     get:

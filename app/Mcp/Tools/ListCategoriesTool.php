@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Mcp\Tools;
 
 use App\Mcp\Concerns\AuthenticatesMcpRequest;
+use App\Mcp\Support\UntrustedText;
 use App\Models\Inventory\ProductCategory;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Laravel\Mcp\Request;
@@ -42,7 +43,8 @@ class ListCategoriesTool extends Tool
 
         return Response::json([
             'count' => $categories->count(),
-            'categories' => $categories->all(),
+            'categories' => $categories->map(fn (ProductCategory $c) => UntrustedText::wrapKeys($c->toArray(), ['description']))->all(),
+            UntrustedText::NOTICE_KEY => UntrustedText::NOTICE,
         ]);
     }
 }

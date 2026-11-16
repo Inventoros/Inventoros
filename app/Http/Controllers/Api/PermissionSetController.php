@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Middleware\CheckApiPermission;
 use App\Http\Requests\Api\PermissionSet\StorePermissionSetRequest;
 use App\Http\Requests\Api\PermissionSet\UpdatePermissionSetRequest;
 use App\Models\PermissionSet;
@@ -203,16 +204,27 @@ class PermissionSetController extends Controller
      * they themselves hold, so a delegated permission-set manager can't embed
      * manage_organization / delete_users etc. into a set applied to their own
      * role and escalate (set permissions merge into effective role
-     * permissions). Admins are unrestricted. Returns a 403 response when the
+     * permissions). Admins are unrestricted unless acting through a scoped
+     * token, which limits them to the token's abilities. Returns a 403 response when the
      * request exceeds the actor's own permissions, or null when allowed.
      */
     private function permissionsExceedingActor(User $actor, array $requested): ?JsonResponse
     {
-        if ($actor->isAdmin() || $requested === []) {
+        // An administrator acting through a token scoped to specific abilities
+        // is limited to what the token allows, like any delegated user.
+        $token = $actor->currentAccessToken();
+        $declared = CheckApiPermission::declaredAbilities($token);
+
+        if (($actor->isAdmin() && CheckApiPermission::grantsFullAccess($token)) || $requested === []) {
             return null;
         }
 
-        $exceeds = array_values(array_diff($requested, $actor->getAllPermissions()));
+        $held = $actor->getAllPermissions();
+        if ($declared !== null) {
+            $held = array_intersect($held, $declared);
+        }
+
+        $exceeds = array_values(array_diff($requested, $held));
 
         if ($exceeds !== []) {
             return response()->json([

@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Schema;
+use Tests\Feature\Concerns\UnlocksInstaller;
 use Tests\TestCase;
 
 /**
@@ -22,6 +23,8 @@ use Tests\TestCase;
  */
 final class InstallerTargetConnectionTest extends TestCase
 {
+    use UnlocksInstaller;
+
     private string $dir;
 
     private string $shippedDatabase;
@@ -71,6 +74,8 @@ final class InstallerTargetConnectionTest extends TestCase
                 ];
             }
         });
+
+        $this->unlockInstaller();
     }
 
     protected function tearDown(): void

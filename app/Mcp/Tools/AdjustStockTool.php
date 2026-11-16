@@ -6,6 +6,7 @@ namespace App\Mcp\Tools;
 
 use App\Exceptions\InsufficientStockException;
 use App\Mcp\Concerns\AuthenticatesMcpRequest;
+use App\Mcp\Support\UntrustedText;
 use App\Models\Inventory\Product;
 use App\Models\Inventory\ProductLocation;
 use App\Models\Inventory\StockAdjustmentRequest;
@@ -39,6 +40,9 @@ class AdjustStockTool extends Tool
 
     public function handle(Request $request): Response
     {
+        // Agents copy tool output into write calls; never store the envelope.
+        UntrustedText::stripArguments($request);
+
         $this->authorize(['manage_stock']);
 
         $validated = $request->validate([

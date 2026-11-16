@@ -120,6 +120,7 @@
     "The Administrator role cannot be edited.": "管理者ロールは編集できません。",
     "System roles cannot be deleted.": "システムロールは削除できません。",
     "Cannot delete a role that is assigned to users. Please reassign users first.": "ユーザーに割り当てられているロールは削除できません。先にユーザーのロールを変更してください。",
+    "You cannot delete a role with permissions you do not hold.": "自分が持っていない権限を含むロールは削除できません。",
     "You cannot delete your own account.": "自分のアカウントは削除できません。",
     "Cannot delete the last administrator.": "最後の管理者は削除できません。",
     "Please start the setup process again.": "設定を最初からやり直してください。",
