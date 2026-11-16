@@ -64,6 +64,9 @@ class OrderPaymentController extends Controller
 
     /**
      * Void a payment or refund.
+     *
+     * Voiding a refund that would leave the order paid more than its total
+     * fails with 422 unless `allow_overpayment` is true.
      */
     public function void(Request $request, Order $order, OrderPayment $payment): JsonResponse
     {
@@ -75,9 +78,11 @@ class OrderPaymentController extends Controller
 
         $validated = $request->validate([
             'reason' => ['nullable', 'string', 'max:255'],
+            // Void a refund even if the order ends up overpaid.
+            'allow_overpayment' => ['sometimes', 'boolean'],
         ]);
 
-        $voided = $this->payments->void($payment, $request->user(), $validated['reason'] ?? null);
+        $voided = $this->payments->void($payment, $request->user(), $validated['reason'] ?? null, $request->boolean('allow_overpayment'));
 
         return response()->json([
             'message' => 'Payment voided',

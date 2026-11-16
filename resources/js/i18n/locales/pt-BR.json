@@ -2542,10 +2542,13 @@
     "server": {
       "alreadyInstalled": "O Inventoros já está instalado.",
       "connectionSuccessful": "Conexão com o banco de dados bem-sucedida.",
-      "connectionFailed": "Falha na conexão com o banco de dados: {error}",
+      "connectionFailed": "Falha na conexão com o banco de dados. Verifique o host, a porta, o nome do banco de dados, o usuário e a senha.",
       "databaseInstalled": "Banco de dados instalado.",
       "unfinishedInstall": "O banco de dados já tem tabelas, provavelmente de uma instalação anterior que não terminou, e a instalação sobre elas falhou: {error}",
-      "adminCreated": "Conta de administrador criada."
+      "adminCreated": "Conta de administrador criada.",
+      "locked": "Primeiro desbloqueie o instalador com o token de configuração.",
+      "invalidToken": "Esse token de configuração não está correto.",
+      "unlocked": "Instalador desbloqueado."
     },
     "welcome": {
       "title": "Bem-vindo ao Inventoros",
@@ -2564,7 +2567,18 @@
       "beforeBegin": "Antes de começar",
       "beforeBeginDesc": "Certifique-se de ter PHP 8.4.1+, MySQL/PostgreSQL e as extensões PHP necessárias instaladas.",
       "startInstallation": "Iniciar Instalação",
-      "license": "Código aberto sob Licença AGPL-3.0"
+      "license": "Código aberto sob Licença AGPL-3.0",
+      "unlockTitle": "Desbloquear o instalador",
+      "unlockDesc": "Digite o token de configuração para continuar. Assim, somente quem tem acesso ao servidor pode concluir a instalação.",
+      "tokenEnv": "Instalado com o script de instalação ou Docker: é INVENTOROS_SETUP_TOKEN no arquivo .env.",
+      "tokenFile": "Caso contrário (cPanel ou instalação manual): está no arquivo storage/app/private/setup-token na pasta do Inventoros no servidor.",
+      "tokenLabel": "Token de configuração",
+      "unlock": "Desbloquear",
+      "unlocking": "Desbloqueando...",
+      "tooManyAttempts": "Muitas tentativas. Aguarde um minuto e tente novamente.",
+      "unlockFailed": "Não foi possível desbloquear o instalador: {error}",
+      "tokenUnavailableTitle": "Nenhum token de configuração disponível",
+      "tokenUnavailable": "INVENTOROS_SETUP_TOKEN não está definido e o instalador não conseguiu gravar storage/app/private/setup-token. Defina INVENTOROS_SETUP_TOKEN no arquivo .env ou torne storage/app/private gravável e recarregue esta página."
     },
     "requirements": {
       "title": "Requisitos do Sistema",

@@ -37,5 +37,7 @@
         <env name="PULSE_ENABLED" value="false"/>
         <env name="TELESCOPE_ENABLED" value="false"/>
         <env name="NIGHTWATCH_ENABLED" value="false"/>
+        <!-- Installer tests never write a setup-token file into storage. -->
+        <env name="INVENTOROS_SETUP_TOKEN" value="testing-installer-setup-token"/>
     </php>
 </phpunit>

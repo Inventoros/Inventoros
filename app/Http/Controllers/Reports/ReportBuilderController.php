@@ -17,6 +17,7 @@ use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -378,8 +379,10 @@ class ReportBuilderController extends Controller
 
         $rendered = $this->renderer->render($savedReport, $user, $format);
 
-        // Keep the original download name shape for saved reports.
-        $filename = str_replace(' ', '_', strtolower($savedReport->name)).'_'.now()->format('Y-m-d').'.'.$format;
+        // Keep the original download name shape for saved reports, with the
+        // name reduced to a slug: "/" or "\" in a filename makes the
+        // download fail.
+        $filename = (Str::slug($savedReport->name, '_') ?: 'report').'_'.now()->format('Y-m-d').'.'.$format;
 
         return response()->streamDownload(function () use ($rendered): void {
             echo $rendered->content;

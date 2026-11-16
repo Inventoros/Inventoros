@@ -55,7 +55,7 @@ class ApiTokenSettingsTest extends TestCase
     public function test_creating_a_token_reveals_the_plaintext_once(): void
     {
         $response = $this->actingAs($this->member)
-            ->post(route('settings.api-tokens.store'), ['name' => 'Zapier', 'abilities' => ['view_orders']]);
+            ->post(route('settings.api-tokens.store'), ['name' => 'Zapier', 'abilities' => ['view_orders'], 'current_password' => 'password']);
 
         $response->assertRedirect(route('settings.api-tokens.index'))
             ->assertSessionHas('newApiToken');

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\GraphQL\Types;
 
+use App\GraphQL\Support\OrganizationExists;
 use GraphQL\Type\Definition\Type;
 use Rebing\GraphQL\Support\InputType;
 
@@ -20,12 +21,12 @@ class OrderItemInputType extends InputType
             'product_id' => [
                 'type' => Type::nonNull(Type::int()),
                 'description' => 'The product ID',
-                'rules' => ['required', 'integer', 'exists:products,id'],
+                'rules' => ['required', 'integer', OrganizationExists::rule('products')],
             ],
             'product_variant_id' => [
                 'type' => Type::int(),
                 'description' => 'The specific variant ID (required for variant-tracked products)',
-                'rules' => ['nullable', 'integer', 'exists:product_variants,id'],
+                'rules' => ['nullable', 'integer', OrganizationExists::rule('product_variants')],
             ],
             'quantity' => [
                 'type' => Type::nonNull(Type::int()),

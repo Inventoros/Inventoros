@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Enums\Permission;
 use App\Models\Customer;
 use App\Models\Inventory\Product;
 use App\Models\Inventory\Supplier;
@@ -22,7 +23,8 @@ class SearchController extends Controller
     public function search(Request $request): JsonResponse
     {
         $query = trim((string) $request->input('q', ''));
-        $organizationId = $request->user()->organization_id;
+        $user = $request->user();
+        $organizationId = $user->organization_id;
         $limit = 5;
 
         if ($query === '') {
@@ -39,7 +41,9 @@ class SearchController extends Controller
         // variants' SKU/barcode; a variant match is named in the subtitle.
         $variantMatch = fn ($variants) => Search::apply($variants, ['sku', 'barcode'], $query);
 
-        $products = Product::where('organization_id', $organizationId)
+        // Each group is searched only when the user may view that kind of
+        // record, the same permission its index page requires.
+        $products = ! $user->hasPermission(Permission::VIEW_PRODUCTS) ? collect() : Product::where('organization_id', $organizationId)
             ->where(function ($q) use ($query, $variantMatch) {
                 Search::apply($q, ['name', 'sku', 'barcode'], $query)
                     ->orWhereHas('variants', $variantMatch);
@@ -58,7 +62,7 @@ class SearchController extends Controller
                 'icon' => 'product',
             ]);
 
-        $orders = Search::apply(
+        $orders = ! $user->hasPermission(Permission::VIEW_ORDERS) ? collect() : Search::apply(
             Order::where('organization_id', $organizationId),
             ['order_number', 'customer_name', 'external_id', 'external_reference', 'metadata->channel_order_number', 'metadata->shopify->name'],
             $query,
@@ -74,7 +78,7 @@ class SearchController extends Controller
                 'icon' => 'order',
             ]);
 
-        $customers = Search::apply(
+        $customers = ! $user->hasPermission(Permission::VIEW_CUSTOMERS) ? collect() : Search::apply(
             Customer::where('organization_id', $organizationId),
             ['name', 'email'],
             $query,
@@ -90,7 +94,7 @@ class SearchController extends Controller
                 'icon' => 'customer',
             ]);
 
-        $suppliers = Search::apply(
+        $suppliers = ! $user->hasPermission(Permission::VIEW_SUPPLIERS) ? collect() : Search::apply(
             Supplier::where('organization_id', $organizationId),
             ['name', 'email'],
             $query,
@@ -106,7 +110,7 @@ class SearchController extends Controller
                 'icon' => 'supplier',
             ]);
 
-        $purchaseOrders = Search::apply(
+        $purchaseOrders = ! $user->hasPermission(Permission::VIEW_PURCHASE_ORDERS) ? collect() : Search::apply(
             PurchaseOrder::where('organization_id', $organizationId),
             ['po_number'],
             $query,

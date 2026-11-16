@@ -7,6 +7,7 @@ namespace Tests\Feature;
 use App\Models\System\SystemSetting;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\File;
+use Tests\Feature\Concerns\UnlocksInstaller;
 use Tests\TestCase;
 
 /**
@@ -17,6 +18,7 @@ use Tests\TestCase;
 final class InstallerMessageKeysTest extends TestCase
 {
     use RefreshDatabase;
+    use UnlocksInstaller;
 
     public function test_already_installed_answers_carry_a_key(): void
     {
@@ -27,8 +29,10 @@ final class InstallerMessageKeysTest extends TestCase
             ->assertJson(['message_key' => 'install.server.alreadyInstalled']);
     }
 
-    public function test_a_failed_connection_test_carries_a_key_and_the_error(): void
+    public function test_a_failed_connection_test_carries_a_key_but_not_the_driver_error(): void
     {
+        $this->unlockInstaller();
+
         $response = $this->postJson('/install/database/test', [
             'driver' => 'mysql',
             'host' => '127.0.0.1',
@@ -39,7 +43,8 @@ final class InstallerMessageKeysTest extends TestCase
         ]);
 
         $response->assertStatus(422)->assertJson(['message_key' => 'install.server.connectionFailed']);
-        $this->assertNotEmpty($response->json('error'));
+        // The driver's error stays in the server log.
+        $this->assertNull($response->json('error'));
     }
 
     public function test_every_key_the_controller_returns_exists_in_en_json(): void

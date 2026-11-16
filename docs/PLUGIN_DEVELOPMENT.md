@@ -984,7 +984,7 @@ For delayed stock-audit counts, pass the item's `count_revision` as the optional
    zip -r my-plugin.zip my-plugin -x 'my-plugin/ui/node_modules/*'
    ```
 
-6. Optionally sign it for installs that require signed plugins: `php artisan update:sign my-plugin.zip` writes `my-plugin.zip.sig`; paste its contents into the upload form's signature field.
+6. Optionally sign it for installs that require signed plugins: `INVENTOROS_UPDATE_SECRET_KEY=<plugin secret key> php artisan update:sign my-plugin.zip` writes `my-plugin.zip.sig`; paste its contents into the upload form's signature field. Use a plugin keypair whose public key is the install's `INVENTOROS_PLUGIN_PUBLIC_KEY`, never the release signing key (see "Requiring signed plugins" in [SECURITY.md](../SECURITY.md)).
 
 Every Inventoros release attaches `hello-world-plugin.zip`, built exactly this way.
 
