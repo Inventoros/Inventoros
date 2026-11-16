@@ -60,8 +60,10 @@ const loadSourceStock = async locationId => {
 };
 watch(() => form.from_location_id, loadSourceStock);
 onBeforeUnmount(() => stockRequest?.abort());
+const stockKey = (productId, variantId = null) => `${Number(productId)}:${Number(variantId) || 'base'}`;
+const sourceBalances = computed(() => new Map((sourceStock.value || []).map(row => [stockKey(row.product_id, row.product_variant_id), row.available])));
 const sourceAvailable = (productId, variantId = null) => sourceStock.value === null ? null
-    : sourceStock.value.find(row => row.product_id === Number(productId) && row.product_variant_id === (Number(variantId) || null))?.available ?? 0;
+    : sourceBalances.value.get(stockKey(productId, variantId)) ?? 0;
 const stockByProduct = computed(() => sourceStock.value === null ? null : Object.fromEntries(props.products.map(product => [product.id, sourceAvailable(product.id)])));
 const sourceStockMessage = computed(() => t(`components.productPicker.${({ idle: 'chooseSource', loading: 'loadingSource', error: 'sourceError', ready: 'atSource' })[sourceStockState.value]}`));
 
