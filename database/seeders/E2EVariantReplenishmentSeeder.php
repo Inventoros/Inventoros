@@ -12,6 +12,7 @@ use App\Models\Inventory\StockAdjustment;
 use App\Models\Inventory\Supplier;
 use App\Models\User;
 use App\Models\Warehouse;
+use Database\Seeders\Concerns\RunsOnlyInFixtureEnvironments;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -19,8 +20,12 @@ use Illuminate\Support\Str;
 
 final class E2EVariantReplenishmentSeeder extends Seeder
 {
+    use RunsOnlyInFixtureEnvironments;
+
     public function run(): void
     {
+        $this->ensureFixtureEnvironment();
+
         $id = (string) env('E2E_REPLENISHMENT_ID');
         if (! Str::isUuid($id)) {
             throw new \InvalidArgumentException('E2E_REPLENISHMENT_ID must be a fresh UUID.');

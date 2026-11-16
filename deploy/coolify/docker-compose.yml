@@ -5,9 +5,10 @@
 # port: 8080
 #
 # Inventoros for Coolify. In Coolify: + New > Docker Compose Empty, paste this
-# file, deploy, then open the generated URL and add /install to finish setup.
-# Coolify generates the domain, APP_KEY and the database password; they stay
-# the same across redeploys. To upgrade, change INVENTOROS_VERSION and redeploy.
+# file, deploy, then open the generated URL and add /install to finish setup,
+# unlocking it with SERVICE_PASSWORD_64_SETUPTOKEN from the environment variables.
+# Coolify generates the domain, APP_KEY, the setup token and the database
+# password; they stay the same across redeploys. To upgrade, change INVENTOROS_VERSION and redeploy.
 
 services:
   app:
@@ -26,6 +27,7 @@ services:
       - DB_DATABASE=${DB_DATABASE:-inventoros}
       - DB_USERNAME=${SERVICE_USER_POSTGRES}
       - DB_PASSWORD=${SERVICE_PASSWORD_64_POSTGRES}
+      - INVENTOROS_SETUP_TOKEN=${SERVICE_PASSWORD_64_SETUPTOKEN}
       - SESSION_DRIVER=database
       - CACHE_STORE=database
       - QUEUE_CONNECTION=database

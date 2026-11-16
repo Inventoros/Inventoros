@@ -21,6 +21,7 @@ const showRecoveryCodes = ref(false);
 
 const enableForm = useForm({
     code: '',
+    current_password: '',
 });
 
 const disableForm = useForm({
@@ -148,6 +149,19 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                             autocomplete="one-time-code"
                         />
                         <p v-if="enableForm.errors.code" :class="fieldError">{{ enableForm.errors.code }}</p>
+                    </div>
+
+                    <div>
+                        <label for="enable_current_password" :class="fieldLabel">{{ t('settings.account.currentPassword') }}</label>
+                        <input
+                            id="enable_current_password"
+                            v-model="enableForm.current_password"
+                            type="password"
+                            :class="fieldInput"
+                            required
+                            autocomplete="current-password"
+                        />
+                        <p v-if="enableForm.errors.current_password" :class="fieldError">{{ enableForm.errors.current_password }}</p>
                     </div>
 
                     <Button type="submit" variant="default" :loading="enableForm.processing" :disabled="enableForm.processing">

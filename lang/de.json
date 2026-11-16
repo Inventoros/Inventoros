@@ -120,6 +120,7 @@
     "The Administrator role cannot be edited.": "Die Administratorrolle kann nicht bearbeitet werden.",
     "System roles cannot be deleted.": "Systemrollen können nicht gelöscht werden.",
     "Cannot delete a role that is assigned to users. Please reassign users first.": "Eine Benutzern zugewiesene Rolle kann nicht gelöscht werden. Weisen Sie den Benutzern zuerst andere Rollen zu.",
+    "You cannot delete a role with permissions you do not hold.": "Sie können keine Rolle löschen, die Berechtigungen enthält, die Sie selbst nicht haben.",
     "You cannot delete your own account.": "Sie können Ihr eigenes Konto nicht löschen.",
     "Cannot delete the last administrator.": "Der letzte Administrator kann nicht gelöscht werden.",
     "Please start the setup process again.": "Bitte starten Sie die Einrichtung erneut.",
@@ -146,5 +147,7 @@
     "Payment recorded.": "Zahlung erfasst.",
     "Cannot delete a supplier with open purchase orders.": "Ein Lieferant mit offenen Bestellungen kann nicht gelöscht werden.",
     "Stock adjustments created for discrepancies: :count.": "Für Abweichungen erstellte Bestandskorrekturen: :count.",
-    "No discrepancies found.": "Keine Abweichungen gefunden."
+    "No discrepancies found.": "Keine Abweichungen gefunden.",
+    "If that email belongs to an account, we have emailed a password reset link.": "Wenn diese E-Mail-Adresse zu einem Konto gehört, haben wir einen Link zum Zurücksetzen des Passworts gesendet.",
+    "This code was already used; wait for the next one.": "Dieser Code wurde bereits verwendet. Warten Sie auf den nächsten."
 }

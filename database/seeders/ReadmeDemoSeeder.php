@@ -17,6 +17,7 @@ use App\Models\Purchasing\PurchaseOrderItem;
 use App\Models\System\SystemSetting;
 use App\Models\User;
 use App\Support\SchedulerHealth;
+use Database\Seeders\Concerns\RunsOnlyInFixtureEnvironments;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
@@ -29,6 +30,8 @@ use Illuminate\Support\Facades\Hash;
  */
 class ReadmeDemoSeeder extends Seeder
 {
+    use RunsOnlyInFixtureEnvironments;
+
     public const EMAIL = 'maya@alderfinch.example';
 
     public const PASSWORD = 'ReadmeDemoPassword123!';
@@ -40,9 +43,7 @@ class ReadmeDemoSeeder extends Seeder
 
     public function run(): void
     {
-        if (app()->environment('production')) {
-            throw new \RuntimeException('Demo data cannot be seeded in production.');
-        }
+        $this->ensureFixtureEnvironment();
 
         SystemSetting::set('installed', true, 'boolean', 'Installation completed');
         SystemSetting::set('installed_at', now()->toDateTimeString(), 'string', 'Installation date');

@@ -23,8 +23,11 @@ on:
       - '.github/workflows/demo.yml'
   workflow_dispatch:
 
+# Recording runs Composer, npm and Playwright, so it gets a read-only token
+# and no persisted credentials. Only the commit job, which runs no project
+# code and never runs for pull requests, can push.
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
   group: demo-gifs-${{ github.ref }}
@@ -37,17 +40,19 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
 
       - name: Setup PHP
-        uses: shivammathur/setup-php@v2
+        uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
         with:
           php-version: '8.4'
           tools: composer:v2
           extensions: sqlite3, gd, bcmath
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: '22'
           cache: npm
@@ -119,7 +124,7 @@ jobs:
           done
 
       - name: Upload GIFs
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: demo-gifs
           path: .github/demo/*.gif
@@ -127,7 +132,7 @@ jobs:
 
       - name: Upload debug frames
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: demo-debug-frames
           path: |
@@ -136,9 +141,26 @@ jobs:
           retention-days: 7
           if-no-files-found: ignore
 
+  commit-gifs:
+    needs: demo-gifs
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+
+      - name: Download recorded GIFs
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: demo-gifs
+          path: .github/demo
+
       - name: Commit updated GIFs
-        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
-        uses: stefanzweifel/git-auto-commit-action@v5
+        uses: stefanzweifel/git-auto-commit-action@b863ae1933cb653a53c021fe36dbb774e1fb9403 # v5.2.0
         with:
           commit_message: 'chore(demo): update README demo GIFs [skip ci]'
           file_pattern: '.github/demo/*.gif'

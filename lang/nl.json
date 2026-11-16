@@ -120,6 +120,7 @@
     "The Administrator role cannot be edited.": "De beheerdersrol kan niet worden bewerkt.",
     "System roles cannot be deleted.": "Systeemrollen kunnen niet worden verwijderd.",
     "Cannot delete a role that is assigned to users. Please reassign users first.": "Een rol die aan gebruikers is toegewezen kan niet worden verwijderd. Wijs de gebruikers eerst andere rollen toe.",
+    "You cannot delete a role with permissions you do not hold.": "U kunt geen rol verwijderen met machtigingen die u zelf niet hebt.",
     "You cannot delete your own account.": "U kunt uw eigen account niet verwijderen.",
     "Cannot delete the last administrator.": "De laatste beheerder kan niet worden verwijderd.",
     "Please start the setup process again.": "Start het instellen opnieuw.",
@@ -146,5 +147,7 @@
     "Payment recorded.": "Betaling vastgelegd.",
     "Cannot delete a supplier with open purchase orders.": "Een leverancier met openstaande inkooporders kan niet worden verwijderd.",
     "Stock adjustments created for discrepancies: :count.": "Voor verschillen aangemaakte voorraadcorrecties: :count.",
-    "No discrepancies found.": "Geen verschillen gevonden."
+    "No discrepancies found.": "Geen verschillen gevonden.",
+    "If that email belongs to an account, we have emailed a password reset link.": "Als dit e-mailadres bij een account hoort, hebben we een link gestuurd om het wachtwoord opnieuw in te stellen.",
+    "This code was already used; wait for the next one.": "Deze code is al gebruikt; wacht op de volgende."
 }
