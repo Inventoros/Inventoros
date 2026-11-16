@@ -2853,6 +2853,18 @@
       "empty": "Nie zarejestrowano jeszcze żadnych numerów seryjnych.",
       "emptyHint": "Kliknij \"Dodaj numer seryjny\", aby zarejestrować pierwszy numer seryjny.",
       "noMatches": "Brak numerów seryjnych pasujących do wybranego filtra."
+    },
+    "productPicker": {
+      "search": "Szukaj nazwy, SKU lub kodu kreskowego",
+      "clear": "Wyczyść produkt",
+      "chooseVariant": "Wybierz wariant",
+      "onHand": "Stan · wszystkie lokalizacje",
+      "atSource": "Dostępne w lokalizacji źródłowej",
+      "chooseSource": "Wybierz źródło, aby zobaczyć dostępność",
+      "loadingSource": "Sprawdzanie zapasów źródłowych…",
+      "sourceError": "Nie udało się wczytać zapasów źródłowych",
+      "refine": "Wyświetlono {shown} z {total}. Zawęź wyszukiwanie.",
+      "results": "Produkty: {count}"
     }
   },
   "warehouses": {

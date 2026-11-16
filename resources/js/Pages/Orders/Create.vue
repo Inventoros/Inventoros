@@ -7,6 +7,7 @@ import Card from '@/Components/ui/Card.vue';
 import Button from '@/Components/ui/Button.vue';
 import TaxInput from '@/Components/TaxInput.vue';
 import CustomerPicker from '@/Components/CustomerPicker.vue';
+import ProductPicker from '@/Components/ui/ProductPicker.vue';
 import DiscountInput from '@/Components/DiscountInput.vue';
 import { useOrderTotals, lineNetCents } from '@/composables/useOrderTotals';
 import { Head, Link, useForm } from '@inertiajs/vue3';
@@ -341,13 +342,10 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                 <div class="grid grid-cols-1 gap-3 md:grid-cols-12">
                                     <div :class="chosenProduct?.has_variants ? 'md:col-span-4' : 'md:col-span-7'">
                                         <label for="add_product" :class="fieldLabel">{{ t('orders.create.selectProduct') }}</label>
-                                        <select id="add_product" v-model="selectedProduct" :class="fieldInput" @change="onProductChange">
-                                            <option :value="null">{{ t('orders.create.chooseProduct') }}</option>
-                                            <option v-for="product in availableProducts" :key="product.id" :value="product.id">
-                                                <template v-if="product.has_variants">{{ product.name }} ({{ product.sku }})</template>
-                                                <template v-else>{{ product.name }} ({{ product.sku }}) - {{ t('orders.create.stockCount', { count: product.stock }) }} - {{ formatMoney(product.price, product.currency) }}</template>
-                                            </option>
-                                        </select>
+                                        <ProductPicker id="add_product" v-model="selectedProduct" :products="availableProducts" :stock-label="t('components.productPicker.onHand')" @change="onProductChange">
+                                            <template #details="{ product }"><span v-if="!product.has_variants" class="block text-xs text-text-secondary">{{ formatMoney(product.price, product.currency) }}</span></template>
+                                        </ProductPicker>
+                                        <p v-if="chosenProduct && !chosenProduct.has_variants" class="mt-1 text-xs text-text-secondary">{{ formatMoney(chosenProduct.price, chosenProduct.currency) }}</p>
                                     </div>
                                     <div v-if="chosenProduct?.has_variants" class="md:col-span-3">
                                         <label for="add_variant" :class="fieldLabel">{{ t('orders.create.variant') }}</label>

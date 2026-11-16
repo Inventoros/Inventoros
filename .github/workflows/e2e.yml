@@ -67,6 +67,7 @@ jobs:
             e2e/tests/products.spec.ts \
             e2e/tests/product-form-actions.spec.ts \
             e2e/tests/orders.spec.ts \
+            e2e/tests/product-picker.spec.ts \
             e2e/tests/plugins.spec.ts \
             e2e/tests/mobile-layout.spec.ts \
             e2e/tests/mobile-receiving.spec.ts \

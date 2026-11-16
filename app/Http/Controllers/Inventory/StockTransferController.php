@@ -12,8 +12,10 @@ use App\Models\Inventory\Product;
 use App\Models\Inventory\ProductLocation;
 use App\Models\Inventory\StockTransfer;
 use App\Services\ApprovalService;
+use App\Services\StockBalanceService;
 use App\Services\StockTransferService;
 use App\Services\WarehouseAccessService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -94,14 +96,30 @@ class StockTransferController extends Controller
         $products = Product::forOrganization($organizationId)
             ->active()
             ->orderBy('name')
-            ->with('activeVariants:id,product_id,title,sku,stock')
-            ->get(['id', 'name', 'sku', 'stock', 'has_variants']);
+            ->with('activeVariants:id,product_id,title,sku,barcode,stock')
+            ->get(['id', 'name', 'sku', 'barcode', 'stock', 'has_variants']);
 
         return Inertia::render('StockTransfers/Create', [
             'locations' => $locations,
             'sourceLocationIds' => $sourceLocationIds,
             'products' => $products,
         ]);
+    }
+
+    /** Availability for the selected source, under the transfer capability. */
+    public function sourceStock(Request $request, StockBalanceService $stock): JsonResponse
+    {
+        $validated = $request->validate(['location_id' => ['required', 'integer', 'min:1']]);
+        // StockBalanceService checks both organization ownership and warehouse
+        // access before reading balances. No organization-wide fallback.
+        $rows = $stock->query($request->user(), ['location_id' => $validated['location_id'], 'include_zero' => true])
+            ->get()->map(fn ($row) => [
+                'product_id' => (int) $row->product_id,
+                'product_variant_id' => $row->product_variant_id === null ? null : (int) $row->product_variant_id,
+                'available' => (int) $row->available,
+            ]);
+
+        return response()->json(['data' => $rows]);
     }
 
     /**
@@ -176,6 +194,7 @@ class StockTransferController extends Controller
     public function prepare(Request $request, StockTransfer $stockTransfer, StockTransferService $transfers)
     {
         $this->authorizeTransfer($request, $stockTransfer);
+
         return $this->transition($stockTransfer, fn () => $transfers->prepare($stockTransfer, $request->user()), 'Stock reserved for transfer.');
     }
 
@@ -183,6 +202,7 @@ class StockTransferController extends Controller
     {
         $this->authorizeTransfer($request, $stockTransfer);
         $data = $request->validate(['shipping_method' => 'nullable|string|max:255', 'tracking_number' => 'nullable|string|max:255', 'estimated_arrival' => 'nullable|date']);
+
         return $this->transition($stockTransfer, fn () => $transfers->ship($stockTransfer, $request->user(), $data), 'Stock transfer shipped.');
     }
 

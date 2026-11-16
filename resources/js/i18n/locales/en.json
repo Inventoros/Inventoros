@@ -2724,6 +2724,18 @@
       "empty": "No serial numbers recorded yet.",
       "emptyHint": "Click \"Add Serial\" to register the first serial number.",
       "noMatches": "No serials matching the selected filter."
+    },
+    "productPicker": {
+      "search": "Search name, SKU, or barcode",
+      "clear": "Clear product",
+      "chooseVariant": "Choose a variant",
+      "onHand": "On hand · all locations",
+      "atSource": "Available at source",
+      "chooseSource": "Choose a source to see availability",
+      "loadingSource": "Checking source stock…",
+      "sourceError": "Source stock could not be loaded",
+      "refine": "Showing {shown} of {total}. Refine your search.",
+      "results": "{count} products"
     }
   },
   "warehouses": {

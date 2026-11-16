@@ -2853,6 +2853,18 @@
       "empty": "Nog geen serienummers geregistreerd.",
       "emptyHint": "Klik op \"Serienummer toevoegen\" om het eerste serienummer te registreren.",
       "noMatches": "Geen serienummers die overeenkomen met het geselecteerde filter."
+    },
+    "productPicker": {
+      "search": "Zoek op naam, SKU of barcode",
+      "clear": "Product wissen",
+      "chooseVariant": "Kies een variant",
+      "onHand": "Op voorraad · alle locaties",
+      "atSource": "Beschikbaar op bronlocatie",
+      "chooseSource": "Kies een bron voor de beschikbaarheid",
+      "loadingSource": "Bronvoorraad controleren…",
+      "sourceError": "Bronvoorraad kon niet worden geladen",
+      "refine": "{shown} van {total}. Verfijn je zoekopdracht.",
+      "results": "{count} producten"
     }
   },
   "warehouses": {

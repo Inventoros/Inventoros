@@ -8,6 +8,7 @@ import AppLayout from '@/Layouts/AppLayout.vue';
 import PageHeader from '@/Components/ui/PageHeader.vue';
 import Card from '@/Components/ui/Card.vue';
 import Button from '@/Components/ui/Button.vue';
+import ProductPicker from '@/Components/ui/ProductPicker.vue';
 import TaxInput from '@/Components/TaxInput.vue';
 import PluginSlot from '@/Components/PluginSlot.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
@@ -265,12 +266,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                         <div class="grid grid-cols-1 gap-3" :class="chosenProduct?.has_variants ? 'md:grid-cols-8' : 'md:grid-cols-6'">
                             <div class="md:col-span-2">
                                 <label for="product" :class="fieldLabel">{{ t('common.product') }}</label>
-                                <select id="product" v-model="selectedProductId" @change="onProductSelected" :class="fieldInput">
-                                    <option value="">{{ t('purchaseOrders.create.selectProduct') }}</option>
-                                    <option v-for="product in products" :key="product.id" :value="product.id">
-                                        {{ product.name }} ({{ product.sku || t('purchaseOrders.noSku') }})
-                                    </option>
-                                </select>
+                                <ProductPicker id="product" v-model="selectedProductId" :products="products" :stock-label="t('components.productPicker.onHand')" @change="onProductSelected" />
                             </div>
 
                             <div v-if="chosenProduct?.has_variants" class="md:col-span-2">

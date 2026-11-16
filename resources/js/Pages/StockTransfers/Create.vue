@@ -5,8 +5,10 @@ import AppLayout from '@/Layouts/AppLayout.vue';
 import PageHeader from '@/Components/ui/PageHeader.vue';
 import Card from '@/Components/ui/Card.vue';
 import Button from '@/Components/ui/Button.vue';
+import ProductPicker from '@/Components/ui/ProductPicker.vue';
+import axios from 'axios';
 import { Head, Link, useForm } from '@inertiajs/vue3';
-import { computed, defineAsyncComponent, ref } from 'vue';
+import { computed, defineAsyncComponent, ref, watch, onBeforeUnmount } from 'vue';
 import { useBarcodeWedge, useBarcodeLookup } from '@/composables/useBarcodeWedge';
 import { useI18n } from 'vue-i18n';
 import { ArrowLeft, ArrowRight, Plus, Trash2, ScanLine } from '@lucide/vue';
@@ -36,6 +38,32 @@ const form = useForm({
         { product_id: '', product_variant_id: '', quantity: 1, notes: '' },
     ],
 });
+
+const sourceStock = ref(null);
+const sourceStockState = ref('idle');
+let stockRequest;
+const loadSourceStock = async locationId => {
+    stockRequest?.abort();
+    sourceStock.value = null;
+    sourceStockState.value = locationId ? 'loading' : 'idle';
+    if (!locationId) return;
+    const controller = new AbortController();
+    stockRequest = controller;
+    try {
+        const { data } = await axios.get(route('stock-transfers.source-stock'), { params: { location_id: locationId }, signal: controller.signal });
+        if (controller.signal.aborted) return;
+        sourceStock.value = data.data;
+        sourceStockState.value = 'ready';
+    } catch (error) {
+        if (!controller.signal.aborted) sourceStockState.value = 'error';
+    }
+};
+watch(() => form.from_location_id, loadSourceStock);
+onBeforeUnmount(() => stockRequest?.abort());
+const sourceAvailable = (productId, variantId = null) => sourceStock.value === null ? null
+    : sourceStock.value.find(row => row.product_id === Number(productId) && row.product_variant_id === (Number(variantId) || null))?.available ?? 0;
+const stockByProduct = computed(() => sourceStock.value === null ? null : Object.fromEntries(props.products.map(product => [product.id, sourceAvailable(product.id)])));
+const sourceStockMessage = computed(() => t(`components.productPicker.${({ idle: 'chooseSource', loading: 'loadingSource', error: 'sourceError', ready: 'atSource' })[sourceStockState.value]}`));
 
 const addItem = () => {
     form.items.push({ product_id: '', product_variant_id: '', quantity: 1, notes: '' });
@@ -269,17 +297,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                             <!-- Product -->
                             <div class="min-w-0 flex-1 basis-full sm:basis-auto sm:min-w-[200px]">
                                 <label :for="fieldIdPrefix + '-repeat-1-' + index" :class="fieldLabel">{{ t('common.product') }} <span class="text-status-danger">*</span></label>
-                                <select :id="fieldIdPrefix + '-repeat-1-' + index"
-                                    v-model="item.product_id"
-                                    @change="item.product_variant_id = ''"
-                                    required
-                                    :class="fieldInput"
-                                >
-                                    <option value="">{{ t('stockTransfers.create.selectProduct') }}</option>
-                                    <option v-for="product in products" :key="product.id" :value="product.id">
-                                        {{ t('stockTransfers.create.productOption', { name: product.name, sku: product.sku, stock: product.stock }) }}
-                                    </option>
-                                </select>
+                                <ProductPicker :id="fieldIdPrefix + '-repeat-1-' + index" v-model="item.product_id" :products="products" :stock-by-product="stockByProduct" :stock-label="sourceStockState === 'ready' ? t('components.productPicker.atSource') : null" required :invalid="Boolean(form.errors[`items.${index}.product_id`])" @change="item.product_variant_id = ''" />
                                 <p v-if="form.errors[`items.${index}.product_id`]" :class="fieldError">
                                     {{ form.errors[`items.${index}.product_id`] }}
                                 </p>
@@ -289,7 +307,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                 <label :for="fieldIdPrefix + '-repeat-2-' + index" :class="fieldLabel">{{ t('orders.create.variant') }}</label>
                                 <select :id="fieldIdPrefix + '-repeat-2-' + index" v-model="item.product_variant_id" required :class="fieldInput">
                                     <option value="">{{ t('orders.create.chooseVariant') }}</option>
-                                    <option v-for="variant in getProduct(item.product_id).active_variants" :key="variant.id" :value="variant.id">{{ variant.sku || variant.title }} ({{ variant.stock }})</option>
+                                    <option v-for="variant in getProduct(item.product_id).active_variants" :key="variant.id" :value="variant.id">{{ variant.sku || variant.title }}<template v-if="sourceStockState === 'ready'"> · {{ t('components.productPicker.atSource') }}: {{ sourceAvailable(item.product_id, variant.id) }}</template></option>
                                 </select>
                                 <p v-if="form.errors[`items.${index}.product_variant_id`]" :class="fieldError">{{ form.errors[`items.${index}.product_variant_id`] }}</p>
                             </div>
@@ -303,9 +321,10 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                     required
                                     :class="fieldInput"
                                 />
-                                <p v-if="item.product_id && getProduct(item.product_id)" class="mt-1 text-xs text-text-tertiary">
-                                    {{ t('stockTransfers.create.available', { count: getProduct(item.product_id).stock }) }}
+                                <p v-if="item.product_id" class="mt-1 text-xs text-text-secondary" role="status">
+                                    {{ sourceStockMessage }}<template v-if="sourceStockState === 'ready' && (!getProduct(item.product_id)?.has_variants || item.product_variant_id)">: {{ sourceAvailable(item.product_id, item.product_variant_id) }}</template>
                                 </p>
+                                <Button v-if="index === 0 && sourceStockState === 'error'" type="button" variant="secondary" size="sm" class="mt-2" @click="loadSourceStock(form.from_location_id)">{{ t('common.retry') }}</Button>
                                 <p v-if="form.errors[`items.${index}.quantity`]" :class="fieldError">
                                     {{ form.errors[`items.${index}.quantity`] }}
                                 </p>
