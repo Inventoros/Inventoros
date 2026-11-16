@@ -223,7 +223,8 @@ async function orderToShipFlow(page) {
     ];
     for (const [name, qty] of lines) {
         await clickOn(page, product, { settle: 150 });
-        await product.selectOption({ label: await optionLabel(product, name) });
+        await typeSlowly(product, name, 45);
+        await clickOn(page, page.locator('.product-picker-popup').getByRole('option').filter({ hasText: name }).first(), { settle: 150 });
         await pause(400);
         await clickOn(page, quantity, { settle: 100 });
         await quantity.press('Control+A');

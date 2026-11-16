@@ -317,6 +317,9 @@ export const ROUTE_PERMISSIONS = {
     "stock-transfers.show": [
         "transfer_stock"
     ],
+    "stock-transfers.source-stock": [
+        "transfer_stock"
+    ],
     "suppliers.create": [
         "create_suppliers"
     ],
