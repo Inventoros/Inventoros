@@ -65,7 +65,7 @@ final class E2EUiAuditSeeder extends Seeder
             'work_order' => $work->id, 'cycleCount' => $cycle->id, 'webhook' => $webhook->id,
             'resetRun' => $reset->public_id,
         ];
-        $map = json_decode(file_get_contents(base_path('docs/audits/ui-ux-application-map.json')), true);
+        $map = json_decode(file_get_contents(base_path('e2e/fixtures/ui-ux-application-map.json')), true);
         $routes = [];
         $excluded = [];
         foreach ($map['mapped_routes'] as $route) {

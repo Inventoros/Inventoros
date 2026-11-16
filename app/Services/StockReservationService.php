@@ -29,7 +29,7 @@ use InvalidArgumentException;
  * hold's owner. available = on hand - SUM(active holds), computed when needed
  * and never stored, so it cannot drift.
  *
- * Scopes (see the design doc, docs/plans/2026-10-05-stock-reservations-design.md):
+ * Scopes (see the design doc, docs/architecture/stock-reservations.md):
  *  - a product hold (no location) constrains the product total only;
  *  - a bin hold (location_id) also constrains that bin;
  *  - a variant hold constrains the variant's stock;

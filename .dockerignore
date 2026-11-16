@@ -6,7 +6,6 @@
 # Local Claude state (never goes into images)
 .claude
 .cursor
-docs/superpowers
 .codex
 
 # Composer / Node build artefacts (rebuilt inside the image)

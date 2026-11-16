@@ -102,7 +102,7 @@ The committed npm and Composer lockfiles report no known vulnerabilities,
 including development dependencies. The previous Tailwind 3/braces exception
 no longer applies to the current Tailwind 4 dependency tree.
 
-The [security audit](docs/audits/2026-11-08-security-audit.md) reconciles the
+The [security audit](https://github.com/Inventoros/Inventoros/blob/v2.5.0/docs/audits/2026-11-08-security-audit.md) reconciles the
 58 stale GitHub alerts with the current lockfile and records application fixes.
 GitHub's dependency graph must be enabled for its alert inventory to stay current.
 

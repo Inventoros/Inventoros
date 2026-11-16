@@ -1,5 +1,8 @@
 # Multi-company and 3PL: core design
 
+> Original design for this feature, kept as background for the code that cites it. Where it and the code differ, the code and the published docs (`docs/site/`) are current.
+
+
 Status: memberships and switching implemented (Inventoros#257); inter-company transfers implemented in the change stacked on it (#258), extended to serial- and batch-tracked units and kits for 2.1; 3PL needs no further core primitive (decision below). Plugin SDK gap G11, and the core capability the Multi-Company (`multi-company`) and 3PL Management (`3pl`) plugins depend on.
 
 ## Why

@@ -1,5 +1,8 @@
 # Stock reservations and available-to-promise: design
 
+> Original design for this feature, kept as background for the code that cites it. Where it and the code differ, the code and the published docs (`docs/site/`) are current.
+
+
 Status: implemented (Inventoros 2.1). Plugin SDK gap G4. The four decisions are settled below ("Decisions"); the plugin guide (docs/PLUGIN_DEVELOPMENT.md, "Stock reservations") is the reference for plugin authors.
 
 ## Why
