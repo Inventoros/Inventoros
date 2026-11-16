@@ -15,6 +15,7 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Storage;
+use PhpOffice\PhpSpreadsheet\Exception as SpreadsheetException;
 use Throwable;
 
 /**
@@ -63,8 +64,15 @@ final class ProcessOrderImportJob implements ShouldQueue
         $importer = app(ActiveOrganization::class)->userIn($this->userId, $this->organizationId)
             ?? throw (new ModelNotFoundException)->setModel(User::class, [$this->userId]);
 
-        $import = (new OrdersImport($importer, $this->historical, $this->notifyIntegrations))
-            ->importFile($this->path, $this->disk, $this->readerType);
+        try {
+            $import = (new OrdersImport($importer, $this->historical, $this->notifyIntegrations))
+                ->importFile($this->path, $this->disk, $this->readerType);
+        } catch (SpreadsheetException $e) {
+            // An unreadable workbook fails the same way on every attempt.
+            $this->fail($e);
+
+            return;
+        }
 
         NotificationService::createImportCompleteNotification(
             $this->organizationId,

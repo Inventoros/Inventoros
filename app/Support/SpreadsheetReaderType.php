@@ -37,7 +37,24 @@ final class SpreadsheetReaderType
     {
         $mime = is_file($path) ? (string) (new \finfo(FILEINFO_MIME_TYPE))->file($path) : '';
 
-        return self::BY_MIME[strtolower($mime)]
+        $type = self::BY_MIME[strtolower($mime)]
             ?? throw new RuntimeException('The file is not a CSV, XLSX or XLS spreadsheet.');
+
+        // An XLSX is a ZIP the reader inflates in memory: refuse a small
+        // upload that would expand far beyond what an import needs.
+        if ($type === Excel::XLSX) {
+            try {
+                SafeZipExtractor::inspect($path, [
+                    'max_entries' => (int) config('imports.xlsx.max_entries', 1000),
+                    'max_bytes' => (int) config('imports.xlsx.max_uncompressed_bytes', 256 * 1024 * 1024),
+                    'max_ratio' => (float) config('imports.xlsx.max_compression_ratio', 100),
+                    'ratio_min_bytes' => (int) config('imports.xlsx.ratio_min_bytes', 1024 * 1024),
+                ]);
+            } catch (RuntimeException) {
+                throw new RuntimeException('The spreadsheet is too large to import once uncompressed, or it is not a valid XLSX file.');
+            }
+        }
+
+        return $type;
     }
 }
