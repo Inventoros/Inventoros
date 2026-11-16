@@ -96,7 +96,11 @@ final class StockAuditSnapshot
      *
      * @return int the number of lines updated
      */
-    public function refresh(StockAudit $audit): int
+    /**
+     * Re-read system quantities from current stock: every line of the audit,
+     * or just $item when given (used when a count is recorded).
+     */
+    public function refresh(StockAudit $audit, ?StockAuditItem $item = null): int
     {
         $items = StockAuditItem::query();
         $grammar = $items->toBase()->getGrammar();
@@ -123,6 +127,7 @@ final class StockAuditSnapshot
 
         return $items
             ->where('stock_audit_id', (int) $audit->getKey())
+            ->when($item !== null, fn ($query) => $query->whereKey($item->getKey()))
             ->update(['system_quantity' => new Expression($quantity)]);
     }
 

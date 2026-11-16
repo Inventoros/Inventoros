@@ -184,6 +184,19 @@ final class StockAuditService
                 throw new InvalidStateException('This count has changed. Review the latest count before saving yours.', 'stale_count');
             }
 
+            // Measure the variance against the stock on hand now, not the
+            // snapshot taken when the audit started. Stock that moved between
+            // the start and this count is already reflected on the shelf, so
+            // booking counted - start snapshot would apply it a second time.
+            // Lock the stock row so no movement lands between this read and
+            // the count being saved.
+            DB::table('products')->where('id', $lockedItem->product_id)->lockForUpdate()->first();
+            if ($lockedItem->product_variant_id !== null) {
+                DB::table('product_variants')->where('id', $lockedItem->product_variant_id)->lockForUpdate()->first();
+            }
+            $this->snapshot->refresh($locked, $lockedItem);
+            $lockedItem->refresh();
+
             $lockedItem->forceFill([
                 'count_sequence' => (int) $lockedItem->count_sequence + 1,
                 'review_status' => $locked->require_variance_approval && $countedQuantity !== $lockedItem->system_quantity ? 'pending' : 'not_required',
@@ -307,6 +320,23 @@ final class StockAuditService
                 }
 
                 $discrepancy = $item->counted_quantity - $item->system_quantity;
+
+                // The variance is relative to stock when the line was counted,
+                // so later movements stay booked. If what left since then is
+                // more than the count found, the count no longer describes the
+                // shelf: refuse rather than drive stock negative.
+                // Read it fresh: an earlier line of this audit may have just
+                // adjusted the same product in another bin.
+                $onHand = (int) ($item->product_variant_id !== null
+                    ? DB::table('product_variants')->where('id', $item->product_variant_id)->value('stock')
+                    : DB::table('products')->where('id', $item->product_id)->value('stock'));
+                if ($discrepancy < 0 && $onHand + $discrepancy < 0) {
+                    $label = $item->variant?->sku ?? $item->product?->sku ?? $item->product?->name ?? (string) $item->product_id;
+                    throw new InvalidStateException(
+                        "Stock for {$label} has moved since it was counted and completing would take it below zero. Recount it, then complete the audit.",
+                        'stock_moved_since_count',
+                    );
+                }
 
                 $item->update([
                     'discrepancy' => $discrepancy,
