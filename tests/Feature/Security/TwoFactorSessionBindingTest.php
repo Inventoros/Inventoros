@@ -179,6 +179,25 @@ class TwoFactorSessionBindingTest extends TestCase
         $this->get(route('dashboard'))->assertOk();
     }
 
+    public function test_enabling_two_factor_rotates_the_session_id_and_keeps_the_user_verified(): void
+    {
+        $google2fa = new Google2FA;
+        $secret = $google2fa->generateSecretKey();
+        $sessionId = Str::random(40);
+
+        $this->actingAs($this->other)
+            ->withCookie(config('session.cookie'), $sessionId)
+            ->withSession(['two_factor_secret' => $secret])
+            ->post(route('two-factor.enable'), ['code' => $google2fa->getCurrentOtp($secret), 'current_password' => 'password'])
+            ->assertRedirect(route('settings.account.index'));
+
+        $this->assertNotSame($sessionId, session()->getId());
+        $this->assertSame($this->other->getKey(), session('two_factor_verified'));
+        $this->assertNull(session('two_factor_secret'));
+
+        $this->get(route('dashboard'))->assertOk();
+    }
+
     public function test_a_verified_user_can_still_disable_two_factor(): void
     {
         $this->actingAs($this->victim)

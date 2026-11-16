@@ -132,8 +132,9 @@ class TwoFactorController extends Controller
 
         app(SecurityEventLogger::class)->record(SecurityEvent::TWO_FACTOR_ENABLED, $request->user(), $enabledUser);
 
-        // Mark session as verified for this user so middleware doesn't redirect
-        $request->session()->put(EnsureTwoFactorVerified::SESSION_KEY, $enabledUser->getAuthIdentifier());
+        // Mark session as verified for this user, under a fresh session id,
+        // so middleware doesn't redirect
+        $this->markSessionVerified($request, $enabledUser);
 
         // Clean up session
         $request->session()->forget('two_factor_secret');
