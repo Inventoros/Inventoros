@@ -179,6 +179,40 @@ class RoleControllerTest extends TestCase
         // Should include both system roles and organization roles
     }
 
+    public function test_roles_list_sends_member_counts_not_the_user_directory(): void
+    {
+        $role = $this->createCustomRole(['name' => 'Packers']);
+        $this->member->roles()->attach($role->id);
+
+        // An assignment in another organization is not counted here.
+        $otherOrganization = Organization::create([
+            'name' => 'Other Organization',
+            'email' => 'other@organization.com',
+            'currency' => 'USD',
+            'timezone' => 'UTC',
+        ]);
+        $outsider = User::create([
+            'name' => 'Outsider',
+            'email' => 'outsider@other.test',
+            'password' => bcrypt('password'),
+            'organization_id' => $otherOrganization->id,
+            'role' => 'member',
+        ]);
+        $outsider->roles()->attach($role->id);
+
+        // The viewer may view roles but not users.
+        $response = $this->actingAs($this->viewOnlyUser)->get(route('roles.index'));
+
+        $response->assertOk();
+        $roles = collect($response->viewData('page')['props']['roles']['data']);
+        $packers = $roles->firstWhere('name', 'Packers');
+
+        $this->assertNotNull($packers);
+        $this->assertSame(1, $packers['users_count']);
+        $roles->each(fn (array $listed) => $this->assertArrayNotHasKey('users', $listed));
+        $this->assertStringNotContainsString('member@test.com', $response->getContent());
+    }
+
     public function test_guest_cannot_view_roles_list(): void
     {
         $response = $this->get(route('roles.index'));

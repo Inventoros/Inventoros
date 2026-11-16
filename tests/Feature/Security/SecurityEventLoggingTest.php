@@ -154,7 +154,7 @@ class SecurityEventLoggingTest extends TestCase
 
         $this->actingAs($this->user)
             ->withSession(['two_factor_secret' => $secret, 'two_factor_recovery_codes' => ['abc']])
-            ->post(route('two-factor.enable'), ['code' => $google2fa->getCurrentOtp($secret)]);
+            ->post(route('two-factor.enable'), ['code' => $google2fa->getCurrentOtp($secret), 'current_password' => 'password']);
 
         $this->assertCount(1, $this->securityLogs(SecurityEvent::TWO_FACTOR_ENABLED));
 
@@ -166,7 +166,7 @@ class SecurityEventLoggingTest extends TestCase
         $this->assertCount(1, $this->securityLogs(SecurityEvent::TWO_FACTOR_FAILED));
 
         $this->actingAs($this->user)
-            ->withSession(['two_factor_verified' => true])
+            ->withSession(['two_factor_verified' => $this->user->getKey()])
             ->post(route('two-factor.disable'), ['password' => 'password']);
 
         $this->assertCount(1, $this->securityLogs(SecurityEvent::TWO_FACTOR_DISABLED));

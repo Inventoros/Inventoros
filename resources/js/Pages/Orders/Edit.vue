@@ -23,6 +23,19 @@ const props = defineProps({
     awaitingApproval: { type: Boolean, default: false },
 });
 
+// Status only moves forward (the server enforces it): cancelled and delivered
+// are final and a shipped order can only be delivered.
+const reachableStatuses = {
+    cancelled: ['cancelled'],
+    delivered: ['delivered'],
+    shipped: ['shipped', 'delivered'],
+};
+const canMoveTo = (status) => {
+    const allowed = reachableStatuses[props.order.status];
+
+    return !allowed || allowed.includes(status);
+};
+
 const form = useForm({
     customer_id: props.order.customer_id ?? null,
     customer_name: props.order.customer_name,
@@ -325,11 +338,11 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                             <div>
                                 <label for="status" :class="fieldLabel">{{ t('orders.create.statusLabel') }}</label>
                                 <select id="status" v-model="form.status" :class="fieldInput" required>
-                                    <option value="pending">{{ t('orders.status.pending') }}</option>
-                                    <option value="processing">{{ t('orders.status.processing') }}</option>
-                                    <option value="shipped" :disabled="awaitingApproval">{{ t('orders.status.shipped') }}</option>
-                                    <option value="delivered" :disabled="awaitingApproval">{{ t('orders.status.delivered') }}</option>
-                                    <option value="cancelled">{{ t('orders.status.cancelled') }}</option>
+                                    <option value="pending" :disabled="!canMoveTo('pending')">{{ t('orders.status.pending') }}</option>
+                                    <option value="processing" :disabled="!canMoveTo('processing')">{{ t('orders.status.processing') }}</option>
+                                    <option value="shipped" :disabled="awaitingApproval || !canMoveTo('shipped')">{{ t('orders.status.shipped') }}</option>
+                                    <option value="delivered" :disabled="awaitingApproval || !canMoveTo('delivered')">{{ t('orders.status.delivered') }}</option>
+                                    <option value="cancelled" :disabled="!canMoveTo('cancelled')">{{ t('orders.status.cancelled') }}</option>
                                 </select>
                                 <p v-if="awaitingApproval" class="mt-1 text-xs text-text-tertiary">{{ t('orders.approval.statusBlocked') }}</p>
                                 <p v-if="form.errors.status" :class="fieldError">{{ form.errors.status }}</p>

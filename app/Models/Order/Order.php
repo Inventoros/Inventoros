@@ -394,6 +394,18 @@ class Order extends Model
     protected static function booted(): void
     {
         static::saving(function (Order $order) {
+            if ($order->exists && $order->isDirty('status')) {
+                $from = OrderStatus::tryFrom((string) $order->getRawOriginal('status'));
+                // The one sanctioned step back: OrderService::revertMistakenShipment().
+                $error = $order->mistakenShipmentRevertPermitted && $from === OrderStatus::SHIPPED && $order->status === OrderStatus::PROCESSING
+                    ? null
+                    : self::statusTransitionError($from, $order->status);
+
+                if ($error !== null) {
+                    throw new InvalidStateException($error, 'invalid_state_transition');
+                }
+            }
+
             // Before the approval check below, so terms changed in the same
             // save as a ship/deliver are held for approval too.
             if ($order->exists && $order->isDirty(self::APPROVED_TERMS)) {
@@ -416,6 +428,10 @@ class Order extends Model
                 : null;
 
             DB::afterCommit(fn () => app(ApprovalService::class)->requestOrderReapproval($order, $editor));
+        });
+
+        static::saved(function (Order $order) {
+            $order->mistakenShipmentRevertPermitted = false;
         });
     }
 
@@ -491,6 +507,70 @@ class Order extends Model
         $this->reapprovalRequested = true;
 
         return true;
+    }
+
+    /**
+     * Why an order may not move from $from to $to, or null when it may.
+     *
+     * Status only moves forward. A cancelled order already gave its stock
+     * back, so reviving it would oversell. Goods of a shipped order have left
+     * the warehouse: it can only be delivered, and a delivered order is
+     * final (goods coming back go through a return). Moving either back to
+     * pending/processing would let cancel, delete or a line edit restock
+     * goods that are no longer here. Enforced for every surface by the
+     * saving hook above; surfaces check it first for their own error shape.
+     */
+    public static function statusTransitionError(OrderStatus|string|null $from, OrderStatus|string|null $to): ?string
+    {
+        $from = $from instanceof OrderStatus ? $from : OrderStatus::tryFrom((string) $from);
+        $to = $to instanceof OrderStatus ? $to : OrderStatus::tryFrom((string) $to);
+
+        if ($from === null || $to === null || $from === $to) {
+            return null;
+        }
+
+        return match ($from) {
+            OrderStatus::CANCELLED => 'A cancelled order cannot be reactivated. Create a new order instead.',
+            OrderStatus::DELIVERED => 'A delivered order\'s status cannot be changed. Record a return for goods that come back.',
+            OrderStatus::SHIPPED => $to === OrderStatus::DELIVERED
+                ? null
+                : 'A shipped order can only be marked delivered. Record a return for goods that come back.',
+            default => null,
+        };
+    }
+
+    /** Set by OrderService::revertMistakenShipment() for its one save. */
+    private bool $mistakenShipmentRevertPermitted = false;
+
+    /**
+     * Let this instance's next save move it from shipped back to processing.
+     * Only OrderService::revertMistakenShipment() calls this, after checking
+     * the actor is an admin and nothing actually left or came back.
+     *
+     * @internal
+     */
+    public function permitMistakenShipmentRevert(): void
+    {
+        $this->mistakenShipmentRevertPermitted = true;
+    }
+
+    /**
+     * Why this order may not move to $status, or null when it may.
+     */
+    public function transitionErrorTo(OrderStatus|string|null $status): ?string
+    {
+        return self::statusTransitionError($this->status, $status);
+    }
+
+    /**
+     * Whether any of this order's goods are recorded as having left the
+     * warehouse: shipped or delivered, or stamped shipped_at (a row moved
+     * back to pending/processing before transitions were enforced).
+     */
+    public function hasShippedGoods(): bool
+    {
+        return $this->shipped_at !== null
+            || in_array($this->status, [OrderStatus::SHIPPED, OrderStatus::DELIVERED], true);
     }
 
     /**
