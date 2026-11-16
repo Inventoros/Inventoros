@@ -1,24 +1,24 @@
 # Inventoros stockroom workbench
 
-This is a proposed dashboard direction for design review. It keeps the existing product shell and styling system while giving the dashboard an inventory-specific centre: a replenishment ledger, SKU labels, and minimum-stock rulers.
+This is a proposed dashboard direction for design review. It keeps the existing product shell and styling system while giving the dashboard an inventory-specific centre: SKU labels and minimum-stock rulers within the existing replenishment panel. The primary stats strip remains first and retains its original styling at every screen size.
 
 ## Design question
 
-**Which stock records need attention, and what can I do next?** The first glance should land on a shortage and its Review action. Product count, valuation, pending orders, and monthly revenue remain available in a quieter register.
+**What is the current inventory and order position, and which stock records need attention?** The established product, valuation, order, and revenue stats remain prominent at the top. The replenishment panel below them gains more recognisable, inventory-specific record styling.
 
-The current four equal metric cells could describe almost any business application. The proposal makes the records being managed carry the identity. Its repeated visual form is an actual stock measurement: solid on-hand quantity, a dashed gap, and a minimum marker. It is neither a history chart nor a forecast.
+Its repeated visual form is an actual stock measurement: solid on-hand quantity, a dashed gap, and a minimum marker. It is neither a history chart nor a forecast. SKU and location identify each record.
 
 ```text
-Dashboard                              date / controls
-Replenishment ledger                   Summary register
-SKU / name / location | 3 ... 10 | gap | Review     products
-SKU / name / location | 0 ... 20 | gap | Review     value
-                                                 pending / revenue
-Recent orders                          Category valuation
+Dashboard                                      date / controls
+Total products | Inventory value | Pending orders | Revenue
+Replenishment
+SKU / name / location | 3 ... 10 | gap | Review
+SKU / name / location | 0 ... 20 | gap | Review
+Recent orders                                  Category valuation
 Financial watch / existing stock actions
 ```
 
-On phones, the replenishment records come before summary metrics. On ultrawide displays, those same records become adjacent stock tickets, allowing meaningful comparison rather than stretching one thin row across the screen. Reading order remains replenishment, summaries, then supporting details.
+The same stats-first order applies on phones. On ultrawide displays, replenishment records become adjacent stock tickets, allowing meaningful comparison rather than stretching one thin row across the screen. Record layouts fold based on their actual panel width so tablet sidebars do not clip actions.
 
 ### Visual choices
 
@@ -26,7 +26,7 @@ The palette is inherited from the shared light/dark tokens: canvas `#F8F8F9`, ra
 
 Keep the existing Inter/Figtree sans stack. Use tabular numerals for quantity comparison and an 11 px monospace role for actual SKU identifiers. The larger on-hand/minimum pair earns its prominence by supporting the next decision. No new font, dependency, animation, brand palette, or synthetic trend is introduced.
 
-The main departure from the Dashboard Design skill's default KPI-first ordering is deliberate: this is an operational stock dashboard, so the problem list leads. Its sample data shows real minimum thresholds instead of an invented health score.
+The visual distinction comes from the stock records rather than replacing the established stats hierarchy. Real minimum thresholds provide the context; no health score is invented.
 
 ### Considered and rejected
 
@@ -46,7 +46,7 @@ Actual Chromium captures of main at `37166232` and this branch, using the same d
 | Dark | ![Dark before](before/dashboard-dark.png) | ![Dark after](after/dashboard-dark.png) |
 | Wide | ![Wide before](before/dashboard-wide.png) | ![Wide after](after/dashboard-wide.png) |
 
-Replenishment begins at y=165 instead of y=341 on desktop, and y=199 instead of y=473 on phone. The main desktop snapshot, supporting tables, and controls retain their data. Phone records take more room to keep identifying text, quantities, and 44 px Review actions readable.
+The primary stats keep their established format and come before replenishment on every viewport. The desktop snapshot, supporting tables, and controls retain their data. Phone records take more room to keep identifying text, quantities, and 44 px Review actions readable.
 
 ## Data and verification
 
@@ -60,9 +60,9 @@ The screenshot seeders create a demo company. `seed.php` then sets three clearly
 
 `verify.mjs` compares the rendered metrics, every shortage and accessible ruler label, and the sum of category valuations against those independent answers. No live database is involved.
 
-Verification includes the production build, all 226 JavaScript tests, 52 dashboard PHP tests (541 assertions), and 22 focused Chromium checks. The browser checks cover quantity accuracy, variant-effective stock, eight viewport widths, empty and healthy catalogs, missing permission-gated values, hidden widgets, full-width runtime plugin placements, Arabic direction, 44 px phone targets, and high contrast. Axe reports no violations in the changed workbench. Colour-deficiency captures were inspected for achromatopsia, deuteranopia, protanopia, and tritanopia; labels and positions retain the meaning independently of colour.
+Verification includes the production build, all 226 JavaScript tests, 52 dashboard PHP tests (541 assertions), and 22 focused Chromium checks. The browser checks cover quantity accuracy, variant-effective stock, eight viewport widths, empty and healthy catalogs, missing permission-gated values, the stats-first hierarchy, hidden widgets, full-width runtime plugin placements, Arabic direction, 44 px phone targets, and high contrast. Axe reports no violations in the changed replenishment panel. Colour-deficiency captures were inspected for achromatopsia, deuteranopia, protanopia, and tritanopia; labels and positions retain the meaning independently of colour.
 
-All existing widget preference keys, metrics, permissions, server aggregates, reorder logic, and extension names remain. `before-stats` and `after-stats` continue to bracket the stats surface at full width; `before-content` precedes the operational group. The dashboard still uses server snapshots, so this change does not introduce a separate loading, stale-data, or fetch-error model.
+All existing widget preference keys, metrics, permissions, server aggregates, reorder logic, and extension names remain. `before-stats`, `after-stats`, and `before-content` retain their original order and full-width placement. The dashboard still uses server snapshots, so this change does not introduce a separate loading, stale-data, or fetch-error model.
 
 ## Follow-up ideas
 

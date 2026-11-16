@@ -5,7 +5,7 @@
     "height": 1000,
     "theme": "light",
     "overflow": 0,
-    "pageHeight": 1320,
+    "pageHeight": 1469,
     "metrics": [
       {
         "key": "dashboard-metric-products",
@@ -33,7 +33,7 @@
       "SKU-10014Laptop Stand AluminumElectronics · Warehouse B3On hand10Minimum7 below minimumReview stock",
       "SKU-10010Corrugated Shipping Box (L)Packaging · Receiving Dock125On hand500Minimum375 below minimumReview stock"
     ],
-    "stockTop": 165,
+    "stockTop": 318,
     "valuationTotal": "$94,390.62"
   },
   {
@@ -70,7 +70,7 @@
       "SKU-10014Laptop Stand AluminumElectronics · Warehouse B3On hand10Minimum7 below minimumReview stock",
       "SKU-10010Corrugated Shipping Box (L)Packaging · Receiving Dock125On hand500Minimum375 below minimumReview stock"
     ],
-    "stockTop": 165,
+    "stockTop": 318,
     "valuationTotal": "$94,390.62"
   },
   {
@@ -79,7 +79,7 @@
     "height": 812,
     "theme": "light",
     "overflow": 0,
-    "pageHeight": 2517,
+    "pageHeight": 2521,
     "metrics": [
       {
         "key": "dashboard-metric-products",
@@ -107,7 +107,7 @@
       "SKU-10014Laptop Stand AluminumElectronics · Warehouse B3On hand10Minimum7 below minimumReview stock",
       "SKU-10010Corrugated Shipping Box (L)Packaging · Receiving Dock125On hand500Minimum375 below minimumReview stock"
     ],
-    "stockTop": 199,
+    "stockTop": 450,
     "valuationTotal": "$94,390.62"
   },
   {
@@ -116,7 +116,7 @@
     "height": 1000,
     "theme": "dark",
     "overflow": 0,
-    "pageHeight": 1320,
+    "pageHeight": 1469,
     "metrics": [
       {
         "key": "dashboard-metric-products",
@@ -144,7 +144,7 @@
       "SKU-10014Laptop Stand AluminumElectronics · Warehouse B3On hand10Minimum7 below minimumReview stock",
       "SKU-10010Corrugated Shipping Box (L)Packaging · Receiving Dock125On hand500Minimum375 below minimumReview stock"
     ],
-    "stockTop": 165,
+    "stockTop": 318,
     "valuationTotal": "$94,390.62"
   }
 ]

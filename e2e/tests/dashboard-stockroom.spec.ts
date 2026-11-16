@@ -32,7 +32,7 @@ async function render(page: Page, overrides: Record<string, unknown> = {}) {
         await route.fulfill({ response, body: body.replace(match[0], `${match[1]}${json}${match[3]}`) });
     });
     await page.goto('/dashboard', { waitUntil: 'networkidle' });
-    await expect(page.locator('.dashboard-workbench')).toBeVisible();
+    await expect(page.locator('.dashboard')).toBeVisible();
 }
 
 for (const width of [320, 375, 768, 1024, 1280, 1440, 1920, 3440]) {
@@ -57,25 +57,32 @@ for (const width of [320, 375, 768, 1024, 1280, 1440, 1920, 3440]) {
         const ruler = await rows.nth(1).getByRole('img').boundingBox();
         expect(Math.abs(marker!.x + 4 - ruler!.x - ruler!.width * 0.3)).toBeLessThan(1);
         const position = await page.locator('.dashboard-replenishment').boundingBox();
-        expect(position!.y).toBeLessThan(300);
+        const metrics = await page.locator('.dashboard-metrics').boundingBox();
+        expect(metrics!.y + metrics!.height).toBeLessThanOrEqual(position!.y);
+        for (const metric of await page.locator('.dashboard-metric-value').all()) await expect(metric).toBeInViewport();
+        for (const button of await rows.getByRole('button').all()) {
+            const box = await button.boundingBox();
+            expect(box!.x).toBeGreaterThanOrEqual(position!.x);
+            expect(box!.x + box!.width).toBeLessThanOrEqual(position!.x + position!.width);
+        }
     });
 }
 
-test('hidden widgets leave no empty register column or invented metrics', async ({ page }) => {
+test('hidden stats leave no invented metrics', async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 1000 });
     await render(page, { widgetPreferences: { ...widgets, stats_overview: false, revenue_chart: false } });
     await expect(page.locator('.dashboard-metric')).toHaveCount(0);
     const panel = await page.locator('.dashboard-replenishment').boundingBox();
-    const workbench = await page.locator('.dashboard-workbench').boundingBox();
+    const workbench = await page.locator('.dashboard').boundingBox();
     expect(panel!.width).toBe(workbench!.width);
 });
 
-test('summary-only preferences use the whole workbench', async ({ page }) => {
+test('summary-only preferences keep the full primary stats strip', async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 1000 });
     await render(page, { widgetPreferences: { ...widgets, low_stock_alerts: false } });
     await expect(page.locator('.dashboard-replenishment')).toHaveCount(0);
     const metrics = await page.locator('.dashboard-metrics').boundingBox();
-    const workbench = await page.locator('.dashboard-workbench').boundingBox();
+    const workbench = await page.locator('.dashboard').boundingBox();
     expect(metrics!.width).toBe(workbench!.width);
     const first = await page.locator('.dashboard-metric').first().boundingBox();
     expect(first!.width).toBeLessThan(metrics!.width / 2);
@@ -113,7 +120,7 @@ test('Arabic reverses the quantity ruler and preserves narrow hit areas', async 
 
 test('the stock workbench has no Axe violations and remains usable in high contrast', async ({ page }) => {
     await render(page);
-    expect((await new AxeBuilder({ page }).include('.dashboard-workbench').analyze()).violations).toEqual([]);
+    expect((await new AxeBuilder({ page }).include('.dashboard-replenishment').analyze()).violations).toEqual([]);
     await page.emulateMedia({ forcedColors: 'active', reducedMotion: 'reduce' });
     await page.locator('.dashboard-review').first().focus();
     await expect(page.locator('.dashboard-review').first()).toBeFocused();
@@ -135,7 +142,7 @@ test('runtime stats extensions retain full-width placements', async ({ page }) =
             });
         }
     });
-    const workbench = await page.locator('.dashboard-workbench').boundingBox();
+    const workbench = await page.locator('.dashboard').boundingBox();
     for (const slot of ['before-stats', 'after-stats']) {
         const extension = page.getByTestId(`extension-${slot}`);
         await expect(extension).toBeVisible();
