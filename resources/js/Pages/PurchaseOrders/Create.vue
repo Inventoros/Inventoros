@@ -14,6 +14,7 @@ import { useFormFeedback } from '@/composables/useFormFeedback';
 import ProductPicker from '@/Components/ui/ProductPicker.vue';
 import TaxInput from '@/Components/TaxInput.vue';
 import PluginSlot from '@/Components/PluginSlot.vue';
+import PurchaseOrderExchangeRate from '@/Components/PurchaseOrderExchangeRate.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import { defineAsyncComponent, ref, computed, watch } from 'vue';
 import { ArrowLeft, Plus, Trash2, ScanLine } from '@lucide/vue';
@@ -30,6 +31,7 @@ const { t } = useI18n();
 const props = defineProps({
     suppliers: Array,
     products: Array,
+    exchangeRates: { type: Object, default: () => ({}) },
     pluginComponents: Object,
 });
 
@@ -42,6 +44,10 @@ const form = useForm({
     tax: 0,
     notes: '',
     items: [],
+    // Only sent when a permitted user enters (manual) or accepts (confirm)
+    // a rate; otherwise the server applies the provider's rate.
+    exchange_rate_mode: null,
+    exchange_rate: null,
 });
 const { errorSummary, errorId, fieldErrorAttrs, focusErrors } = useFormFeedback(form);
 const errorTargets = computed(() => ({
@@ -56,6 +62,9 @@ const errorTargets = computed(() => ({
     ...Object.fromEntries(form.items.flatMap((_, index) => [[`items.${index}.quantity`, fieldIdPrefix + '-repeat-1-' + index], [`items.${index}.unit_cost`, fieldIdPrefix + '-repeat-2-' + index]])),
 }));
 
+
+// The rate the PO will be saved at (for the organization-currency amounts).
+const effectiveRate = ref(null);
 
 const showScanner = ref(false);
 const selectedProductId = ref('');
@@ -267,6 +276,17 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                         <textarea id="notes" v-model="form.notes" rows="3" :class="fieldArea" v-bind="fieldErrorAttrs('notes')"></textarea>
                         <p v-if="form.errors.notes" :class="fieldError" :id="errorId('notes')">{{ form.errors.notes }}</p>
                     </div>
+
+                    <PurchaseOrderExchangeRate
+                        :form="form"
+                        :currency="form.currency"
+                        :order-date="form.order_date"
+                        :organization-currency="organizationCurrency"
+                        :total="total"
+                        :can-override="!!exchangeRates?.canOverride"
+                        :current="null"
+                        @rate="(rate) => (effectiveRate = rate)"
+                    />
                 </div>
             </Card>
 
@@ -353,6 +373,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                             <div class="w-28 text-end">
                                 <label class="mb-1 block text-[11px] text-text-tertiary">{{ t('common.subtotal') }}</label>
                                 <p class="font-semibold tabular-nums text-text-primary">{{ formatCurrency(item.quantity * item.unit_cost) }}</p>
+                                <p v-if="effectiveRate" class="text-[11px] tabular-nums text-text-tertiary">{{ formatMoney(item.quantity * item.unit_cost * Number(effectiveRate), organizationCurrency) }}</p>
                             </div>
                             <button :aria-label="t('common.delete')" type="button" @click="removeItem(index)" class="mt-4 rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-surface-sunken hover:text-status-danger"><Trash2 :size="16" /></button>
                         </div>
@@ -373,6 +394,10 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                             <div class="flex items-center justify-between border-t border-border-subtle pt-3">
                                 <span class="text-sm font-semibold text-text-primary">{{ t('common.total') }}</span>
                                 <span class="text-xl font-bold text-brand">{{ formatCurrency(total) }}</span>
+                            </div>
+                            <div v-if="effectiveRate" class="flex items-center justify-between text-sm">
+                                <span class="text-text-secondary">{{ t('exchangeRates.po.totalIn', { currency: organizationCurrency }) }}</span>
+                                <span class="font-semibold tabular-nums text-text-primary">{{ formatMoney(total * Number(effectiveRate), organizationCurrency) }}</span>
                             </div>
                         </div>
                     </div>
