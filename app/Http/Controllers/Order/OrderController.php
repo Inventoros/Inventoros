@@ -548,11 +548,12 @@ class OrderController extends Controller
                 }
             })])
             ->orderBy('name')
-            ->get(['id', 'name', 'sku', 'price', 'currency', 'price_in_currencies', 'stock', 'has_variants', 'category_id', 'location_id'])
+            ->get(['id', 'name', 'sku', 'barcode', 'price', 'currency', 'price_in_currencies', 'stock', 'has_variants', 'category_id', 'location_id'])
             ->map(fn (Product $product) => [
                 'id' => $product->id,
                 'name' => $product->name,
                 'sku' => $product->sku,
+                'barcode' => $product->barcode,
                 'price' => $product->price,
                 // A line in another currency is prefilled from these, as
                 // OrderService prices a line sent without a unit price.

@@ -2853,6 +2853,22 @@
       "empty": "Henüz kayıtlı seri numarası yok.",
       "emptyHint": "İlk seri numarasını kaydetmek için \"Seri No Ekle\"ye tıklayın.",
       "noMatches": "Seçili filtreyle eşleşen seri numarası yok."
+    },
+    "productPicker": {
+      "search": "Ad, SKU veya barkod ara",
+      "clear": "Ürünü temizle",
+      "chooseVariant": "Varyant seçin",
+      "onHand": "Stok · tüm konumlar",
+      "atSource": "Kaynakta kullanılabilir",
+      "chooseSource": "Kullanılabilirliği görmek için kaynak seçin",
+      "loadingSource": "Kaynak stoku kontrol ediliyor…",
+      "sourceError": "Kaynak stoku yüklenemedi",
+      "refine": "{total} sonuçtan {shown} gösteriliyor. Aramayı daraltın.",
+      "results": "{count} ürün"
+    },
+    "formFeedback": {
+      "title": "Bu alanları kontrol edin",
+      "hint": "Girdileriniz korunur. Aşağıdaki sorunları düzeltip tekrar deneyin."
     }
   },
   "warehouses": {

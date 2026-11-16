@@ -2853,6 +2853,22 @@
       "empty": "Noch keine Seriennummern erfasst.",
       "emptyHint": "Klicken Sie auf „Seriennummer hinzufügen“, um die erste Seriennummer zu registrieren.",
       "noMatches": "Keine Seriennummern für den ausgewählten Filter."
+    },
+    "productPicker": {
+      "search": "Name, SKU oder Barcode suchen",
+      "clear": "Produkt löschen",
+      "chooseVariant": "Variante wählen",
+      "onHand": "Bestand · alle Lagerorte",
+      "atSource": "Am Quellort verfügbar",
+      "chooseSource": "Quellort wählen, um die Verfügbarkeit zu sehen",
+      "loadingSource": "Quellbestand wird geprüft…",
+      "sourceError": "Quellbestand konnte nicht geladen werden",
+      "refine": "{shown} von {total}. Suche eingrenzen.",
+      "results": "{count} Produkte"
+    },
+    "formFeedback": {
+      "title": "Prüfen Sie diese Felder",
+      "hint": "Ihre Eingaben bleiben erhalten. Beheben Sie die folgenden Probleme und versuchen Sie es erneut."
     }
   },
   "warehouses": {

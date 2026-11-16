@@ -2853,6 +2853,22 @@
       "empty": "暂无序列号记录。",
       "emptyHint": "点击“添加序列号”登记第一个序列号。",
       "noMatches": "没有符合所选筛选条件的序列号。"
+    },
+    "productPicker": {
+      "search": "搜索名称、SKU 或条码",
+      "clear": "清除产品",
+      "chooseVariant": "请选择规格",
+      "onHand": "现有库存 · 所有库位",
+      "atSource": "来源库位可用量",
+      "chooseSource": "选择来源以查看可用量",
+      "loadingSource": "正在检查来源库存…",
+      "sourceError": "无法加载来源库存",
+      "refine": "显示 {shown} 项，共 {total} 项。请缩小搜索范围。",
+      "results": "{count} 个产品"
+    },
+    "formFeedback": {
+      "title": "请检查这些字段",
+      "hint": "已保留您的输入。请修正以下问题后重试。"
     }
   },
   "warehouses": {

@@ -2853,6 +2853,22 @@
       "empty": "Nessun numero di serie registrato.",
       "emptyHint": "Clicca su \"Aggiungi numero di serie\" per registrare il primo numero di serie.",
       "noMatches": "Nessun numero di serie corrisponde al filtro selezionato."
+    },
+    "productPicker": {
+      "search": "Cerca nome, SKU o codice a barre",
+      "clear": "Rimuovi prodotto",
+      "chooseVariant": "Scegli una variante",
+      "onHand": "Giacenza · tutte le ubicazioni",
+      "atSource": "Disponibile all’origine",
+      "chooseSource": "Scegli un’origine per vedere la disponibilità",
+      "loadingSource": "Verifica scorte all’origine…",
+      "sourceError": "Impossibile caricare le scorte all’origine",
+      "refine": "{shown} di {total}. Affina la ricerca.",
+      "results": "{count} prodotti"
+    },
+    "formFeedback": {
+      "title": "Controlla questi campi",
+      "hint": "I dati inseriti sono conservati. Correggi i problemi seguenti e riprova."
     }
   },
   "warehouses": {

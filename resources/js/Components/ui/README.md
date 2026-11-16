@@ -2,6 +2,28 @@
 
 Reuse interaction behavior and layout boundaries when pages have the same job. Pages retain their own permissions, routes, field state, and business rules.
 
+## Form actions and validation recovery
+
+`FormActions` provides the shared sticky save/cancel boundary. Pass `label`, `cancelHref`, `processing`, and any page-owned `disabled` condition. It submits the surrounding form, preserves native validation, exposes pending state, reserves safe-area space, and keeps keyboard targets clear of the sticky bar. Set `sticky=false` where the containing layout already owns a fixed action boundary. Optional `#hint` content explains a material save condition. `ProductFormActions` remains a compatibility wrapper.
+
+Use `useFormFeedback(form)` with `FormErrorSummary` to retain entered values and focus validation feedback after a failed save:
+
+```vue
+<FormErrorSummary ref="errorSummary" :errors="form.errors" :targets="{ name: 'name' }" />
+<input id="name" v-model="form.name" v-bind="fieldErrorAttrs('name')" />
+<p v-if="form.errors.name" :id="errorId('name')">{{ form.errors.name }}</p>
+```
+
+Call `focusErrors` from the Inertia request's `onError`. `targets` maps server error paths to actual focusable field ids, including indexed line fields. Unmapped business errors stay readable without an invented destination. The summary links focus the relevant control; `fieldErrorAttrs` associates the inline message and invalid state. Pass existing help ids as the helper's second argument to keep their descriptions. Pages retain all validation and submission logic.
+
+## Product selection
+
+`ProductPicker` takes `v-model` (a product id), `products`, and an optional `id` for an external label. It searches product and variant names, SKUs and barcodes locally, prioritizes exact identifiers, and renders at most 40 matches with a refinement prompt. Arrow keys move through results; Enter selects; Escape dismisses search; Tab closes the list. Editing clears the selected id, so unmatched text cannot silently submit the previous product. Required pickers also use native constraint validation.
+
+The component emits `change` after updating the model. Callers retain variant selection, prices, supplier defaults, quantities, and scanning. `required`, `disabled`, `invalid`, and `describedby` connect the field to its form. Each instance owns unique list and option ids.
+
+Pass `stockLabel` only when the quantity's scope is known. Without `stockByProduct`, the optional stock label describes the supplied product stock (for example, all locations). A `stockByProduct` map overrides those values. Transfer forms load availability for the selected authorized source; loading or failed requests clear old quantities. Variant quantities remain in the caller's variant selector. Search matches on a variant identify its product and still require an explicit variant choice.
+
 ## Empty lists and filtered results
 
 `EmptyState` presents a feature's first-use state, or search recovery when `filtered` is true. Pass the **applied server filters**, so typing into an unsubmitted search does not change the result message.

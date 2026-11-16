@@ -41,6 +41,8 @@ const control = 'h-9 rounded-md border border-border-subtle bg-surface-canvas px
         <div class="flex gap-2">
             <input
                 :id="id"
+                :aria-invalid="error ? true : undefined"
+                :aria-describedby="error ? `${id}-hint ${id}-error` : `${id}-hint`"
                 v-model.number="amount"
                 type="number"
                 step="0.01"
@@ -64,7 +66,7 @@ const control = 'h-9 rounded-md border border-border-subtle bg-surface-canvas px
                 <span class="text-sm text-text-tertiary" aria-hidden="true">%</span>
             </div>
         </div>
-        <p class="mt-1 text-xs text-text-tertiary">{{ t('tax.rateHint') }}</p>
-        <p v-if="error" class="mt-1 text-xs text-status-danger">{{ error }}</p>
+        <p :id="`${id}-hint`" class="mt-1 text-xs text-text-tertiary">{{ t('tax.rateHint') }}</p>
+        <p v-if="error" :id="`${id}-error`" class="mt-1 text-xs text-status-danger">{{ error }}</p>
     </div>
 </template>

@@ -152,6 +152,7 @@ Route::post('/set-warehouse', [WarehouseController::class, 'setActiveWarehouse']
 // Stock Transfers - Permission based
 Route::get('/stock-transfers', [StockTransferController::class, 'index'])->name('stock-transfers.index')->middleware('permission:transfer_stock');
 Route::get('/stock-transfers/create', [StockTransferController::class, 'create'])->name('stock-transfers.create')->middleware('permission:transfer_stock');
+Route::get('/stock-transfers/source-stock', [StockTransferController::class, 'sourceStock'])->name('stock-transfers.source-stock')->middleware('permission:transfer_stock');
 Route::post('/stock-transfers', [StockTransferController::class, 'store'])->name('stock-transfers.store')->middleware('permission:transfer_stock');
 Route::get('/stock-transfers/{stockTransfer}', [StockTransferController::class, 'show'])->name('stock-transfers.show')->middleware('permission:transfer_stock');
 Route::put('/stock-transfers/{stockTransfer}', [StockTransferController::class, 'update'])->name('stock-transfers.update')->middleware('permission:transfer_stock');

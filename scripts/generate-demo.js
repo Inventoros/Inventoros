@@ -223,7 +223,8 @@ async function orderToShipFlow(page) {
     ];
     for (const [name, qty] of lines) {
         await clickOn(page, product, { settle: 150 });
-        await product.selectOption({ label: await optionLabel(product, name) });
+        await typeSlowly(product, name, 45);
+        await clickOn(page, page.locator('.product-picker-popup').getByRole('option').filter({ hasText: name }).first(), { settle: 150 });
         await pause(400);
         await clickOn(page, quantity, { settle: 100 });
         await quantity.press('Control+A');
@@ -258,14 +259,6 @@ async function orderToShipFlow(page) {
     // Step aside so the pointer does not cover the badge.
     await page.mouse.move(mouse.x + 46, mouse.y + 26, { steps: 8 });
     await pause(2800);
-}
-
-/** The full text of the <option> whose label starts with the product name. */
-async function optionLabel(select, name) {
-    const labels = await select.locator('option').allTextContents();
-    const match = labels.map((l) => l.trim()).find((l) => l.startsWith(name));
-    if (!match) throw new Error(`No product option for ${name}`);
-    return match;
 }
 
 const FLOWS = {
