@@ -146,5 +146,7 @@
     "Payment recorded.": "Pagamento registrado.",
     "Cannot delete a supplier with open purchase orders.": "Não é possível excluir um fornecedor com pedidos de compra em aberto.",
     "Stock adjustments created for discrepancies: :count.": "Ajustes de estoque criados para divergências: :count.",
-    "No discrepancies found.": "Nenhuma divergência encontrada."
+    "No discrepancies found.": "Nenhuma divergência encontrada.",
+    "If that email belongs to an account, we have emailed a password reset link.": "Se esse e-mail pertencer a uma conta, enviamos um link para redefinir a senha.",
+    "This code was already used; wait for the next one.": "Este código já foi usado; aguarde o próximo."
 }

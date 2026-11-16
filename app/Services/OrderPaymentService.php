@@ -31,8 +31,9 @@ use Illuminate\Validation\ValidationException;
  *  - a payment larger than the balance due is rejected unless the caller
  *    explicitly allows an overpayment;
  *  - a cancelled order takes no new payments (refunds are still allowed);
- *  - a refund never exceeds what is currently paid, and voiding a payment may
- *    not leave refunds standing against money that was never received;
+ *  - a refund never exceeds what is currently paid, voiding a payment may
+ *    not leave refunds standing against money that was never received, and
+ *    voiding a refund may not leave the order paid more than its total;
  *  - rows are never edited or deleted, only voided, so the history is an
  *    audit trail.
  *
@@ -118,11 +119,14 @@ final class OrderPaymentService
      * Void a payment or refund. The row stays, marked voided, and stops
      * counting towards what was paid.
      *
+     * Voiding a refund that would leave the order paid more than its total
+     * needs $allowOverpayment, like recording a payment above the balance.
+     *
      * @throws ValidationException
      */
-    public function void(OrderPayment $payment, User $actor, ?string $reason): OrderPayment
+    public function void(OrderPayment $payment, User $actor, ?string $reason, bool $allowOverpayment = false): OrderPayment
     {
-        [$voided, $locked] = DB::transaction(function () use ($payment, $actor, $reason) {
+        [$voided, $locked] = DB::transaction(function () use ($payment, $actor, $reason, $allowOverpayment) {
             $locked = $this->lock($payment->order()->withTrashed()->withoutGlobalScopes()->firstOrFail());
             $row = OrderPayment::withoutGlobalScopes()->whereKey($payment->getKey())->lockForUpdate()->firstOrFail();
 
@@ -135,6 +139,16 @@ final class OrderPaymentService
             if (! $row->isRefund() && Money::compare($row->amount, $locked->amount_paid) > 0) {
                 throw ValidationException::withMessages([
                     'payment' => 'Voiding this payment would leave refunds larger than what was paid. Void the refunds first.',
+                ]);
+            }
+
+            // Voiding a refund puts its money back on the order. Like a new
+            // payment, that may not overpay it unless the caller explicitly
+            // allows an overpayment (an order that was overpaid on purpose).
+            if ($row->isRefund() && ! $allowOverpayment
+                && Money::compare(Money::add($locked->amount_paid, $row->amount), $locked->total) > 0) {
+                throw ValidationException::withMessages([
+                    'payment' => "Voiding this refund would leave the order paid more than its {$locked->total} total. Allow an overpayment and void it again if the order was overpaid on purpose.",
                 ]);
             }
 
