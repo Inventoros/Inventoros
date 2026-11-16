@@ -479,7 +479,8 @@
       "atCost": "Tegen kostprijs",
       "reviewSystem": "Systeem controleren",
       "saveError": "Voorkeuren konden niet worden opgeslagen. Probeer opnieuw.",
-      "shortfallHelp": "Het tekort is het verschil met de minimumvoorraad. Controleer de leverancier en bestelinstellingen voordat u inkoopt."
+      "shortfallHelp": "Het tekort is het verschil met de minimumvoorraad. Controleer de leverancier en bestelinstellingen voordat u inkoopt.",
+      "viewProduct": "Product bekijken"
     }
   },
   "products": {
@@ -939,7 +940,8 @@
     "addSupplier": "Leverancier toevoegen",
     "hint": "Maakt één concept-inkooporder per primaire leverancier aan. Producten zonder leverancier worden overgeslagen.",
     "chooseVariants": "Varianten kiezen",
-    "variantHint": "Selecteer variant-SKUs op een inkooporder om dit product aan te vullen."
+    "variantHint": "Selecteer variant-SKUs op een inkooporder om dit product aan te vullen.",
+    "createFailed": "Het concept van de inkooporder kon niet worden aangemaakt. Probeer het opnieuw."
   },
   "suppliers": {
     "title": "Leveranciers",

@@ -613,27 +613,7 @@ a.dashboard-metric:hover {
     border-bottom: 1px solid hsl(var(--border-subtle));
     font-size: 13px;
 }
-.dashboard-stock-facts {
-    padding: 8px 15px;
-    margin: 16px 0;
-    border: 1px solid hsl(var(--border-subtle));
-    border-radius: 8px;
-    background: hsl(var(--surface-canvas));
-}
-.dashboard-stock-facts > div {
-    display: flex;
-    justify-content: space-between;
-    gap: 20px;
-    padding: 9px 0;
-    font-size: 13px;
-}
-.dashboard-stock-facts dt {
-    color: hsl(var(--text-tertiary));
-}
-.dashboard-stock-facts dd {
-    text-align: end;
-    font-variant-numeric: tabular-nums;
-}
+
 @media (min-width: 112.5rem) {
     .dashboard-content-grid {
         grid-template-columns: minmax(0, 2.15fr) minmax(280px, 1fr);

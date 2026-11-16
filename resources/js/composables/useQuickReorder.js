@@ -35,17 +35,23 @@ export function useQuickReorder(rows) {
         selected.value = allSelected.value ? [] : orderable.value.map((row) => row.id);
     };
 
-    const createPurchaseOrders = (ids = selected.value) => {
+    // A caller may supply scoped feedback (for example inside a stock review)
+    // without changing the table/report callers' default Inertia behaviour.
+    const createPurchaseOrders = (ids = selected.value, feedback = {}) => {
         if (!ids.length || submitting.value) return;
 
         router.post(
             route('purchase-orders.quick-reorder'),
             { product_ids: ids },
             {
+                ...feedback,
                 preserveScroll: true,
                 onStart: () => (submitting.value = true),
                 onFinish: () => (submitting.value = false),
-                onSuccess: () => (selected.value = []),
+                onSuccess: () => {
+                    selected.value = [];
+                    feedback.onSuccess?.();
+                },
             }
         );
     };

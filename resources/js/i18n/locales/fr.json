@@ -479,7 +479,8 @@
       "atCost": "Au coût d’achat",
       "reviewSystem": "Vérifier le système",
       "saveError": "Impossible d’enregistrer les préférences. Réessayez.",
-      "shortfallHelp": "Le manque correspond à l’écart au stock minimum. Vérifiez le fournisseur et les paramètres de réapprovisionnement avant tout achat."
+      "shortfallHelp": "Le manque correspond à l’écart au stock minimum. Vérifiez le fournisseur et les paramètres de réapprovisionnement avant tout achat.",
+      "viewProduct": "Voir le produit"
     }
   },
   "products": {
@@ -939,7 +940,8 @@
     "addSupplier": "Ajouter un fournisseur",
     "hint": "Crée un bon de commande brouillon par fournisseur principal. Les produits sans fournisseur sont ignorés.",
     "chooseVariants": "Choisir les variantes",
-    "variantHint": "Sélectionnez les références des variantes sur un bon de commande pour réapprovisionner ce produit."
+    "variantHint": "Sélectionnez les références des variantes sur un bon de commande pour réapprovisionner ce produit.",
+    "createFailed": "Impossible de cr?er le brouillon du bon de commande. R?essayez."
   },
   "suppliers": {
     "title": "Fournisseurs",

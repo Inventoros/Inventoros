@@ -479,7 +479,8 @@
       "atCost": "按成本",
       "reviewSystem": "检查系统",
       "saveError": "无法保存偏好设置。请重试。",
-      "shortfallHelp": "缺口是当前库存与最低库存的差额。采购前请检查供应商和补货设置。"
+      "shortfallHelp": "缺口是当前库存与最低库存的差额。采购前请检查供应商和补货设置。",
+      "viewProduct": "????"
     }
   },
   "products": {
@@ -939,7 +940,8 @@
     "addSupplier": "添加供应商",
     "hint": "为每个主要供应商创建一张采购订单草稿。没有供应商的产品将被跳过。",
     "chooseVariants": "选择变体",
-    "variantHint": "请在采购单中选择具体的变体 SKU，以补充此产品。"
+    "variantHint": "请在采购单中选择具体的变体 SKU，以补充此产品。",
+    "createFailed": "???????????????"
   },
   "suppliers": {
     "title": "供应商",

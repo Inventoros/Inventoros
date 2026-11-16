@@ -479,7 +479,8 @@
       "atCost": "Maliyet üzerinden",
       "reviewSystem": "Sistemi incele",
       "saveError": "Tercihler kaydedilemedi. Tekrar deneyin.",
-      "shortfallHelp": "Eksik miktar, minimum stokla aradaki farktır. Satın almadan önce tedarikçiyi ve yeniden sipariş ayarlarını kontrol edin."
+      "shortfallHelp": "Eksik miktar, minimum stokla aradaki farktır. Satın almadan önce tedarikçiyi ve yeniden sipariş ayarlarını kontrol edin.",
+      "viewProduct": "?r?n? g?r?nt?le"
     }
   },
   "products": {
@@ -939,7 +940,8 @@
     "addSupplier": "Tedarikçi ekle",
     "hint": "Her birincil tedarikçi için bir taslak satın alma siparişi oluşturur. Tedarikçisi olmayan ürünler atlanır.",
     "chooseVariants": "Varyant seç",
-    "variantHint": "Bu ürünü tedarik etmek için satın alma siparişinde varyant SKU’larını seçin."
+    "variantHint": "Bu ürünü tedarik etmek için satın alma siparişinde varyant SKU’larını seçin.",
+    "createFailed": "Sat?n alma sipari?i tasla?? olu?turulamad?. Tekrar deneyin."
   },
   "suppliers": {
     "title": "Tedarikçiler",

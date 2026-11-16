@@ -63,6 +63,7 @@ jobs:
           APP_URL=http://127.0.0.1:8000 npx playwright test \
             e2e/tests/dashboard.spec.ts \
             e2e/tests/dashboard-stockroom.spec.ts \
+            e2e/tests/dashboard-review.spec.ts \
             e2e/tests/products.spec.ts \
             e2e/tests/product-form-actions.spec.ts \
             e2e/tests/orders.spec.ts \

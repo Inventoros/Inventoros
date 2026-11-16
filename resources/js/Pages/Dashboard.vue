@@ -6,6 +6,7 @@ import TableViewport from '@/Components/ui/TableViewport.vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import PluginSlot from '@/Components/PluginSlot.vue';
 import PluginWidgets from '@/Components/PluginWidgets.vue';
+import StockReview from '@/Components/Dashboard/StockReview.vue';
 import StockPosition from '@/Components/Dashboard/StockPosition.vue';
 import MetricCard from '@/Components/Dashboard/MetricCard.vue';
 import Modal from '@/Components/Modal.vue';
@@ -68,6 +69,7 @@ const showSystemModal = ref(false);
 const saving = ref(false);
 const preferenceError = ref(false);
 const selectedProduct = ref(null);
+const reviewError = ref(null);
 const widgetLabels = computed(() => ({
     stats_overview: t('dashboard.widgets.statsOverview'),
     revenue_chart: t('dashboard.widgets.revenueChart'),
@@ -205,6 +207,28 @@ const systemWarningMessage = (warning) => {
 };
 const quickReorder = useQuickReorder(computed(() => props.reorderSuggestions));
 const selectedSuggestion = computed(() => props.reorderSuggestions.find((row) => row.id === selectedProduct.value?.id));
+const reviewStock = (product) => {
+    reviewError.value = null;
+    selectedProduct.value = product;
+};
+const closeReview = () => {
+    selectedProduct.value = null;
+    reviewError.value = null;
+};
+const createFromReview = () => {
+    if (!selectedProduct.value) return;
+    reviewError.value = null;
+    const failed = () => {
+        reviewError.value = t('quickReorder.createFailed');
+        return false;
+    };
+    quickReorder.createPurchaseOrders([selectedProduct.value.id], {
+        onError: (errors) => { reviewError.value = errors.product_ids || t('quickReorder.createFailed'); },
+        onHttpException: failed,
+        onNetworkError: failed,
+        onSuccess: closeReview,
+    });
+};
 const reorderThClass = 'px-3 py-2 text-start text-xs font-medium tracking-tight text-text-secondary';
 const ordersStatusIcon = (status) => (status === 'delivered' ? Check : status === 'pending' ? Clock3 : CircleDot);
 </script>
@@ -317,7 +341,7 @@ const ordersStatusIcon = (status) => (status === 'delivered' ? Check : status ==
                         <p class="dashboard-shortfall">
                             {{ t('dashboard.design.shortfall', { count: formatPlainNumber(stockLevel(product).shortfall) }) }}
                         </p>
-                        <button type="button" class="dashboard-review ds-focus-ring" @click="selectedProduct = product">
+                        <button type="button" class="dashboard-review ds-focus-ring" @click="reviewStock(product)">
                             {{ t('dashboard.design.reviewStock')
                             }}<ArrowRight :size="14" aria-hidden="true" />
                         </button>
@@ -703,60 +727,18 @@ const ordersStatusIcon = (status) => (status === 'delivered' ? Check : status ==
                     </div>
                 </div></Modal
             >
-            <Modal :show="!!selectedProduct" max-width="lg" :aria-label="t('dashboard.design.reviewStock')" @close="selectedProduct = null"
-                ><div v-if="selectedProduct" class="dashboard-dialog">
-                    <div class="dashboard-dialog-heading">
-                        <h2>{{ t('dashboard.design.reviewStock') }}</h2>
-                        <button
-                            class="dashboard-icon-button ds-focus-ring"
-                            :aria-label="t('common.cancel')"
-                            @click="selectedProduct = null"
-                        >
-                            <X :size="18" />
-                        </button>
-                    </div>
-                    <h3>{{ selectedProduct.name }}</h3>
-                    <dl class="dashboard-stock-facts">
-                        <div>
-                            <dt>{{ t('warehouses.stockLevels.onHand') }}</dt>
-                            <dd>{{ formatPlainNumber(stockLevel(selectedProduct).stock) }}</dd>
-                        </div>
-                        <div>
-                            <dt>{{ t('dashboard.design.minimum') }}</dt>
-                            <dd>{{ formatPlainNumber(stockLevel(selectedProduct).minimum) }}</dd>
-                        </div>
-                        <div>
-                            <dt>{{ t('dashboard.hints.belowMinimum') }}</dt>
-                            <dd>{{ formatPlainNumber(stockLevel(selectedProduct).shortfall) }}</dd>
-                        </div>
-                        <template v-if="selectedSuggestion"
-                            ><div>
-                                <dt>{{ t('purchaseOrders.supplier') }}</dt>
-                                <dd>{{ selectedSuggestion.supplier || t('quickReorder.noSupplier') }}</dd>
-                            </div>
-                            <div>
-                                <dt>{{ t('quickReorder.suggestedQty') }}</dt>
-                                <dd>{{ formatPlainNumber(selectedSuggestion.suggested_quantity) }}</dd>
-                            </div></template
-                        >
-                    </dl>
-                    <p>{{ selectedSuggestion ? t('dashboard.reorderSuggestions.subtitle') : t('dashboard.design.shortfallHelp') }}</p>
-                    <div class="dashboard-dialog-actions">
-                        <Button
-                            v-if="canVisit('products.show')"
-                            variant="outline"
-                            as="Link"
-                            :href="route('products.show', selectedProduct.id)"
-                            >{{ t('dashboard.viewInventory') }}</Button
-                        ><Button
-                            v-if="quickReorder.canCreatePo.value && selectedSuggestion?.supplier_id"
-                            :loading="quickReorder.submitting.value"
-                            @click="quickReorder.createPurchaseOrders([selectedProduct.id])"
-                            >{{ t('quickReorder.createPo') }}</Button
-                        >
-                    </div>
-                </div></Modal
-            >
+            <StockReview
+                :product="selectedProduct"
+                :suggestion="selectedSuggestion"
+                :can-create-po="quickReorder.canCreatePo.value"
+                :view-href="selectedProduct && canVisit('products.show') ? route('products.show', selectedProduct.id) : null"
+                :edit-href="selectedProduct && canVisit('products.edit') ? route('products.edit', selectedProduct.id) : null"
+                :purchase-order-href="canVisit('purchase-orders.create') ? route('purchase-orders.create') : null"
+                :submitting="quickReorder.submitting.value"
+                :error="reviewError"
+                @close="closeReview"
+                @create="createFromReview"
+            />
         </div>
     </AppLayout>
 </template>

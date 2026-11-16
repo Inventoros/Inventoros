@@ -479,7 +479,8 @@
       "atCost": "Al costo",
       "reviewSystem": "Revisar sistema",
       "saveError": "No se pudieron guardar las preferencias. Inténtelo de nuevo.",
-      "shortfallHelp": "El faltante es la diferencia respecto al stock mínimo. Revise el proveedor y la configuración de reposición antes de comprar."
+      "shortfallHelp": "El faltante es la diferencia respecto al stock mínimo. Revise el proveedor y la configuración de reposición antes de comprar.",
+      "viewProduct": "Ver producto"
     }
   },
   "products": {
@@ -939,7 +940,8 @@
     "addSupplier": "Agregar un proveedor",
     "hint": "Crea un borrador de orden de compra por cada proveedor principal. Los productos sin proveedor se omiten.",
     "chooseVariants": "Elegir variantes",
-    "variantHint": "Seleccione los SKU de las variantes en una orden de compra para reponer este producto."
+    "variantHint": "Seleccione los SKU de las variantes en una orden de compra para reponer este producto.",
+    "createFailed": "No se pudo crear el borrador del pedido de compra. Int?ntalo de nuevo."
   },
   "suppliers": {
     "title": "Proveedores",
