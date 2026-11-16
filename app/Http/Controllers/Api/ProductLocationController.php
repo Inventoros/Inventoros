@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api;
 
+use App\Http\Controllers\Api\Concerns\HandlesApiResponses;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\ProductLocation\StoreProductLocationRequest;
 use App\Http\Requests\Api\ProductLocation\UpdateProductLocationRequest;
@@ -20,6 +21,8 @@ use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
  */
 class ProductLocationController extends Controller
 {
+    use HandlesApiResponses;
+
     /**
      * List locations.
      */
@@ -51,7 +54,7 @@ class ProductLocationController extends Controller
         $sortDir = ($request->input('sort_dir') === 'desc') ? 'desc' : 'asc';
         $query->orderBy($sortBy, $sortDir);
 
-        $perPage = min($request->input('per_page', 15), 100);
+        $perPage = $this->perPage($request);
         $locations = $query->paginate($perPage);
 
         return ProductLocationResource::collection($locations);

@@ -6,6 +6,7 @@ namespace App\Mcp\Tools;
 
 use App\Mcp\Concerns\AuthenticatesMcpRequest;
 use App\Models\Inventory\Product;
+use App\Support\PageSize;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
@@ -25,7 +26,7 @@ class ListLowStockTool extends Tool
     {
         return [
             'warehouse_id' => $schema->integer()->description('Restrict to one warehouse.'),
-            'limit' => $schema->integer()->description('Max results (default 50, max 200).'),
+            'limit' => $schema->integer()->min(1)->max(200)->description('Max results (default 50, max 200).'),
         ];
     }
 
@@ -38,7 +39,7 @@ class ListLowStockTool extends Tool
             'limit' => ['nullable', 'integer', 'min:1', 'max:200'],
         ]);
 
-        $limit = min((int) ($request->get('limit') ?? 50), 200);
+        $limit = PageSize::resolve($request->get('limit'), 50, 200);
 
         $products = Product::query()
             ->forOrganization($this->organizationId())

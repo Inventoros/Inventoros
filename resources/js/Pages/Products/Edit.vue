@@ -7,6 +7,7 @@ import Card from '@/Components/ui/Card.vue';
 import Button from '@/Components/ui/Button.vue';
 import Badge from '@/Components/ui/Badge.vue';
 import PluginSlot from '@/Components/PluginSlot.vue';
+import ProductFormActions from '@/Components/Products/ProductFormActions.vue';
 import ProductVariantManager from '@/Components/ProductVariantManager.vue';
 import ProductSupplierManager from '@/Components/ProductSupplierManager.vue';
 import QuickAddModal from '@/Components/QuickAddModal.vue';
@@ -257,11 +258,11 @@ const fieldError = 'mt-1 text-xs text-status-danger';
         <!-- Plugin Slot: Before Form -->
         <PluginSlot slot="before-form" :components="pluginComponents?.beforeForm" />
 
-        <form @submit.prevent="submit" class="mt-6">
-            <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <form @submit.prevent="submit" class="mt-6 [&_:focus]:scroll-mb-28">
+            <div class="grid grid-cols-1 items-start gap-4 lg:grid-cols-2">
                 <!-- Basic Information -->
-                <Card :padded="false">
-                    <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">{{ t('products.create.basicInfo') }}</h3></div>
+                <Card :padded="false" class="@container">
+                    <div class="px-5 pt-5"><h2 class="text-balance text-sm font-semibold text-text-primary">{{ t('products.create.basicInfo') }}</h2></div>
                     <div class="space-y-4 p-5">
                         <!-- Product Name -->
                         <div>
@@ -274,14 +275,14 @@ const fieldError = 'mt-1 text-xs text-status-danger';
 
                         <!-- SKU -->
                         <div>
-                            <div class="flex items-center justify-between">
-                                <label for="sku" :class="fieldLabel">
+                            <div class="mb-1 flex items-center justify-between">
+                                <label for="sku" class="block text-sm font-medium text-text-secondary">
                                     {{ t('products.create.sku') }} <span class="text-status-danger">*</span>
                                 </label>
                                 <button
                                     type="button"
                                     @click="showSKUGenerator = true"
-                                    class="mb-1 flex items-center gap-1 text-xs font-medium text-brand hover:text-brand-hover"
+                                    class="flex items-center gap-1 text-xs font-medium text-brand hover:text-brand-hover"
                                 >
                                     <Zap :size="12" />
                                     {{ t('products.create.generateSku') }}
@@ -291,35 +292,62 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                             <p v-if="form.errors.sku" :class="fieldError">{{ form.errors.sku }}</p>
                         </div>
 
-                        <!-- Barcode -->
-                        <div>
-                            <label for="barcode" :class="fieldLabel">{{ t('products.create.barcode') }}</label>
-                            <input id="barcode" v-model="form.barcode" type="text" :class="fieldInput" />
-                            <p v-if="form.errors.barcode" :class="fieldError">{{ form.errors.barcode }}</p>
+                        <div class="grid grid-cols-1 gap-4 @sm:grid-cols-2">
+                            <!-- Barcode -->
+                            <div>
+                                <label for="barcode" :class="fieldLabel">{{ t('products.create.barcode') }}</label>
+                                <input id="barcode" v-model="form.barcode" type="text" :class="fieldInput" />
+                                <p v-if="form.errors.barcode" :class="fieldError">{{ form.errors.barcode }}</p>
+                            </div>
+
+                            <!-- Barcode Type -->
+                            <div>
+                                <label for="barcode_type" :class="fieldLabel">{{ t('products.create.barcodeType') }}</label>
+                                <select id="barcode_type" v-model="form.barcode_type" :class="fieldInput">
+                                    <option value="">{{ t('products.create.barcodeTypeAuto') }}</option>
+                                    <option v-for="bt in barcodeTypes" :key="bt.value" :value="bt.value">{{ bt.label }}</option>
+                                </select>
+                                <p v-if="form.errors.barcode_type" :class="fieldError">{{ form.errors.barcode_type }}</p>
+                            </div>
                         </div>
 
-                        <!-- Barcode Type -->
-                        <div>
-                            <label for="barcode_type" :class="fieldLabel">{{ t('products.create.barcodeType') }}</label>
-                            <select id="barcode_type" v-model="form.barcode_type" :class="fieldInput">
-                                <option value="">{{ t('products.create.barcodeTypeAuto') }}</option>
-                                <option v-for="bt in barcodeTypes" :key="bt.value" :value="bt.value">{{ bt.label }}</option>
-                            </select>
-                            <p v-if="form.errors.barcode_type" :class="fieldError">{{ form.errors.barcode_type }}</p>
-                        </div>
+                        <div class="grid grid-cols-1 gap-4 @sm:grid-cols-2">
+                            <!-- Product Type -->
+                            <div>
+                                <label for="type" :class="fieldLabel">{{ t('products.form.productType') }}</label>
+                                <select id="type" v-model="form.type" :class="fieldInput">
+                                    <option value="standard">{{ t('products.types.standard') }}</option>
+                                    <option value="kit">{{ t('products.types.kit') }}</option>
+                                    <option value="assembly">{{ t('products.types.assembly') }}</option>
+                                </select>
+                                <p class="mt-1 text-xs text-text-tertiary">
+                                    {{ t('products.form.productTypeHint') }}
+                                </p>
+                                <p v-if="form.errors.type" :class="fieldError">{{ form.errors.type }}</p>
+                            </div>
 
-                        <!-- Product Type -->
-                        <div>
-                            <label for="type" :class="fieldLabel">{{ t('products.form.productType') }}</label>
-                            <select id="type" v-model="form.type" :class="fieldInput">
-                                <option value="standard">{{ t('products.types.standard') }}</option>
-                                <option value="kit">{{ t('products.types.kit') }}</option>
-                                <option value="assembly">{{ t('products.types.assembly') }}</option>
-                            </select>
-                            <p class="mt-1 text-xs text-text-tertiary">
-                                {{ t('products.form.productTypeHint') }}
-                            </p>
-                            <p v-if="form.errors.type" :class="fieldError">{{ form.errors.type }}</p>
+                            <!-- Category -->
+                            <div>
+                                <div class="mb-1 flex items-center justify-between">
+                                    <label for="category" class="block text-sm font-medium text-text-secondary">
+                                        {{ t('products.category') }}
+                                    </label>
+                                    <button
+                                        type="button"
+                                        @click="showCategoryModal = true"
+                                        class="text-xs font-medium text-brand hover:text-brand-hover"
+                                    >
+                                        {{ t('products.create.quickAdd') }}
+                                    </button>
+                                </div>
+                                <select id="category" v-model="form.category_id" :class="fieldInput">
+                                    <option value="">{{ t('products.create.selectCategory') }}</option>
+                                    <option v-for="category in categories" :key="category.id" :value="category.id">
+                                        {{ category.name }}
+                                    </option>
+                                </select>
+                                <p v-if="form.errors.category_id" :class="fieldError">{{ form.errors.category_id }}</p>
+                            </div>
                         </div>
 
                         <!-- Description -->
@@ -332,158 +360,145 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                 </Card>
 
                 <!-- Pricing & Inventory -->
-                <Card :padded="false">
-                    <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">{{ t('products.create.pricingInventory') }}</h3></div>
+                <Card :padded="false" class="@container">
+                    <div class="px-5 pt-5"><h2 class="text-balance text-sm font-semibold text-text-primary">{{ t('products.show.pricingInfo') }}</h2></div>
                     <div class="space-y-4 p-5">
-                        <!-- Purchase Price (Cost) -->
-                        <div>
-                            <label for="purchase_price" :class="fieldLabel">{{ t('products.create.purchasePrice') }}</label>
-                            <div class="relative">
-                                <div class="pointer-events-none absolute inset-y-0 start-0 flex items-center ps-3">
-                                    <span class="text-sm text-text-tertiary">$</span>
+                        <div class="grid grid-cols-1 gap-4 @sm:grid-cols-2">
+                            <!-- Purchase Price (Cost) -->
+                            <div>
+                                <label for="purchase_price" :class="fieldLabel">{{ t('products.create.purchasePrice') }}</label>
+                                <div class="relative">
+                                    <div class="pointer-events-none absolute inset-y-0 start-0 flex items-center ps-3">
+                                        <span class="text-sm text-text-tertiary">$</span>
+                                    </div>
+                                    <input id="purchase_price" v-model="form.purchase_price" type="number" step="0.01" min="0" :class="[fieldInput, 'ps-7']" />
                                 </div>
-                                <input id="purchase_price" v-model="form.purchase_price" type="number" step="0.01" min="0" :class="[fieldInput, 'ps-7']" />
+                                <p class="mt-1 text-xs text-text-tertiary">{{ t('products.create.purchasePriceHint') }}</p>
+                                <p v-if="form.errors.purchase_price" :class="fieldError">{{ form.errors.purchase_price }}</p>
                             </div>
-                            <p class="mt-1 text-xs text-text-tertiary">{{ t('products.create.purchasePriceHint') }}</p>
-                            <p v-if="form.errors.purchase_price" :class="fieldError">{{ form.errors.purchase_price }}</p>
-                        </div>
 
-                        <!-- Selling Price -->
-                        <div>
-                            <label for="price" :class="fieldLabel">
-                                {{ t('products.create.sellingPrice') }} <span class="text-status-danger">*</span>
-                            </label>
-                            <div class="relative">
-                                <div class="pointer-events-none absolute inset-y-0 start-0 flex items-center ps-3">
-                                    <span class="text-sm text-text-tertiary">$</span>
+                            <!-- Selling Price -->
+                            <div>
+                                <label for="price" :class="fieldLabel">
+                                    {{ t('products.create.sellingPrice') }} <span class="text-status-danger">*</span>
+                                </label>
+                                <div class="relative">
+                                    <div class="pointer-events-none absolute inset-y-0 start-0 flex items-center ps-3">
+                                        <span class="text-sm text-text-tertiary">$</span>
+                                    </div>
+                                    <input id="price" v-model="form.price" type="number" step="0.01" min="0" :class="[fieldInput, 'ps-7']" required />
                                 </div>
-                                <input id="price" v-model="form.price" type="number" step="0.01" min="0" :class="[fieldInput, 'ps-7']" required />
+                                <p class="mt-1 text-xs text-text-tertiary">{{ t('products.create.sellingPriceHint') }}</p>
+                                <p v-if="form.errors.price" :class="fieldError">{{ form.errors.price }}</p>
                             </div>
-                            <p class="mt-1 text-xs text-text-tertiary">{{ t('products.create.sellingPriceHint') }}</p>
-                            <p v-if="form.errors.price" :class="fieldError">{{ form.errors.price }}</p>
                         </div>
 
                         <!-- Profit Indicator -->
-                        <div v-if="form.price && form.purchase_price" class="rounded-lg border border-status-success/20 bg-status-success-soft p-4">
+                        <div v-if="form.price && form.purchase_price" class="rounded-lg border border-status-success/20 bg-status-success-soft p-3">
                             <div class="flex items-center justify-between">
                                 <span class="text-sm font-medium text-status-success">{{ t('products.create.profitPerUnit') }}:</span>
-                                <span class="text-lg font-bold text-status-success">
+                                <span class="text-base font-semibold tabular-nums text-status-success">
                                     {{ formatMoney(parseFloat(form.price) - parseFloat(form.purchase_price), product.currency) }}
                                 </span>
                             </div>
                             <div class="mt-1 flex items-center justify-between">
                                 <span class="text-xs text-status-success">{{ t('products.create.margin') }}:</span>
-                                <span class="text-sm font-semibold text-status-success">
+                                <span class="text-sm font-semibold tabular-nums text-status-success">
                                     {{ formatPercent(((parseFloat(form.price) - parseFloat(form.purchase_price)) / parseFloat(form.price) * 100)) }}
                                 </span>
                             </div>
                         </div>
 
-                        <!-- Stock Quantity (read-only: changed through stock adjustments) -->
-                        <div>
-                            <label for="stock" :class="fieldLabel">
-                                {{ t('products.create.currentStock') }}
-                            </label>
-                            <input id="stock" :value="product.stock" type="number" :class="[fieldInput, 'cursor-not-allowed text-text-secondary']" readonly aria-describedby="stock-hint" />
-                            <p id="stock-hint" class="mt-1 text-xs text-text-tertiary">
-                                {{ t('products.edit.stockReadOnlyHint') }}
-                                <Link
-                                    v-if="hasPermission('manage_stock')"
-                                    :href="route('stock-adjustments.create', { product_id: product.id })"
-                                    class="font-medium text-brand hover:underline ds-focus-ring"
-                                >{{ t('products.edit.adjustStockLink') }}</Link>
-                            </p>
-                        </div>
+                        <h2 class="border-t border-border-subtle pt-5 text-balance text-sm font-semibold text-text-primary">{{ t('products.show.stockInfo') }}</h2>
 
-                        <!-- Minimum Stock -->
-                        <div>
-                            <label for="min_stock" :class="fieldLabel">
-                                {{ t('products.create.minStockLevel') }} <span class="text-status-danger">*</span>
-                            </label>
-                            <input id="min_stock" v-model="form.min_stock" type="number" min="0" :class="fieldInput" required />
-                            <p class="mt-1 text-xs text-text-tertiary">{{ t('products.create.minStockHint') }}</p>
-                            <p v-if="form.errors.min_stock" :class="fieldError">{{ form.errors.min_stock }}</p>
-                        </div>
-
-                        <!-- Reorder Point -->
-                        <div>
-                            <label for="reorder_point" :class="fieldLabel">{{ t('products.form.reorderPoint') }}</label>
-                            <input id="reorder_point" v-model="form.reorder_point" type="number" min="0" :class="fieldInput" :placeholder="t('products.form.leaveEmptyToDisable')" />
-                            <p class="mt-1 text-xs text-text-tertiary">{{ t('products.form.reorderPointHint') }}</p>
-                            <p v-if="form.errors.reorder_point" :class="fieldError">{{ form.errors.reorder_point }}</p>
-                        </div>
-
-                        <!-- Reorder Quantity -->
-                        <div>
-                            <label for="reorder_quantity" :class="fieldLabel">{{ t('products.form.reorderQuantity') }}</label>
-                            <input id="reorder_quantity" v-model="form.reorder_quantity" type="number" min="0" :class="fieldInput" :placeholder="t('products.form.leaveEmptyToDisable')" />
-                            <p class="mt-1 text-xs text-text-tertiary">{{ t('products.form.reorderQuantityHint') }}</p>
-                            <p v-if="form.errors.reorder_quantity" :class="fieldError">{{ form.errors.reorder_quantity }}</p>
-                        </div>
-
-                        <!-- Category -->
-                        <div>
-                            <div class="flex items-center justify-between">
-                                <label for="category" :class="fieldLabel">
-                                    {{ t('products.category') }}
+                        <div class="grid grid-cols-1 gap-4 @sm:grid-cols-2">
+                            <!-- Stock Quantity (read-only: changed through stock adjustments) -->
+                            <div>
+                                <label for="stock" :class="fieldLabel">
+                                    {{ t('products.create.currentStock') }}
                                 </label>
-                                <button
-                                    type="button"
-                                    @click="showCategoryModal = true"
-                                    class="mb-1 text-xs font-medium text-brand hover:text-brand-hover"
-                                >
-                                    {{ t('products.create.quickAdd') }}
-                                </button>
+                                <input id="stock" :value="product.stock" type="number" :class="[fieldInput, 'cursor-not-allowed text-text-secondary']" readonly aria-describedby="stock-hint" />
+                                <p id="stock-hint" class="mt-1 text-xs text-text-tertiary">
+                                    {{ t('products.edit.stockReadOnlyHint') }}
+                                    <Link
+                                        v-if="hasPermission('manage_stock')"
+                                        :href="route('stock-adjustments.create', { product_id: product.id })"
+                                        class="font-medium text-brand hover:underline ds-focus-ring"
+                                    >{{ t('products.edit.adjustStockLink') }}</Link>
+                                </p>
                             </div>
-                            <select id="category" v-model="form.category_id" :class="fieldInput">
-                                <option value="">{{ t('products.create.selectCategory') }}</option>
-                                <option v-for="category in categories" :key="category.id" :value="category.id">
-                                    {{ category.name }}
-                                </option>
-                            </select>
-                            <p v-if="form.errors.category_id" :class="fieldError">{{ form.errors.category_id }}</p>
-                        </div>
 
-                        <!-- Location -->
-                        <div>
-                            <div class="flex items-center justify-between">
-                                <label for="location" :class="fieldLabel">
-                                    {{ t('products.location') }}
+                            <!-- Minimum Stock -->
+                            <div>
+                                <label for="min_stock" :class="fieldLabel">
+                                    {{ t('products.create.minStockLevel') }} <span class="text-status-danger">*</span>
                                 </label>
-                                <button
-                                    type="button"
-                                    @click="showLocationModal = true"
-                                    class="mb-1 text-xs font-medium text-brand hover:text-brand-hover"
-                                >
-                                    {{ t('products.create.quickAdd') }}
-                                </button>
+                                <input id="min_stock" v-model="form.min_stock" type="number" min="0" :class="fieldInput" required />
+                                <p class="mt-1 text-xs text-text-tertiary">{{ t('products.create.minStockHint') }}</p>
+                                <p v-if="form.errors.min_stock" :class="fieldError">{{ form.errors.min_stock }}</p>
                             </div>
-                            <select id="location" v-model="form.location_id" :class="fieldInput">
-                                <option value="">{{ t('products.create.selectLocation') }}</option>
-                                <option v-for="location in locations" :key="location.id" :value="location.id">
-                                    {{ location.name }}
-                                </option>
-                            </select>
-                            <p v-if="form.errors.location_id" :class="fieldError">{{ form.errors.location_id }}</p>
                         </div>
 
-                        <!-- Tracking Type -->
-                        <div>
-                            <label for="tracking_type" :class="fieldLabel">{{ t('products.form.inventoryTracking') }}</label>
-                            <select id="tracking_type" v-model="form.tracking_type" :class="fieldInput">
-                                <option value="none">{{ t('products.trackingTypes.none') }}</option>
-                                <option value="batch">{{ t('products.trackingTypes.batch') }}</option>
-                                <option value="serial">{{ t('products.trackingTypes.serial') }}</option>
-                            </select>
-                            <p class="mt-1 text-xs text-text-tertiary">{{ t('products.form.inventoryTrackingHint') }}</p>
-                            <p v-if="form.errors.tracking_type" :class="fieldError">{{ form.errors.tracking_type }}</p>
+                        <div class="grid grid-cols-1 gap-4 @sm:grid-cols-2">
+                            <!-- Reorder Point -->
+                            <div>
+                                <label for="reorder_point" :class="fieldLabel">{{ t('products.form.reorderPoint') }}</label>
+                                <input id="reorder_point" v-model="form.reorder_point" type="number" min="0" :class="fieldInput" :placeholder="t('products.form.leaveEmptyToDisable')" />
+                                <p class="mt-1 text-xs text-text-tertiary">{{ t('products.form.reorderPointHint') }}</p>
+                                <p v-if="form.errors.reorder_point" :class="fieldError">{{ form.errors.reorder_point }}</p>
+                            </div>
+
+                            <!-- Reorder Quantity -->
+                            <div>
+                                <label for="reorder_quantity" :class="fieldLabel">{{ t('products.form.reorderQuantity') }}</label>
+                                <input id="reorder_quantity" v-model="form.reorder_quantity" type="number" min="0" :class="fieldInput" :placeholder="t('products.form.leaveEmptyToDisable')" />
+                                <p class="mt-1 text-xs text-text-tertiary">{{ t('products.form.reorderQuantityHint') }}</p>
+                                <p v-if="form.errors.reorder_quantity" :class="fieldError">{{ form.errors.reorder_quantity }}</p>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 gap-4 @sm:grid-cols-2">
+                            <!-- Location -->
+                            <div>
+                                <div class="mb-1 flex items-center justify-between">
+                                    <label for="location" class="block text-sm font-medium text-text-secondary">
+                                        {{ t('products.location') }}
+                                    </label>
+                                    <button
+                                        type="button"
+                                        @click="showLocationModal = true"
+                                        class="text-xs font-medium text-brand hover:text-brand-hover"
+                                    >
+                                        {{ t('products.create.quickAdd') }}
+                                    </button>
+                                </div>
+                                <select id="location" v-model="form.location_id" :class="fieldInput">
+                                    <option value="">{{ t('products.create.selectLocation') }}</option>
+                                    <option v-for="location in locations" :key="location.id" :value="location.id">
+                                        {{ location.name }}
+                                    </option>
+                                </select>
+                                <p v-if="form.errors.location_id" :class="fieldError">{{ form.errors.location_id }}</p>
+                            </div>
+
+                            <!-- Tracking Type -->
+                            <div>
+                                <label for="tracking_type" :class="fieldLabel">{{ t('products.form.inventoryTracking') }}</label>
+                                <select id="tracking_type" v-model="form.tracking_type" :class="fieldInput">
+                                    <option value="none">{{ t('products.trackingTypes.none') }}</option>
+                                    <option value="batch">{{ t('products.trackingTypes.batch') }}</option>
+                                    <option value="serial">{{ t('products.trackingTypes.serial') }}</option>
+                                </select>
+                                <p class="mt-1 text-xs text-text-tertiary">{{ t('products.form.inventoryTrackingHint') }}</p>
+                                <p v-if="form.errors.tracking_type" :class="fieldError">{{ form.errors.tracking_type }}</p>
+                            </div>
                         </div>
                     </div>
                 </Card>
 
                 <!-- Product Images (Full Width) -->
                 <Card :padded="false" class="lg:col-span-2">
-                    <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">{{ t('products.create.productImages') }}</h3></div>
+                    <div class="px-5 pt-5"><h2 class="text-balance text-sm font-semibold text-text-primary">{{ t('products.create.productImages') }}</h2></div>
                     <div class="p-5">
                         <ImageUploader
                             v-model="form.images"
@@ -543,7 +558,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
 
                 <!-- Suppliers (Full Width) -->
                 <Card :padded="false" class="lg:col-span-2">
-                    <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">{{ t('productSuppliers.title') }}</h3></div>
+                    <div class="px-5 pt-5"><h2 class="text-balance text-sm font-semibold text-text-primary">{{ t('productSuppliers.title') }}</h2></div>
                     <div class="p-5">
                         <ProductSupplierManager
                             v-model="form.suppliers"
@@ -557,7 +572,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
 
                 <!-- Notes (Full Width) -->
                 <Card :padded="false" class="lg:col-span-2">
-                    <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">{{ t('common.notes') }}</h3></div>
+                    <div class="px-5 pt-5"><h2 class="text-balance text-sm font-semibold text-text-primary">{{ t('common.notes') }}</h2></div>
                     <div class="p-5">
                         <textarea
                             id="notes"
@@ -571,15 +586,11 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                 </Card>
             </div>
 
-            <!-- Form Actions -->
-            <div class="mt-6 flex items-center justify-end gap-3">
-                <Button variant="secondary" as="Link" :href="route('products.index')">
-                    {{ t('common.cancel') }}
-                </Button>
-                <Button type="submit" variant="default" :loading="form.processing" :disabled="form.processing">
-                    {{ t('products.edit.updateProduct') }}
-                </Button>
-            </div>
+            <ProductFormActions
+                :label="t('products.edit.updateProduct')"
+                :cancel-href="route('products.index')"
+                :processing="form.processing"
+            />
         </form>
 
         <!-- Plugin Slot: After Form -->
@@ -592,9 +603,9 @@ const fieldError = 'mt-1 text-xs text-status-danger';
 
                 <Card class="relative w-full max-w-md shadow-xl" @click.stop>
                     <div class="mb-4 flex items-center justify-between">
-                        <h3 class="text-base font-semibold text-text-primary">
+                        <h2 class="text-base font-semibold text-text-primary">
                             {{ t('products.quickAddCategory.title') }}
-                        </h3>
+                        </h2>
                         <button
                             @click="showCategoryModal = false"
                             class="rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-surface-sunken hover:text-text-primary"
@@ -653,9 +664,9 @@ const fieldError = 'mt-1 text-xs text-status-danger';
 
                 <Card class="relative w-full max-w-md shadow-xl" @click.stop>
                     <div class="mb-4 flex items-center justify-between">
-                        <h3 class="text-base font-semibold text-text-primary">
+                        <h2 class="text-base font-semibold text-text-primary">
                             {{ t('products.quickAddLocation.title') }}
-                        </h3>
+                        </h2>
                         <button
                             @click="showLocationModal = false"
                             class="rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-surface-sunken hover:text-text-primary"
