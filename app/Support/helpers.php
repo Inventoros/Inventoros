@@ -204,6 +204,25 @@ if (!function_exists('register_permission')) {
     }
 }
 
+if (!function_exists('register_exchange_rate_provider')) {
+    /**
+     * Add an exchange rate provider. Administrators can then pick it (or use
+     * it as the fallback) in Settings > Exchange rates. Its id must be the
+     * plugin slug or start with "{slug}."; the core ids "frankfurter" and
+     * "manual" are reserved. It is available while the plugin is active.
+     *
+     * @param string $slug The plugin slug
+     * @param \App\Services\ExchangeRates\ExchangeRateProvider|class-string<\App\Services\ExchangeRates\ExchangeRateProvider> $provider
+     * @return void
+     *
+     * @throws \InvalidArgumentException When the id, name or class is not acceptable
+     */
+    function register_exchange_rate_provider(string $slug, \App\Services\ExchangeRates\ExchangeRateProvider|string $provider): void
+    {
+        app(\App\Services\ExchangeRates\ExchangeRateProviderRegistry::class)->register($slug, $provider);
+    }
+}
+
 if (!function_exists('register_mcp_tool')) {
     /**
      * Add a tool to the Inventoros MCP server. The tool is a laravel/mcp Tool
