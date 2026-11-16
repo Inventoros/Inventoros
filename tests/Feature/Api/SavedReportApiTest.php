@@ -238,6 +238,22 @@ class SavedReportApiTest extends TestCase
             ->assertHeader('content-type', 'text/csv; charset=UTF-8');
     }
 
+    public function test_export_of_a_report_named_with_slashes_downloads_with_a_safe_filename(): void
+    {
+        Sanctum::actingAs($this->admin);
+        $this->travelTo(now()->setDate(2026, 11, 15));
+
+        $report = $this->createSavedReport(['name' => 'Q1/Q2 Stock\Levels']);
+
+        $response = $this->get("/api/v1/reports/{$report->id}/export");
+
+        $response->assertOk();
+        $this->assertStringContainsString(
+            'filename=q1q2_stocklevels_2026-11-15.csv',
+            (string) $response->headers->get('Content-Disposition'),
+        );
+    }
+
     public function test_export_supports_xlsx_and_pdf(): void
     {
         Sanctum::actingAs($this->admin);

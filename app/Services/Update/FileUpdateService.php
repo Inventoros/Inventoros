@@ -432,7 +432,8 @@ class FileUpdateService
      * is touched.
      *
      * The package must carry a release.json manifest for the expected
-     * version and the cPanel layout, this server's PHP must be inside the
+     * version and the cPanel layout, that version must be newer than the
+     * installed one, this server's PHP must be inside the
      * manifest's supported range, the package must contain the files the
      * installer relies on, and the web root must be locatable.
      *
@@ -471,6 +472,23 @@ class FileUpdateService
             throw new Exception("The release package is for version {$version}, not ".ltrim($expectedVersion, 'v').'.');
         }
 
+        // The manifest and VERSION file are inside the signed archive; the
+        // release API's tag name is not. Only ever move forward: an older
+        // signed release could bring back fixed vulnerabilities, and
+        // migrations only run forward.
+        $packagedVersionFile = $extractPath.'/inventoros/VERSION';
+        if (is_file($packagedVersionFile) && ltrim(trim((string) file_get_contents($packagedVersionFile)), 'v') !== $version) {
+            throw new Exception('The release package is inconsistent: inventoros/VERSION does not match '.self::MANIFEST.'.');
+        }
+
+        $installed = $this->installedVersion();
+        if (! version_compare($version, $installed, '>')) {
+            throw new Exception(
+                "Inventoros {$version} is not newer than the installed version {$installed}. "
+                .'The updater only installs newer releases; restore a backup to go back.'
+            );
+        }
+
         $minPhp = trim((string) ($manifest['min_php'] ?? ''));
         if ($minPhp !== '' && version_compare($this->phpVersion(), $minPhp, '<')) {
             throw new Exception(
@@ -507,6 +525,18 @@ class FileUpdateService
         $manifest['version'] = $version;
 
         return $manifest;
+    }
+
+    /**
+     * The version recorded in the install's VERSION file ('1.0.0' when it
+     * has none, as UpdateService reports).
+     */
+    public function installedVersion(): string
+    {
+        $file = $this->basePath().'/VERSION';
+        $version = is_file($file) ? ltrim(trim((string) file_get_contents($file)), 'v') : '';
+
+        return $version !== '' ? $version : '1.0.0';
     }
 
     /**

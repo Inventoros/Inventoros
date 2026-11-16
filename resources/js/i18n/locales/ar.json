@@ -2542,10 +2542,13 @@
     "server": {
       "alreadyInstalled": "Inventoros مثبت بالفعل.",
       "connectionSuccessful": "تم الاتصال بقاعدة البيانات بنجاح.",
-      "connectionFailed": "فشل الاتصال بقاعدة البيانات: {error}",
+      "connectionFailed": "فشل الاتصال بقاعدة البيانات. تحقق من المضيف والمنفذ واسم قاعدة البيانات والمستخدم وكلمة المرور.",
       "databaseInstalled": "تم تثبيت قاعدة البيانات.",
       "unfinishedInstall": "تحتوي قاعدة البيانات بالفعل على جداول، ربما من تثبيت سابق لم يكتمل، وفشل التثبيت فوقها: {error}",
-      "adminCreated": "تم إنشاء حساب المسؤول."
+      "adminCreated": "تم إنشاء حساب المسؤول.",
+      "locked": "افتح قفل معالج التثبيت برمز الإعداد أولاً.",
+      "invalidToken": "رمز الإعداد هذا غير صحيح.",
+      "unlocked": "تم فتح قفل معالج التثبيت."
     },
     "welcome": {
       "title": "مرحباً بك في Inventoros",
@@ -2564,7 +2567,18 @@
       "beforeBegin": "قبل البدء",
       "beforeBeginDesc": "تأكد من تثبيت PHP 8.4.1+ و MySQL/PostgreSQL وامتدادات PHP المطلوبة.",
       "startInstallation": "بدء التثبيت",
-      "license": "مفتوح المصدر تحت رخصة AGPL-3.0"
+      "license": "مفتوح المصدر تحت رخصة AGPL-3.0",
+      "unlockTitle": "فتح قفل معالج التثبيت",
+      "unlockDesc": "أدخل رمز الإعداد للمتابعة. يضمن ذلك ألا يُكمل التثبيت إلا من لديه وصول إلى الخادم.",
+      "tokenEnv": "إذا ثبّتّ باستخدام سكربت التثبيت أو Docker: إنه INVENTOROS_SETUP_TOKEN في ملف .env.",
+      "tokenFile": "خلاف ذلك (cPanel أو التثبيت اليدوي): يوجد في الملف storage/app/private/setup-token داخل مجلد Inventoros على الخادم.",
+      "tokenLabel": "رمز الإعداد",
+      "unlock": "فتح القفل",
+      "unlocking": "جارٍ فتح القفل...",
+      "tooManyAttempts": "محاولات كثيرة جدًا. انتظر دقيقة ثم حاول مرة أخرى.",
+      "unlockFailed": "تعذر فتح قفل معالج التثبيت: {error}",
+      "tokenUnavailableTitle": "لا يتوفر رمز إعداد",
+      "tokenUnavailable": "لم يتم تعيين INVENTOROS_SETUP_TOKEN ولم يتمكن معالج التثبيت من كتابة storage/app/private/setup-token. عيّن INVENTOROS_SETUP_TOKEN في ملف .env، أو اجعل storage/app/private قابلاً للكتابة، ثم أعد تحميل هذه الصفحة."
     },
     "requirements": {
       "title": "متطلبات النظام",
