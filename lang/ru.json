@@ -153,5 +153,18 @@
     "Stock adjustments created for discrepancies: :count.": "Корректировки запасов, созданные для расхождений: :count.",
     "No discrepancies found.": "Расхождений не найдено.",
     "If that email belongs to an account, we have emailed a password reset link.": "Если этот адрес электронной почты связан с учётной записью, мы отправили ссылку для сброса пароля.",
-    "This code was already used; wait for the next one.": "Этот код уже использован; дождитесь следующего."
+    "This code was already used; wait for the next one.": "Этот код уже использован; дождитесь следующего.",
+    "You do not have permission to set a purchase order exchange rate.": "У вас нет прав на установку курса заказа на закупку.",
+    "There is no exchange rate to confirm. Enter one instead.": "Нет курса для подтверждения. Введите курс.",
+    "This purchase order already has an exchange rate, or does not need one.": "У этого заказа на закупку уже есть курс или он не нужен.",
+    "Enter an exchange rate greater than zero.": "Введите курс больше нуля.",
+    "Exchange rate recorded.": "Курс записан.",
+    "The fallback provider must differ from the main provider.": "Резервный источник должен отличаться от основного.",
+    "Enter :field for this provider.": "Введите :field для этого источника.",
+    "Exchange rate settings saved.": "Настройки обменных курсов сохранены.",
+    "Exchange rates refreshed.": "Обменные курсы обновлены.",
+    "Some exchange rates could not be refreshed. See the synchronization status for details.": "Некоторые курсы не удалось обновить. Подробности смотрите в статусе синхронизации.",
+    "Exchange rates could not be refreshed. See the synchronization status for details.": "Не удалось обновить обменные курсы. Подробности смотрите в статусе синхронизации.",
+    "Manual exchange rate saved.": "Ручной курс сохранен.",
+    "Manual exchange rate deleted.": "Ручной курс удален."
 }

@@ -153,5 +153,18 @@
     "Stock adjustments created for discrepancies: :count.": "Korekty zapasów utworzone dla rozbieżności: :count.",
     "No discrepancies found.": "Nie znaleziono rozbieżności.",
     "If that email belongs to an account, we have emailed a password reset link.": "Jeśli ten adres e-mail należy do konta, wysłaliśmy link do zresetowania hasła.",
-    "This code was already used; wait for the next one.": "Ten kod został już użyty; poczekaj na następny."
+    "This code was already used; wait for the next one.": "Ten kod został już użyty; poczekaj na następny.",
+    "You do not have permission to set a purchase order exchange rate.": "Nie masz uprawnień do ustawienia kursu zamówienia zakupu.",
+    "There is no exchange rate to confirm. Enter one instead.": "Nie ma kursu do potwierdzenia. Wprowadź kurs.",
+    "This purchase order already has an exchange rate, or does not need one.": "To zamówienie zakupu ma już kurs lub go nie potrzebuje.",
+    "Enter an exchange rate greater than zero.": "Wprowadź kurs większy od zera.",
+    "Exchange rate recorded.": "Kurs zapisany.",
+    "The fallback provider must differ from the main provider.": "Źródło zapasowe musi być inne niż główne.",
+    "Enter :field for this provider.": "Wprowadź :field dla tego źródła.",
+    "Exchange rate settings saved.": "Ustawienia kursów walut zapisane.",
+    "Exchange rates refreshed.": "Kursy walut odświeżone.",
+    "Some exchange rates could not be refreshed. See the synchronization status for details.": "Nie udało się odświeżyć niektórych kursów. Szczegóły znajdziesz w stanie synchronizacji.",
+    "Exchange rates could not be refreshed. See the synchronization status for details.": "Nie udało się odświeżyć kursów walut. Szczegóły znajdziesz w stanie synchronizacji.",
+    "Manual exchange rate saved.": "Kurs ręczny zapisany.",
+    "Manual exchange rate deleted.": "Kurs ręczny usunięty."
 }

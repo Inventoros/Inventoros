@@ -153,5 +153,18 @@
     "Stock adjustments created for discrepancies: :count.": "Stock adjustments created for discrepancies: :count.",
     "No discrepancies found.": "No discrepancies found.",
     "If that email belongs to an account, we have emailed a password reset link.": "If that email belongs to an account, we have emailed a password reset link.",
-    "This code was already used; wait for the next one.": "This code was already used; wait for the next one."
+    "This code was already used; wait for the next one.": "This code was already used; wait for the next one.",
+    "You do not have permission to set a purchase order exchange rate.": "You do not have permission to set a purchase order exchange rate.",
+    "There is no exchange rate to confirm. Enter one instead.": "There is no exchange rate to confirm. Enter one instead.",
+    "This purchase order already has an exchange rate, or does not need one.": "This purchase order already has an exchange rate, or does not need one.",
+    "Enter an exchange rate greater than zero.": "Enter an exchange rate greater than zero.",
+    "Exchange rate recorded.": "Exchange rate recorded.",
+    "The fallback provider must differ from the main provider.": "The fallback provider must differ from the main provider.",
+    "Enter :field for this provider.": "Enter :field for this provider.",
+    "Exchange rate settings saved.": "Exchange rate settings saved.",
+    "Exchange rates refreshed.": "Exchange rates refreshed.",
+    "Some exchange rates could not be refreshed. See the synchronization status for details.": "Some exchange rates could not be refreshed. See the synchronization status for details.",
+    "Exchange rates could not be refreshed. See the synchronization status for details.": "Exchange rates could not be refreshed. See the synchronization status for details.",
+    "Manual exchange rate saved.": "Manual exchange rate saved.",
+    "Manual exchange rate deleted.": "Manual exchange rate deleted."
 }

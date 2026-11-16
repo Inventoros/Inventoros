@@ -2262,6 +2262,10 @@
           "label": "Satın Alma Siparişlerini Onayla",
           "description": "Gönderilmeden önce onay gerektiren satın alma siparişlerini onaylayabilir veya reddedebilir"
         },
+        "override_purchase_order_exchange_rate": {
+          "label": "Satın Alma Siparişi Kurlarını Geçersiz Kılma",
+          "description": "Bir satın alma siparişinin kurunu elle girebilir veya eski bir kuru kabul edebilir"
+        },
         "view_orders": {
           "label": "Siparişleri Görüntüle",
           "description": "Siparişleri görüntüleyebilir"
@@ -2301,6 +2305,10 @@
         "manage_organization": {
           "label": "Organizasyonu Yönet",
           "description": "Organizasyon detaylarını yönetebilir"
+        },
+        "manage_exchange_rates": {
+          "label": "Döviz Kurlarını Yönetme",
+          "description": "Kur kaynağını seçebilir, kurları eşitleyebilir ve elle kur girebilir"
         },
         "view_plugins": {
           "label": "Eklentileri Görüntüle",
@@ -4139,5 +4147,122 @@
     "searchSupplier": "Tedarikçi ara",
     "loadOptions": "Seçenekleri ara",
     "optionsError": "Seçenekler yüklenemedi. Yeniden deneyin."
+  },
+  "exchangeRates": {
+    "rate": "Kur",
+    "provider": "Kur kaynağı",
+    "effectiveDate": "Geçerlilik tarihi",
+    "retrievedAt": "Alındı",
+    "noRateYet": "Henüz kur yok",
+    "fallback": "Yedek",
+    "stale": "Eski",
+    "staleDays": "{count} günlük",
+    "enteredBy": "Giren: {name}",
+    "source": {
+      "manual": "Elle girildi",
+      "confirmed": "Elle onaylandı"
+    },
+    "errors": {
+      "provider_unavailable": "{provider} kur kaynağı kullanılamıyor.",
+      "fetch_failed": "{provider} kaynağına ulaşılamadı.",
+      "unsupported": "{provider} bu para birimi için kur vermiyor.",
+      "no_rate": "Bu para birimi için henüz kayıtlı kur yok."
+    },
+    "po": {
+      "title": "Döviz kuru",
+      "help": "Tutarlar {from} cinsindendir. Bu kurla {to} cinsine çevrilir.",
+      "loading": "Döviz kuru aranıyor...",
+      "keptRate": "Bu taslakta belirlenen kur, siz değiştirene kadar korunur.",
+      "rateSource": "{provider}, {date} kuru",
+      "fallbackNotice": "Varsayılan kaynak kullanılamıyor, bu nedenle kur yedek kaynak {provider} tarafından sağlandı.",
+      "staleNotice": "Bu kur {count} günlük ve {days} günlük sınırı aşıyor. Yalnızca siz kabul ederseniz kullanılır.",
+      "savedWithout": "Satın alma siparişi yine de kur olmadan kaydedilebilir.",
+      "lookupFailed": "Döviz kuru alınamadı.",
+      "noRate": "Kullanılabilir döviz kuru yok.",
+      "manualLabel": "Kur: 1 {from} = ? {to}",
+      "convertedTotal": "{currency} cinsinden toplam:",
+      "totalIn": "{currency} cinsinden toplam",
+      "useStale": "Bu kuru kullan",
+      "enterManually": "Kuru elle gir",
+      "useProviderRate": "Kaynağın kurunu kullan"
+    },
+    "show": {
+      "enteredBy": "Elle giren: {name}",
+      "confirmedBy": "{provider} kuru, onaylayan: {name}",
+      "fromFallback": "{provider} (yedek kaynak)",
+      "locked": "Kilitli",
+      "draftRate": "Taslak",
+      "providerGone": "Bu kaynak artık kullanılamıyor. Kaydedilen kur korunur.",
+      "lockedHelp": "Sipariş gönderildiğinde kilitlendi ({date}). Sonraki kur güncellemeleri onu değiştirmez.",
+      "draftHelp": "Sipariş taslak olduğu sürece kur değişebilir. Gönderildiğinde kilitlenir.",
+      "notRecorded": "Bu sipariş için {from} biriminden {to} birimine kur kaydedilmedi. Teslim alınan maliyetler {from} cinsinden kaydedilir.",
+      "recordHelp": "Kur kaydedildiği anda kilitlenir.",
+      "record": "Kuru kaydet"
+    },
+    "receive": {
+      "convertedAt": "Teslim alınan maliyetler 1 {from} = {rate} {to} kuruyla kaydedilir.",
+      "noRate": "Kayıtlı kur yok: teslim alınan maliyetler {currency} cinsinden kaydedilir."
+    },
+    "settings": {
+      "title": "Döviz kurları",
+      "description": "Tedarikçi para birimindeki satın alma siparişleri için {currency} cinsine çevrilen kurlar.",
+      "hubDescription": "Diğer para birimlerindeki satın alma siparişleri için kaynak, eşitleme ve elle girilen kurlar",
+      "providerMissing": "Seçilen \"{provider}\" kaynağı kullanılamıyor, bu nedenle satın alma siparişleri yeni kur almıyor. Eklentisi etkin olmayabilir. Başka bir kaynak seçin.",
+      "fallbackMissing": "\"{provider}\" yedek kaynağı kullanılamıyor. Başka birini seçin veya hiçbirini seçmeyin.",
+      "provider": "Kur kaynağı",
+      "providerHelp": "Kurların geldiği yer. Inventoros hiçbir zaman kendiliğinden başka bir kaynağa geçmez.",
+      "defaultProvider": "Varsayılan kaynak",
+      "fromPlugin": "Eklenti: {plugin}",
+      "capability": {
+        "automatic": "Otomatik alınır",
+        "manual": "Elle girilir",
+        "historical": "Geçmiş kurlar",
+        "shareable": "Herkese açık veri"
+      },
+      "fallbackProvider": "Yedek kaynak",
+      "noFallback": "Yok",
+      "fallbackHelp": "Yalnızca varsayılan kaynak başarısız olduğunda kullanılır ve her zaman yedek olarak belirtilir.",
+      "providerSettings": "{provider} ayarları",
+      "secretSaved": "Kaydedildi. Korumak için boş bırakın.",
+      "staleAfter": "Kurları şu kadar gün sonra eski say",
+      "staleAfterHelp": "Daha eski bir kur eski olarak gösterilir ve bir siparişte yalnızca biri kabul ederse kullanılır.",
+      "sync": "Para birimleri ve eşitleme",
+      "syncHelp": "Etkin tedarikçilerinizin kullandığı her para birimi ve burada eklediğiniz para birimleri için kur tutulur.",
+      "refreshNow": "Şimdi yenile",
+      "syncEnabled": "Kurları otomatik eşitle",
+      "frequency": "Sıklık",
+      "frequencies": {
+        "hourly": "Saatte bir",
+        "every_six_hours": "6 saatte bir",
+        "daily": "Günlük",
+        "weekly": "Haftalık"
+      },
+      "currencies": "Para birimleri",
+      "currenciesHelp": "{currency} karşısında kur tutulacak yabancı para birimleri.",
+      "fromSuppliers": "tedarikçiler",
+      "providerCurrenciesUnknown": "Kaynağın para birimi listesi şu anda yüklenemedi.",
+      "unsupportedDimmed": "Soluk gösterilen para birimleri seçilen kaynakta yok.",
+      "lastStatus": "Son eşitleme",
+      "syncStatus": {
+        "success": "Başarılı",
+        "partial": "Kısmen başarılı",
+        "failed": "Başarısız",
+        "never": "Henüz çalışmadı"
+      },
+      "lastSuccess": "Son başarı",
+      "lastAttempt": "Son deneme",
+      "nextAttempt": "Sonraki deneme",
+      "lastError": "Son hata",
+      "save": "Ayarları kaydet",
+      "currentRates": "Güncel kurlar",
+      "currentRatesHelp": "Her para birimi için kayıtlı en yeni kur, {currency} cinsinden. {days} günden eski kurlar eski olarak işaretlenir.",
+      "noTrackedCurrencies": "Henüz yabancı para birimi yok. Başka bir para birimi kullanan bir tedarikçi ekleyin veya yukarıdan para birimi seçin.",
+      "manualRates": "Elle girilen kurlar",
+      "manualRatesHelp": "Elle girilen kurlar varsayılan veya yedek kaynak olduğunda kullanılır. Satın alma siparişleri verildikleri kuru korur.",
+      "rateIn": "1 {currency} kaç {organizationCurrency}",
+      "addRate": "Kur ekle",
+      "noManualRates": "Elle girilmiş kur yok.",
+      "confirmDeleteRate": "{date} tarihli {currency} kuru silinsin mi? Onu kullanan satın alma siparişleri kurlarını korur."
+    }
   }
 }

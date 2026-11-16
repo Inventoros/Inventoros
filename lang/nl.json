@@ -153,5 +153,18 @@
     "Stock adjustments created for discrepancies: :count.": "Voor verschillen aangemaakte voorraadcorrecties: :count.",
     "No discrepancies found.": "Geen verschillen gevonden.",
     "If that email belongs to an account, we have emailed a password reset link.": "Als dit e-mailadres bij een account hoort, hebben we een link gestuurd om het wachtwoord opnieuw in te stellen.",
-    "This code was already used; wait for the next one.": "Deze code is al gebruikt; wacht op de volgende."
+    "This code was already used; wait for the next one.": "Deze code is al gebruikt; wacht op de volgende.",
+    "You do not have permission to set a purchase order exchange rate.": "U hebt geen toestemming om de wisselkoers van een inkooporder in te stellen.",
+    "There is no exchange rate to confirm. Enter one instead.": "Er is geen wisselkoers om te bevestigen. Voer er een in.",
+    "This purchase order already has an exchange rate, or does not need one.": "Deze inkooporder heeft al een wisselkoers of heeft er geen nodig.",
+    "Enter an exchange rate greater than zero.": "Voer een wisselkoers groter dan nul in.",
+    "Exchange rate recorded.": "Wisselkoers vastgelegd.",
+    "The fallback provider must differ from the main provider.": "De reservebron moet verschillen van de hoofdbron.",
+    "Enter :field for this provider.": "Voer :field in voor deze bron.",
+    "Exchange rate settings saved.": "Wisselkoersinstellingen opgeslagen.",
+    "Exchange rates refreshed.": "Wisselkoersen vernieuwd.",
+    "Some exchange rates could not be refreshed. See the synchronization status for details.": "Sommige wisselkoersen konden niet worden vernieuwd. Zie de synchronisatiestatus voor details.",
+    "Exchange rates could not be refreshed. See the synchronization status for details.": "De wisselkoersen konden niet worden vernieuwd. Zie de synchronisatiestatus voor details.",
+    "Manual exchange rate saved.": "Handmatige wisselkoers opgeslagen.",
+    "Manual exchange rate deleted.": "Handmatige wisselkoers verwijderd."
 }

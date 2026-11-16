@@ -2262,6 +2262,10 @@
           "label": "Zatwierdzanie zamówień zakupu",
           "description": "Może zatwierdzać lub odrzucać zamówienia zakupu wymagające zatwierdzenia przed wysłaniem"
         },
+        "override_purchase_order_exchange_rate": {
+          "label": "Nadpisywanie kursów zamówień zakupu",
+          "description": "Może ręcznie wprowadzić kurs zamówienia zakupu lub zaakceptować nieaktualny kurs"
+        },
         "view_orders": {
           "label": "Przeglądanie zamówień",
           "description": "Może przeglądać zamówienia"
@@ -2301,6 +2305,10 @@
         "manage_organization": {
           "label": "Zarządzanie organizacją",
           "description": "Może zarządzać danymi organizacji"
+        },
+        "manage_exchange_rates": {
+          "label": "Zarządzanie kursami walut",
+          "description": "Może wybrać źródło kursów, synchronizować kursy i wprowadzać kursy ręczne"
         },
         "view_plugins": {
           "label": "Przeglądanie wtyczek",
@@ -4139,5 +4147,122 @@
     "searchSupplier": "Szukaj dostawców",
     "loadOptions": "Szukaj opcji",
     "optionsError": "Nie można wczytać opcji. Spróbuj ponownie."
+  },
+  "exchangeRates": {
+    "rate": "Kurs",
+    "provider": "Źródło kursów",
+    "effectiveDate": "Data obowiązywania",
+    "retrievedAt": "Pobrano",
+    "noRateYet": "Brak kursu",
+    "fallback": "Zapasowe",
+    "stale": "Nieaktualny",
+    "staleDays": "{count} dni",
+    "enteredBy": "Wprowadził(a): {name}",
+    "source": {
+      "manual": "Wprowadzony ręcznie",
+      "confirmed": "Potwierdzony ręcznie"
+    },
+    "errors": {
+      "provider_unavailable": "Źródło kursów {provider} jest niedostępne.",
+      "fetch_failed": "Nie udało się połączyć z {provider}.",
+      "unsupported": "{provider} nie podaje kursu tej waluty.",
+      "no_rate": "Dla tej waluty nie zapisano jeszcze kursu."
+    },
+    "po": {
+      "title": "Kurs wymiany",
+      "help": "Kwoty są w {from}. Są przeliczane na {to} po tym kursie.",
+      "loading": "Wyszukiwanie kursu wymiany...",
+      "keptRate": "Kurs ustawiony w tym szkicu pozostaje, dopóki go nie zmienisz.",
+      "rateSource": "{provider}, kurs z dnia {date}",
+      "fallbackNotice": "Domyślne źródło jest niedostępne, więc ten kurs pochodzi ze źródła zapasowego {provider}.",
+      "staleNotice": "Ten kurs ma {count} dni, więcej niż limit {days} dni. Zostanie użyty tylko po Twojej akceptacji.",
+      "savedWithout": "Zamówienie zakupu można mimo to zapisać bez kursu.",
+      "lookupFailed": "Nie udało się pobrać kursu wymiany.",
+      "noRate": "Brak dostępnego kursu wymiany.",
+      "manualLabel": "Kurs: 1 {from} w {to}",
+      "convertedTotal": "Razem w {currency}:",
+      "totalIn": "Razem w {currency}",
+      "useStale": "Użyj tego kursu",
+      "enterManually": "Wprowadź kurs ręcznie",
+      "useProviderRate": "Użyj kursu ze źródła"
+    },
+    "show": {
+      "enteredBy": "Wprowadzony ręcznie przez: {name}",
+      "confirmedBy": "Kurs {provider}, potwierdził(a): {name}",
+      "fromFallback": "{provider} (źródło zapasowe)",
+      "locked": "Zablokowany",
+      "draftRate": "Szkic",
+      "providerGone": "To źródło nie jest już dostępne. Zapisany kurs zostaje zachowany.",
+      "lockedHelp": "Zablokowany przy wysłaniu zamówienia ({date}). Późniejsze zmiany kursów go nie zmieniają.",
+      "draftHelp": "Kurs może się zmieniać, dopóki zamówienie jest szkicem. Blokuje się przy wysłaniu.",
+      "notRecorded": "Dla tego zamówienia nie zapisano kursu z {from} na {to}. Koszty przyjęte są rejestrowane w {from}.",
+      "recordHelp": "Kurs blokuje się zaraz po zapisaniu.",
+      "record": "Zapisz kurs"
+    },
+    "receive": {
+      "convertedAt": "Koszty przyjęte są księgowane po kursie 1 {from} = {rate} {to}.",
+      "noRate": "Brak zapisanego kursu: koszty przyjęte są rejestrowane w {currency}."
+    },
+    "settings": {
+      "title": "Kursy walut",
+      "description": "Kursy dla zamówień zakupu w walucie dostawcy, przeliczane na {currency}.",
+      "hubDescription": "Źródło, synchronizacja i kursy ręczne dla zamówień zakupu w innych walutach",
+      "providerMissing": "Wybrane źródło \"{provider}\" jest niedostępne, więc zamówienia zakupu nie otrzymują nowych kursów. Jego wtyczka może być nieaktywna. Wybierz inne źródło.",
+      "fallbackMissing": "Źródło zapasowe \"{provider}\" jest niedostępne. Wybierz inne lub żadne.",
+      "provider": "Źródło kursów",
+      "providerHelp": "Skąd pochodzą kursy. Inventoros nigdy sam nie przełącza się na inne źródło.",
+      "defaultProvider": "Domyślne źródło",
+      "fromPlugin": "Wtyczka: {plugin}",
+      "capability": {
+        "automatic": "Pobierane automatycznie",
+        "manual": "Wprowadzane ręcznie",
+        "historical": "Kursy historyczne",
+        "shareable": "Dane publiczne"
+      },
+      "fallbackProvider": "Źródło zapasowe",
+      "noFallback": "Brak",
+      "fallbackHelp": "Używane tylko, gdy domyślne źródło zawiedzie, i zawsze oznaczone jako zapasowe.",
+      "providerSettings": "Ustawienia {provider}",
+      "secretSaved": "Zapisano. Pozostaw puste, aby zachować.",
+      "staleAfter": "Uznawaj kursy za nieaktualne po (dniach)",
+      "staleAfterHelp": "Starszy kurs jest oznaczany jako nieaktualny i używany w zamówieniu tylko wtedy, gdy ktoś go zaakceptuje.",
+      "sync": "Waluty i synchronizacja",
+      "syncHelp": "Kursy są prowadzone dla każdej waluty używanej przez aktywnych dostawców oraz dla walut dodanych tutaj.",
+      "refreshNow": "Odśwież teraz",
+      "syncEnabled": "Synchronizuj kursy automatycznie",
+      "frequency": "Częstotliwość",
+      "frequencies": {
+        "hourly": "Co godzinę",
+        "every_six_hours": "Co 6 godzin",
+        "daily": "Codziennie",
+        "weekly": "Co tydzień"
+      },
+      "currencies": "Waluty",
+      "currenciesHelp": "Waluty obce, dla których prowadzone są kursy względem {currency}.",
+      "fromSuppliers": "dostawcy",
+      "providerCurrenciesUnknown": "Nie udało się teraz wczytać listy walut źródła.",
+      "unsupportedDimmed": "Wyszarzone waluty nie są oferowane przez wybrane źródło.",
+      "lastStatus": "Ostatnia synchronizacja",
+      "syncStatus": {
+        "success": "Udana",
+        "partial": "Częściowo udana",
+        "failed": "Nieudana",
+        "never": "Jeszcze nieuruchomiona"
+      },
+      "lastSuccess": "Ostatni sukces",
+      "lastAttempt": "Ostatnia próba",
+      "nextAttempt": "Następna próba",
+      "lastError": "Ostatni błąd",
+      "save": "Zapisz ustawienia",
+      "currentRates": "Bieżące kursy",
+      "currentRatesHelp": "Najnowszy zapisany kurs każdej waluty, w {currency}. Kursy starsze niż {days} dni są oznaczane jako nieaktualne.",
+      "noTrackedCurrencies": "Brak walut obcych. Dodaj dostawcę używającego innej waluty lub wybierz waluty powyżej.",
+      "manualRates": "Kursy ręczne",
+      "manualRatesHelp": "Używane, gdy Kursy ręczne są źródłem domyślnym lub zapasowym. Zamówienia zakupu zachowują kurs, po którym je złożono.",
+      "rateIn": "1 {currency} w {organizationCurrency}",
+      "addRate": "Dodaj kurs",
+      "noManualRates": "Nie wprowadzono kursów ręcznych.",
+      "confirmDeleteRate": "Usunąć kurs {currency} z dnia {date}? Zamówienia zakupu, które go użyły, zachowają swój kurs."
+    }
   }
 }

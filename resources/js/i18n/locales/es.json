@@ -2262,6 +2262,10 @@
           "label": "Aprobar órdenes de compra",
           "description": "Puede aprobar o rechazar órdenes de compra que requieren aprobación antes de enviarse"
         },
+        "override_purchase_order_exchange_rate": {
+          "label": "Sustituir tipos de cambio de órdenes de compra",
+          "description": "Puede introducir a mano el tipo de cambio de una orden de compra o aceptar uno desactualizado"
+        },
         "view_orders": {
           "label": "Ver pedidos",
           "description": "Puede ver pedidos"
@@ -2301,6 +2305,10 @@
         "manage_organization": {
           "label": "Gestionar organización",
           "description": "Puede gestionar los detalles de la organización"
+        },
+        "manage_exchange_rates": {
+          "label": "Gestionar tipos de cambio",
+          "description": "Puede elegir el proveedor de tipos, sincronizar tipos e introducir tipos manuales"
         },
         "view_plugins": {
           "label": "Ver plugins",
@@ -4139,5 +4147,122 @@
     "searchSupplier": "Buscar proveedores",
     "loadOptions": "Buscar opciones",
     "optionsError": "No se pudieron cargar las opciones. Inténtalo de nuevo."
+  },
+  "exchangeRates": {
+    "rate": "Tipo",
+    "provider": "Proveedor de tipos",
+    "effectiveDate": "Fecha de vigencia",
+    "retrievedAt": "Obtenido",
+    "noRateYet": "Aún sin tipo",
+    "fallback": "Respaldo",
+    "stale": "Desactualizado",
+    "staleDays": "{count} días de antigüedad",
+    "enteredBy": "Introducido por {name}",
+    "source": {
+      "manual": "Introducido manualmente",
+      "confirmed": "Confirmado manualmente"
+    },
+    "errors": {
+      "provider_unavailable": "El proveedor de tipos de cambio {provider} no está disponible.",
+      "fetch_failed": "No se pudo contactar con {provider}.",
+      "unsupported": "{provider} no cotiza esta moneda.",
+      "no_rate": "Todavía no hay ningún tipo de cambio guardado para esta moneda."
+    },
+    "po": {
+      "title": "Tipo de cambio",
+      "help": "Los importes están en {from}. Se convierten a {to} con este tipo.",
+      "loading": "Buscando el tipo de cambio...",
+      "keptRate": "El tipo fijado en este borrador se mantiene hasta que lo cambie.",
+      "rateSource": "{provider}, tipo del {date}",
+      "fallbackNotice": "El proveedor predeterminado no está disponible, así que este tipo procede del proveedor de respaldo, {provider}.",
+      "staleNotice": "Este tipo tiene {count} días, más que el límite de {days} días. Solo se usa si usted lo acepta.",
+      "savedWithout": "La orden de compra puede guardarse igualmente sin tipo.",
+      "lookupFailed": "No se pudo obtener el tipo de cambio.",
+      "noRate": "No hay ningún tipo de cambio disponible.",
+      "manualLabel": "Tipo: 1 {from} en {to}",
+      "convertedTotal": "Total en {currency}:",
+      "totalIn": "Total en {currency}",
+      "useStale": "Usar este tipo",
+      "enterManually": "Introducir el tipo manualmente",
+      "useProviderRate": "Usar el tipo del proveedor"
+    },
+    "show": {
+      "enteredBy": "Introducido manualmente por {name}",
+      "confirmedBy": "Tipo de {provider}, confirmado por {name}",
+      "fromFallback": "{provider} (proveedor de respaldo)",
+      "locked": "Bloqueado",
+      "draftRate": "Borrador",
+      "providerGone": "Este proveedor ya no está disponible. Se conserva el tipo registrado.",
+      "lockedHelp": "Bloqueado al enviar la orden ({date}). Las actualizaciones posteriores de tipos no lo cambian.",
+      "draftHelp": "El tipo puede cambiar mientras la orden sea un borrador. Se bloquea al enviarla.",
+      "notRecorded": "No se registró ningún tipo de cambio de {from} a {to} para esta orden. Los costes recibidos se registran en {from}.",
+      "recordHelp": "El tipo se bloquea en cuanto se registra.",
+      "record": "Registrar tipo"
+    },
+    "receive": {
+      "convertedAt": "Los costes recibidos se contabilizan a 1 {from} = {rate} {to}.",
+      "noRate": "No hay tipo de cambio registrado: los costes recibidos se registran en {currency}."
+    },
+    "settings": {
+      "title": "Tipos de cambio",
+      "description": "Tipos para órdenes de compra en la moneda de un proveedor, convertidos a {currency}.",
+      "hubDescription": "Proveedor, sincronización y tipos manuales para órdenes de compra en otras monedas",
+      "providerMissing": "El proveedor seleccionado \"{provider}\" no está disponible, por lo que las órdenes de compra no reciben tipos nuevos. Puede que su complemento esté inactivo. Elija otro proveedor.",
+      "fallbackMissing": "El proveedor de respaldo \"{provider}\" no está disponible. Elija otro o ninguno.",
+      "provider": "Proveedor de tipos",
+      "providerHelp": "De dónde proceden los tipos. Inventoros nunca cambia de proveedor por su cuenta.",
+      "defaultProvider": "Proveedor predeterminado",
+      "fromPlugin": "Complemento: {plugin}",
+      "capability": {
+        "automatic": "Obtenidos automáticamente",
+        "manual": "Introducidos a mano",
+        "historical": "Tipos históricos",
+        "shareable": "Datos públicos"
+      },
+      "fallbackProvider": "Proveedor de respaldo",
+      "noFallback": "Ninguno",
+      "fallbackHelp": "Solo se usa si falla el proveedor predeterminado, y siempre se indica como respaldo.",
+      "providerSettings": "Ajustes de {provider}",
+      "secretSaved": "Guardado. Déjelo en blanco para conservarlo.",
+      "staleAfter": "Considerar desactualizados los tipos después de (días)",
+      "staleAfterHelp": "Un tipo más antiguo se muestra como desactualizado y solo se usa en una orden de compra si alguien lo acepta.",
+      "sync": "Monedas y sincronización",
+      "syncHelp": "Se mantienen tipos para cada moneda que usan sus proveedores activos, más las que añada aquí.",
+      "refreshNow": "Actualizar ahora",
+      "syncEnabled": "Sincronizar tipos automáticamente",
+      "frequency": "Frecuencia",
+      "frequencies": {
+        "hourly": "Cada hora",
+        "every_six_hours": "Cada 6 horas",
+        "daily": "Diaria",
+        "weekly": "Semanal"
+      },
+      "currencies": "Monedas",
+      "currenciesHelp": "Monedas extranjeras para las que mantener tipos frente a {currency}.",
+      "fromSuppliers": "proveedores",
+      "providerCurrenciesUnknown": "No se pudo cargar ahora la lista de monedas del proveedor.",
+      "unsupportedDimmed": "Las monedas atenuadas no las ofrece el proveedor seleccionado.",
+      "lastStatus": "Última sincronización",
+      "syncStatus": {
+        "success": "Correcta",
+        "partial": "Parcialmente correcta",
+        "failed": "Fallida",
+        "never": "Aún no ejecutada"
+      },
+      "lastSuccess": "Último éxito",
+      "lastAttempt": "Último intento",
+      "nextAttempt": "Próximo intento",
+      "lastError": "Último error",
+      "save": "Guardar ajustes",
+      "currentRates": "Tipos actuales",
+      "currentRatesHelp": "El tipo guardado más reciente de cada moneda, en {currency}. Los tipos con más de {days} días se marcan como desactualizados.",
+      "noTrackedCurrencies": "Aún no hay monedas extranjeras. Añada un proveedor que use otra moneda o elija monedas arriba.",
+      "manualRates": "Tipos manuales",
+      "manualRatesHelp": "Se usan cuando Tipos manuales es el proveedor predeterminado o de respaldo. Las órdenes de compra conservan el tipo con el que se emitieron.",
+      "rateIn": "1 {currency} en {organizationCurrency}",
+      "addRate": "Añadir tipo",
+      "noManualRates": "No hay tipos manuales introducidos.",
+      "confirmDeleteRate": "¿Eliminar el tipo de {currency} del {date}? Las órdenes de compra que lo usaron conservan su tipo."
+    }
   }
 }

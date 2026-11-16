@@ -2262,6 +2262,10 @@
           "label": "Approuver les bons de commande",
           "description": "Peut approuver ou rejeter les bons de commande qui doivent être approuvés avant leur envoi"
         },
+        "override_purchase_order_exchange_rate": {
+          "label": "Remplacer les taux de change des bons de commande",
+          "description": "Peut saisir à la main le taux de change d'un bon de commande ou accepter un taux périmé"
+        },
         "view_orders": {
           "label": "Voir les commandes",
           "description": "Peut consulter les commandes"
@@ -2301,6 +2305,10 @@
         "manage_organization": {
           "label": "Gérer l'organisation",
           "description": "Peut gérer les détails de l'organisation"
+        },
+        "manage_exchange_rates": {
+          "label": "Gérer les taux de change",
+          "description": "Peut choisir le fournisseur de taux, synchroniser les taux et saisir des taux manuels"
         },
         "view_plugins": {
           "label": "Voir les plugins",
@@ -4139,5 +4147,122 @@
     "searchSupplier": "Rechercher des fournisseurs",
     "loadOptions": "Rechercher les options",
     "optionsError": "Impossible de charger les options. Réessayez."
+  },
+  "exchangeRates": {
+    "rate": "Taux",
+    "provider": "Fournisseur de taux",
+    "effectiveDate": "Date d'effet",
+    "retrievedAt": "Récupéré",
+    "noRateYet": "Pas encore de taux",
+    "fallback": "Secours",
+    "stale": "Périmé",
+    "staleDays": "{count} jours",
+    "enteredBy": "Saisi par {name}",
+    "source": {
+      "manual": "Saisi manuellement",
+      "confirmed": "Confirmé manuellement"
+    },
+    "errors": {
+      "provider_unavailable": "Le fournisseur de taux de change {provider} n'est pas disponible.",
+      "fetch_failed": "{provider} n'a pas pu être joint.",
+      "unsupported": "{provider} ne cote pas cette devise.",
+      "no_rate": "Aucun taux de change n'est encore enregistré pour cette devise."
+    },
+    "po": {
+      "title": "Taux de change",
+      "help": "Les montants sont en {from}. Ils sont convertis en {to} à ce taux.",
+      "loading": "Recherche du taux de change...",
+      "keptRate": "Le taux défini sur ce brouillon est conservé jusqu'à ce que vous le changiez.",
+      "rateSource": "{provider}, taux du {date}",
+      "fallbackNotice": "Le fournisseur par défaut n'est pas disponible : ce taux provient du fournisseur de secours, {provider}.",
+      "staleNotice": "Ce taux date de {count} jours, au-delà de la limite de {days} jours. Il n'est utilisé que si vous l'acceptez.",
+      "savedWithout": "Le bon de commande peut quand même être enregistré sans taux.",
+      "lookupFailed": "Le taux de change n'a pas pu être obtenu.",
+      "noRate": "Aucun taux de change disponible.",
+      "manualLabel": "Taux : 1 {from} en {to}",
+      "convertedTotal": "Total en {currency} :",
+      "totalIn": "Total en {currency}",
+      "useStale": "Utiliser ce taux",
+      "enterManually": "Saisir le taux manuellement",
+      "useProviderRate": "Utiliser le taux du fournisseur"
+    },
+    "show": {
+      "enteredBy": "Saisi manuellement par {name}",
+      "confirmedBy": "Taux {provider}, confirmé par {name}",
+      "fromFallback": "{provider} (fournisseur de secours)",
+      "locked": "Verrouillé",
+      "draftRate": "Brouillon",
+      "providerGone": "Ce fournisseur n'est plus disponible. Le taux enregistré est conservé.",
+      "lockedHelp": "Verrouillé à l'envoi de la commande ({date}). Les mises à jour de taux ultérieures ne le modifient pas.",
+      "draftHelp": "Le taux peut changer tant que la commande est un brouillon. Il est verrouillé à l'envoi.",
+      "notRecorded": "Aucun taux de change de {from} vers {to} n'a été enregistré pour cette commande. Les coûts reçus sont consignés en {from}.",
+      "recordHelp": "Le taux est verrouillé dès qu'il est enregistré.",
+      "record": "Enregistrer le taux"
+    },
+    "receive": {
+      "convertedAt": "Les coûts reçus sont comptabilisés à 1 {from} = {rate} {to}.",
+      "noRate": "Aucun taux de change enregistré : les coûts reçus sont consignés en {currency}."
+    },
+    "settings": {
+      "title": "Taux de change",
+      "description": "Taux pour les bons de commande dans la devise d'un fournisseur, convertis en {currency}.",
+      "hubDescription": "Fournisseur, synchronisation et taux manuels pour les bons de commande dans d'autres devises",
+      "providerMissing": "Le fournisseur sélectionné « {provider} » n'est pas disponible, les bons de commande ne reçoivent donc pas de nouveaux taux. Son extension est peut-être inactive. Choisissez un autre fournisseur.",
+      "fallbackMissing": "Le fournisseur de secours « {provider} » n'est pas disponible. Choisissez-en un autre ou aucun.",
+      "provider": "Fournisseur de taux",
+      "providerHelp": "La source des taux. Inventoros ne passe jamais de lui-même à un autre fournisseur.",
+      "defaultProvider": "Fournisseur par défaut",
+      "fromPlugin": "Extension : {plugin}",
+      "capability": {
+        "automatic": "Récupéré automatiquement",
+        "manual": "Saisi à la main",
+        "historical": "Taux historiques",
+        "shareable": "Données publiques"
+      },
+      "fallbackProvider": "Fournisseur de secours",
+      "noFallback": "Aucun",
+      "fallbackHelp": "Utilisé uniquement en cas d'échec du fournisseur par défaut, et toujours signalé comme secours.",
+      "providerSettings": "Paramètres de {provider}",
+      "secretSaved": "Enregistré. Laissez vide pour le conserver.",
+      "staleAfter": "Considérer les taux comme périmés après (jours)",
+      "staleAfterHelp": "Un taux plus ancien est signalé comme périmé et n'est utilisé sur un bon de commande que si quelqu'un l'accepte.",
+      "sync": "Devises et synchronisation",
+      "syncHelp": "Les taux sont tenus pour chaque devise utilisée par vos fournisseurs actifs, plus celles ajoutées ici.",
+      "refreshNow": "Actualiser maintenant",
+      "syncEnabled": "Synchroniser les taux automatiquement",
+      "frequency": "Fréquence",
+      "frequencies": {
+        "hourly": "Toutes les heures",
+        "every_six_hours": "Toutes les 6 heures",
+        "daily": "Quotidienne",
+        "weekly": "Hebdomadaire"
+      },
+      "currencies": "Devises",
+      "currenciesHelp": "Devises étrangères pour lesquelles tenir des taux par rapport à {currency}.",
+      "fromSuppliers": "fournisseurs",
+      "providerCurrenciesUnknown": "La liste des devises du fournisseur n'a pas pu être chargée pour le moment.",
+      "unsupportedDimmed": "Les devises grisées ne sont pas proposées par le fournisseur sélectionné.",
+      "lastStatus": "Dernière synchronisation",
+      "syncStatus": {
+        "success": "Réussie",
+        "partial": "Partiellement réussie",
+        "failed": "Échouée",
+        "never": "Pas encore exécutée"
+      },
+      "lastSuccess": "Dernière réussite",
+      "lastAttempt": "Dernière tentative",
+      "nextAttempt": "Prochaine tentative",
+      "lastError": "Dernière erreur",
+      "save": "Enregistrer les paramètres",
+      "currentRates": "Taux actuels",
+      "currentRatesHelp": "Le taux enregistré le plus récent pour chaque devise, en {currency}. Les taux de plus de {days} jours sont signalés comme périmés.",
+      "noTrackedCurrencies": "Aucune devise étrangère pour l'instant. Ajoutez un fournisseur qui utilise une autre devise ou choisissez des devises ci-dessus.",
+      "manualRates": "Taux manuels",
+      "manualRatesHelp": "Utilisés lorsque Taux manuels est le fournisseur par défaut ou de secours. Les bons de commande conservent le taux auquel ils ont été passés.",
+      "rateIn": "1 {currency} en {organizationCurrency}",
+      "addRate": "Ajouter un taux",
+      "noManualRates": "Aucun taux manuel saisi.",
+      "confirmDeleteRate": "Supprimer le taux {currency} du {date} ? Les bons de commande qui l'ont utilisé conservent leur taux."
+    }
   }
 }

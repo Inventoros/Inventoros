@@ -153,5 +153,18 @@
     "Stock adjustments created for discrepancies: :count.": "Ajustes de estoque criados para divergências: :count.",
     "No discrepancies found.": "Nenhuma divergência encontrada.",
     "If that email belongs to an account, we have emailed a password reset link.": "Se esse e-mail pertencer a uma conta, enviamos um link para redefinir a senha.",
-    "This code was already used; wait for the next one.": "Este código já foi usado; aguarde o próximo."
+    "This code was already used; wait for the next one.": "Este código já foi usado; aguarde o próximo.",
+    "You do not have permission to set a purchase order exchange rate.": "Você não tem permissão para definir a taxa de câmbio de um pedido de compra.",
+    "There is no exchange rate to confirm. Enter one instead.": "Não há taxa de câmbio para confirmar. Insira uma.",
+    "This purchase order already has an exchange rate, or does not need one.": "Este pedido de compra já tem uma taxa de câmbio ou não precisa de uma.",
+    "Enter an exchange rate greater than zero.": "Insira uma taxa de câmbio maior que zero.",
+    "Exchange rate recorded.": "Taxa de câmbio registrada.",
+    "The fallback provider must differ from the main provider.": "O provedor de reserva deve ser diferente do provedor principal.",
+    "Enter :field for this provider.": "Insira :field para este provedor.",
+    "Exchange rate settings saved.": "Configurações de taxas de câmbio salvas.",
+    "Exchange rates refreshed.": "Taxas de câmbio atualizadas.",
+    "Some exchange rates could not be refreshed. See the synchronization status for details.": "Algumas taxas de câmbio não puderam ser atualizadas. Veja o status da sincronização para detalhes.",
+    "Exchange rates could not be refreshed. See the synchronization status for details.": "Não foi possível atualizar as taxas de câmbio. Veja o status da sincronização para detalhes.",
+    "Manual exchange rate saved.": "Taxa de câmbio manual salva.",
+    "Manual exchange rate deleted.": "Taxa de câmbio manual excluída."
 }

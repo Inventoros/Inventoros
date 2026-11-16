@@ -2262,6 +2262,10 @@
           "label": "اعتماد أوامر الشراء",
           "description": "يمكنه الموافقة على أوامر الشراء التي تتطلب موافقة قبل إرسالها أو رفضها"
         },
+        "override_purchase_order_exchange_rate": {
+          "label": "تجاوز أسعار صرف أوامر الشراء",
+          "description": "يمكنه إدخال سعر صرف أمر شراء يدويًا أو قبول سعر قديم"
+        },
         "view_orders": {
           "label": "عرض الطلبات",
           "description": "يمكنه عرض الطلبات"
@@ -2301,6 +2305,10 @@
         "manage_organization": {
           "label": "إدارة المؤسسة",
           "description": "يمكنه إدارة تفاصيل المؤسسة"
+        },
+        "manage_exchange_rates": {
+          "label": "إدارة أسعار الصرف",
+          "description": "يمكنه اختيار مصدر الأسعار ومزامنة الأسعار وإدخال أسعار يدوية"
         },
         "view_plugins": {
           "label": "عرض الإضافات",
@@ -4139,5 +4147,122 @@
     "searchSupplier": "البحث عن الموردين",
     "loadOptions": "البحث عن الخيارات",
     "optionsError": "تعذر تحميل الخيارات. حاول مجدداً."
+  },
+  "exchangeRates": {
+    "rate": "السعر",
+    "provider": "مصدر الأسعار",
+    "effectiveDate": "تاريخ السريان",
+    "retrievedAt": "تاريخ الجلب",
+    "noRateYet": "لا يوجد سعر بعد",
+    "fallback": "احتياطي",
+    "stale": "قديم",
+    "staleDays": "عمره {count} يوم",
+    "enteredBy": "أدخله {name}",
+    "source": {
+      "manual": "أُدخل يدويًا",
+      "confirmed": "أُكّد يدويًا"
+    },
+    "errors": {
+      "provider_unavailable": "مصدر أسعار الصرف {provider} غير متاح.",
+      "fetch_failed": "تعذّر الوصول إلى {provider}.",
+      "unsupported": "لا يوفّر {provider} سعرًا لهذه العملة.",
+      "no_rate": "لا يوجد سعر صرف محفوظ لهذه العملة بعد."
+    },
+    "po": {
+      "title": "سعر الصرف",
+      "help": "المبالغ بعملة {from}، وتُحوَّل إلى {to} بهذا السعر.",
+      "loading": "جارٍ البحث عن سعر الصرف...",
+      "keptRate": "يبقى السعر المحدد في هذه المسودة حتى تغيّره.",
+      "rateSource": "{provider}، سعر يوم {date}",
+      "fallbackNotice": "المصدر الافتراضي غير متاح، لذا يأتي هذا السعر من المصدر الاحتياطي {provider}.",
+      "staleNotice": "عمر هذا السعر {count} يوم، وهو أكثر من الحد البالغ {days} يوم. لا يُستخدم إلا إذا قبلته.",
+      "savedWithout": "لا يزال بالإمكان حفظ أمر الشراء دون سعر.",
+      "lookupFailed": "تعذّر الحصول على سعر الصرف.",
+      "noRate": "لا يتوفر سعر صرف.",
+      "manualLabel": "السعر: 1 {from} بعملة {to}",
+      "convertedTotal": "الإجمالي بعملة {currency}:",
+      "totalIn": "الإجمالي بعملة {currency}",
+      "useStale": "استخدام هذا السعر",
+      "enterManually": "إدخال السعر يدويًا",
+      "useProviderRate": "استخدام سعر المصدر"
+    },
+    "show": {
+      "enteredBy": "أدخله يدويًا {name}",
+      "confirmedBy": "سعر {provider}، أكّده {name}",
+      "fromFallback": "{provider} (مصدر احتياطي)",
+      "locked": "مقفل",
+      "draftRate": "مسودة",
+      "providerGone": "لم يعد هذا المصدر متاحًا. يُحتفظ بالسعر المسجل.",
+      "lockedHelp": "قُفل عند إرسال الأمر ({date}). لا تغيّره تحديثات الأسعار اللاحقة.",
+      "draftHelp": "يمكن أن يتغير السعر ما دام الأمر مسودة، ويُقفل عند إرساله.",
+      "notRecorded": "لم يُسجَّل سعر صرف من {from} إلى {to} لهذا الأمر. تُسجَّل التكاليف المستلمة بعملة {from}.",
+      "recordHelp": "يُقفل السعر فور تسجيله.",
+      "record": "تسجيل السعر"
+    },
+    "receive": {
+      "convertedAt": "تُقيَّد التكاليف المستلمة بسعر 1 {from} = {rate} {to}.",
+      "noRate": "لا يوجد سعر صرف مسجل: تُسجَّل التكاليف المستلمة بعملة {currency}."
+    },
+    "settings": {
+      "title": "أسعار الصرف",
+      "description": "أسعار أوامر الشراء بعملة المورد، محوّلة إلى {currency}.",
+      "hubDescription": "المصدر والمزامنة والأسعار اليدوية لأوامر الشراء بعملات أخرى",
+      "providerMissing": "المصدر المحدد \"{provider}\" غير متاح، لذا لا تحصل أوامر الشراء على أسعار جديدة. قد تكون إضافته غير مفعّلة. اختر مصدرًا آخر.",
+      "fallbackMissing": "المصدر الاحتياطي \"{provider}\" غير متاح. اختر مصدرًا آخر أو لا شيء.",
+      "provider": "مصدر الأسعار",
+      "providerHelp": "من أين تأتي الأسعار. لا ينتقل Inventoros أبدًا إلى مصدر آخر من تلقاء نفسه.",
+      "defaultProvider": "المصدر الافتراضي",
+      "fromPlugin": "الإضافة: {plugin}",
+      "capability": {
+        "automatic": "تُجلب تلقائيًا",
+        "manual": "تُدخل يدويًا",
+        "historical": "أسعار تاريخية",
+        "shareable": "بيانات عامة"
+      },
+      "fallbackProvider": "المصدر الاحتياطي",
+      "noFallback": "لا يوجد",
+      "fallbackHelp": "يُستخدم فقط عند فشل المصدر الافتراضي، ويُشار إليه دائمًا على أنه احتياطي.",
+      "providerSettings": "إعدادات {provider}",
+      "secretSaved": "محفوظ. اتركه فارغًا للإبقاء عليه.",
+      "staleAfter": "اعتبار الأسعار قديمة بعد (أيام)",
+      "staleAfterHelp": "يُعرض السعر الأقدم على أنه قديم ولا يُستخدم في أمر شراء إلا إذا قبله أحد.",
+      "sync": "العملات والمزامنة",
+      "syncHelp": "تُحفظ الأسعار لكل عملة يستخدمها مورّدوك النشطون، إضافة إلى ما تضيفه هنا.",
+      "refreshNow": "تحديث الآن",
+      "syncEnabled": "مزامنة الأسعار تلقائيًا",
+      "frequency": "التكرار",
+      "frequencies": {
+        "hourly": "كل ساعة",
+        "every_six_hours": "كل 6 ساعات",
+        "daily": "يوميًا",
+        "weekly": "أسبوعيًا"
+      },
+      "currencies": "العملات",
+      "currenciesHelp": "العملات الأجنبية التي تُحفظ أسعارها مقابل {currency}.",
+      "fromSuppliers": "الموردون",
+      "providerCurrenciesUnknown": "تعذّر تحميل قائمة عملات المصدر الآن.",
+      "unsupportedDimmed": "العملات الباهتة لا يوفرها المصدر المحدد.",
+      "lastStatus": "آخر مزامنة",
+      "syncStatus": {
+        "success": "نجحت",
+        "partial": "نجحت جزئيًا",
+        "failed": "فشلت",
+        "never": "لم تُشغَّل بعد"
+      },
+      "lastSuccess": "آخر نجاح",
+      "lastAttempt": "آخر محاولة",
+      "nextAttempt": "المحاولة التالية",
+      "lastError": "آخر خطأ",
+      "save": "حفظ الإعدادات",
+      "currentRates": "الأسعار الحالية",
+      "currentRatesHelp": "أحدث سعر محفوظ لكل عملة بعملة {currency}. تُعلَّم الأسعار الأقدم من {days} يوم على أنها قديمة.",
+      "noTrackedCurrencies": "لا توجد عملات أجنبية بعد. أضف موردًا يستخدم عملة أخرى أو اختر عملات أعلاه.",
+      "manualRates": "الأسعار اليدوية",
+      "manualRatesHelp": "تُستخدم عندما تكون الأسعار اليدوية هي المصدر الافتراضي أو الاحتياطي. تحتفظ أوامر الشراء بالسعر الذي صدرت به.",
+      "rateIn": "1 {currency} بعملة {organizationCurrency}",
+      "addRate": "إضافة سعر",
+      "noManualRates": "لم تُدخل أسعار يدوية.",
+      "confirmDeleteRate": "حذف سعر {currency} ليوم {date}؟ تحتفظ أوامر الشراء التي استخدمته بسعرها."
+    }
   }
 }

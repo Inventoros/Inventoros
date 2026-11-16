@@ -153,5 +153,18 @@
     "Stock adjustments created for discrepancies: :count.": "عدد تسويات المخزون المنشأة للفروقات: :count.",
     "No discrepancies found.": "لم يتم العثور على فروقات.",
     "If that email belongs to an account, we have emailed a password reset link.": "إذا كان هذا البريد الإلكتروني مرتبطًا بحساب، فقد أرسلنا رابط إعادة تعيين كلمة المرور.",
-    "This code was already used; wait for the next one.": "تم استخدام هذا الرمز بالفعل؛ انتظر الرمز التالي."
+    "This code was already used; wait for the next one.": "تم استخدام هذا الرمز بالفعل؛ انتظر الرمز التالي.",
+    "You do not have permission to set a purchase order exchange rate.": "ليست لديك صلاحية تحديد سعر صرف أمر الشراء.",
+    "There is no exchange rate to confirm. Enter one instead.": "لا يوجد سعر صرف لتأكيده. أدخل سعرًا بدلًا من ذلك.",
+    "This purchase order already has an exchange rate, or does not need one.": "لأمر الشراء هذا سعر صرف بالفعل أو لا يحتاج إليه.",
+    "Enter an exchange rate greater than zero.": "أدخل سعر صرف أكبر من الصفر.",
+    "Exchange rate recorded.": "سُجّل سعر الصرف.",
+    "The fallback provider must differ from the main provider.": "يجب أن يختلف المصدر الاحتياطي عن المصدر الرئيسي.",
+    "Enter :field for this provider.": "أدخل :field لهذا المصدر.",
+    "Exchange rate settings saved.": "حُفظت إعدادات أسعار الصرف.",
+    "Exchange rates refreshed.": "حُدّثت أسعار الصرف.",
+    "Some exchange rates could not be refreshed. See the synchronization status for details.": "تعذّر تحديث بعض أسعار الصرف. راجع حالة المزامنة للتفاصيل.",
+    "Exchange rates could not be refreshed. See the synchronization status for details.": "تعذّر تحديث أسعار الصرف. راجع حالة المزامنة للتفاصيل.",
+    "Manual exchange rate saved.": "حُفظ سعر الصرف اليدوي.",
+    "Manual exchange rate deleted.": "حُذف سعر الصرف اليدوي."
 }

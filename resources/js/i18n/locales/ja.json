@@ -2262,6 +2262,10 @@
           "label": "発注を承認",
           "description": "送信前に承認が必要な発注を承認または却下できます"
         },
+        "override_purchase_order_exchange_rate": {
+          "label": "発注書の為替レートの上書き",
+          "description": "発注書の為替レートを手動で入力したり、古いレートを承認したりできます"
+        },
         "view_orders": {
           "label": "注文を表示",
           "description": "注文を表示できます"
@@ -2301,6 +2305,10 @@
         "manage_organization": {
           "label": "組織を管理",
           "description": "組織の詳細を管理できます"
+        },
+        "manage_exchange_rates": {
+          "label": "為替レートの管理",
+          "description": "レート提供元の選択、レートの同期、手動レートの入力ができます"
         },
         "view_plugins": {
           "label": "プラグインを表示",
@@ -4139,5 +4147,122 @@
     "searchSupplier": "仕入先を検索",
     "loadOptions": "候補を検索",
     "optionsError": "候補を読み込めませんでした。もう一度お試しください。"
+  },
+  "exchangeRates": {
+    "rate": "レート",
+    "provider": "レート提供元",
+    "effectiveDate": "適用日",
+    "retrievedAt": "取得日時",
+    "noRateYet": "レートなし",
+    "fallback": "予備",
+    "stale": "古いレート",
+    "staleDays": "{count}日前",
+    "enteredBy": "入力者: {name}",
+    "source": {
+      "manual": "手動入力",
+      "confirmed": "手動で確認済み"
+    },
+    "errors": {
+      "provider_unavailable": "為替レート提供元 {provider} は利用できません。",
+      "fetch_failed": "{provider} に接続できませんでした。",
+      "unsupported": "{provider} はこの通貨のレートを提供していません。",
+      "no_rate": "この通貨の為替レートはまだ保存されていません。"
+    },
+    "po": {
+      "title": "為替レート",
+      "help": "金額は {from} です。このレートで {to} に換算されます。",
+      "loading": "為替レートを検索しています...",
+      "keptRate": "この下書きに設定したレートは、変更するまで保持されます。",
+      "rateSource": "{provider}、{date} のレート",
+      "fallbackNotice": "既定の提供元を利用できないため、このレートは予備の提供元 {provider} のものです。",
+      "staleNotice": "このレートは {count} 日前のもので、上限の {days} 日を超えています。承認した場合のみ使用されます。",
+      "savedWithout": "発注書はレートなしでも保存できます。",
+      "lookupFailed": "為替レートを取得できませんでした。",
+      "noRate": "利用できる為替レートがありません。",
+      "manualLabel": "レート: 1 {from} あたりの {to}",
+      "convertedTotal": "{currency} での合計:",
+      "totalIn": "{currency} での合計",
+      "useStale": "このレートを使用",
+      "enterManually": "レートを手動で入力",
+      "useProviderRate": "提供元のレートを使用"
+    },
+    "show": {
+      "enteredBy": "{name} が手動入力",
+      "confirmedBy": "{provider} のレート、{name} が確認",
+      "fromFallback": "{provider}(予備の提供元)",
+      "locked": "確定済み",
+      "draftRate": "下書き",
+      "providerGone": "この提供元は利用できなくなりました。記録済みのレートは保持されます。",
+      "lockedHelp": "発注書の送信時に確定しました ({date})。その後のレート更新では変わりません。",
+      "draftHelp": "発注書が下書きの間はレートが変わることがあります。送信時に確定します。",
+      "notRecorded": "この発注書には {from} から {to} への為替レートが記録されていません。入荷したコストは {from} で記録されます。",
+      "recordHelp": "レートは記録するとすぐに確定します。",
+      "record": "レートを記録"
+    },
+    "receive": {
+      "convertedAt": "入荷したコストは 1 {from} = {rate} {to} で計上されます。",
+      "noRate": "為替レートが記録されていません。入荷したコストは {currency} で記録されます。"
+    },
+    "settings": {
+      "title": "為替レート",
+      "description": "仕入先の通貨で発行する発注書のレート。{currency} に換算されます。",
+      "hubDescription": "他の通貨の発注書に使う提供元、同期、手動レート",
+      "providerMissing": "選択した提供元「{provider}」を利用できないため、発注書に新しいレートが付きません。プラグインが無効になっている可能性があります。別の提供元を選択してください。",
+      "fallbackMissing": "予備の提供元「{provider}」を利用できません。別の提供元を選ぶか、なしにしてください。",
+      "provider": "レート提供元",
+      "providerHelp": "レートの取得元です。Inventoros が自動で別の提供元に切り替えることはありません。",
+      "defaultProvider": "既定の提供元",
+      "fromPlugin": "プラグイン: {plugin}",
+      "capability": {
+        "automatic": "自動取得",
+        "manual": "手動入力",
+        "historical": "過去のレート",
+        "shareable": "公開データ"
+      },
+      "fallbackProvider": "予備の提供元",
+      "noFallback": "なし",
+      "fallbackHelp": "既定の提供元が失敗した場合にのみ使用され、常に予備として表示されます。",
+      "providerSettings": "{provider} の設定",
+      "secretSaved": "保存済み。変更しない場合は空欄のままにしてください。",
+      "staleAfter": "レートを古いとみなす日数",
+      "staleAfterHelp": "これより古いレートは古いレートとして表示され、誰かが承認した場合にのみ発注書で使用されます。",
+      "sync": "通貨と同期",
+      "syncHelp": "有効な仕入先が使う各通貨と、ここで追加した通貨のレートを保持します。",
+      "refreshNow": "今すぐ更新",
+      "syncEnabled": "レートを自動で同期する",
+      "frequency": "頻度",
+      "frequencies": {
+        "hourly": "1時間ごと",
+        "every_six_hours": "6時間ごと",
+        "daily": "毎日",
+        "weekly": "毎週"
+      },
+      "currencies": "通貨",
+      "currenciesHelp": "{currency} に対するレートを保持する外貨。",
+      "fromSuppliers": "仕入先",
+      "providerCurrenciesUnknown": "現在、提供元の通貨一覧を読み込めませんでした。",
+      "unsupportedDimmed": "淡色表示の通貨は、選択した提供元では提供されていません。",
+      "lastStatus": "前回の同期",
+      "syncStatus": {
+        "success": "成功",
+        "partial": "一部成功",
+        "failed": "失敗",
+        "never": "未実行"
+      },
+      "lastSuccess": "前回の成功",
+      "lastAttempt": "前回の試行",
+      "nextAttempt": "次回の試行",
+      "lastError": "前回のエラー",
+      "save": "設定を保存",
+      "currentRates": "現在のレート",
+      "currentRatesHelp": "各通貨の最新の保存済みレート ({currency})。{days} 日より古いレートは古いレートとして表示されます。",
+      "noTrackedCurrencies": "外貨はまだありません。別の通貨を使う仕入先を追加するか、上で通貨を選択してください。",
+      "manualRates": "手動レート",
+      "manualRatesHelp": "手動レートが既定または予備の提供元のときに使用されます。発注書は発行時のレートを保持します。",
+      "rateIn": "1 {currency} あたりの {organizationCurrency}",
+      "addRate": "レートを追加",
+      "noManualRates": "手動レートは入力されていません。",
+      "confirmDeleteRate": "{date} の {currency} レートを削除しますか?使用した発注書のレートは変わりません。"
+    }
   }
 }

@@ -153,5 +153,18 @@
     "Stock adjustments created for discrepancies: :count.": "因差异而创建的库存调整数量：:count。",
     "No discrepancies found.": "未发现差异。",
     "If that email belongs to an account, we have emailed a password reset link.": "如果该邮箱属于某个账户，我们已发送密码重置链接。",
-    "This code was already used; wait for the next one.": "此验证码已被使用，请等待下一个。"
+    "This code was already used; wait for the next one.": "此验证码已被使用，请等待下一个。",
+    "You do not have permission to set a purchase order exchange rate.": "您没有设置采购订单汇率的权限。",
+    "There is no exchange rate to confirm. Enter one instead.": "没有可确认的汇率。请改为输入一个汇率。",
+    "This purchase order already has an exchange rate, or does not need one.": "此采购订单已有汇率,或不需要汇率。",
+    "Enter an exchange rate greater than zero.": "请输入大于零的汇率。",
+    "Exchange rate recorded.": "已记录汇率。",
+    "The fallback provider must differ from the main provider.": "备用来源必须与主来源不同。",
+    "Enter :field for this provider.": "请为此来源输入 :field。",
+    "Exchange rate settings saved.": "已保存汇率设置。",
+    "Exchange rates refreshed.": "已刷新汇率。",
+    "Some exchange rates could not be refreshed. See the synchronization status for details.": "部分汇率无法刷新。详情请查看同步状态。",
+    "Exchange rates could not be refreshed. See the synchronization status for details.": "无法刷新汇率。详情请查看同步状态。",
+    "Manual exchange rate saved.": "已保存手动汇率。",
+    "Manual exchange rate deleted.": "已删除手动汇率。"
 }

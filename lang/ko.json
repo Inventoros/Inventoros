@@ -153,5 +153,18 @@
     "Stock adjustments created for discrepancies: :count.": "차이에 대해 생성된 재고 조정 수: :count.",
     "No discrepancies found.": "차이가 발견되지 않았습니다.",
     "If that email belongs to an account, we have emailed a password reset link.": "해당 이메일이 계정에 등록되어 있다면 비밀번호 재설정 링크를 보냈습니다.",
-    "This code was already used; wait for the next one.": "이 코드는 이미 사용되었습니다. 다음 코드를 기다려 주세요."
+    "This code was already used; wait for the next one.": "이 코드는 이미 사용되었습니다. 다음 코드를 기다려 주세요.",
+    "You do not have permission to set a purchase order exchange rate.": "구매 주문의 환율을 설정할 권한이 없습니다.",
+    "There is no exchange rate to confirm. Enter one instead.": "확인할 환율이 없습니다. 대신 환율을 입력하세요.",
+    "This purchase order already has an exchange rate, or does not need one.": "이 구매 주문에는 이미 환율이 있거나 환율이 필요하지 않습니다.",
+    "Enter an exchange rate greater than zero.": "0보다 큰 환율을 입력하세요.",
+    "Exchange rate recorded.": "환율을 기록했습니다.",
+    "The fallback provider must differ from the main provider.": "대체 제공처는 기본 제공처와 달라야 합니다.",
+    "Enter :field for this provider.": "이 제공처의 :field을(를) 입력하세요.",
+    "Exchange rate settings saved.": "환율 설정을 저장했습니다.",
+    "Exchange rates refreshed.": "환율을 새로 고쳤습니다.",
+    "Some exchange rates could not be refreshed. See the synchronization status for details.": "일부 환율을 새로 고치지 못했습니다. 자세한 내용은 동기화 상태를 확인하세요.",
+    "Exchange rates could not be refreshed. See the synchronization status for details.": "환율을 새로 고치지 못했습니다. 자세한 내용은 동기화 상태를 확인하세요.",
+    "Manual exchange rate saved.": "직접 입력 환율을 저장했습니다.",
+    "Manual exchange rate deleted.": "직접 입력 환율을 삭제했습니다."
 }

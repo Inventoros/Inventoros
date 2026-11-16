@@ -153,5 +153,18 @@
     "Stock adjustments created for discrepancies: :count.": "Für Abweichungen erstellte Bestandskorrekturen: :count.",
     "No discrepancies found.": "Keine Abweichungen gefunden.",
     "If that email belongs to an account, we have emailed a password reset link.": "Wenn diese E-Mail-Adresse zu einem Konto gehört, haben wir einen Link zum Zurücksetzen des Passworts gesendet.",
-    "This code was already used; wait for the next one.": "Dieser Code wurde bereits verwendet. Warten Sie auf den nächsten."
+    "This code was already used; wait for the next one.": "Dieser Code wurde bereits verwendet. Warten Sie auf den nächsten.",
+    "You do not have permission to set a purchase order exchange rate.": "Sie haben keine Berechtigung, den Wechselkurs einer Bestellung festzulegen.",
+    "There is no exchange rate to confirm. Enter one instead.": "Es gibt keinen Wechselkurs zum Bestätigen. Geben Sie stattdessen einen ein.",
+    "This purchase order already has an exchange rate, or does not need one.": "Diese Bestellung hat bereits einen Wechselkurs oder benötigt keinen.",
+    "Enter an exchange rate greater than zero.": "Geben Sie einen Wechselkurs größer als null ein.",
+    "Exchange rate recorded.": "Wechselkurs erfasst.",
+    "The fallback provider must differ from the main provider.": "Der Ersatzanbieter muss sich vom Hauptanbieter unterscheiden.",
+    "Enter :field for this provider.": "Geben Sie :field für diesen Anbieter ein.",
+    "Exchange rate settings saved.": "Wechselkurseinstellungen gespeichert.",
+    "Exchange rates refreshed.": "Wechselkurse aktualisiert.",
+    "Some exchange rates could not be refreshed. See the synchronization status for details.": "Einige Wechselkurse konnten nicht aktualisiert werden. Details finden Sie im Synchronisierungsstatus.",
+    "Exchange rates could not be refreshed. See the synchronization status for details.": "Die Wechselkurse konnten nicht aktualisiert werden. Details finden Sie im Synchronisierungsstatus.",
+    "Manual exchange rate saved.": "Manueller Wechselkurs gespeichert.",
+    "Manual exchange rate deleted.": "Manueller Wechselkurs gelöscht."
 }

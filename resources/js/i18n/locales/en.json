@@ -2133,6 +2133,10 @@
           "label": "Approve Purchase Orders",
           "description": "Can approve or reject purchase orders that need approval before they are sent"
         },
+        "override_purchase_order_exchange_rate": {
+          "label": "Override Purchase Order Exchange Rates",
+          "description": "Can enter a purchase order exchange rate by hand or accept a stale one"
+        },
         "view_orders": {
           "label": "View Orders",
           "description": "Can view orders"
@@ -2172,6 +2176,10 @@
         "manage_organization": {
           "label": "Manage Organization",
           "description": "Can manage organization details"
+        },
+        "manage_exchange_rates": {
+          "label": "Manage Exchange Rates",
+          "description": "Can choose the exchange rate provider, synchronize rates and enter manual rates"
         },
         "view_plugins": {
           "label": "View Plugins",
@@ -4139,5 +4147,122 @@
     "searchSupplier": "Search suppliers",
     "loadOptions": "Search options",
     "optionsError": "Could not load options. Please try again."
+  },
+  "exchangeRates": {
+    "rate": "Rate",
+    "provider": "Provider",
+    "effectiveDate": "Effective date",
+    "retrievedAt": "Retrieved",
+    "noRateYet": "No rate yet",
+    "fallback": "Fallback",
+    "stale": "Stale",
+    "staleDays": "{count} days old",
+    "enteredBy": "Entered by {name}",
+    "source": {
+      "manual": "Entered manually",
+      "confirmed": "Confirmed manually"
+    },
+    "errors": {
+      "provider_unavailable": "The exchange rate provider {provider} is not available.",
+      "fetch_failed": "{provider} could not be reached.",
+      "unsupported": "{provider} does not quote this currency.",
+      "no_rate": "No exchange rate is stored for this currency yet."
+    },
+    "po": {
+      "title": "Exchange rate",
+      "help": "Amounts are in {from}. They are converted to {to} at this rate.",
+      "loading": "Looking up the exchange rate...",
+      "keptRate": "The rate set on this draft is kept until you change it.",
+      "rateSource": "{provider}, rate for {date}",
+      "fallbackNotice": "The default provider is unavailable, so this rate comes from the fallback provider, {provider}.",
+      "staleNotice": "This rate is {count} days old, more than the {days} day limit. It is only used if you accept it.",
+      "savedWithout": "The purchase order can still be saved without a rate.",
+      "lookupFailed": "The exchange rate could not be looked up.",
+      "noRate": "No exchange rate is available.",
+      "manualLabel": "Rate: 1 {from} in {to}",
+      "convertedTotal": "Total in {currency}:",
+      "totalIn": "Total in {currency}",
+      "useStale": "Use this rate",
+      "enterManually": "Enter rate manually",
+      "useProviderRate": "Use the provider rate"
+    },
+    "show": {
+      "enteredBy": "Entered manually by {name}",
+      "confirmedBy": "{provider} rate, confirmed by {name}",
+      "fromFallback": "{provider} (fallback provider)",
+      "locked": "Locked",
+      "draftRate": "Draft",
+      "providerGone": "This provider is no longer available. The recorded rate is kept.",
+      "lockedHelp": "Locked when the order was sent ({date}). Later rate updates do not change it.",
+      "draftHelp": "The rate can change while the order is a draft. It locks when the order is sent.",
+      "notRecorded": "No exchange rate from {from} to {to} was recorded for this order. Received costs are logged in {from}.",
+      "recordHelp": "The rate locks as soon as it is recorded.",
+      "record": "Record rate"
+    },
+    "receive": {
+      "convertedAt": "Received costs are booked at 1 {from} = {rate} {to}.",
+      "noRate": "No exchange rate recorded: received costs are logged in {currency}."
+    },
+    "settings": {
+      "title": "Exchange rates",
+      "description": "Rates for purchase orders in a supplier's currency, converted to {currency}.",
+      "hubDescription": "Provider, synchronization and manual rates for purchase orders in other currencies",
+      "providerMissing": "The selected provider \"{provider}\" is not available, so purchase orders get no new rates. Its plugin may be inactive. Choose another provider.",
+      "fallbackMissing": "The fallback provider \"{provider}\" is not available. Choose another one or none.",
+      "provider": "Provider",
+      "providerHelp": "Where rates come from. Inventoros never switches to another provider on its own.",
+      "defaultProvider": "Default provider",
+      "fromPlugin": "Plugin: {plugin}",
+      "capability": {
+        "automatic": "Fetched automatically",
+        "manual": "Entered by hand",
+        "historical": "Historical rates",
+        "shareable": "Public data"
+      },
+      "fallbackProvider": "Fallback provider",
+      "noFallback": "None",
+      "fallbackHelp": "Used only when the default provider fails, and always labelled as the fallback.",
+      "providerSettings": "{provider} settings",
+      "secretSaved": "Saved. Leave blank to keep it.",
+      "staleAfter": "Treat rates as stale after (days)",
+      "staleAfterHelp": "An older rate is shown as stale and is only used on a purchase order if someone accepts it.",
+      "sync": "Currencies and synchronization",
+      "syncHelp": "Rates are kept for every currency your active suppliers use, plus any you add here.",
+      "refreshNow": "Refresh now",
+      "syncEnabled": "Synchronize rates automatically",
+      "frequency": "Frequency",
+      "frequencies": {
+        "hourly": "Every hour",
+        "every_six_hours": "Every 6 hours",
+        "daily": "Daily",
+        "weekly": "Weekly"
+      },
+      "currencies": "Currencies",
+      "currenciesHelp": "Foreign currencies to keep rates for, against {currency}.",
+      "fromSuppliers": "suppliers",
+      "providerCurrenciesUnknown": "The provider's currency list could not be loaded right now.",
+      "unsupportedDimmed": "Dimmed currencies are not offered by the selected provider.",
+      "lastStatus": "Last synchronization",
+      "syncStatus": {
+        "success": "Succeeded",
+        "partial": "Partly succeeded",
+        "failed": "Failed",
+        "never": "Not run yet"
+      },
+      "lastSuccess": "Last success",
+      "lastAttempt": "Last attempt",
+      "nextAttempt": "Next attempt",
+      "lastError": "Last error",
+      "save": "Save settings",
+      "currentRates": "Current rates",
+      "currentRatesHelp": "The newest stored rate for each currency, in {currency}. Rates older than {days} days are marked stale.",
+      "noTrackedCurrencies": "No foreign currencies yet. Add a supplier that uses another currency, or pick currencies above.",
+      "manualRates": "Manual rates",
+      "manualRatesHelp": "Used when Manual rates is the default or fallback provider. Purchase orders keep the rate they were placed at.",
+      "rateIn": "1 {currency} in {organizationCurrency}",
+      "addRate": "Add rate",
+      "noManualRates": "No manual rates entered.",
+      "confirmDeleteRate": "Delete the {currency} rate for {date}? Purchase orders that used it keep their rate."
+    }
   }
 }

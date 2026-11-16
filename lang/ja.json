@@ -153,5 +153,18 @@
     "Stock adjustments created for discrepancies: :count.": "差異に対して作成した在庫調整の件数：:count。",
     "No discrepancies found.": "差異はありませんでした。",
     "If that email belongs to an account, we have emailed a password reset link.": "そのメールアドレスのアカウントが存在する場合、パスワード再設定用のリンクを送信しました。",
-    "This code was already used; wait for the next one.": "このコードはすでに使用されています。次のコードをお待ちください。"
+    "This code was already used; wait for the next one.": "このコードはすでに使用されています。次のコードをお待ちください。",
+    "You do not have permission to set a purchase order exchange rate.": "発注書の為替レートを設定する権限がありません。",
+    "There is no exchange rate to confirm. Enter one instead.": "確認する為替レートがありません。代わりに入力してください。",
+    "This purchase order already has an exchange rate, or does not need one.": "この発注書にはすでに為替レートがあるか、レートが不要です。",
+    "Enter an exchange rate greater than zero.": "0 より大きい為替レートを入力してください。",
+    "Exchange rate recorded.": "為替レートを記録しました。",
+    "The fallback provider must differ from the main provider.": "予備の提供元はメインの提供元と異なる必要があります。",
+    "Enter :field for this provider.": "この提供元の :field を入力してください。",
+    "Exchange rate settings saved.": "為替レートの設定を保存しました。",
+    "Exchange rates refreshed.": "為替レートを更新しました。",
+    "Some exchange rates could not be refreshed. See the synchronization status for details.": "一部の為替レートを更新できませんでした。詳細は同期状況を確認してください。",
+    "Exchange rates could not be refreshed. See the synchronization status for details.": "為替レートを更新できませんでした。詳細は同期状況を確認してください。",
+    "Manual exchange rate saved.": "手動の為替レートを保存しました。",
+    "Manual exchange rate deleted.": "手動の為替レートを削除しました。"
 }

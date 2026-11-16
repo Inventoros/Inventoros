@@ -2262,6 +2262,10 @@
           "label": "Inkooporders goedkeuren",
           "description": "Kan inkooporders goedkeuren of afwijzen die goedkeuring nodig hebben voordat ze worden verzonden"
         },
+        "override_purchase_order_exchange_rate": {
+          "label": "Wisselkoersen van inkooporders overschrijven",
+          "description": "Kan de wisselkoers van een inkooporder handmatig invoeren of een verouderde koers accepteren"
+        },
         "view_orders": {
           "label": "Bestellingen bekijken",
           "description": "Kan bestellingen bekijken"
@@ -2301,6 +2305,10 @@
         "manage_organization": {
           "label": "Organisatie beheren",
           "description": "Kan organisatiegegevens beheren"
+        },
+        "manage_exchange_rates": {
+          "label": "Wisselkoersen beheren",
+          "description": "Kan de koersbron kiezen, koersen synchroniseren en handmatige koersen invoeren"
         },
         "view_plugins": {
           "label": "Plugins bekijken",
@@ -4139,5 +4147,122 @@
     "searchSupplier": "Leveranciers zoeken",
     "loadOptions": "Opties zoeken",
     "optionsError": "Opties laden mislukt. Probeer opnieuw."
+  },
+  "exchangeRates": {
+    "rate": "Koers",
+    "provider": "Koersbron",
+    "effectiveDate": "Geldig op",
+    "retrievedAt": "Opgehaald",
+    "noRateYet": "Nog geen koers",
+    "fallback": "Reserve",
+    "stale": "Verouderd",
+    "staleDays": "{count} dagen oud",
+    "enteredBy": "Ingevoerd door {name}",
+    "source": {
+      "manual": "Handmatig ingevoerd",
+      "confirmed": "Handmatig bevestigd"
+    },
+    "errors": {
+      "provider_unavailable": "De koersbron {provider} is niet beschikbaar.",
+      "fetch_failed": "{provider} is niet bereikbaar.",
+      "unsupported": "{provider} geeft geen koers voor deze valuta.",
+      "no_rate": "Voor deze valuta is nog geen wisselkoers opgeslagen."
+    },
+    "po": {
+      "title": "Wisselkoers",
+      "help": "Bedragen zijn in {from}. Ze worden tegen deze koers omgerekend naar {to}.",
+      "loading": "Wisselkoers opzoeken...",
+      "keptRate": "De koers die op dit concept is ingesteld blijft tot u hem wijzigt.",
+      "rateSource": "{provider}, koers van {date}",
+      "fallbackNotice": "De standaardbron is niet beschikbaar, dus deze koers komt van de reservebron {provider}.",
+      "staleNotice": "Deze koers is {count} dagen oud, ouder dan de grens van {days} dagen. Hij wordt alleen gebruikt als u hem accepteert.",
+      "savedWithout": "De inkooporder kan ook zonder koers worden opgeslagen.",
+      "lookupFailed": "De wisselkoers kon niet worden opgezocht.",
+      "noRate": "Er is geen wisselkoers beschikbaar.",
+      "manualLabel": "Koers: 1 {from} in {to}",
+      "convertedTotal": "Totaal in {currency}:",
+      "totalIn": "Totaal in {currency}",
+      "useStale": "Deze koers gebruiken",
+      "enterManually": "Koers handmatig invoeren",
+      "useProviderRate": "Koers van de bron gebruiken"
+    },
+    "show": {
+      "enteredBy": "Handmatig ingevoerd door {name}",
+      "confirmedBy": "Koers van {provider}, bevestigd door {name}",
+      "fromFallback": "{provider} (reservebron)",
+      "locked": "Vastgezet",
+      "draftRate": "Concept",
+      "providerGone": "Deze bron is niet meer beschikbaar. De vastgelegde koers blijft behouden.",
+      "lockedHelp": "Vastgezet toen de order werd verzonden ({date}). Latere koerswijzigingen veranderen hem niet.",
+      "draftHelp": "De koers kan veranderen zolang de order een concept is. Bij verzending wordt hij vastgezet.",
+      "notRecorded": "Voor deze order is geen wisselkoers van {from} naar {to} vastgelegd. Ontvangen kosten worden in {from} geregistreerd.",
+      "recordHelp": "De koers wordt vastgezet zodra hij is vastgelegd.",
+      "record": "Koers vastleggen"
+    },
+    "receive": {
+      "convertedAt": "Ontvangen kosten worden geboekt tegen 1 {from} = {rate} {to}.",
+      "noRate": "Geen wisselkoers vastgelegd: ontvangen kosten worden in {currency} geregistreerd."
+    },
+    "settings": {
+      "title": "Wisselkoersen",
+      "description": "Koersen voor inkooporders in de valuta van een leverancier, omgerekend naar {currency}.",
+      "hubDescription": "Bron, synchronisatie en handmatige koersen voor inkooporders in andere valuta",
+      "providerMissing": "De gekozen bron \"{provider}\" is niet beschikbaar, dus inkooporders krijgen geen nieuwe koersen. De plugin is mogelijk inactief. Kies een andere bron.",
+      "fallbackMissing": "De reservebron \"{provider}\" is niet beschikbaar. Kies een andere of geen.",
+      "provider": "Koersbron",
+      "providerHelp": "Waar de koersen vandaan komen. Inventoros schakelt nooit uit zichzelf over op een andere bron.",
+      "defaultProvider": "Standaardbron",
+      "fromPlugin": "Plugin: {plugin}",
+      "capability": {
+        "automatic": "Automatisch opgehaald",
+        "manual": "Handmatig ingevoerd",
+        "historical": "Historische koersen",
+        "shareable": "Openbare gegevens"
+      },
+      "fallbackProvider": "Reservebron",
+      "noFallback": "Geen",
+      "fallbackHelp": "Alleen gebruikt als de standaardbron faalt, en altijd als reserve aangeduid.",
+      "providerSettings": "Instellingen van {provider}",
+      "secretSaved": "Opgeslagen. Laat leeg om te behouden.",
+      "staleAfter": "Koersen gelden als verouderd na (dagen)",
+      "staleAfterHelp": "Een oudere koers wordt als verouderd getoond en alleen op een inkooporder gebruikt als iemand hem accepteert.",
+      "sync": "Valuta en synchronisatie",
+      "syncHelp": "Er worden koersen bijgehouden voor elke valuta van uw actieve leveranciers, plus de valuta die u hier toevoegt.",
+      "refreshNow": "Nu vernieuwen",
+      "syncEnabled": "Koersen automatisch synchroniseren",
+      "frequency": "Frequentie",
+      "frequencies": {
+        "hourly": "Elk uur",
+        "every_six_hours": "Elke 6 uur",
+        "daily": "Dagelijks",
+        "weekly": "Wekelijks"
+      },
+      "currencies": "Valuta",
+      "currenciesHelp": "Vreemde valuta waarvoor koersen tegen {currency} worden bijgehouden.",
+      "fromSuppliers": "leveranciers",
+      "providerCurrenciesUnknown": "De valutalijst van de bron kon nu niet worden geladen.",
+      "unsupportedDimmed": "Gedimde valuta worden niet door de gekozen bron aangeboden.",
+      "lastStatus": "Laatste synchronisatie",
+      "syncStatus": {
+        "success": "Geslaagd",
+        "partial": "Deels geslaagd",
+        "failed": "Mislukt",
+        "never": "Nog niet uitgevoerd"
+      },
+      "lastSuccess": "Laatst geslaagd",
+      "lastAttempt": "Laatste poging",
+      "nextAttempt": "Volgende poging",
+      "lastError": "Laatste fout",
+      "save": "Instellingen opslaan",
+      "currentRates": "Huidige koersen",
+      "currentRatesHelp": "De nieuwste opgeslagen koers per valuta, in {currency}. Koersen ouder dan {days} dagen worden als verouderd gemarkeerd.",
+      "noTrackedCurrencies": "Nog geen vreemde valuta. Voeg een leverancier met een andere valuta toe of kies hierboven valuta.",
+      "manualRates": "Handmatige koersen",
+      "manualRatesHelp": "Gebruikt als Handmatige koersen de standaard- of reservebron is. Inkooporders behouden de koers waartegen ze zijn geplaatst.",
+      "rateIn": "1 {currency} in {organizationCurrency}",
+      "addRate": "Koers toevoegen",
+      "noManualRates": "Geen handmatige koersen ingevoerd.",
+      "confirmDeleteRate": "De koers voor {currency} van {date} verwijderen? Inkooporders die hem gebruikten behouden hun koers."
+    }
   }
 }

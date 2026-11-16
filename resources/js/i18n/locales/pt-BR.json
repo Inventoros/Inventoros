@@ -2262,6 +2262,10 @@
           "label": "Aprovar Ordens de Compra",
           "description": "Pode aprovar ou rejeitar ordens de compra que precisam de aprovação antes do envio"
         },
+        "override_purchase_order_exchange_rate": {
+          "label": "Substituir taxas de câmbio de pedidos de compra",
+          "description": "Pode inserir manualmente a taxa de câmbio de um pedido de compra ou aceitar uma taxa desatualizada"
+        },
         "view_orders": {
           "label": "Ver Pedidos",
           "description": "Pode ver pedidos"
@@ -2301,6 +2305,10 @@
         "manage_organization": {
           "label": "Gerenciar Organização",
           "description": "Pode gerenciar os detalhes da organização"
+        },
+        "manage_exchange_rates": {
+          "label": "Gerenciar taxas de câmbio",
+          "description": "Pode escolher o provedor de taxas, sincronizar taxas e inserir taxas manuais"
         },
         "view_plugins": {
           "label": "Ver Plugins",
@@ -4139,5 +4147,122 @@
     "searchSupplier": "Buscar fornecedores",
     "loadOptions": "Buscar opções",
     "optionsError": "Não foi possível carregar as opções. Tente novamente."
+  },
+  "exchangeRates": {
+    "rate": "Taxa",
+    "provider": "Provedor de taxas",
+    "effectiveDate": "Data de vigência",
+    "retrievedAt": "Obtida em",
+    "noRateYet": "Ainda sem taxa",
+    "fallback": "Reserva",
+    "stale": "Desatualizada",
+    "staleDays": "{count} dias",
+    "enteredBy": "Inserida por {name}",
+    "source": {
+      "manual": "Inserida manualmente",
+      "confirmed": "Confirmada manualmente"
+    },
+    "errors": {
+      "provider_unavailable": "O provedor de taxas de câmbio {provider} não está disponível.",
+      "fetch_failed": "Não foi possível contatar {provider}.",
+      "unsupported": "{provider} não cota esta moeda.",
+      "no_rate": "Ainda não há taxa de câmbio armazenada para esta moeda."
+    },
+    "po": {
+      "title": "Taxa de câmbio",
+      "help": "Os valores estão em {from}. Eles são convertidos para {to} por esta taxa.",
+      "loading": "Buscando a taxa de câmbio...",
+      "keptRate": "A taxa definida neste rascunho é mantida até você alterá-la.",
+      "rateSource": "{provider}, taxa de {date}",
+      "fallbackNotice": "O provedor padrão está indisponível, então esta taxa vem do provedor de reserva, {provider}.",
+      "staleNotice": "Esta taxa tem {count} dias, mais que o limite de {days} dias. Ela só é usada se você aceitá-la.",
+      "savedWithout": "O pedido de compra pode ser salvo mesmo sem taxa.",
+      "lookupFailed": "Não foi possível obter a taxa de câmbio.",
+      "noRate": "Nenhuma taxa de câmbio disponível.",
+      "manualLabel": "Taxa: 1 {from} em {to}",
+      "convertedTotal": "Total em {currency}:",
+      "totalIn": "Total em {currency}",
+      "useStale": "Usar esta taxa",
+      "enterManually": "Inserir taxa manualmente",
+      "useProviderRate": "Usar a taxa do provedor"
+    },
+    "show": {
+      "enteredBy": "Inserida manualmente por {name}",
+      "confirmedBy": "Taxa de {provider}, confirmada por {name}",
+      "fromFallback": "{provider} (provedor de reserva)",
+      "locked": "Bloqueada",
+      "draftRate": "Rascunho",
+      "providerGone": "Este provedor não está mais disponível. A taxa registrada é mantida.",
+      "lockedHelp": "Bloqueada quando o pedido foi enviado ({date}). Atualizações posteriores de taxas não a alteram.",
+      "draftHelp": "A taxa pode mudar enquanto o pedido for rascunho. Ela é bloqueada no envio.",
+      "notRecorded": "Nenhuma taxa de câmbio de {from} para {to} foi registrada para este pedido. Os custos recebidos são registrados em {from}.",
+      "recordHelp": "A taxa é bloqueada assim que é registrada.",
+      "record": "Registrar taxa"
+    },
+    "receive": {
+      "convertedAt": "Os custos recebidos são lançados a 1 {from} = {rate} {to}.",
+      "noRate": "Nenhuma taxa de câmbio registrada: os custos recebidos são registrados em {currency}."
+    },
+    "settings": {
+      "title": "Taxas de câmbio",
+      "description": "Taxas para pedidos de compra na moeda de um fornecedor, convertidas para {currency}.",
+      "hubDescription": "Provedor, sincronização e taxas manuais para pedidos de compra em outras moedas",
+      "providerMissing": "O provedor selecionado \"{provider}\" não está disponível, então os pedidos de compra não recebem novas taxas. O plugin dele pode estar inativo. Escolha outro provedor.",
+      "fallbackMissing": "O provedor de reserva \"{provider}\" não está disponível. Escolha outro ou nenhum.",
+      "provider": "Provedor de taxas",
+      "providerHelp": "De onde vêm as taxas. O Inventoros nunca troca de provedor por conta própria.",
+      "defaultProvider": "Provedor padrão",
+      "fromPlugin": "Plugin: {plugin}",
+      "capability": {
+        "automatic": "Obtidas automaticamente",
+        "manual": "Inseridas à mão",
+        "historical": "Taxas históricas",
+        "shareable": "Dados públicos"
+      },
+      "fallbackProvider": "Provedor de reserva",
+      "noFallback": "Nenhum",
+      "fallbackHelp": "Usado somente quando o provedor padrão falha, e sempre identificado como reserva.",
+      "providerSettings": "Configurações de {provider}",
+      "secretSaved": "Salvo. Deixe em branco para manter.",
+      "staleAfter": "Considerar taxas desatualizadas após (dias)",
+      "staleAfterHelp": "Uma taxa mais antiga aparece como desatualizada e só é usada em um pedido de compra se alguém aceitá-la.",
+      "sync": "Moedas e sincronização",
+      "syncHelp": "São mantidas taxas para cada moeda usada pelos fornecedores ativos, além das adicionadas aqui.",
+      "refreshNow": "Atualizar agora",
+      "syncEnabled": "Sincronizar taxas automaticamente",
+      "frequency": "Frequência",
+      "frequencies": {
+        "hourly": "A cada hora",
+        "every_six_hours": "A cada 6 horas",
+        "daily": "Diária",
+        "weekly": "Semanal"
+      },
+      "currencies": "Moedas",
+      "currenciesHelp": "Moedas estrangeiras para as quais manter taxas em relação a {currency}.",
+      "fromSuppliers": "fornecedores",
+      "providerCurrenciesUnknown": "Não foi possível carregar a lista de moedas do provedor agora.",
+      "unsupportedDimmed": "As moedas esmaecidas não são oferecidas pelo provedor selecionado.",
+      "lastStatus": "Última sincronização",
+      "syncStatus": {
+        "success": "Concluída",
+        "partial": "Parcialmente concluída",
+        "failed": "Falhou",
+        "never": "Ainda não executada"
+      },
+      "lastSuccess": "Último sucesso",
+      "lastAttempt": "Última tentativa",
+      "nextAttempt": "Próxima tentativa",
+      "lastError": "Último erro",
+      "save": "Salvar configurações",
+      "currentRates": "Taxas atuais",
+      "currentRatesHelp": "A taxa armazenada mais recente de cada moeda, em {currency}. Taxas com mais de {days} dias são marcadas como desatualizadas.",
+      "noTrackedCurrencies": "Ainda não há moedas estrangeiras. Adicione um fornecedor que use outra moeda ou escolha moedas acima.",
+      "manualRates": "Taxas manuais",
+      "manualRatesHelp": "Usadas quando Taxas manuais é o provedor padrão ou de reserva. Os pedidos de compra mantêm a taxa com que foram feitos.",
+      "rateIn": "1 {currency} em {organizationCurrency}",
+      "addRate": "Adicionar taxa",
+      "noManualRates": "Nenhuma taxa manual inserida.",
+      "confirmDeleteRate": "Excluir a taxa de {currency} de {date}? Os pedidos de compra que a usaram mantêm sua taxa."
+    }
   }
 }
