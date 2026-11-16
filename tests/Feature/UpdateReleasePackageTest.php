@@ -327,6 +327,48 @@ final class UpdateReleasePackageTest extends TestCase
         $this->assertFileExists($this->base.'/app/OldService.php');
     }
 
+    /**
+     * The signature covers the archive bytes, not the API's tag name, so an
+     * older signed release must never be installed over a newer install.
+     *
+     * @return array<string, array{0: string}>
+     */
+    public static function notNewerInstalls(): array
+    {
+        return [
+            'installed version is newer' => ['2.1.0'],
+            'installed version is the same' => [self::VERSION],
+        ];
+    }
+
+    #[DataProvider('notNewerInstalls')]
+    public function test_a_release_that_is_not_newer_than_the_install_is_refused(string $installed): void
+    {
+        File::put($this->base.'/VERSION', $installed);
+        $this->fakeGitHub($this->makeRelease());
+
+        $result = $this->updater()->update();
+
+        $this->assertFalse($result['success']);
+        $this->assertStringContainsString('not newer', $result['message']);
+        $this->assertNotContains('down', $this->artisanCalls);
+        $this->assertNotContains('migrate', $this->artisanCalls);
+        $this->assertSame($installed, File::get($this->base.'/VERSION'));
+        $this->assertFileExists($this->base.'/app/OldService.php');
+    }
+
+    public function test_a_package_whose_version_file_disagrees_with_its_manifest_is_refused(): void
+    {
+        $this->fakeGitHub($this->makeRelease([], ['inventoros/VERSION' => '1.0.0']));
+
+        $result = $this->updater()->update();
+
+        $this->assertFalse($result['success']);
+        $this->assertStringContainsString('VERSION', $result['message']);
+        $this->assertNotContains('down', $this->artisanCalls);
+        $this->assertSame('1.0.8', File::get($this->base.'/VERSION'));
+    }
+
     public function test_a_release_without_the_cpanel_package_is_refused(): void
     {
         Http::fake([

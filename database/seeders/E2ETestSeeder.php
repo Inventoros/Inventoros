@@ -10,11 +10,14 @@ use App\Models\PermissionSet;
 use App\Models\Purchasing\PurchaseOrder;
 use App\Models\Role;
 use App\Models\User;
+use Database\Seeders\Concerns\RunsOnlyInFixtureEnvironments;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
 class E2ETestSeeder extends Seeder
 {
+    use RunsOnlyInFixtureEnvironments;
+
     /**
      * E2E Test User Credentials
      * These are used by Playwright tests for authentication
@@ -39,6 +42,8 @@ class E2ETestSeeder extends Seeder
      */
     public function run(): void
     {
+        $this->ensureFixtureEnvironment();
+
         // Run role seeder first to ensure system roles exist
         $this->call(RoleSeeder::class);
 

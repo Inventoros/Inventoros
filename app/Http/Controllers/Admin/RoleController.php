@@ -37,7 +37,9 @@ class RoleController extends Controller
         $user = $request->user();
 
         // Get organization-specific roles and system roles
-        $roles = Role::with(['users' => fn ($query) => $query->where('role_user.organization_id', $user->organization_id)])
+        // The list shows member counts only, so it never sends the members
+        // themselves (view_roles does not imply view_users).
+        $roles = Role::withCount(['users' => fn ($query) => $query->where('role_user.organization_id', $user->organization_id)])
             ->where(function ($query) use ($user) {
                 $query->where('organization_id', $user->organization_id)
                     ->orWhereNull('organization_id'); // Include system roles

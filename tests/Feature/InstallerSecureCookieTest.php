@@ -7,6 +7,7 @@ namespace Tests\Feature;
 use App\Http\Controllers\Install\InstallerController;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\File;
+use Tests\Feature\Concerns\UnlocksInstaller;
 use Tests\TestCase;
 
 /**
@@ -18,6 +19,8 @@ use Tests\TestCase;
  */
 final class InstallerSecureCookieTest extends TestCase
 {
+    use UnlocksInstaller;
+
     private string $envFile;
 
     protected function setUp(): void
@@ -42,6 +45,8 @@ final class InstallerSecureCookieTest extends TestCase
             protected function prepareDatabase(string $driver, array $input, bool $reset): void {}
         });
         Artisan::shouldReceive('call')->andReturn(0);
+
+        $this->unlockInstaller();
     }
 
     protected function tearDown(): void

@@ -54,11 +54,18 @@ const handleTabKeydown = async (event) => {
 const profileForm = useForm({
     name: props.user.name || '',
     email: props.user.email || '',
+    current_password: '',
 });
+
+// Changing the sign-in email needs the current password.
+const emailChanged = computed(() =>
+    profileForm.email.trim().toLowerCase() !== (props.user.email || '').toLowerCase(),
+);
 
 const submitProfile = () => {
     profileForm.patch(route('settings.account.update.profile'), {
         preserveScroll: true,
+        onFinish: () => profileForm.reset('current_password'),
     });
 };
 
@@ -189,6 +196,20 @@ const toggles = [
                                     required
                                 />
                                 <p v-if="profileForm.errors.email" id="account-email-error" :class="fieldError" role="alert">{{ profileForm.errors.email }}</p>
+                            </div>
+                            <div v-if="emailChanged || profileForm.errors.current_password" class="settings-field">
+                                <label for="profile_current_password" :class="fieldLabel">{{ t('settings.account.currentPassword') }}</label>
+                                <input
+                                    id="profile_current_password"
+                                    :aria-invalid="!!profileForm.errors.current_password"
+                                    :aria-describedby="profileForm.errors.current_password ? 'account-profile-current_password-error' : undefined"
+                                    v-model="profileForm.current_password"
+                                    type="password"
+                                    autocomplete="current-password"
+                                    :class="fieldInput"
+                                    required
+                                />
+                                <p v-if="profileForm.errors.current_password" id="account-profile-current_password-error" :class="fieldError" role="alert">{{ profileForm.errors.current_password }}</p>
                             </div>
                         </div>
 

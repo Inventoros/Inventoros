@@ -123,6 +123,16 @@ final class OrderLifecycleRestockTest extends TestCase
         return $order->fresh();
     }
 
+    /**
+     * Move a delivered order back to pending the way rows written before
+     * status transitions were enforced could be (no shipped_at stamp, no
+     * shipments), bypassing the model guard that now refuses it.
+     */
+    private function revertToPendingLikeALegacyRow(Order $order): void
+    {
+        DB::table('orders')->where('id', $order->id)->update(['status' => 'pending']);
+    }
+
     private function orders(): OrderService
     {
         return app(OrderService::class);
@@ -356,7 +366,7 @@ final class OrderLifecycleRestockTest extends TestCase
 
         // Status moved back by hand (no shipments recorded), then cancelled:
         // only the 2 units still out may come back.
-        $this->orders()->transitionStatus($order->fresh(), OrderStatus::PENDING);
+        $this->revertToPendingLikeALegacyRow($order);
         $this->orders()->cancel($order->fresh());
 
         $this->assertStock($product, 10, 10);
@@ -367,7 +377,7 @@ final class OrderLifecycleRestockTest extends TestCase
         $product = $this->product(10);
         $order = $this->order($product, 5, 'delivered');
         $this->receiveReturn($order, 5);
-        $this->orders()->transitionStatus($order->fresh(), OrderStatus::PENDING);
+        $this->revertToPendingLikeALegacyRow($order);
 
         $this->orders()->cancel($order->fresh());
 
@@ -379,7 +389,7 @@ final class OrderLifecycleRestockTest extends TestCase
         $product = $this->product(10);
         $order = $this->order($product, 5, 'delivered');
         $this->raiseReturn($order, 5);
-        $this->orders()->transitionStatus($order->fresh(), OrderStatus::PENDING);
+        $this->revertToPendingLikeALegacyRow($order);
 
         $this->expectException(\RuntimeException::class);
         $this->expectExceptionMessage('open return');

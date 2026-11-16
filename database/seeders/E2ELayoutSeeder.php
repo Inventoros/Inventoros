@@ -21,6 +21,7 @@ use App\Models\Purchasing\PurchaseOrderItem;
 use App\Models\SavedReport;
 use App\Models\User;
 use App\Models\Warehouse;
+use Database\Seeders\Concerns\RunsOnlyInFixtureEnvironments;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
@@ -34,12 +35,16 @@ use Illuminate\Support\Facades\Hash;
  */
 class E2ELayoutSeeder extends Seeder
 {
+    use RunsOnlyInFixtureEnvironments;
+
     public const PORTAL_EMAIL = 'e2e-portal@inventoros.test';
 
     public const PORTAL_PASSWORD = 'E2EPortalPassword123!';
 
     public function run(): void
     {
+        $this->ensureFixtureEnvironment();
+
         $this->call(ScreenshotSeeder::class);
 
         $organization = Organization::where('name', E2ETestSeeder::TEST_ORG_NAME)->firstOrFail();

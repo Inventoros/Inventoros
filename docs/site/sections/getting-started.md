@@ -26,6 +26,8 @@ sudo bash install.sh
 
 However you deploy, you finish at `https://your-address/install`. The guided installer checks the server, connects to the database and creates the tables, then creates your organization and the first administrator. With the Docker-based methods the database details are already filled in.
 
+The installer first asks for a one-time **setup token**, so nobody else can finish the installation before you. It is `INVENTOROS_SETUP_TOKEN` in `.env` when that is set (the Linux installer and the Coolify template set it for you). Otherwise Inventoros writes a random token to `storage/app/private/setup-token` in the application folder the first time `/install` is opened, and logs the file's location. The file is deleted when the installation completes.
+
 Download the latest release: https://github.com/Inventoros/Inventoros/releases/latest
 
 ## System requirements
