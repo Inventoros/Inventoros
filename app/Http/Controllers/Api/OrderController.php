@@ -122,7 +122,7 @@ class OrderController extends Controller
             'order_date' => ['nullable', 'date'],
             'notes' => ['nullable', 'string'],
             'metadata' => ['nullable', 'array'],
-            'items' => ['required', 'array', 'min:1'],
+            'items' => ['required', 'array', 'min:1', 'max:500'],
             'items.*.product_id' => ['required', 'integer', Rule::exists('products', 'id')->where('organization_id', $organizationId)],
             'items.*.product_variant_id' => ['nullable', 'integer', Rule::exists('product_variants', 'id')->where('organization_id', $organizationId)],
             'items.*.quantity' => ['required', 'integer', 'min:1'],

@@ -303,6 +303,8 @@ Mutations: `createProduct`, `updateProduct`, `deleteProduct`, `createOrder`, `up
 
 Every field is gated like the matching REST route: the user must hold the permission and the token must allow it, so a scoped token is enforced the same way over GraphQL. Mutations call the same services as the web app and REST API, so a return received or a transfer completed over GraphQL restocks and moves bins exactly as it would anywhere else. List queries accept `limit` (default 50, max 100), except `pendingApprovals`, which takes none. The endpoint shares the REST rate limit of 60 requests per minute.
 
+A mutation operation may contain at most 10 root fields, aliases included (`GRAPHQL_MUTATION_MAX_ROOT_FIELDS`); split larger batches across requests. An order takes at most 500 lines, over REST and GraphQL alike, the same as purchase orders, transfers and returns.
+
 ```bash
 curl -X POST "${APP_URL}/graphql" \
   -H "Authorization: Bearer ${TOKEN}" \
