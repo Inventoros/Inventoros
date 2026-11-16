@@ -6,6 +6,7 @@ namespace App\GraphQL\Mutations;
 
 use App\Exceptions\InsufficientStockException;
 use App\GraphQL\Concerns\RequiresPermissions;
+use App\GraphQL\Support\OrganizationExists;
 use App\Models\Inventory\Product;
 use App\Models\Inventory\ProductLocation;
 use App\Models\Inventory\StockAdjustment;
@@ -47,7 +48,7 @@ class CreateStockAdjustmentMutation extends Mutation
             'product_id' => [
                 'type' => Type::nonNull(Type::int()),
                 'description' => 'The product ID to adjust',
-                'rules' => ['required', 'integer', 'exists:products,id'],
+                'rules' => ['required', 'integer', OrganizationExists::rule('products')],
             ],
             'quantity' => [
                 'type' => Type::nonNull(Type::int()),

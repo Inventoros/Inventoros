@@ -37,7 +37,9 @@ class RoleController extends Controller
         $user = $request->user();
 
         // Get organization-specific roles and system roles
-        $roles = Role::with(['users' => fn ($query) => $query->where('role_user.organization_id', $user->organization_id)])
+        // The list shows member counts only, so it never sends the members
+        // themselves (view_roles does not imply view_users).
+        $roles = Role::withCount(['users' => fn ($query) => $query->where('role_user.organization_id', $user->organization_id)])
             ->where(function ($query) use ($user) {
                 $query->where('organization_id', $user->organization_id)
                     ->orWhereNull('organization_id'); // Include system roles
@@ -302,6 +304,23 @@ class RoleController extends Controller
         if ($role->is_system) {
             return redirect()->back()
                 ->withErrors(['role' => __('System roles cannot be deleted.')]);
+        }
+
+        // Deleting a role is managing it: a delegated role manager may not
+        // remove a role that holds permissions they do not hold themselves.
+        // A permission of a plugin that is no longer active grants nothing,
+        // so it does not count. Refused like the checks around it, so the
+        // role page can show the reason.
+        if (! $currentUser->isAdmin()) {
+            $beyondActor = collect($role->getAllPermissions())
+                ->filter(fn ($permission) => is_string($permission)
+                    && Permission::isKnown($permission)
+                    && ! $currentUser->hasPermission($permission));
+
+            if ($beyondActor->isNotEmpty()) {
+                return redirect()->back()
+                    ->withErrors(['role' => __('You cannot delete a role with permissions you do not hold.')]);
+            }
         }
 
         // Check if role is assigned to any users

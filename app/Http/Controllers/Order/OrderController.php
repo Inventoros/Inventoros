@@ -26,6 +26,7 @@ use App\Services\OrderService;
 use App\Services\Shipping\OrderShippingPanel;
 use App\Services\WarehouseAccessService;
 use App\Support\ApprovalSettings;
+use App\Support\PaymentVisibility;
 use App\Support\Search;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\JsonResponse;
@@ -298,6 +299,7 @@ class OrderController extends Controller
         // Load each line's variant (so the form can show and round-trip it)
         // and the linked customer (so the customer picker starts on it).
         $order->load(['items.variant', 'customer']);
+        PaymentVisibility::hideOnOrders($request->user(), $order);
 
         // Keep the variants the order already uses selectable even if they
         // have since been deactivated, so editing the order doesn't force a
@@ -337,18 +339,17 @@ class OrderController extends Controller
                 // against a stale, pre-transaction model (e.g. restock twice).
                 $order = Order::whereKey($order->getKey())->lockForUpdate()->firstOrFail();
 
-                // A cancelled order's stock was already restored on cancel;
-                // reactivating it would oversell (a live order with its
-                // inventory handed back). Cancellation is terminal — create a
-                // new order instead.
-                if ($order->status === OrderStatus::CANCELLED
-                    && isset($validated['status'])
-                    && $validated['status'] !== OrderStatus::CANCELLED->value) {
-                    throw new InvalidStateException('A cancelled order cannot be reactivated. Create a new order instead.', 'invalid_state_transition');
-                }
-
                 $isCancelling = $validated['status'] === 'cancelled'
                     && $order->status !== OrderStatus::CANCELLED;
+
+                // Status only moves forward (see Order::statusTransitionError()):
+                // a cancelled order's stock was already restored, and a shipped
+                // or delivered order's goods have left, so neither can be moved
+                // back. Cancelling is checked by OrderService::cancel().
+                $transitionError = $isCancelling ? null : $order->transitionErrorTo($validated['status'] ?? null);
+                if ($transitionError !== null) {
+                    throw new InvalidStateException($transitionError, 'invalid_state_transition');
+                }
 
                 if ($isCancelling) {
                     // The same cancel REST and GraphQL use: refuses an order

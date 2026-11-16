@@ -10,6 +10,7 @@ use App\Models\System\SystemSetting;
 use App\Models\User;
 use App\Support\AppVersion;
 use App\Support\InstallationState;
+use App\Support\InstallerSetupToken;
 use App\Support\PublicPath;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
@@ -76,7 +77,41 @@ class InstallerController extends Controller
             return redirect('/login');
         }
 
-        return Inertia::render('Install/Welcome');
+        // Generates the token file on the first visit when no token is
+        // configured. Without either, the page says how to provide one.
+        $token = $this->setupToken();
+
+        return Inertia::render('Install/Welcome', [
+            'unlocked' => $token->isUnlocked(request()),
+            'tokenAvailable' => $token->available(),
+        ]);
+    }
+
+    /**
+     * Unlock the installer for this session with the setup token.
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function unlock(Request $request)
+    {
+        if ($this->isInstalled()) {
+            return $this->answer(false, 'install.server.alreadyInstalled', 'Application is already installed.', 403);
+        }
+
+        $request->validate([
+            'token' => 'required|string|max:512',
+        ]);
+
+        $token = $this->setupToken();
+        if (! $token->matches((string) $request->input('token'))) {
+            Log::warning('Rejected an installer setup token', ['ip' => $request->ip()]);
+
+            return $this->answer(false, 'install.server.invalidToken', 'The setup token is not correct.', 403);
+        }
+
+        $token->unlock($request);
+
+        return $this->answer(true, 'install.server.unlocked', 'Installer unlocked.');
     }
 
     /**
@@ -84,10 +119,14 @@ class InstallerController extends Controller
      *
      * @return \Inertia\Response|\Illuminate\Http\RedirectResponse
      */
-    public function requirements()
+    public function requirements(Request $request)
     {
         if ($this->isInstalled()) {
             return redirect('/login');
+        }
+
+        if (! $this->setupToken()->isUnlocked($request)) {
+            return redirect()->route('install.index');
         }
 
         $requirements = $this->checkRequirements();
@@ -103,10 +142,14 @@ class InstallerController extends Controller
      *
      * @return \Inertia\Response|\Illuminate\Http\RedirectResponse
      */
-    public function database()
+    public function database(Request $request)
     {
         if ($this->isInstalled()) {
             return redirect('/login');
+        }
+
+        if (! $this->setupToken()->isUnlocked($request)) {
+            return redirect()->route('install.index');
         }
 
         // Adding PostgreSQL support alongside MySQL (issue #50). The welcome
@@ -140,14 +183,11 @@ class InstallerController extends Controller
             return $this->answer(false, 'install.server.alreadyInstalled', 'Application is already installed.', 403);
         }
 
-        $request->validate([
-            'driver' => 'required|string|in:mysql,pgsql',
-            'host' => 'required|string',
-            'port' => 'required|integer',
-            'database' => 'required|string',
-            'username' => 'required|string',
-            'password' => 'nullable|string',
-        ]);
+        if ($locked = $this->lockedAnswer($request)) {
+            return $locked;
+        }
+
+        $request->validate($this->databaseRules());
 
         try {
             $dsn = $this->buildDsn($request->driver, $request->host, (int) $request->port, $request->database);
@@ -160,14 +200,54 @@ class InstallerController extends Controller
 
             return $this->answer(true, 'install.server.connectionSuccessful', 'Database connection successful!');
         } catch (\Exception $e) {
+            // The driver's error (which hosts and ports answer, and how) is
+            // for the server log only.
             Log::warning('Database connection test failed', [
                 'driver' => $request->driver,
                 'host' => $request->host,
                 'database' => $request->database,
                 'error' => $e->getMessage(),
             ]);
-            return $this->answer(false, 'install.server.connectionFailed', 'Database connection failed: '.$e->getMessage(), 422, $e->getMessage());
+            return $this->answer(false, 'install.server.connectionFailed', 'Database connection failed. Check the host, port, database name, user and password.', 422);
         }
+    }
+
+    /**
+     * Validation for the database step. The host and database name end up in
+     * a PDO DSN, where `;` and `=` would add or override DSN parameters.
+     *
+     * @return array<string, mixed>
+     */
+    protected function databaseRules(): array
+    {
+        $dsnSafe = 'regex:/\A[^;=\s\x00]+\z/u';
+
+        return [
+            'driver' => 'required|string|in:mysql,pgsql',
+            'host' => ['required', 'string', 'max:255', $dsnSafe],
+            'port' => 'required|integer|between:1,65535',
+            'database' => ['required', 'string', 'max:255', $dsnSafe],
+            'username' => 'required|string|max:255',
+            'password' => 'nullable|string',
+        ];
+    }
+
+    /**
+     * The answer for an installer step this session has not unlocked, or
+     * null when it has.
+     */
+    protected function lockedAnswer(Request $request): ?\Illuminate\Http\JsonResponse
+    {
+        if ($this->setupToken()->isUnlocked($request)) {
+            return null;
+        }
+
+        return $this->answer(false, 'install.server.locked', 'Unlock the installer with the setup token first.', 403);
+    }
+
+    protected function setupToken(): InstallerSetupToken
+    {
+        return app(InstallerSetupToken::class);
     }
 
     /**
@@ -204,13 +284,11 @@ class InstallerController extends Controller
             return $this->answer(false, 'install.server.alreadyInstalled', 'Application is already installed.', 403);
         }
 
-        $request->validate([
-            'driver' => 'required|string|in:mysql,pgsql',
-            'host' => 'required|string',
-            'port' => 'required|integer',
-            'database' => 'required|string',
-            'username' => 'required|string',
-            'password' => 'nullable|string',
+        if ($locked = $this->lockedAnswer($request)) {
+            return $locked;
+        }
+
+        $request->validate($this->databaseRules() + [
             'reset_database' => 'nullable|boolean',
         ]);
 
@@ -383,10 +461,14 @@ class InstallerController extends Controller
      *
      * @return \Inertia\Response|\Illuminate\Http\RedirectResponse
      */
-    public function admin()
+    public function admin(Request $request)
     {
         if ($this->isInstalled()) {
             return redirect('/login');
+        }
+
+        if (! $this->setupToken()->isUnlocked($request)) {
+            return redirect()->route('install.index');
         }
 
         return Inertia::render('Install/Admin');
@@ -402,6 +484,10 @@ class InstallerController extends Controller
     {
         if ($this->isInstalled()) {
             return $this->answer(false, 'install.server.alreadyInstalled', 'Application is already installed.', 403);
+        }
+
+        if ($locked = $this->lockedAnswer($request)) {
+            return $locked;
         }
 
         $validated = $request->validate([
@@ -450,6 +536,9 @@ class InstallerController extends Controller
             ]);
 
             DB::commit();
+
+            // The token has done its job: the installer is closed for good.
+            $this->setupToken()->retire($request);
 
             return $this->answer(true, 'install.server.adminCreated', 'Admin account created successfully!');
         } catch (\Exception $e) {

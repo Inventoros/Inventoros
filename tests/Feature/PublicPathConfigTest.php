@@ -10,6 +10,7 @@ use Illuminate\Contracts\Console\Kernel;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\File;
+use Tests\Feature\Concerns\UnlocksInstaller;
 use Tests\TestCase;
 
 /**
@@ -19,6 +20,7 @@ use Tests\TestCase;
 final class PublicPathConfigTest extends TestCase
 {
     use RefreshDatabase;
+    use UnlocksInstaller;
 
     private string $root;
 
@@ -122,6 +124,7 @@ final class PublicPathConfigTest extends TestCase
             protected function prepareDatabase(string $driver, array $input, bool $reset): void {}
         });
         Artisan::shouldReceive('call')->andReturn(0);
+        $this->unlockInstaller();
 
         $this->app->usePublicPath($this->root.'/home/public_html');
 
@@ -157,6 +160,7 @@ final class PublicPathConfigTest extends TestCase
             protected function prepareDatabase(string $driver, array $input, bool $reset): void {}
         });
         Artisan::shouldReceive('call')->andReturn(0);
+        $this->unlockInstaller();
 
         $this->postJson('/install/database/install', [
             'driver' => 'mysql',
