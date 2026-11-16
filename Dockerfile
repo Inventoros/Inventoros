@@ -118,11 +118,13 @@ COPY docker/Caddyfile.prod /etc/caddy/Caddyfile
 COPY --chmod=755 docker/entrypoint.prod.sh /usr/local/bin/inventoros-entrypoint
 COPY --chmod=755 docker/healthcheck.sh /usr/local/bin/inventoros-healthcheck
 
-COPY --chown=app:app . /app
-COPY --from=vendor --chown=app:app /app/vendor /app/vendor
-COPY --from=assets --chown=app:app /app/public/build /app/public/build
-COPY --from=assets --chown=app:app /app/plugins/hello-world/dist /app/plugins/hello-world/dist
-COPY --from=assets --chown=app:app /app/plugins/tax-billing/dist /app/plugins/tax-billing/dist
+# Application code stays owned by root so the runtime user cannot rewrite it;
+# only the paths the app writes to at runtime are handed to `app` below.
+COPY . /app
+COPY --from=vendor /app/vendor /app/vendor
+COPY --from=assets /app/public/build /app/public/build
+COPY --from=assets /app/plugins/hello-world/dist /app/plugins/hello-world/dist
+COPY --from=assets /app/plugins/tax-billing/dist /app/plugins/tax-billing/dist
 
 RUN set -eux; \
     rm -rf tests e2e screenshots docs node_modules docker-compose*.yml playwright*.config.* \

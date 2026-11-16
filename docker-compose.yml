@@ -95,8 +95,10 @@ services:
   mailpit:
     image: axllent/mailpit:latest
     ports:
-      - "${MAILPIT_PORT:-8025}:8025"   # Web UI
-      - "${MAILPIT_SMTP_PORT:-1025}:1025"  # SMTP
+      # Development services use default credentials, so they listen on
+      # this machine only. Set DEV_SERVICES_BIND=0.0.0.0 to expose them.
+      - "${DEV_SERVICES_BIND:-127.0.0.1}:${MAILPIT_PORT:-8025}:8025"   # Web UI
+      - "${DEV_SERVICES_BIND:-127.0.0.1}:${MAILPIT_SMTP_PORT:-1025}:1025"  # SMTP
     environment:
       MP_MAX_MESSAGES: 5000
     restart: unless-stopped
@@ -109,7 +111,7 @@ services:
       POSTGRES_USER: ${DB_USERNAME:-inventoros}
       POSTGRES_PASSWORD: ${DB_PASSWORD:-inventoros}
     ports:
-      - "${DB_PORT:-5432}:5432"
+      - "${DEV_SERVICES_BIND:-127.0.0.1}:${DB_PORT:-5432}:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
     healthcheck:
@@ -123,7 +125,7 @@ services:
     image: redis:7-alpine
     profiles: ["redis"]
     ports:
-      - "${REDIS_PORT:-6379}:6379"
+      - "${DEV_SERVICES_BIND:-127.0.0.1}:${REDIS_PORT:-6379}:6379"
     volumes:
       - redis-data:/data
     restart: unless-stopped
