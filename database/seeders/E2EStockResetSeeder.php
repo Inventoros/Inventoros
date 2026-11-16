@@ -7,6 +7,7 @@ namespace Database\Seeders;
 use App\Models\Auth\Organization;
 use App\Models\Inventory\Product;
 use App\Models\User;
+use Database\Seeders\Concerns\RunsOnlyInFixtureEnvironments;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -14,8 +15,12 @@ use Illuminate\Support\Str;
 /** Isolated stock: resetting it cannot change another browser test's data. */
 final class E2EStockResetSeeder extends Seeder
 {
+    use RunsOnlyInFixtureEnvironments;
+
     public function run(): void
     {
+        $this->ensureFixtureEnvironment();
+
         $id = (string) env('E2E_RESET_FIXTURE_ID');
         if (! Str::isUuid($id)) {
             throw new \InvalidArgumentException('E2E_RESET_FIXTURE_ID must be a fresh UUID.');

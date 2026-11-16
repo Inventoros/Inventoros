@@ -134,6 +134,12 @@ sudo systemctl restart nginx
 http://your-domain.com/install
 ```
 
+The installer asks for a setup token. Set `INVENTOROS_SETUP_TOKEN` in `.env` beforehand (for example `openssl rand -hex 24`), or read the token the installer generates on its first visit:
+
+```bash
+sudo cat /var/www/inventoros/storage/app/private/setup-token
+```
+
 The database step writes the connection you enter to `.env` (`DB_CONNECTION`, host, database and credentials) and creates the tables in that database. Finishing the installer (creating the admin account) sets `APP_ENV=production` and `APP_DEBUG=false`, so a site set up with the example `.env` does not stay in debug mode.
 
 ## CentOS / RHEL

@@ -15,6 +15,7 @@ use App\Services\Organizations\ActiveOrganization;
 use App\Services\WarehouseAccessService;
 use App\Services\WarehouseDeletionService;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -305,10 +306,75 @@ class WarehouseController extends Controller
             'user_ids.*' => ['integer', new OrganizationMember($request->user()->organization_id)],
         ]);
 
+        $this->guardLastAssignments($request->user(), $warehouse, $validated['user_ids']);
+
         $warehouse->users()->sync($validated['user_ids']);
 
         return redirect()->back()
             ->with('success', __('Warehouse user assignments updated successfully.'));
+    }
+
+    /**
+     * A user with no assignment is unrestricted unless the organization
+     * restricts unassigned users, so removing someone's last assignment can
+     * widen their access. A restricted actor may never drop their own last
+     * assignment, and only admins or holders of access_all_warehouses may
+     * drop a colleague's last one.
+     *
+     * @param  array<int, int|string>  $userIds
+     *
+     * @throws ValidationException
+     */
+    private function guardLastAssignments(User $actor, Warehouse $warehouse, array $userIds): void
+    {
+        $keep = array_map('intval', $userIds);
+        $removed = $warehouse->users()->pluck('users.id')
+            ->map(fn ($id) => (int) $id)
+            ->reject(fn (int $id) => in_array($id, $keep, true))
+            ->values();
+
+        if ($removed->isEmpty()) {
+            return;
+        }
+
+        $losesLastAssignment = function (User $user) use ($warehouse): bool {
+            $ids = $this->warehouseAccess->accessibleWarehouseIds($user);
+
+            return $ids !== null && array_values(array_diff($ids, [(int) $warehouse->id])) === [];
+        };
+
+        if ($removed->contains((int) $actor->id) && $losesLastAssignment($actor)) {
+            throw ValidationException::withMessages([
+                'user_ids' => __('You cannot remove your own last warehouse assignment.'),
+            ]);
+        }
+
+        if ($actor->isAdmin() || $actor->hasPermission(Permission::ACCESS_ALL_WAREHOUSES)) {
+            return;
+        }
+
+        // With the organization setting on, an unassigned user sees no
+        // warehouse, so the removal narrows access instead of widening it.
+        if ($this->warehouseAccess->organizationRestrictsToAssigned((int) $warehouse->organization_id)) {
+            return;
+        }
+
+        // Evaluate each user as a member of this warehouse's organization:
+        // their stored organization_id may be a different home organization.
+        $organization = app(ActiveOrganization::class);
+        $widened = User::query()
+            ->whereIn('id', $removed->all())
+            ->get()
+            ->map(fn (User $user) => $organization->userIn($user, (int) $warehouse->organization_id))
+            ->filter(fn (?User $user) => $user !== null && $losesLastAssignment($user));
+
+        if ($widened->isNotEmpty()) {
+            throw ValidationException::withMessages([
+                'user_ids' => __('This change would leave :names with no warehouse assignment, which would give them access to every warehouse. Assign them to another warehouse first, or ask an administrator.', [
+                    'names' => $widened->pluck('name')->implode(', '),
+                ]),
+            ]);
+        }
     }
 
     /**

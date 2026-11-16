@@ -53,7 +53,7 @@ final class SKUGeneratorService
         // Replace category placeholder
         if (str_contains($sku, '{category}')) {
             if ($categoryId) {
-                $category = ProductCategory::find($categoryId);
+                $category = ProductCategory::where('organization_id', $organizationId)->find($categoryId);
                 $categoryCode = $category ? mb_strtoupper(mb_substr($category->name, 0, 3)) : 'UNC';
             } else {
                 $categoryCode = 'UNC';

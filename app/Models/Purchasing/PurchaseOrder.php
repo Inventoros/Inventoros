@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace App\Models\Purchasing;
 
+use App\Exceptions\InvalidStateException;
 use App\Models\Auth\Organization;
 use App\Models\Concerns\BelongsToOrganization;
 use App\Models\Inventory\StockAdjustment;
 use App\Models\Inventory\Supplier;
+use App\Models\Scopes\OrganizationScope;
 use App\Models\User;
 use App\Support\ApprovalSettings;
 use App\Support\SequenceNumber;
@@ -467,11 +469,32 @@ class PurchaseOrder extends Model
 
     /**
      * Cancel the purchase order.
+     *
+     * The row is re-read under a lock and re-checked, so a cancel decided on
+     * a stale copy cannot overwrite a receipt that committed in between
+     * (receiving takes the same lock).
+     *
+     * @throws InvalidStateException cannot_cancel when the PO is no longer cancellable
      */
     public function cancel(): void
     {
-        $this->status = self::STATUS_CANCELLED;
-        $this->save();
+        DB::transaction(function (): void {
+            $locked = static::withoutGlobalScope(OrganizationScope::class)
+                ->whereKey($this->getKey())
+                ->where('organization_id', $this->organization_id)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            if (! $locked->canBeCancelled()) {
+                $this->setRawAttributes($locked->getAttributes(), true);
+
+                throw new InvalidStateException('This purchase order cannot be cancelled', 'cannot_cancel');
+            }
+
+            $locked->status = self::STATUS_CANCELLED;
+            $locked->save();
+            $this->setRawAttributes($locked->getAttributes(), true);
+        });
     }
 
     /**

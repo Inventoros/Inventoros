@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\GraphQL\Mutations;
 
 use App\GraphQL\Concerns\RequiresPermissions;
+use App\GraphQL\Support\OrganizationExists;
 use App\Http\Requests\Concerns\ValidatesProductSuppliers;
 use App\Models\Inventory\ProductCategory;
 use App\Models\Inventory\ProductLocation;
@@ -108,12 +109,12 @@ class CreateProductMutation extends Mutation
             'category_id' => [
                 'type' => Type::int(),
                 'description' => 'Category ID',
-                'rules' => ['nullable', 'integer', 'exists:product_categories,id'],
+                'rules' => ['nullable', 'integer', OrganizationExists::rule('product_categories')],
             ],
             'location_id' => [
                 'type' => Type::int(),
                 'description' => 'Location ID',
-                'rules' => ['nullable', 'integer', 'exists:product_locations,id'],
+                'rules' => ['nullable', 'integer', OrganizationExists::rule('product_locations')],
             ],
             'is_active' => [
                 'type' => Type::boolean(),

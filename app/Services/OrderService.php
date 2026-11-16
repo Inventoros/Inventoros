@@ -13,6 +13,7 @@ use App\Exceptions\BusinessRuleException;
 use App\Exceptions\InsufficientStockException;
 use App\Exceptions\InvalidOrderItemException;
 use App\Exceptions\InvalidStateException;
+use App\Models\ActivityLog;
 use App\Models\Auth\Organization;
 use App\Models\Inventory\Product;
 use App\Models\Inventory\ProductVariant;
@@ -400,6 +401,15 @@ final class OrderService
                 );
             }
 
+            // Stamped shipped but moved back to pending/processing (rows from
+            // before status transitions were enforced): its goods left.
+            if ($locked->hasShippedGoods()) {
+                throw new InvalidStateException(
+                    'Cannot cancel an order whose goods have already shipped.',
+                    'invalid_state_transition'
+                );
+            }
+
             $this->releaseStock($locked, 'cancel', "Order {$locked->order_number} cancelled", $actor);
 
             $locked->update(['status' => OrderStatus::CANCELLED]);
@@ -415,6 +425,7 @@ final class OrderService
      * pass the pending check. Shared by the web and REST surfaces.
      *
      * @throws InvalidStateException When the order was already approved/rejected.
+     * @throws AuthorizationException When the approver cannot access the order's warehouse.
      *
      * @api
      */
@@ -424,6 +435,13 @@ final class OrderService
 
         $approved = DB::transaction(function () use ($order, $approver, $notes) {
             $locked = Order::whereKey($order->getKey())->lockForUpdate()->firstOrFail();
+
+            // The approver needs access to the order's warehouse. An order
+            // with no warehouse (REST, GraphQL and MCP create them) is not
+            // tied to one, as in replaceItems().
+            if ($locked->warehouse_id !== null) {
+                app(WarehouseAccessService::class)->authorizeWarehouse($approver, (int) $locked->warehouse_id);
+            }
 
             if (! $locked->isPendingApproval()) {
                 throw new InvalidStateException('Order has already been processed.', 'already_processed');
@@ -453,6 +471,7 @@ final class OrderService
      * the stock that was decremented when it was created.
      *
      * @throws InvalidStateException When the order was already approved/rejected.
+     * @throws AuthorizationException When the approver cannot access the order's warehouse.
      *
      * @api
      */
@@ -460,6 +479,13 @@ final class OrderService
     {
         $rejected = DB::transaction(function () use ($order, $approver, $notes) {
             $locked = Order::whereKey($order->getKey())->lockForUpdate()->firstOrFail();
+
+            // The approver needs access to the order's warehouse. An order
+            // with no warehouse (REST, GraphQL and MCP create them) is not
+            // tied to one, as in replaceItems().
+            if ($locked->warehouse_id !== null) {
+                app(WarehouseAccessService::class)->authorizeWarehouse($approver, (int) $locked->warehouse_id);
+            }
 
             // isPendingApproval() is false for a cancelled order, whose stock
             // cancel() already gave back: rejecting it would restock twice.
@@ -542,8 +568,10 @@ final class OrderService
             }
 
             // Goods already gone (shipped/delivered) or already returned
-            // (cancelled) → deletion must not re-inject phantom stock.
-            if (in_array($locked->status, [OrderStatus::SHIPPED, OrderStatus::DELIVERED, OrderStatus::CANCELLED], true)) {
+            // (cancelled) → deletion must not re-inject phantom stock. A row
+            // stamped shipped_at but moved back to pending/processing before
+            // status transitions were enforced counts as shipped too.
+            if ($locked->status === OrderStatus::CANCELLED || $locked->hasShippedGoods()) {
                 return;
             }
 
@@ -846,6 +874,12 @@ final class OrderService
             throw new InvalidOrderItemException('A cancelled order\'s line items cannot be changed.');
         }
 
+        // A shipped or delivered order's goods have left: releasing its lines
+        // would restock them. Corrections go through a return.
+        if ($order->hasShippedGoods()) {
+            throw new InvalidOrderItemException('A shipped order\'s line items cannot be changed. Record a return instead.');
+        }
+
         // Shipments point at the order's line rows. Once any are open the
         // lines are frozen, so a shipment never loses the lines it packed.
         if (Shipment::withoutGlobalScopes()->where('order_id', $order->getKey())->active()->exists()) {
@@ -1079,7 +1113,8 @@ final class OrderService
      * inventory when the order was created. Cancelling has its own restocking
      * path, cancel().
      *
-     * @throws \RuntimeException When the order is cancelled.
+     * @throws \RuntimeException When the order is cancelled or delivered, or is
+     *                           shipped and $to is not delivered.
      *
      * @api
      */
@@ -1096,8 +1131,9 @@ final class OrderService
                 return $locked;
             }
 
-            if ($locked->status === OrderStatus::CANCELLED) {
-                throw new InvalidStateException('A cancelled order cannot be reactivated. Create a new order instead.', 'invalid_state_transition');
+            $error = $locked->transitionErrorTo($to);
+            if ($error !== null) {
+                throw new InvalidStateException($error, 'invalid_state_transition');
             }
 
             if ($locked->approvalBlocks($to)) {
@@ -1115,6 +1151,65 @@ final class OrderService
             }
 
             $locked->update($attributes);
+
+            return $locked;
+        });
+    }
+
+    /**
+     * Correct an order marked shipped by mistake: move it back to processing
+     * and clear shipped_at. The only step back the status rules allow (see
+     * Order::statusTransitionError()), and only when:
+     *
+     *  - the actor is an admin of the order's organization;
+     *  - the order is shipped (not delivered);
+     *  - none of its shipments has left the warehouse (pending or label
+     *    created only), so no goods are actually gone;
+     *  - it has no returns.
+     *
+     * Stock is untouched. The correction is written to the activity log.
+     *
+     * @throws AuthorizationException When the actor is not an admin there.
+     * @throws InvalidStateException When the conditions above do not hold.
+     *
+     * @api
+     */
+    public function revertMistakenShipment(Order $order, User $actor): Order
+    {
+        if (! $actor->isAdmin() || (int) $actor->organization_id !== (int) $order->organization_id) {
+            throw new AuthorizationException('Only an administrator can correct a mistaken shipped status.');
+        }
+
+        return DB::transaction(function () use ($order, $actor) {
+            $locked = Order::withoutGlobalScopes()->whereKey($order->getKey())->lockForUpdate()->firstOrFail();
+
+            if ($locked->status !== OrderStatus::SHIPPED) {
+                throw new InvalidStateException('Only an order marked shipped can be moved back to processing.', 'invalid_state_transition');
+            }
+
+            if (Shipment::withoutGlobalScopes()->where('order_id', $locked->getKey())->leftWarehouse()->exists()) {
+                throw new InvalidStateException('This order has a shipment that left the warehouse, so it really shipped. Record a return for goods that come back.', 'invalid_state_transition');
+            }
+
+            if (ReturnOrder::withoutGlobalScopes()->where('order_id', $locked->getKey())->exists()) {
+                throw new InvalidStateException('This order has returns recorded against it, so its shipped status cannot be corrected.', 'invalid_state_transition');
+            }
+
+            $shippedAt = $locked->shipped_at?->toIso8601String();
+            $locked->permitMistakenShipmentRevert();
+            $locked->update(['status' => OrderStatus::PROCESSING, 'shipped_at' => null]);
+
+            ActivityLog::create([
+                'organization_id' => $locked->organization_id,
+                'user_id' => $actor->id,
+                'subject_type' => Order::class,
+                'subject_id' => $locked->getKey(),
+                'action' => 'shipment_reverted',
+                'description' => "Corrected order {$locked->order_number} from shipped back to processing (marked shipped by mistake)",
+                'properties' => ['previous_status' => OrderStatus::SHIPPED->value, 'previous_shipped_at' => $shippedAt],
+                'ip_address' => request()?->ip(),
+                'user_agent' => request()?->userAgent(),
+            ]);
 
             return $locked;
         });

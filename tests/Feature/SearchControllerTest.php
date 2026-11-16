@@ -368,4 +368,161 @@ class SearchControllerTest extends TestCase
         $response->assertStatus(200)
             ->assertJsonCount(1, 'products');
     }
+    /**
+     * One "Alpha" record of every kind global search returns.
+     */
+    protected function seedAlphaRecordsOfEveryKind(): void
+    {
+        Product::create([
+            'organization_id' => $this->organization->id,
+            'name' => 'Alpha Widget',
+            'sku' => 'ALP-001',
+            'price' => 10.00,
+            'stock' => 100,
+            'is_active' => true,
+        ]);
+
+        Order::create([
+            'organization_id' => $this->organization->id,
+            'order_number' => 'ALPHA-ORD-0001',
+            'customer_name' => 'Alpha Customer',
+            'status' => 'pending',
+            'approval_status' => 'pending',
+            'subtotal' => 100,
+            'tax' => 0,
+            'shipping' => 0,
+            'total' => 100,
+        ]);
+
+        Customer::create([
+            'organization_id' => $this->organization->id,
+            'name' => 'Alpha Corp',
+            'email' => 'alpha@example.com',
+            'is_active' => true,
+        ]);
+
+        $supplier = Supplier::create([
+            'organization_id' => $this->organization->id,
+            'name' => 'Alpha Supplies',
+            'email' => 'supply@alpha.com',
+            'is_active' => true,
+        ]);
+
+        PurchaseOrder::create([
+            'organization_id' => $this->organization->id,
+            'supplier_id' => $supplier->id,
+            'created_by' => $this->admin->id,
+            'po_number' => 'ALPHA-PO-0001',
+            'status' => 'draft',
+            'subtotal' => 500,
+            'tax' => 0,
+            'shipping' => 0,
+            'total' => 500,
+            'order_date' => now(),
+        ]);
+    }
+
+    protected function createMember(string $email): User
+    {
+        Role::firstOrCreate(
+            ['slug' => 'system-member'],
+            [
+                'name' => 'Member',
+                'is_system' => true,
+                'permissions' => ['view_products', 'view_orders'],
+            ]
+        );
+
+        return User::create([
+            'name' => 'Member User',
+            'email' => $email,
+            'password' => bcrypt('password'),
+            'organization_id' => $this->organization->id,
+            'role' => 'member',
+        ]);
+    }
+
+    public function test_search_hides_groups_the_user_may_not_view(): void
+    {
+        $this->seedAlphaRecordsOfEveryKind();
+        $member = $this->createMember('member@test.com');
+
+        $response = $this->actingAs($member)->getJson('/search?q=alpha');
+
+        // The default Member role may view products and orders only.
+        $response->assertStatus(200)
+            ->assertJsonCount(1, 'products')
+            ->assertJsonCount(1, 'orders')
+            ->assertJsonCount(0, 'customers')
+            ->assertJsonCount(0, 'suppliers')
+            ->assertJsonCount(0, 'purchase_orders');
+    }
+
+    public function test_search_hides_products_and_orders_without_their_view_permissions(): void
+    {
+        $this->seedAlphaRecordsOfEveryKind();
+
+        $role = Role::create([
+            'name' => 'Customer Desk',
+            'slug' => 'customer-desk',
+            'organization_id' => $this->organization->id,
+            'permissions' => ['view_customers'],
+        ]);
+        $user = User::create([
+            'name' => 'Customer Desk User',
+            'email' => 'desk@test.com',
+            'password' => bcrypt('password'),
+            'organization_id' => $this->organization->id,
+            // No system-member row exists in this test, so the base role grants nothing.
+            'role' => 'member',
+        ]);
+        $user->roles()->attach($role->id);
+
+        $response = $this->actingAs($user)->getJson('/search?q=alpha');
+
+        $response->assertStatus(200)
+            ->assertJsonCount(0, 'products')
+            ->assertJsonCount(0, 'orders')
+            ->assertJsonCount(1, 'customers')
+            ->assertJsonCount(0, 'suppliers')
+            ->assertJsonCount(0, 'purchase_orders');
+    }
+
+    public function test_search_returns_groups_granted_through_a_custom_role(): void
+    {
+        $this->seedAlphaRecordsOfEveryKind();
+        $member = $this->createMember('buyer@test.com');
+
+        $role = Role::create([
+            'name' => 'Buyer',
+            'slug' => 'buyer',
+            'organization_id' => $this->organization->id,
+            'permissions' => ['view_customers', 'view_suppliers', 'view_purchase_orders'],
+        ]);
+        $member->roles()->attach($role->id);
+
+        $response = $this->actingAs($member)->getJson('/search?q=alpha');
+
+        $response->assertStatus(200)
+            ->assertJsonCount(1, 'products')
+            ->assertJsonCount(1, 'orders')
+            ->assertJsonCount(1, 'customers')
+            ->assertJsonCount(1, 'suppliers')
+            ->assertJsonCount(1, 'purchase_orders');
+        $this->assertSame('Alpha Corp', $response->json('customers.0.title'));
+    }
+
+    public function test_search_with_permission_still_excludes_other_organizations(): void
+    {
+        Customer::create([
+            'organization_id' => $this->otherOrganization->id,
+            'name' => 'Alpha Foreign',
+            'email' => 'foreign@example.com',
+            'is_active' => true,
+        ]);
+
+        $response = $this->actingAs($this->admin)->getJson('/search?q=alpha');
+
+        $response->assertStatus(200)->assertJsonCount(0, 'customers');
+    }
 }

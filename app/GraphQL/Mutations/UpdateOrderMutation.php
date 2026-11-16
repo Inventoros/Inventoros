@@ -103,6 +103,18 @@ class UpdateOrderMutation extends Mutation
 
         $updateData = collect($args)->except(['id', 'discount_type', 'discount_value'])->toArray();
 
+        // Status only moves forward, as on the web and REST surfaces (see
+        // Order::statusTransitionError()): a cancelled or rejected order
+        // stays cancelled, and a shipped or delivered order cannot go back.
+        // Cancelling is checked by OrderService::cancel() below.
+        $requestedStatus = $updateData['status'] ?? null;
+        if ($requestedStatus !== null && $requestedStatus !== 'cancelled') {
+            $transitionError = $order->transitionErrorTo($requestedStatus);
+            if ($transitionError !== null) {
+                throw new Error($transitionError);
+            }
+        }
+
         // Order-level discount change: recomputed under the order's row lock
         // by the same service the web and REST surfaces use.
         if (array_key_exists('discount_type', $args) || array_key_exists('discount_value', $args)) {
@@ -143,7 +155,12 @@ class UpdateOrderMutation extends Mutation
         }
 
         if ($updateData !== []) {
-            $order->update($updateData);
+            try {
+                $order->update($updateData);
+            } catch (BusinessRuleException $e) {
+                // The model's transition backstop (a concurrent status change).
+                throw new Error($e->getMessage());
+            }
         }
 
         if ($cancelling) {
