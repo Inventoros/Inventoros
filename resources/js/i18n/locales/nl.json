@@ -943,7 +943,7 @@
     "hint": "Maakt één concept-inkooporder per primaire leverancier aan. Producten zonder leverancier worden overgeslagen.",
     "chooseVariants": "Varianten kiezen",
     "variantHint": "Selecteer variant-SKUs op een inkooporder om dit product aan te vullen.",
-    "createFailed": "Het concept van de inkooporder kon niet worden aangemaakt. Probeer het opnieuw."
+    "createFailed": "Het concept van de inkooporder kon niet worden gemaakt. Probeer het opnieuw."
   },
   "suppliers": {
     "title": "Leveranciers",
@@ -3983,8 +3983,8 @@
       "from": "Van",
       "to": "Naar",
       "items": "Artikelen",
-      "empty": "Nog geen voorraadverplaatsingen",
-      "emptyHint": "Maak een verplaatsing aan om voorraad tussen locaties te verplaatsen.",
+      "empty": "Nog geen voorraadoverdrachten",
+      "emptyHint": "Maak een overdracht om voorraad tussen locaties te verplaatsen.",
       "itemCount": "{count} artikel | {count} artikelen",
       "showingTransfers": "{from} tot {to} van {total} overboekingen"
     },

@@ -480,7 +480,7 @@
       "reviewSystem": "시스템 검토",
       "saveError": "환경설정을 저장하지 못했습니다. 다시 시도하세요.",
       "shortfallHelp": "부족 수량은 최소 재고와의 차이입니다. 구매 전에 공급업체와 재주문 설정을 확인하세요.",
-      "viewProduct": "?? ??"
+      "viewProduct": "제품 보기"
     }
   },
   "products": {
@@ -877,8 +877,8 @@
       "cannotUndo": "이 작업은 되돌릴 수 없습니다."
     },
     "receive": {
-      "fillAll": "?? ?? ?? ??",
-      "fillRemaining": "?? ?? ??",
+      "fillAll": "남은 수량 모두 입력",
+      "fillRemaining": "남은 수량 입력",
       "title": "입고 처리 - {poNumber}",
       "orderTotal": "주문 합계: {total}",
       "itemsToReceive": "입고 대상 품목",
@@ -943,7 +943,7 @@
     "hint": "기본 공급업체별로 발주 초안을 하나씩 생성합니다. 공급업체가 없는 제품은 건너뜁니다.",
     "chooseVariants": "옵션 선택",
     "variantHint": "이 상품을 보충하려면 구매 주문에서 옵션 SKU를 선택하세요.",
-    "createFailed": "?? ?? ??? ?? ? ????. ?? ?????."
+    "createFailed": "구매 주문 초안을 만들 수 없습니다. 다시 시도하세요."
   },
   "suppliers": {
     "title": "공급업체",
@@ -2821,7 +2821,7 @@
       "heading": "조직 전환"
     },
     "emptyState": {
-      "filteredHint": "?? ???? ????? ??? ????."
+      "filteredHint": "다른 검색어를 사용하거나 필터를 지우세요."
     },
     "dataTable": {
       "noData": "데이터가 없습니다."
@@ -3983,8 +3983,8 @@
       "from": "출발",
       "to": "도착",
       "items": "품목",
-      "empty": "?? ?? ??? ????",
-      "emptyHint": "??? ???? ?? ?? ??? ????.",
+      "empty": "아직 재고 이동이 없습니다",
+      "emptyHint": "재고 이동을 생성하여 위치 간에 재고를 옮기세요.",
       "itemCount": "품목 {count}개 | 품목 {count}개",
       "showingTransfers": "이동 {total}건 중 {from}~{to} 표시"
     },

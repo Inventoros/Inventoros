@@ -480,7 +480,7 @@
       "reviewSystem": "システムを確認",
       "saveError": "設定を保存できませんでした。再度お試しください。",
       "shortfallHelp": "不足数は最低在庫との差です。購入前に仕入先と発注設定を確認してください。",
-      "viewProduct": "?????"
+      "viewProduct": "製品を表示"
     }
   },
   "products": {
@@ -877,8 +877,8 @@
       "cannotUndo": "この操作は元に戻せません。"
     },
     "receive": {
-      "fillAll": "?????????",
-      "fillRemaining": "?????",
+      "fillAll": "残りの数量をすべて入力",
+      "fillRemaining": "残りの数量を入力",
       "title": "商品入荷 - {poNumber}",
       "orderTotal": "発注合計: {total}",
       "itemsToReceive": "入荷する商品",
@@ -943,7 +943,7 @@
     "hint": "優先仕入先ごとに下書き発注を1件作成します。仕入先のない商品はスキップされます。",
     "chooseVariants": "バリエーションを選択",
     "variantHint": "この商品の補充には、発注書でバリエーションのSKUを選択してください。",
-    "createFailed": "???????????????????????????????"
+    "createFailed": "発注書の下書きを作成できませんでした。もう一度お試しください。"
   },
   "suppliers": {
     "title": "仕入先",
@@ -2821,7 +2821,7 @@
       "heading": "組織を切り替え"
     },
     "emptyState": {
-      "filteredHint": "?????????????????????????????"
+      "filteredHint": "別の条件で検索するか、フィルターを解除してください。"
     },
     "dataTable": {
       "noData": "データがありません。"
@@ -3983,8 +3983,8 @@
       "from": "移動元",
       "to": "移動先",
       "items": "商品",
-      "empty": "????????????",
-      "emptyHint": "??????????????????????????",
+      "empty": "在庫移動はまだありません",
+      "emptyHint": "在庫移動を作成して、拠点間で在庫を移動してください。",
       "itemCount": "{count}件 | {count}件",
       "showingTransfers": "{total}件中 {from}〜{to}件の移動を表示"
     },
