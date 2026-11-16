@@ -5,28 +5,13 @@ import PageHeader from '@/Components/ui/PageHeader.vue';
 import Card from '@/Components/ui/Card.vue';
 import Button from '@/Components/ui/Button.vue';
 import Badge from '@/Components/ui/Badge.vue';
+import ReportGlyph from '@/Components/Reports/ReportGlyph.vue';
 import { Head, Link } from '@inertiajs/vue3';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { displayDate } from '@/lib/dates';
 import { usePermissions } from '@/composables/usePermissions';
-import {
-    DollarSign,
-    ArrowLeftRight,
-    TrendingUp,
-    AlertTriangle,
-    Tag,
-    Wrench,
-    ChevronRight,
-    Plus,
-    PackageX,
-    RefreshCw,
-    Percent,
-    MapPin,
-    BarChart3,
-    Wallet,
-    CalendarClock,
-} from '@lucide/vue';
+import { ChevronRight, Plus } from '@lucide/vue';
 
 const { t, te } = useI18n();
 const { hasAllPermissions } = usePermissions();
@@ -41,34 +26,34 @@ const props = defineProps({
 const reportCards = computed(() => ([
     {
         href: route('reports.inventory-valuation'),
-        icon: DollarSign,
+        glyph: 'valuation',
         title: t('reports.inventoryValuation.title'),
         description: t('reports.inventoryValuation.description'),
         requires: ['view_products'],
     },
     {
         href: route('reports.stock-movement'),
-        icon: ArrowLeftRight,
+        glyph: 'movement',
         title: t('reports.stockMovement.title'),
         description: t('reports.stockMovement.description'),
     },
     {
         href: route('reports.sales-analysis'),
-        icon: TrendingUp,
+        glyph: 'sales',
         title: t('reports.salesAnalysis.title'),
         description: t('reports.salesAnalysis.description'),
         requires: ['view_orders'],
     },
     {
         href: route('reports.low-stock'),
-        icon: AlertTriangle,
+        glyph: 'shortage',
         title: t('reports.lowStock.title'),
         description: t('reports.lowStock.description'),
         requires: ['view_products'],
     },
     {
         href: route('reports.category-performance'),
-        icon: Tag,
+        glyph: 'categories',
         title: t('reports.categoryPerformance.title'),
         description: t('reports.categoryPerformance.description'),
         requires: ['view_products'],
@@ -77,35 +62,35 @@ const reportCards = computed(() => ([
     // they read; cards the user cannot open are hidden rather than 403ing.
     {
         href: route('reports.dead-stock'),
-        icon: PackageX,
+        glyph: 'idle',
         title: t('reports.deadStock.title'),
         description: t('reports.deadStock.description'),
         requires: ['view_products', 'view_orders'],
     },
     {
         href: route('reports.inventory-turnover'),
-        icon: RefreshCw,
+        glyph: 'turnover',
         title: t('reports.inventoryTurnover.title'),
         description: t('reports.inventoryTurnover.description'),
         requires: ['view_products', 'view_orders'],
     },
     {
         href: route('reports.profit-margin'),
-        icon: Percent,
+        glyph: 'margin',
         title: t('reports.profitMargin.title'),
         description: t('reports.profitMargin.description'),
         requires: ['view_products', 'view_orders'],
     },
     {
         href: route('reports.sales-by-location'),
-        icon: MapPin,
+        glyph: 'locations',
         title: t('reports.salesByLocation.title'),
         description: t('reports.salesByLocation.description'),
         requires: ['view_orders'],
     },
     {
         href: route('reports.abc-analysis'),
-        icon: BarChart3,
+        glyph: 'abc',
         title: t('reports.abcAnalysis.title'),
         description: t('reports.abcAnalysis.description'),
         requires: ['view_orders'],
@@ -113,21 +98,21 @@ const reportCards = computed(() => ([
     // Built from payments, so it also needs view_payments.
     {
         href: route('reports.receivables'),
-        icon: Wallet,
+        glyph: 'receivables',
         title: t('receivables.title'),
         description: t('receivables.description'),
         requires: ['view_payments'],
     },
     {
         href: route('reports.batch-expiry'),
-        icon: CalendarClock,
+        glyph: 'expiry',
         title: t('batchExpiryReport.title'),
         description: t('batchExpiryReport.description'),
         requires: ['view_products'],
     },
     {
         href: route('reports.builder.index'),
-        icon: Wrench,
+        glyph: 'builder',
         title: t('reports.customReports.title'),
         description: t('reports.customReports.description'),
     },
@@ -153,13 +138,11 @@ const visibleReportCards = computed(() =>
         <PageHeader :title="t('reports.title')" :description="t('reports.subtitle')" />
 
         <!-- Report cards -->
-        <div class="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-2 xl:grid-cols-3">
+        <div class="report-catalog mt-6 grid grid-cols-1 gap-4 lg:grid-cols-2 xl:grid-cols-3">
             <Link v-for="report in visibleReportCards" :key="report.href" :href="report.href">
                 <Card hoverable class="h-full">
-                    <div class="flex items-start gap-4">
-                        <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-brand-soft text-brand">
-                            <component :is="report.icon" :size="18" />
-                        </span>
+                    <div class="flex items-start gap-5">
+                        <ReportGlyph :kind="report.glyph" :size="48" />
                         <div class="min-w-0 flex-1 [overflow-wrap:anywhere]">
                             <h3 class="text-sm font-semibold text-text-primary">{{ report.title }}</h3>
                             <p class="mt-1 text-sm text-text-secondary">{{ report.description }}</p>
