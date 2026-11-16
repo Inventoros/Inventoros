@@ -289,17 +289,48 @@ class FileUpdateService
      */
     protected function assertAllowedDownloadUrl(string $url): void
     {
-        $prefixes = (array) config('update.download_url_prefixes', []);
-        foreach ($prefixes as $prefix) {
-            if ($prefix !== '' && str_starts_with($url, $prefix)) {
-                return;
+        // Compare parsed parts, not raw text: https only, the prefix's exact
+        // host and port, and a path that cannot be normalised (by the client
+        // or the server) to somewhere outside the prefix.
+        $host = CanonicalHost::of($url);
+        $path = parse_url($url, PHP_URL_PATH);
+
+        if ($host !== null
+            && strtolower((string) parse_url($url, PHP_URL_SCHEME)) === 'https'
+            && is_string($path)
+            && $this->isPlainDownloadPath($path)) {
+            $port = parse_url($url, PHP_URL_PORT);
+
+            foreach ((array) config('update.download_url_prefixes', []) as $prefix) {
+                if (! is_string($prefix) || $prefix === ''
+                    || strtolower((string) parse_url($prefix, PHP_URL_SCHEME)) !== 'https'
+                    || CanonicalHost::of($prefix) !== $host
+                    || parse_url($prefix, PHP_URL_PORT) !== $port) {
+                    continue;
+                }
+
+                if (str_starts_with($path, (string) parse_url($prefix, PHP_URL_PATH))) {
+                    return;
+                }
             }
         }
 
         throw new Exception(
             'Update download URL is not in the allowed list. Add the prefix '
-            .'to INVENTOROS_UPDATE_PREFIXES if you trust the source.'
+            .'to INVENTOROS_UPDATE_PREFIXES (the download allowlist) if you trust the source.'
         );
+    }
+
+    /**
+     * A download path with no dot-dot sequence, backslash or percent-encoded
+     * dot, slash or backslash: nothing a client or server could resolve to a
+     * different path than the one compared with the prefix.
+     */
+    private function isPlainDownloadPath(string $path): bool
+    {
+        return ! str_contains($path, '..')
+            && ! str_contains($path, '\\')
+            && preg_match('/%(?:2e|2f|5c)/i', $path) !== 1;
     }
 
     /**
