@@ -877,6 +877,8 @@
       "cannotUndo": "Deze actie kan niet ongedaan worden gemaakt."
     },
     "receive": {
+      "fillAll": "Alle resterende aantallen invullen",
+      "fillRemaining": "Resterend aantal invullen",
       "title": "Artikelen ontvangen - {poNumber}",
       "orderTotal": "Ordertotaal: {total}",
       "itemsToReceive": "Te ontvangen artikelen",

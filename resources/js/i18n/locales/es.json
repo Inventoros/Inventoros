@@ -877,6 +877,8 @@
       "cannotUndo": "Esta acción no se puede deshacer."
     },
     "receive": {
+      "fillAll": "Rellenar todas las cantidades restantes",
+      "fillRemaining": "Rellenar cantidad restante",
       "title": "Recibir artículos - {poNumber}",
       "orderTotal": "Total del pedido: {total}",
       "itemsToReceive": "Artículos por recibir",

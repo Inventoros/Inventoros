@@ -748,6 +748,8 @@
       "cannotUndo": "This action cannot be undone."
     },
     "receive": {
+      "fillAll": "Fill all remaining",
+      "fillRemaining": "Fill remaining",
       "title": "Receive Items - {poNumber}",
       "orderTotal": "Order Total: {total}",
       "itemsToReceive": "Items to Receive",

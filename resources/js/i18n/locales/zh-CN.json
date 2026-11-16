@@ -877,6 +877,8 @@
       "cannotUndo": "此操作无法撤销。"
     },
     "receive": {
+      "fillAll": "????????",
+      "fillRemaining": "??????",
       "title": "收货 - {poNumber}",
       "orderTotal": "订单合计：{total}",
       "itemsToReceive": "待收货商品",

@@ -7,7 +7,7 @@ import Card from '@/Components/ui/Card.vue';
 import Button from '@/Components/ui/Button.vue';
 import Badge from '@/Components/ui/Badge.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
-import { defineAsyncComponent, ref, computed } from 'vue';
+import { defineAsyncComponent, ref, computed, useId } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { formatMoney } from '@/lib/money';
 import { ArrowLeft, ScanLine, PackageCheck } from '@lucide/vue';
@@ -23,6 +23,8 @@ const props = defineProps({
 });
 
 const showScanner = ref(false);
+const tableId = `receiving-${useId()}`;
+const fieldId = (part, item) => `${tableId}-${part}-${item.id}`;
 
 const form = useForm({
     items: props.purchaseOrder.items?.map(item => ({
@@ -58,7 +60,7 @@ const receivingLocationLabel = (location) => [
 ].filter(Boolean).join(' / ');
 
 const totalItemsToReceive = computed(() => {
-    return form.items.reduce((sum, item) => sum + item.quantity_to_receive, 0);
+    return form.items.reduce((sum, item) => sum + Math.max(0, Number(item.quantity_to_receive) || 0), 0);
 });
 
 const receiveAll = (index) => {
@@ -94,7 +96,15 @@ const onProductFound = (product, variant = null) => {
 };
 
 const submit = () => {
-    form.post(route('purchase-orders.process-receiving', props.purchaseOrder.id));
+    if (form.processing) return;
+    form.transform(data => ({
+        ...data,
+        items: data.items.map(item => ({
+            ...item,
+            // A cleared field means this line is skipped in this receipt.
+            quantity_to_receive: item.quantity_to_receive === '' ? 0 : item.quantity_to_receive,
+        })),
+    })).post(route('purchase-orders.process-receiving', props.purchaseOrder.id));
 };
 
 const formatCurrency = (value) => {
@@ -147,7 +157,7 @@ const thClassCenter = 'px-4 py-2.5 text-center text-xs font-medium tracking-tigh
             :description="t('purchaseOrders.receive.description')"
         >
             <template #actions>
-                <Button variant="secondary" size="sm" @click="showScanner = true">
+                <Button variant="secondary" size="sm" :disabled="form.processing" @click="showScanner = true">
                     <ScanLine :size="14" />
                     {{ t('components.barcodeScanner.title') }}
                 </Button>
@@ -181,53 +191,55 @@ const thClassCenter = 'px-4 py-2.5 text-center text-xs font-medium tracking-tigh
         <!-- Receiving Form -->
         <form @submit.prevent="submit" class="mt-4">
             <Card :padded="false">
-                <div class="flex items-center justify-between px-5 pt-5">
+                <div class="receiving-toolbar flex flex-wrap items-center justify-between gap-3 px-5 pt-5">
                     <h3 class="text-sm font-semibold text-text-primary">{{ t('purchaseOrders.receive.itemsToReceive') }}</h3>
                     <div class="flex items-center gap-2">
-                        <Button type="button" variant="default" size="sm" @click="receiveAllItems">
-                            {{ t('purchaseOrders.receive.receiveAll') }}
+                        <Button type="button" variant="secondary" size="sm" class="min-h-11" :disabled="form.processing" @click="receiveAllItems">
+                            {{ t('purchaseOrders.receive.fillAll') }}
                         </Button>
-                        <Button type="button" variant="secondary" size="sm" @click="clearAll">
+                        <Button type="button" variant="secondary" size="sm" class="min-h-11" :disabled="form.processing" @click="clearAll">
                             {{ t('common.clear') }}
                         </Button>
                     </div>
                 </div>
-                <div class="p-5">
+                <div class="receiving-items p-5">
                     <p class="mb-3 text-xs text-text-secondary">{{ t('receivingDestination.hint') }}</p>
-                    <TableViewport class="w-full overflow-x-auto rounded-lg border border-border-subtle">
-                        <table class="w-full text-sm">
-                            <thead>
-                                <tr class="border-b border-border-subtle">
-                                    <th :class="thClass">{{ t('common.product') }}</th>
-                                    <th :class="thClass">SKU</th>
-                                    <th :class="thClassCenter">{{ t('purchaseOrders.show.ordered') }}</th>
-                                    <th :class="thClassCenter">{{ t('purchaseOrders.receive.alreadyReceived') }}</th>
-                                    <th :class="thClassCenter">{{ t('purchaseOrders.receive.remaining') }}</th>
-                                    <th :class="thClassCenter">{{ t('purchaseOrders.receive.receiveNow') }}</th>
-                                    <th :class="thClass">{{ t('receivingDestination.label') }}</th>
-                                    <th :class="thClassCenter">{{ t('common.actions') }}</th>
+                    <TableViewport :label="t('purchaseOrders.receive.itemsToReceive')" class="w-full overflow-x-auto rounded-lg border border-border-subtle">
+                        <table role="table" :aria-label="t('purchaseOrders.receive.itemsToReceive')" class="receiving-table w-full text-sm">
+                            <thead role="rowgroup">
+                                <tr role="row" class="border-b border-border-subtle">
+                                    <th role="columnheader" scope="col" :class="thClass">{{ t('common.product') }}</th>
+                                    <th role="columnheader" scope="col" :class="thClass">SKU</th>
+                                    <th role="columnheader" scope="col" :class="thClassCenter">{{ t('purchaseOrders.show.ordered') }}</th>
+                                    <th role="columnheader" scope="col" :class="thClassCenter">{{ t('purchaseOrders.receive.alreadyReceived') }}</th>
+                                    <th role="columnheader" scope="col" :class="thClassCenter">{{ t('purchaseOrders.receive.remaining') }}</th>
+                                    <th role="columnheader" scope="col" :class="thClassCenter">{{ t('purchaseOrders.receive.receiveNow') }}</th>
+                                    <th role="columnheader" scope="col" :class="thClass">{{ t('receivingDestination.label') }}</th>
+                                    <th role="columnheader" scope="col" :class="thClassCenter">{{ t('common.actions') }}</th>
                                 </tr>
                             </thead>
-                            <tbody>
-                                <tr
+                            <tbody role="rowgroup">
+                                <tr role="row"
                                     v-for="(item, index) in form.items"
                                     :key="item.id"
                                     class="border-b border-border-subtle transition-colors last:border-b-0 hover:bg-surface-overlay"
                                     :class="{ 'bg-status-success-soft': item.remaining === 0 }"
                                 >
-                                    <td class="min-w-[12rem] px-4 py-3 text-sm text-text-primary">
+                                    <td role="cell" :id="fieldId('product', item)" class="receiving-product min-w-[12rem] px-4 py-3 text-sm text-text-primary">
                                         {{ item.product_name }}
                                         <span v-if="item.receiving_location" class="block text-xs text-text-secondary">{{ t('variantReplenishment.receiveAt', { location: item.receiving_location.name, warehouse: item.receiving_location.warehouse?.name }) }}</span>
                                         <span v-if="item.variant_title" class="block text-xs text-text-secondary">{{ t('orders.create.variant') }}: {{ item.variant_title }}</span>
                                     </td>
-                                    <td class="whitespace-nowrap px-4 py-3 text-sm text-text-tertiary">
+                                    <td role="cell" class="receiving-sku whitespace-nowrap px-4 py-3 text-sm text-text-tertiary">
                                         {{ item.sku || '-' }}
                                     </td>
-                                    <td class="px-4 py-3 text-center text-sm tabular-nums text-text-primary">
-                                        {{ item.quantity_ordered }}
+                                    <td role="cell" class="receiving-count px-4 py-3 text-center text-sm tabular-nums text-text-primary">
+                                        <span class="receiving-label" aria-hidden="true">{{ t('purchaseOrders.show.ordered') }}</span>
+                                        <span class="receiving-count-value">{{ item.quantity_ordered }}</span>
                                     </td>
-                                    <td class="px-4 py-3 text-center text-sm tabular-nums">
-                                        <span :class="[
+                                    <td role="cell" class="receiving-count px-4 py-3 text-center text-sm tabular-nums">
+                                        <span class="receiving-label" aria-hidden="true">{{ t('purchaseOrders.receive.alreadyReceived') }}</span>
+                                        <span class="receiving-count-value" :class="[
                                             item.quantity_received >= item.quantity_ordered
                                                 ? 'font-medium text-status-success'
                                                 : item.quantity_received > 0
@@ -237,8 +249,9 @@ const thClassCenter = 'px-4 py-2.5 text-center text-xs font-medium tracking-tigh
                                             {{ item.quantity_received }}
                                         </span>
                                     </td>
-                                    <td class="px-4 py-3 text-center text-sm tabular-nums">
-                                        <span :class="[
+                                    <td role="cell" class="receiving-count px-4 py-3 text-center text-sm tabular-nums">
+                                        <span class="receiving-label" aria-hidden="true">{{ t('purchaseOrders.receive.remaining') }}</span>
+                                        <span class="receiving-count-value" :class="[
                                             item.remaining === 0
                                                 ? 'font-medium text-status-success'
                                                 : 'font-medium text-status-warning'
@@ -246,27 +259,36 @@ const thClassCenter = 'px-4 py-2.5 text-center text-xs font-medium tracking-tigh
                                             {{ item.remaining }}
                                         </span>
                                     </td>
-                                    <td class="px-4 py-3 text-center">
+                                    <td role="cell" class="receiving-quantity px-4 py-3 text-center">
+                                        <label v-if="item.remaining > 0" :for="fieldId('quantity', item)" class="receiving-label">{{ t('purchaseOrders.receive.receiveNow') }}</label>
                                         <input :aria-label="t('purchaseOrders.receive.receiveNow')"
                                             v-if="item.remaining > 0"
+                                            :id="fieldId('quantity', item)"
                                             type="number"
                                             v-model.number="item.quantity_to_receive"
                                             :max="item.remaining"
                                             min="0"
-                                            :class="[fieldInput, 'w-20 text-center']"
+                                            step="1"
+                                            :disabled="form.processing"
+                                            :aria-invalid="!!form.errors[`items.${index}.quantity_to_receive`]"
+                                            :aria-describedby="[fieldId('product', item), form.errors[`items.${index}.quantity_to_receive`] && fieldId('quantity-error', item)].filter(Boolean).join(' ')"
+                                            :class="[fieldInput, 'receiving-input w-20 text-center']"
                                         />
-                                        <Badge v-else variant="success" size="sm">
+                                        <p v-if="form.errors[`items.${index}.quantity_to_receive`]" :id="fieldId('quantity-error', item)" :class="fieldError">{{ form.errors[`items.${index}.quantity_to_receive`] }}</p>
+                                        <Badge v-if="item.remaining <= 0" variant="success" size="sm">
                                             {{ t('purchaseOrders.receive.complete') }}
                                         </Badge>
                                     </td>
-                                    <td class="min-w-[15rem] px-4 py-3">
+                                    <td role="cell" class="receiving-destination min-w-[15rem] px-4 py-3">
                                         <template v-if="item.remaining > 0">
+                                            <label :for="fieldId('location', item)" class="receiving-label">{{ t('receivingDestination.label') }}</label>
                                             <select
+                                                :id="fieldId('location', item)"
                                                 v-model="item.receiving_location_id"
                                                 :aria-label="t('receivingDestination.label')"
                                                 :aria-invalid="!!form.errors[`items.${index}.receiving_location_id`]"
-                                                :aria-describedby="form.errors[`items.${index}.receiving_location_id`] ? `receiving-location-error-${item.id}` : undefined"
-                                                :class="fieldInput"
+                                                :aria-describedby="[fieldId('product', item), form.errors[`items.${index}.receiving_location_id`] && fieldId('location-error', item)].filter(Boolean).join(' ')"
+                                                :class="[fieldInput, 'receiving-input']"
                                                 :disabled="form.processing"
                                             >
                                                 <option :value="null">{{ t('receivingDestination.existing') }}</option>
@@ -275,19 +297,20 @@ const thClassCenter = 'px-4 py-2.5 text-center text-xs font-medium tracking-tigh
                                                 </option>
                                             </select>
                                             <p v-if="receivingLocationsFor(item).length === 0" class="mt-1 text-xs text-text-tertiary">{{ t('receivingDestination.empty') }}</p>
-                                            <p v-if="form.errors[`items.${index}.receiving_location_id`]" :id="`receiving-location-error-${item.id}`" :class="fieldError">{{ form.errors[`items.${index}.receiving_location_id`] }}</p>
+                                            <p v-if="form.errors[`items.${index}.receiving_location_id`]" :id="fieldId('location-error', item)" :class="fieldError">{{ form.errors[`items.${index}.receiving_location_id`] }}</p>
                                         </template>
                                         <span v-else class="text-text-tertiary">-</span>
                                     </td>
-                                    <td class="px-4 py-3 text-center">
+                                    <td role="cell" class="receiving-line-actions px-4 py-3 text-center">
                                         <Button
                                             v-if="item.remaining > 0"
                                             type="button"
                                             variant="link"
                                             size="sm"
+                                            :disabled="form.processing"
                                             @click="receiveAll(index)"
                                         >
-                                            {{ t('purchaseOrders.receive.receiveAll') }}
+                                            {{ t('purchaseOrders.receive.fillRemaining') }}
                                         </Button>
                                     </td>
                                 </tr>
@@ -298,8 +321,8 @@ const thClassCenter = 'px-4 py-2.5 text-center text-xs font-medium tracking-tigh
                 </div>
 
                 <!-- Summary & Submit -->
-                <div class="flex items-center justify-between border-t border-border-subtle px-5 py-4">
-                    <div class="text-sm text-text-secondary">
+                <div class="receiving-summary flex flex-col items-stretch justify-between gap-4 border-t border-border-subtle px-5 py-4 sm:flex-row sm:flex-wrap sm:items-center">
+                    <div class="min-w-0 text-sm text-text-secondary" role="status">
                         <span v-if="hasItemsToReceive">
                             {{ t('purchaseOrders.receive.readyToReceiveCount', { count: totalItemsToReceive }, totalItemsToReceive) }}
                         </span>
@@ -307,13 +330,14 @@ const thClassCenter = 'px-4 py-2.5 text-center text-xs font-medium tracking-tigh
                             {{ t('purchaseOrders.receive.selectQuantities') }}
                         </span>
                     </div>
-                    <div class="flex items-center gap-3">
-                        <Button variant="secondary" as="Link" :href="route('purchase-orders.show', purchaseOrder.id)">
+                    <div class="flex min-w-0 flex-col gap-3 sm:flex-row">
+                        <Button variant="secondary" class="h-auto min-h-11 whitespace-normal" as="Link" :href="route('purchase-orders.show', purchaseOrder.id)">
                             {{ t('common.cancel') }}
                         </Button>
                         <Button
                             type="submit"
                             variant="default"
+                            class="h-auto min-h-11 whitespace-normal"
                             :loading="form.processing"
                             :disabled="form.processing || !hasItemsToReceive"
                         >
@@ -336,3 +360,52 @@ const thClassCenter = 'px-4 py-2.5 text-center text-xs font-medium tracking-tigh
         />
     </AppLayout>
 </template>
+
+<style scoped>
+.receiving-items { container: receiving-items / inline-size; }
+.receiving-label { display: none; }
+.receiving-input[type="number"] { width: 6rem; min-width: 6rem; }
+
+/* One table and one set of inputs. On narrow panels, each row becomes a
+   receiving record while its column headers remain available to readers. */
+@container receiving-items (max-width: 52rem) {
+    .receiving-items :deep(.table-panel) { border: 0; border-radius: 0; }
+    .receiving-items :deep(.table-viewport) { max-height: none; overflow: visible; scrollbar-gutter: auto; }
+    .receiving-items :deep(.table-expand-button) { display: none; }
+    .receiving-table, .receiving-table tbody { display: block; width: 100%; }
+    .receiving-table thead {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip-path: inset(50%);
+        white-space: nowrap;
+    }
+    .receiving-table tbody { display: grid; gap: 16px; }
+    .receiving-table tbody tr {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        overflow: hidden;
+        border: 1px solid hsl(var(--border-subtle));
+        border-radius: 8px;
+    }
+    .receiving-table tbody td {
+        min-width: 0;
+        padding: 12px;
+        text-align: start;
+        overflow-wrap: anywhere;
+        white-space: normal;
+    }
+    .receiving-product, .receiving-sku, .receiving-quantity, .receiving-destination, .receiving-line-actions { grid-column: 1 / -1; }
+    .receiving-table .receiving-product { padding-bottom: 4px; font-weight: 600; }
+    .receiving-table .receiving-product span { font-weight: 400; }
+    .receiving-table .receiving-sku { padding-top: 0; font-family: ui-monospace, monospace; font-size: 12px; border-bottom: 1px solid hsl(var(--border-subtle)); }
+    .receiving-label { display: block; margin-bottom: 6px; color: hsl(var(--text-secondary)); font-size: 12px; line-height: 16px; }
+    .receiving-count .receiving-label { min-height: 32px; }
+    .receiving-count-value { font-size: 20px; font-weight: 600; line-height: 28px; }
+    .receiving-table .receiving-input { width: 100%; min-height: 44px; }
+    .receiving-line-actions :deep(button) { width: 100%; min-height: 44px; white-space: normal; }
+    .receiving-table .receiving-destination:has(> span:only-child),
+    .receiving-table .receiving-line-actions:empty { display: none; }
+}
+</style>

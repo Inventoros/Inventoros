@@ -877,6 +877,8 @@
       "cannotUndo": "Bu işlem geri alınamaz."
     },
     "receive": {
+      "fillAll": "Kalan t?m miktarlar? doldur",
+      "fillRemaining": "Kalan miktar? doldur",
       "title": "Ürün Teslim Al - {poNumber}",
       "orderTotal": "Sipariş Toplamı: {total}",
       "itemsToReceive": "Teslim Alınacak Ürünler",

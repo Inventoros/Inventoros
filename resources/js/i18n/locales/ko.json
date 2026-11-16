@@ -877,6 +877,8 @@
       "cannotUndo": "이 작업은 되돌릴 수 없습니다."
     },
     "receive": {
+      "fillAll": "?? ?? ?? ??",
+      "fillRemaining": "?? ?? ??",
       "title": "입고 처리 - {poNumber}",
       "orderTotal": "주문 합계: {total}",
       "itemsToReceive": "입고 대상 품목",

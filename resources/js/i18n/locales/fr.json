@@ -877,6 +877,8 @@
       "cannotUndo": "Cette action est irréversible."
     },
     "receive": {
+      "fillAll": "Remplir toutes les quantit?s restantes",
+      "fillRemaining": "Remplir la quantit? restante",
       "title": "Réceptionner les articles - {poNumber}",
       "orderTotal": "Total de la commande : {total}",
       "itemsToReceive": "Articles à réceptionner",

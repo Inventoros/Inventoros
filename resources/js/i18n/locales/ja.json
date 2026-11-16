@@ -877,6 +877,8 @@
       "cannotUndo": "この操作は元に戻せません。"
     },
     "receive": {
+      "fillAll": "?????????",
+      "fillRemaining": "?????",
       "title": "商品入荷 - {poNumber}",
       "orderTotal": "発注合計: {total}",
       "itemsToReceive": "入荷する商品",
