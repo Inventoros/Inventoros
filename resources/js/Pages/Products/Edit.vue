@@ -551,6 +551,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                             :product-purchase-price="form.purchase_price"
                             :currency-symbol="getCurrencySymbol(product.currency || defaultCurrency)"
                             lock-existing-stock
+                            :lock-new-stock="!hasPermission('manage_stock')"
                         />
                     </div>
                 </Card>

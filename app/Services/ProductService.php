@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Enums\Permission;
+use App\Http\Middleware\CheckApiPermission;
 use App\Models\Inventory\Product;
 use App\Models\Inventory\ProductOption;
 use App\Models\Inventory\ProductVariant;
@@ -42,6 +44,14 @@ final class ProductService
      * starting stock.
      */
     public const OPENING_STOCK_TYPE = 'opening_stock';
+
+    /**
+     * Why a new variant on an existing product may not carry opening stock
+     * for this user.
+     */
+    public const VARIANT_OPENING_STOCK_PERMISSION_MESSAGE = 'Opening stock on a new variant needs the manage_stock permission. Create the variant with 0 stock and ask someone who manages stock to adjust it.';
+
+    public const VARIANT_OPENING_STOCK_APPROVAL_MESSAGE = 'Opening stock on a new variant needs approval under this organization\'s stock adjustment rules. Create the variant with 0 stock, then submit a stock adjustment for approval.';
 
     /**
      * Create a product (plus its options/variants) from validated data.
@@ -285,6 +295,37 @@ final class ProductService
             'adjustment_quantity' => $quantity,
             'reason' => 'Opening stock',
         ]);
+    }
+
+    /**
+     * Guard opening stock on a new variant of an existing product. It raises
+     * the product's on-hand like a stock adjustment, so it needs manage_stock
+     * (for an API token, the manage_stock ability too) and is refused when
+     * the organization's approval rules would hold the same adjustment for
+     * approval. $field names the input the refusal is reported against. The
+     * acting user is $actor, else the signed-in user; a system caller with
+     * neither is not narrowed. Call inside the transaction that creates the
+     * variant, before recording its opening stock. Both refusals are field
+     * errors on $field, so a form keeps the user's input.
+     *
+     * @throws ValidationException without manage_stock, or when the stock would need approval
+     */
+    public function authorizeNewVariantStock(Product $product, ProductVariant $variant, string $field, ?User $actor = null): void
+    {
+        $quantity = (int) $variant->stock;
+        $user = $actor ?? auth()->user();
+        if ($quantity <= 0 || ! $user instanceof User) {
+            return;
+        }
+
+        $ability = Permission::MANAGE_STOCK->value;
+        if (! $user->hasPermission($ability) || ! CheckApiPermission::tokenAllows($user->currentAccessToken())($ability)) {
+            throw ValidationException::withMessages([$field => self::VARIANT_OPENING_STOCK_PERMISSION_MESSAGE]);
+        }
+
+        if (app(ApprovalService::class)->stockAdjustmentNeedsApproval($product, $variant, $quantity)) {
+            throw ValidationException::withMessages([$field => self::VARIANT_OPENING_STOCK_APPROVAL_MESSAGE]);
+        }
     }
 
     /**
@@ -634,6 +675,7 @@ final class ProductService
             }
 
             $variant = ProductVariant::create($variantPayload);
+            $this->authorizeNewVariantStock($product, $variant, "variants.{$index}.stock");
             $this->recordOpeningVariantStock($variant);
             $incomingVariantIds[] = $variant->id;
         }
