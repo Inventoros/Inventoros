@@ -163,4 +163,86 @@ final class RoleSecurityBoundariesTest extends TestCase
         ])->assertRedirect(route('roles.index'));
         $this->assertSame(['view_suppliers'], $role->fresh()->permissions);
     }
+    private function delegatedDeleter(): User
+    {
+        $deleter = User::factory()->forOrganization($this->organization->id)->create();
+        $role = Role::create(['name' => 'Delegated deleter', 'organization_id' => $this->organization->id,
+            'is_system' => false, 'permissions' => ['view_roles', 'delete_roles', 'view_products']]);
+        $deleter->roles()->attach($role->id);
+
+        return $deleter;
+    }
+
+    public function test_a_delegated_deleter_cannot_delete_a_more_privileged_role(): void
+    {
+        $role = Role::create(['name' => 'Privileged role', 'organization_id' => $this->organization->id,
+            'permissions' => ['manage_organization'], 'is_system' => false]);
+
+        // Refused like the other delete guards, so the role page shows why.
+        $this->actingAs($this->delegatedDeleter())
+            ->from(route('roles.show', $role))
+            ->delete(route('roles.destroy', $role))
+            ->assertRedirect(route('roles.show', $role))
+            ->assertSessionHasErrors(['role' => 'You cannot delete a role with permissions you do not hold.']);
+        $this->assertDatabaseHas('roles', ['id' => $role->id]);
+    }
+
+    public function test_a_delegated_deleter_cannot_delete_a_role_granted_more_through_a_permission_set(): void
+    {
+        $set = PermissionSet::create(['name' => 'Privileged set', 'organization_id' => $this->organization->id,
+            'permissions' => ['manage_organization'], 'is_template' => false, 'is_active' => true]);
+        $role = Role::create(['name' => 'Set role', 'organization_id' => $this->organization->id,
+            'permissions' => ['view_products'], 'is_system' => false]);
+        $role->permissionSets()->attach($set->id);
+
+        $this->actingAs($this->delegatedDeleter())->delete(route('roles.destroy', $role))
+            ->assertSessionHasErrors(['role' => 'You cannot delete a role with permissions you do not hold.']);
+        $this->assertDatabaseHas('roles', ['id' => $role->id]);
+    }
+
+    public function test_permissions_of_a_plugin_that_is_no_longer_active_do_not_block_deleting_a_role(): void
+    {
+        // A permission string left behind by a removed plugin grants nothing.
+        $role = Role::create(['name' => 'Stale role', 'organization_id' => $this->organization->id,
+            'permissions' => ['view_products', 'removed-plugin.manage_widgets'], 'is_system' => false]);
+
+        $this->actingAs($this->delegatedDeleter())->delete(route('roles.destroy', $role))
+            ->assertRedirect(route('roles.index'));
+        $this->assertDatabaseMissing('roles', ['id' => $role->id]);
+    }
+
+    public function test_permissions_of_an_active_plugin_still_block_deleting_a_role(): void
+    {
+        register_permission('active-plugin.manage_widgets', 'Manage widgets');
+        $role = Role::create(['name' => 'Plugin role', 'organization_id' => $this->organization->id,
+            'permissions' => ['view_products', 'active-plugin.manage_widgets'], 'is_system' => false]);
+
+        $this->actingAs($this->delegatedDeleter())->delete(route('roles.destroy', $role))
+            ->assertSessionHasErrors(['role' => 'You cannot delete a role with permissions you do not hold.']);
+        $this->assertDatabaseHas('roles', ['id' => $role->id]);
+    }
+
+    public function test_a_delegated_deleter_can_delete_a_role_within_their_permissions(): void
+    {
+        $role = Role::create(['name' => 'Narrow role', 'organization_id' => $this->organization->id,
+            'permissions' => ['view_products'], 'is_system' => false]);
+
+        $this->actingAs($this->delegatedDeleter())->delete(route('roles.destroy', $role))
+            ->assertRedirect(route('roles.index'));
+        $this->assertDatabaseMissing('roles', ['id' => $role->id]);
+    }
+
+    public function test_a_tenant_admin_can_delete_any_unassigned_custom_role_but_not_another_organizations(): void
+    {
+        $role = Role::create(['name' => 'Privileged role', 'organization_id' => $this->organization->id,
+            'permissions' => ['manage_organization'], 'is_system' => false]);
+        $foreign = Role::create(['name' => 'Foreign role', 'organization_id' => $this->other->id,
+            'permissions' => ['view_products'], 'is_system' => false]);
+
+        $this->actingAs($this->admin)->delete(route('roles.destroy', $role))->assertRedirect(route('roles.index'));
+        $this->assertDatabaseMissing('roles', ['id' => $role->id]);
+
+        $this->deleteJson(route('roles.destroy', $foreign))->assertForbidden();
+        $this->assertDatabaseHas('roles', ['id' => $foreign->id]);
+    }
 }
