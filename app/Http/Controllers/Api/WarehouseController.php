@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api;
 
+use App\Http\Controllers\Api\Concerns\HandlesApiResponses;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Warehouse\StoreWarehouseRequest;
 use App\Http\Requests\Api\Warehouse\UpdateWarehouseRequest;
@@ -20,6 +21,8 @@ use Illuminate\Validation\ValidationException;
  */
 class WarehouseController extends Controller
 {
+    use HandlesApiResponses;
+
     /**
      * List warehouses.
      */
@@ -52,7 +55,7 @@ class WarehouseController extends Controller
         $sortDir = ($request->input('sort_dir') === 'asc') ? 'asc' : 'desc';
         $query->orderBy($sortBy, $sortDir);
 
-        $perPage = min($request->input('per_page', 15), 100);
+        $perPage = $this->perPage($request);
         $warehouses = $query->paginate($perPage);
 
         return response()->json($warehouses);

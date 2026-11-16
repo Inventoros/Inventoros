@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api;
 
+use App\Http\Controllers\Api\Concerns\HandlesApiResponses;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\ProductCategory\StoreProductCategoryRequest;
 use App\Http\Requests\Api\ProductCategory\UpdateProductCategoryRequest;
@@ -19,6 +20,8 @@ use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
  */
 class ProductCategoryController extends Controller
 {
+    use HandlesApiResponses;
+
     /**
      * List categories.
      */
@@ -50,7 +53,7 @@ class ProductCategoryController extends Controller
         $sortDir = ($request->input('sort_dir') === 'desc') ? 'desc' : 'asc';
         $query->orderBy($sortBy, $sortDir);
 
-        $perPage = min($request->input('per_page', 15), 100);
+        $perPage = $this->perPage($request);
         $categories = $query->paginate($perPage);
 
         return ProductCategoryResource::collection($categories);

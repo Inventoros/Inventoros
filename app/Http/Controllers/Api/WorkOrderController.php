@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Api;
 use App\Exceptions\BusinessRuleException;
 use App\Exceptions\InsufficientStockException;
 use App\Exceptions\InvalidStateException;
+use App\Http\Controllers\Api\Concerns\HandlesApiResponses;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\WorkOrder\StoreWorkOrderRequest;
 use App\Models\Inventory\WorkOrder;
@@ -22,6 +23,8 @@ use Illuminate\Http\Request;
  */
 class WorkOrderController extends Controller
 {
+    use HandlesApiResponses;
+
     /**
      * List work orders.
      */
@@ -58,7 +61,7 @@ class WorkOrderController extends Controller
         $sortDir = ($request->input('sort_dir') === 'asc') ? 'asc' : 'desc';
         $query->orderBy($sortBy, $sortDir);
 
-        $perPage = min($request->input('per_page', 15), 100);
+        $perPage = $this->perPage($request);
         $workOrders = $query->paginate($perPage);
 
         return response()->json($workOrders);
