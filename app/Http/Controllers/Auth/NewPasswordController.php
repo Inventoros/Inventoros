@@ -64,6 +64,12 @@ class NewPasswordController extends Controller
                     'remember_token' => Str::random(60),
                 ])->save();
 
+                // Account recovery also evicts API tokens: a new password
+                // already ends other browser sessions, and a leaked token
+                // must not outlive the recovery. One delete per token so
+                // each revocation reaches the security log.
+                $user->tokens()->get()->each->delete();
+
                 event(new PasswordReset($user));
             }
         );

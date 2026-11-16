@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Listeners;
 
 use App\Enums\SecurityEvent;
+use App\Http\Middleware\EnsureTwoFactorVerified;
 use App\Models\User;
 use App\Services\SecurityEventLogger;
 use App\Services\UserActivityAlertService;
@@ -38,9 +39,11 @@ final class SecurityEventSubscriber
             return;
         }
 
-        // Bind newly authenticated staff sessions to the current password.
+        // Bind newly authenticated staff sessions to the current password,
+        // and start every staff sign-in with the second factor unverified.
         if ($event->guard === 'web' && request()->hasSession()) {
             request()->session()->put('password_hash_web', Auth::guard('web')->hashPasswordForCookie($event->user->getAuthPassword()));
+            request()->session()->forget(EnsureTwoFactorVerified::SESSION_KEY);
         }
 
         $this->logger->record(SecurityEvent::LOGIN, $event->user, $event->user, [

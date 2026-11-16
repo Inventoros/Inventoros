@@ -4,11 +4,13 @@ namespace Tests\Feature;
 
 use App\Models\System\SystemSetting;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Feature\Concerns\UnlocksInstaller;
 use Tests\TestCase;
 
 class InstallerControllerTest extends TestCase
 {
     use RefreshDatabase;
+    use UnlocksInstaller;
 
     public function test_create_admin_is_blocked_after_installation_completes(): void
     {
@@ -38,6 +40,8 @@ class InstallerControllerTest extends TestCase
         // need far newer; the stated minimum must be composer.json's.
         $composer = json_decode((string) file_get_contents(base_path('composer.json')), true);
         $minimum = ltrim((string) $composer['require']['php'], '^~>=');
+
+        $this->unlockInstaller();
 
         $response = $this->get('/install/requirements');
 
@@ -75,6 +79,8 @@ class InstallerControllerTest extends TestCase
 
     public function test_requirements_page_states_the_upper_bound(): void
     {
+        $this->unlockInstaller();
+
         $response = $this->get('/install/requirements');
 
         $php = collect($response->viewData('page')['props']['requirements'])->firstWhere('name', 'PHP Version');
@@ -104,6 +110,7 @@ class InstallerControllerTest extends TestCase
             protected function prepareDatabase(string $driver, array $input, bool $reset): void {}
         });
         \Illuminate\Support\Facades\Artisan::shouldReceive('call')->andReturn(0);
+        $this->unlockInstaller();
 
         $response = $this->postJson('/install/database/install', [
             'driver' => 'mysql',

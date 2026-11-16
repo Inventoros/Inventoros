@@ -7,6 +7,7 @@ namespace App\Services;
 use App\Exceptions\DocumentEmailException;
 use App\Mail\PurchaseOrderEmail;
 use App\Models\Purchasing\PurchaseOrder;
+use App\Models\Scopes\OrganizationScope;
 use App\Models\User;
 use App\Services\Documents\DocumentEmailThrottle;
 use App\Services\Documents\DocumentRecipients;
@@ -37,19 +38,7 @@ class PurchaseOrderEmailService
         array $cc = [],
         ?string $message = null,
     ): PurchaseOrder {
-        if ($purchaseOrder->awaitsApproval()) {
-            throw DocumentEmailException::approvalRequired(match ($purchaseOrder->approval_status) {
-                PurchaseOrder::APPROVAL_PENDING => "Purchase order {$purchaseOrder->po_number} is waiting for approval and cannot be sent yet.",
-                PurchaseOrder::APPROVAL_REJECTED => "Purchase order {$purchaseOrder->po_number} was rejected. Update it and submit it for approval again before sending.",
-                default => "Purchase order {$purchaseOrder->po_number} needs approval before it can be sent. Submit it for approval first.",
-            });
-        }
-
-        if (! $purchaseOrder->canBeSent()) {
-            throw DocumentEmailException::notSendable(
-                "Purchase order {$purchaseOrder->po_number} is {$purchaseOrder->status_label} and cannot be sent. Only drafts with at least one item, or orders already sent, can be sent."
-            );
-        }
+        $this->assertSendable($purchaseOrder);
 
         $purchaseOrder->loadMissing('supplier');
         $supplierName = $purchaseOrder->supplier?->name ?? 'The supplier';
@@ -93,12 +82,23 @@ class PurchaseOrderEmailService
         Carbon $sentAt,
     ): void {
         DB::transaction(function () use ($purchaseOrder, $actor, $recipient, $cc, $message, $sentAt) {
-            if ($purchaseOrder->status === PurchaseOrder::STATUS_DRAFT) {
-                $purchaseOrder->status = PurchaseOrder::STATUS_SENT;
+            // Re-check on the row as it is now, under the lock an edit also
+            // takes: a copy loaded before a concurrent edit must not send
+            // terms that were changed (and so need approval again).
+            $locked = PurchaseOrder::withoutGlobalScope(OrganizationScope::class)
+                ->whereKey($purchaseOrder->getKey())
+                ->where('organization_id', $purchaseOrder->organization_id)
+                ->lockForUpdate()
+                ->firstOrFail();
+            $this->assertSendable($locked);
+
+            if ($locked->status === PurchaseOrder::STATUS_DRAFT) {
+                $locked->status = PurchaseOrder::STATUS_SENT;
             }
-            $purchaseOrder->queued_at = $sentAt;
-            $purchaseOrder->sent_to = $recipient;
-            $purchaseOrder->save();
+            $locked->queued_at = $sentAt;
+            $locked->sent_to = $recipient;
+            $locked->save();
+            $purchaseOrder->setRawAttributes($locked->getAttributes(), true);
 
             DocumentRecipients::logSend(
                 $purchaseOrder,
@@ -112,5 +112,25 @@ class PurchaseOrderEmailService
 
             Mail::to($recipient)->cc($cc)->queue(new PurchaseOrderEmail($purchaseOrder, $message));
         });
+    }
+
+    /**
+     * @throws DocumentEmailException when the PO awaits approval or cannot be sent
+     */
+    private function assertSendable(PurchaseOrder $purchaseOrder): void
+    {
+        if ($purchaseOrder->awaitsApproval()) {
+            throw DocumentEmailException::approvalRequired(match ($purchaseOrder->approval_status) {
+                PurchaseOrder::APPROVAL_PENDING => "Purchase order {$purchaseOrder->po_number} is waiting for approval and cannot be sent yet.",
+                PurchaseOrder::APPROVAL_REJECTED => "Purchase order {$purchaseOrder->po_number} was rejected. Update it and submit it for approval again before sending.",
+                default => "Purchase order {$purchaseOrder->po_number} needs approval before it can be sent. Submit it for approval first.",
+            });
+        }
+
+        if (! $purchaseOrder->canBeSent()) {
+            throw DocumentEmailException::notSendable(
+                "Purchase order {$purchaseOrder->po_number} is {$purchaseOrder->status_label} and cannot be sent. Only drafts with at least one item, or orders already sent, can be sent."
+            );
+        }
     }
 }

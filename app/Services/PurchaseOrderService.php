@@ -10,6 +10,7 @@ use App\Models\Inventory\ProductVariant;
 use App\Models\Inventory\Supplier;
 use App\Models\Purchasing\PurchaseOrder;
 use App\Models\Purchasing\PurchaseOrderItem;
+use App\Models\Scopes\OrganizationScope;
 use App\Models\User;
 use App\Support\Money;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -82,7 +83,20 @@ final class PurchaseOrderService
             throw new InvalidStateException('This purchase order cannot be edited', 'cannot_edit');
         }
 
-        DB::transaction(function () use ($purchaseOrder, $organizationId, &$data) {
+        DB::transaction(function () use (&$purchaseOrder, $organizationId, &$data) {
+            // Decide on the row as it is now, under a lock that send and the
+            // approval decision also take. A copy loaded before a concurrent
+            // send or submission must not edit what was sent or submitted.
+            $purchaseOrder = PurchaseOrder::withoutGlobalScope(OrganizationScope::class)
+                ->whereKey($purchaseOrder->getKey())
+                ->where('organization_id', $organizationId)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            if (! $purchaseOrder->canBeEdited()) {
+                throw new InvalidStateException('This purchase order cannot be edited', 'cannot_edit');
+            }
+
             if (isset($data['items'])) {
                 $purchaseOrder->load('items');
                 $existingItems = $purchaseOrder->items->keyBy('id');

@@ -17,7 +17,13 @@ less install.sh
 sudo bash install.sh
 ```
 
-When it finishes it prints the address to open, for example `http://203.0.113.10:8080/install`. On the database step of the web installer, the host, port, database name and user are already filled in. The password is `DB_PASSWORD` in `/opt/inventoros/.env`:
+When it finishes it prints the address to open, for example `http://203.0.113.10:8080/install`. The web installer first asks for the setup token, `INVENTOROS_SETUP_TOKEN` in `/opt/inventoros/.env`:
+
+```bash
+sudo grep INVENTOROS_SETUP_TOKEN /opt/inventoros/.env
+```
+
+On the database step, the host, port, database name and user are already filled in. The password is `DB_PASSWORD` in the same file:
 
 ```bash
 sudo grep DB_PASSWORD /opt/inventoros/.env
