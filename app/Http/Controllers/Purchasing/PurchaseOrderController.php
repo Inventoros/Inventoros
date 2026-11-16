@@ -371,6 +371,32 @@ class PurchaseOrderController extends Controller
     }
 
     /**
+     * Mark a draft purchase order as sent without emailing the supplier, for
+     * orders placed some other way (the supplier's own ordering site, a
+     * phone call). Same permission and approval rules as Send to Supplier.
+     *
+     * @param  Request  $request  The incoming HTTP request
+     * @param  PurchaseOrder  $purchaseOrder  The draft to mark as sent
+     */
+    public function markSent(Request $request, PurchaseOrder $purchaseOrder, PurchaseOrderEmailService $emails): RedirectResponse
+    {
+        // Ensure user can only mark POs from their organization
+        if ($purchaseOrder->organization_id !== $request->user()->organization_id) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        try {
+            $emails->markSent($purchaseOrder, $request->user());
+        } catch (DocumentEmailException $e) {
+            return redirect()->route('purchase-orders.show', $purchaseOrder)
+                ->with('error', $e->getMessage());
+        }
+
+        return redirect()->route('purchase-orders.show', $purchaseOrder)
+            ->with('success', __('Purchase order marked as sent.'));
+    }
+
+    /**
      * Submit a draft purchase order for approval.
      *
      * @param  Request  $request  The incoming HTTP request

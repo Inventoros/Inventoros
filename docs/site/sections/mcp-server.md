@@ -101,7 +101,7 @@ Add an entry to `~/.cursor/mcp.json` (or the workspace-level `.cursor/mcp.json`)
 
 ### Tool catalog
 
-32 tools across 8 surfaces. Tools marked destructive mutate state and should be confirmed before invocation.
+33 tools across 8 surfaces. Tools marked destructive mutate state and should be confirmed before invocation.
 
 Identity:
 
@@ -140,6 +140,7 @@ Purchasing:
 - `get_purchase_order` (`view_purchase_orders`). Single PO with supplier and line items.
 - `create_purchase_order` (`create_purchase_orders`). Create a draft PO. Does not affect stock until received. Destructive.
 - `send_purchase_order` (`edit_purchase_orders`). Email the PO to the supplier's address on file with the PO PDF attached (to or CC may also be users of the organization; use the web UI for anyone else, and note that a supplier without an email address cannot be sent through MCP) and mark a draft as sent. A PO that is already sent or partly received can be re-sent; its status is unchanged. Destructive.
+- `mark_purchase_order_sent` (`edit_purchase_orders`). Mark a draft PO as sent without emailing anyone, for orders placed with the supplier another way (the supplier's website, a phone call), so it can be received. Only drafts with at least one item; a draft that needs approval must be approved first. Destructive.
 - `receive_purchase_order` (`receive_purchase_orders`). Receive items; writes stock; transitions to partial or received. Destructive.
 - `submit_purchase_order_for_approval` (`edit_purchase_orders`). Put a draft PO in front of the approvers when the organization requires approval. Approvers are notified, and the PO cannot be edited or sent until one of them decides.
 

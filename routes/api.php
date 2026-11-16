@@ -243,6 +243,8 @@ Route::prefix('v1')->as('api.')->middleware('throttle:api')->group(function () {
             ->middleware('api.permission:receive_purchase_orders');
         Route::post('purchase-orders/{purchaseOrder}/send', [PurchaseOrderController::class, 'send'])
             ->middleware('api.permission:edit_purchase_orders');
+        Route::post('purchase-orders/{purchaseOrder}/mark-sent', [PurchaseOrderController::class, 'markSent'])
+            ->middleware('api.permission:edit_purchase_orders');
         Route::post('purchase-orders/{purchaseOrder}/cancel', [PurchaseOrderController::class, 'cancel'])
             ->middleware('api.permission:edit_purchase_orders');
         Route::post('purchase-orders/{purchaseOrder}/submit-for-approval', [PurchaseOrderController::class, 'submitForApproval'])

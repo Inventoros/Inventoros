@@ -253,6 +253,40 @@ class PurchaseOrderController extends Controller
     }
 
     /**
+     * Mark a draft purchase order as sent without emailing the supplier.
+     *
+     * For orders placed with the supplier some other way. Same permission
+     * and approval rules as `send`: 422 `approval_required` while the draft
+     * needs approval, 422 `cannot_send` when the PO is not a draft or has
+     * no items. Nothing is emailed.
+     *
+     * @param  PurchaseOrder  $purchaseOrder  The draft to mark as sent
+     */
+    public function markSent(Request $request, PurchaseOrder $purchaseOrder, PurchaseOrderEmailService $emails): JsonResponse
+    {
+        if ($purchaseOrder->organization_id !== $request->user()->organization_id) {
+            return response()->json([
+                'message' => 'Purchase order not found',
+                'error' => 'not_found',
+            ], 404);
+        }
+
+        try {
+            $purchaseOrder = $emails->markSent($purchaseOrder, $request->user());
+        } catch (DocumentEmailException $e) {
+            return response()->json([
+                'message' => $e->getMessage(),
+                'error' => $e->reason,
+            ], $e->status());
+        }
+
+        return response()->json([
+            'message' => 'Purchase order marked as sent',
+            'data' => new PurchaseOrderResource($purchaseOrder),
+        ]);
+    }
+
+    /**
      * Submit a draft purchase order for approval.
      *
      * Only needed when the organization requires approval for this PO

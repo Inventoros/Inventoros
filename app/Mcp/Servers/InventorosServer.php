@@ -31,6 +31,7 @@ use App\Mcp\Tools\ListSuppliersTool;
 use App\Mcp\Tools\ListWarehousesTool;
 use App\Mcp\Tools\ListWorkOrdersTool;
 use App\Mcp\Tools\LookupBarcodeTool;
+use App\Mcp\Tools\MarkPurchaseOrderSentTool;
 use App\Mcp\Tools\ReceivePurchaseOrderTool;
 use App\Mcp\Tools\SearchProductsTool;
 use App\Mcp\Tools\SendPurchaseOrderTool;
@@ -117,6 +118,7 @@ class InventorosServer extends Server
         GetPurchaseOrderTool::class,
         CreatePurchaseOrderTool::class,
         SendPurchaseOrderTool::class,
+        MarkPurchaseOrderSentTool::class,
         ReceivePurchaseOrderTool::class,
         SubmitPurchaseOrderForApprovalTool::class,
 
