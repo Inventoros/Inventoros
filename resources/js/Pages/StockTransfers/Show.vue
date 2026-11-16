@@ -57,7 +57,9 @@ const canPrepare = computed(() => props.canDispatch && props.transfer.status ===
 const canShip = computed(() => props.canDispatch && props.transfer.status === 'prepared' && !awaitingApproval.value);
 const canComplete = computed(() => !awaitingApproval.value && (
     (props.transfer.status === 'in_transit' && props.canReceive)
-    || (!props.transfer.is_inter_warehouse && ['pending', 'prepared'].includes(props.transfer.status))
+    // Completing an unshipped transfer moves stock out of the source, so it
+    // needs the same source access as shipping.
+    || (props.canDispatch && !props.transfer.is_inter_warehouse && ['pending', 'prepared'].includes(props.transfer.status))
 ));
 const canCancel = computed(() => ['pending', 'prepared', 'in_transit'].includes(props.transfer.status) && !props.transfer.stock_dispatched_at);
 const shipping = ref({ shipping_method: props.transfer.shipping_method || '', tracking_number: props.transfer.tracking_number || '' });

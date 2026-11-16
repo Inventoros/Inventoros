@@ -228,6 +228,11 @@ final class StockTransferService
 
                 return;
             }
+            // An undispatched transfer moves stock out of the source bin here,
+            // so (as when shipping) the actor needs the source warehouse.
+            if (in_array($locked->status, ['pending', 'prepared'], true)) {
+                $this->warehouseAccess->authorizeLocation($actor, $locked->from_location_id);
+            }
             $this->stockTargets($locked);
             if ($locked->status === 'prepared') {
                 app(StockReservationService::class)->consume('core', $this->holdReference($locked), $locked, $locked->organization_id);
