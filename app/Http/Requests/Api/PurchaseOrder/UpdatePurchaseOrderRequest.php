@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Requests\Api\PurchaseOrder;
 
 use App\Http\Requests\Concerns\ValidatesVariantLines;
+use App\Services\ExchangeRates\PurchaseOrderExchangeRates;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -39,6 +40,10 @@ final class UpdatePurchaseOrderRequest extends FormRequest
             'items.*.quantity' => ['required_with:items', 'integer', 'min:1'],
             'items.*.unit_cost' => ['required_with:items', 'numeric', 'decimal:0,2', 'min:0'],
             'items.*.supplier_sku' => ['nullable', 'string', 'max:255'],
+            // Optional: enter a rate (manual), accept a stale one (confirm) or
+            // take the provider's again (auto). Needs
+            // override_purchase_order_exchange_rate for manual and confirm.
+            ...PurchaseOrderExchangeRates::rules(),
         ];
     }
 

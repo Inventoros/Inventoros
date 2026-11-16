@@ -11,7 +11,10 @@ use App\Models\Inventory\StockAdjustment;
 use App\Models\Inventory\Supplier;
 use App\Models\Scopes\OrganizationScope;
 use App\Models\User;
+use App\Services\ExchangeRates\ExchangeRateProviderRegistry;
 use App\Support\ApprovalSettings;
+use App\Support\ExchangeMath;
+use App\Support\Money;
 use App\Support\SequenceNumber;
 use App\Support\SequenceNumberRetry;
 use App\Traits\LogsActivity;
@@ -25,6 +28,7 @@ use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use LogicException;
 
 /**
  * Represents a purchase order in the system.
@@ -52,6 +56,19 @@ use Illuminate\Support\Facades\DB;
  * @property string $shipping
  * @property string $total
  * @property string|null $currency
+ * @property string|null $exchange_rate 1 exchange_rate_from = this many exchange_rate_to
+ * @property string|null $exchange_rate_from The PO currency the rate converts from
+ * @property string|null $exchange_rate_to The organization currency it converts to
+ * @property string|null $exchange_rate_provider
+ * @property Carbon|null $exchange_rate_effective_date
+ * @property Carbon|null $exchange_rate_retrieved_at
+ * @property string|null $exchange_rate_source provider, fallback, confirmed or manual
+ * @property int|null $exchange_rate_set_by
+ * @property Carbon|null $exchange_rate_locked_at
+ * @property string|null $converted_subtotal
+ * @property string|null $converted_tax
+ * @property string|null $converted_shipping
+ * @property string|null $converted_total
  * @property string|null $notes
  * @property array|null $metadata
  * @property Carbon|null $created_at
@@ -64,6 +81,7 @@ use Illuminate\Support\Facades\DB;
  * @property-read User|null $creator
  * @property-read User|null $approver
  * @property-read User|null $approvalRequester
+ * @property-read User|null $exchangeRateSetter
  * @property-read Collection|PurchaseOrderItem[] $items
  * @property-read Collection|StockAdjustment[] $stockAdjustments
  */
@@ -110,6 +128,14 @@ class PurchaseOrder extends Model
         'tax' => 'decimal:2',
         'shipping' => 'decimal:2',
         'total' => 'decimal:2',
+        'exchange_rate' => 'decimal:10',
+        'exchange_rate_effective_date' => 'date',
+        'exchange_rate_retrieved_at' => 'datetime',
+        'exchange_rate_locked_at' => 'datetime',
+        'converted_subtotal' => 'decimal:2',
+        'converted_tax' => 'decimal:2',
+        'converted_shipping' => 'decimal:2',
+        'converted_total' => 'decimal:2',
         'metadata' => 'array',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
@@ -146,10 +172,60 @@ class PurchaseOrder extends Model
      */
     public const APPROVED_TERMS = [
         'supplier_id', 'subtotal', 'tax', 'shipping', 'total', 'currency',
+        'exchange_rate', 'converted_total',
+    ];
+
+    /**
+     * Where a PO's exchange rate came from.
+     */
+    public const RATE_SOURCE_PROVIDER = 'provider';
+
+    public const RATE_SOURCE_FALLBACK = 'fallback';
+
+    public const RATE_SOURCE_CONFIRMED = 'confirmed';
+
+    public const RATE_SOURCE_MANUAL = 'manual';
+
+    /**
+     * The exchange rate snapshot. Locked (unchangeable) once the PO leaves
+     * draft; the converted totals follow the rate and the PO totals.
+     *
+     * @var array<int, string>
+     */
+    public const EXCHANGE_RATE_SNAPSHOT = [
+        'exchange_rate', 'exchange_rate_from', 'exchange_rate_to', 'exchange_rate_provider',
+        'exchange_rate_effective_date', 'exchange_rate_retrieved_at', 'exchange_rate_source',
+        'exchange_rate_set_by', 'converted_subtotal', 'converted_tax', 'converted_shipping', 'converted_total',
     ];
 
     protected static function booted(): void
     {
+        static::saving(function (PurchaseOrder $po): void {
+            if ($po->getOriginal('exchange_rate_locked_at') !== null) {
+                // A locked snapshot is history: later rate updates, edits or
+                // code paths may never rewrite it.
+                if ($po->isDirty([...self::EXCHANGE_RATE_SNAPSHOT, 'exchange_rate_locked_at'])) {
+                    throw new LogicException("The exchange rate of purchase order {$po->po_number} is locked and cannot change.");
+                }
+
+                return;
+            }
+
+            $po->syncConvertedTotals();
+        });
+
+        static::updating(function (PurchaseOrder $po): void {
+            // Leaving draft (sent to the supplier) finalizes the PO: its
+            // exchange rate, when it has one, is locked from here on.
+            if ($po->isDirty('status')
+                && $po->getOriginal('status') === self::STATUS_DRAFT
+                && ! in_array($po->status, [self::STATUS_DRAFT, self::STATUS_CANCELLED], true)
+                && $po->exchange_rate !== null
+                && $po->exchange_rate_locked_at === null) {
+                $po->exchange_rate_locked_at = now();
+            }
+        });
+
         static::updating(function (PurchaseOrder $po): void {
             if ($po->status === self::STATUS_DRAFT
                 && $po->getOriginal('approval_status') === self::APPROVAL_APPROVED
@@ -218,6 +294,162 @@ class PurchaseOrder extends Model
     public function approvalRequester(): BelongsTo
     {
         return $this->belongsTo(User::class, 'approval_requested_by');
+    }
+
+    /**
+     * The user who entered or confirmed this PO's exchange rate.
+     *
+     * @return BelongsTo<User, $this>
+     */
+    public function exchangeRateSetter(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'exchange_rate_set_by');
+    }
+
+    /**
+     * The organization currency this PO is valued in: the snapshot's target
+     * currency, else the organization's current currency.
+     */
+    public function organizationCurrency(): string
+    {
+        if ($this->exchange_rate_to !== null && $this->exchange_rate_to !== '') {
+            return strtoupper($this->exchange_rate_to);
+        }
+
+        $organization = $this->relationLoaded('organization') ? $this->organization : null;
+
+        return $organization instanceof Organization
+            ? $organization->baseCurrency()
+            : Organization::currencyFor($this->organization_id);
+    }
+
+    /**
+     * Whether the PO is in a currency other than the organization's.
+     */
+    public function isForeignCurrency(): bool
+    {
+        $currency = strtoupper(trim((string) $this->currency));
+
+        return $currency !== '' && $currency !== $this->organizationCurrency();
+    }
+
+    public function hasExchangeRate(): bool
+    {
+        return $this->exchange_rate !== null;
+    }
+
+    /**
+     * Whether the exchange rate snapshot can no longer change.
+     */
+    public function exchangeRateIsLocked(): bool
+    {
+        return $this->exchange_rate_locked_at !== null;
+    }
+
+    /**
+     * A foreign-currency PO without a rate (an older PO, or one saved while
+     * no rate was available) can have one recorded once, while it is with
+     * the supplier, by someone allowed to override rates.
+     */
+    public function canRecordExchangeRate(): bool
+    {
+        return $this->isForeignCurrency()
+            && ! $this->hasExchangeRate()
+            && in_array($this->status, [self::STATUS_SENT, self::STATUS_PARTIAL], true);
+    }
+
+    /**
+     * $amount (in the PO currency) in the organization's currency: as is for
+     * a PO in that currency, at the snapshot rate otherwise, null when no
+     * rate was recorded (never an invented one).
+     */
+    public function toOrganizationCurrency(int|float|string|null $amount): ?string
+    {
+        if (! $this->isForeignCurrency()) {
+            return Money::of($amount);
+        }
+
+        if (! $this->hasExchangeRate()) {
+            return null;
+        }
+
+        return ExchangeMath::convert($amount, (string) $this->exchange_rate, $this->organizationCurrency());
+    }
+
+    /**
+     * The PO total in the organization's currency, or null when it is in a
+     * foreign currency with no rate recorded.
+     */
+    public function organizationCurrencyTotal(): ?string
+    {
+        if (! $this->isForeignCurrency()) {
+            return Money::of($this->total);
+        }
+
+        return $this->converted_total !== null ? Money::of($this->converted_total) : null;
+    }
+
+    /**
+     * Recompute the converted totals from the rate and the PO totals.
+     */
+    public function syncConvertedTotals(): void
+    {
+        if ($this->exchange_rate === null) {
+            $this->converted_subtotal = null;
+            $this->converted_tax = null;
+            $this->converted_shipping = null;
+            $this->converted_total = null;
+
+            return;
+        }
+
+        $to = $this->organizationCurrency();
+        $rate = (string) $this->exchange_rate;
+
+        $this->converted_subtotal = ExchangeMath::convert($this->subtotal, $rate, $to);
+        $this->converted_tax = ExchangeMath::convert($this->tax, $rate, $to);
+        $this->converted_shipping = ExchangeMath::convert($this->shipping, $rate, $to);
+        // The total is converted as a whole (not summed from the converted
+        // parts) so it is exactly the rate applied to the supplier's total.
+        $this->converted_total = ExchangeMath::convert($this->total, $rate, $to);
+    }
+
+    /**
+     * The exchange rate information shown on the PO page and returned by
+     * the REST, GraphQL and MCP surfaces.
+     *
+     * @return array<string, mixed>
+     */
+    public function exchangeRateSummary(): array
+    {
+        $foreign = $this->isForeignCurrency();
+        $registry = app(ExchangeRateProviderRegistry::class);
+
+        return [
+            'organization_currency' => $this->organizationCurrency(),
+            'is_foreign_currency' => $foreign,
+            'status' => ! $foreign ? 'same_currency' : ($this->hasExchangeRate() ? 'recorded' : 'not_recorded'),
+            'rate' => $this->hasExchangeRate() ? ExchangeMath::rate((string) $this->exchange_rate) : null,
+            'from' => $this->exchange_rate_from,
+            'to' => $this->exchange_rate_to,
+            'provider' => $this->exchange_rate_provider,
+            'provider_name' => $registry->nameFor($this->exchange_rate_provider),
+            'provider_available' => $this->exchange_rate_provider === null || $registry->has($this->exchange_rate_provider),
+            'effective_date' => $this->exchange_rate_effective_date?->format('Y-m-d'),
+            'retrieved_at' => $this->exchange_rate_retrieved_at?->toIso8601String(),
+            'source' => $this->exchange_rate_source,
+            'is_manual' => in_array($this->exchange_rate_source, [self::RATE_SOURCE_MANUAL, self::RATE_SOURCE_CONFIRMED], true),
+            'set_by' => $this->exchange_rate_set_by,
+            'set_by_name' => $this->exchange_rate_set_by !== null ? $this->exchangeRateSetter?->name : null,
+            'locked' => $this->exchangeRateIsLocked(),
+            'locked_at' => $this->exchange_rate_locked_at?->toIso8601String(),
+            'converted' => [
+                'subtotal' => $foreign ? $this->converted_subtotal : Money::of($this->subtotal),
+                'tax' => $foreign ? $this->converted_tax : Money::of($this->tax),
+                'shipping' => $foreign ? $this->converted_shipping : Money::of($this->shipping),
+                'total' => $this->organizationCurrencyTotal(),
+            ],
+        ];
     }
 
     /**
@@ -359,8 +591,13 @@ class PurchaseOrder extends Model
     {
         $organization = $this->relationLoaded('organization') ? $this->organization : $this->organization_id;
 
+        // Judged in the organization's currency, the currency the threshold
+        // is set in. A foreign-currency PO with no rate recorded cannot be
+        // shown to be under the threshold, so it needs approval.
+        $total = $this->organizationCurrencyTotal();
+
         return ApprovalSettings::forOrganization($organization)
-            ->purchaseOrderNeedsApproval((float) $this->total);
+            ->purchaseOrderNeedsApproval($total === null ? null : (float) $total);
     }
 
     /**

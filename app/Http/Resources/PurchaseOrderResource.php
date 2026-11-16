@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Resources;
 
 use App\Models\Purchasing\PurchaseOrder;
+use App\Support\ExchangeMath;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -42,6 +43,25 @@ class PurchaseOrderResource extends JsonResource
             'shipping' => $this->shipping,
             'total' => $this->total,
             'currency' => $this->currency,
+            // Exchange rate snapshot (1 exchange_rate_from = exchange_rate
+            // exchange_rate_to, the organization currency). Null rate on a
+            // PO in the organization's currency, or a foreign-currency PO
+            // with no rate recorded.
+            'organization_currency' => $this->organizationCurrency(),
+            'exchange_rate' => $this->exchange_rate !== null ? ExchangeMath::rate((string) $this->exchange_rate) : null,
+            'exchange_rate_from' => $this->exchange_rate_from,
+            'exchange_rate_to' => $this->exchange_rate_to,
+            'exchange_rate_provider' => $this->exchange_rate_provider,
+            'exchange_rate_effective_date' => $this->exchange_rate_effective_date?->format('Y-m-d'),
+            'exchange_rate_retrieved_at' => $this->exchange_rate_retrieved_at?->toIso8601String(),
+            'exchange_rate_source' => $this->exchange_rate_source,
+            'exchange_rate_set_by' => $this->exchange_rate_set_by,
+            'exchange_rate_locked_at' => $this->exchange_rate_locked_at?->toIso8601String(),
+            'converted_subtotal' => $this->converted_subtotal,
+            'converted_tax' => $this->converted_tax,
+            'converted_shipping' => $this->converted_shipping,
+            'converted_total' => $this->converted_total,
+            'organization_currency_total' => $this->organizationCurrencyTotal(),
             'notes' => $this->notes,
             'metadata' => $this->metadata,
             'can_be_edited' => $this->canBeEdited(),

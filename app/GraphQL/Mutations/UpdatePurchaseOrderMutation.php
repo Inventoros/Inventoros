@@ -42,6 +42,8 @@ class UpdatePurchaseOrderMutation extends Mutation
             'shipping' => ['type' => Type::float(), 'description' => 'Shipping cost'],
             'tax' => ['type' => Type::float(), 'description' => 'Tax'],
             'notes' => ['type' => Type::string(), 'description' => 'Notes'],
+            'exchange_rate_mode' => ['type' => Type::string(), 'description' => 'For a currency other than the organization\'s: auto (provider rate), manual (use exchange_rate) or confirm (accept a stale provider rate). manual and confirm need override_purchase_order_exchange_rate'],
+            'exchange_rate' => ['type' => Type::string(), 'description' => 'Exchange rate as a decimal string (1 PO currency = this many organization currency), for exchange_rate_mode manual'],
             'items' => ['type' => Type::listOf(Type::nonNull(GraphQL::type('PurchaseOrderItemInput'))), 'description' => 'Replacement lines'],
         ];
     }
@@ -58,7 +60,7 @@ class UpdatePurchaseOrderMutation extends Mutation
 
         $data = collect($args)->except('id')->all();
 
-        $updated = $this->attempt(fn () => app(PurchaseOrderService::class)->update($purchaseOrder, $this->organizationId(), $data));
+        $updated = $this->attempt(fn () => app(PurchaseOrderService::class)->update($purchaseOrder, $this->organizationId(), $data, $this->actor()));
 
         return $updated->load(['supplier', 'items']);
     }

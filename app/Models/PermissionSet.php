@@ -251,6 +251,7 @@ class PermissionSet extends Model
                     Permission::CREATE_PURCHASE_ORDERS->value,
                     Permission::EDIT_PURCHASE_ORDERS->value,
                     Permission::RECEIVE_PURCHASE_ORDERS->value,
+                    Permission::OVERRIDE_PURCHASE_ORDER_EXCHANGE_RATE->value,
                 ],
             ],
             [

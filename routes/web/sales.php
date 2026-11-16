@@ -51,6 +51,7 @@ Route::get('/purchase-orders', [PurchaseOrderController::class, 'index'])->name(
 Route::get('/purchase-orders/create', [PurchaseOrderController::class, 'create'])->name('purchase-orders.create')->middleware('permission:create_purchase_orders');
 Route::post('/purchase-orders', [PurchaseOrderController::class, 'store'])->name('purchase-orders.store')->middleware('permission:create_purchase_orders');
 Route::post('/purchase-orders/quick-reorder', [QuickReorderController::class, 'store'])->name('purchase-orders.quick-reorder')->middleware('permission:create_purchase_orders');
+Route::get('/purchase-orders/exchange-rate', [PurchaseOrderController::class, 'exchangeRateQuote'])->name('purchase-orders.exchange-rate')->middleware('permission:create_purchase_orders|edit_purchase_orders');
 Route::get('/purchase-orders/{purchaseOrder}', [PurchaseOrderController::class, 'show'])->name('purchase-orders.show')->middleware('permission:view_purchase_orders');
 Route::get('/purchase-orders/{purchaseOrder}/edit', [PurchaseOrderController::class, 'edit'])->name('purchase-orders.edit')->middleware('permission:edit_purchase_orders');
 Route::put('/purchase-orders/{purchaseOrder}', [PurchaseOrderController::class, 'update'])->name('purchase-orders.update')->middleware('permission:edit_purchase_orders');
@@ -62,6 +63,7 @@ Route::post('/purchase-orders/{purchaseOrder}/send', [PurchaseOrderController::c
 Route::post('/purchase-orders/{purchaseOrder}/mark-sent', [PurchaseOrderController::class, 'markSent'])->name('purchase-orders.mark-sent')->middleware('permission:edit_purchase_orders');
 Route::post('/purchase-orders/{purchaseOrder}/submit-for-approval', [PurchaseOrderController::class, 'submitForApproval'])->name('purchase-orders.submit-approval')->middleware('permission:edit_purchase_orders');
 Route::post('/purchase-orders/{purchaseOrder}/cancel', [PurchaseOrderController::class, 'cancel'])->name('purchase-orders.cancel')->middleware('permission:edit_purchase_orders');
+Route::post('/purchase-orders/{purchaseOrder}/exchange-rate', [PurchaseOrderController::class, 'recordExchangeRate'])->name('purchase-orders.exchange-rate.record')->middleware('permission:edit_purchase_orders|override_purchase_order_exchange_rate,all');
 
 // Purchase Order Invoice PDF
 Route::get('/purchase-orders/{purchaseOrder}/invoice/download', [PurchaseOrderInvoiceController::class, 'download'])->name('purchase-orders.invoice.download')->middleware('permission:view_purchase_orders');

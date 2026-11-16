@@ -56,6 +56,7 @@ enum Permission: string
     case DELETE_PURCHASE_ORDERS = 'delete_purchase_orders';
     case RECEIVE_PURCHASE_ORDERS = 'receive_purchase_orders';
     case APPROVE_PURCHASE_ORDERS = 'approve_purchase_orders';
+    case OVERRIDE_PURCHASE_ORDER_EXCHANGE_RATE = 'override_purchase_order_exchange_rate';
 
     // Order Management
     case VIEW_ORDERS = 'view_orders';
@@ -72,6 +73,7 @@ enum Permission: string
     case VIEW_SETTINGS = 'view_settings';
     case EDIT_SETTINGS = 'edit_settings';
     case MANAGE_ORGANIZATION = 'manage_organization';
+    case MANAGE_EXCHANGE_RATES = 'manage_exchange_rates';
 
     // Plugins
     case VIEW_PLUGINS = 'view_plugins';
@@ -150,6 +152,7 @@ enum Permission: string
             self::DELETE_PURCHASE_ORDERS => 'Delete Purchase Orders',
             self::RECEIVE_PURCHASE_ORDERS => 'Receive Purchase Orders',
             self::APPROVE_PURCHASE_ORDERS => 'Approve Purchase Orders',
+            self::OVERRIDE_PURCHASE_ORDER_EXCHANGE_RATE => 'Override Purchase Order Exchange Rates',
 
             self::VIEW_ORDERS => 'View Orders',
             self::CREATE_ORDERS => 'Create Orders',
@@ -169,6 +172,7 @@ enum Permission: string
             self::VIEW_SETTINGS => 'View Settings',
             self::EDIT_SETTINGS => 'Edit Settings',
             self::MANAGE_ORGANIZATION => 'Manage Organization',
+            self::MANAGE_EXCHANGE_RATES => 'Manage Exchange Rates',
 
             self::VIEW_PLUGINS => 'View Plugins',
             self::MANAGE_PLUGINS => 'Manage Plugins',
@@ -235,6 +239,7 @@ enum Permission: string
             self::DELETE_PURCHASE_ORDERS => 'Can delete purchase orders',
             self::RECEIVE_PURCHASE_ORDERS => 'Can receive items from purchase orders',
             self::APPROVE_PURCHASE_ORDERS => 'Can approve or reject purchase orders that need approval before they are sent',
+            self::OVERRIDE_PURCHASE_ORDER_EXCHANGE_RATE => 'Can enter a purchase order exchange rate by hand or accept a stale one',
 
             self::VIEW_ORDERS => 'Can view orders',
             self::CREATE_ORDERS => 'Can create new orders',
@@ -254,6 +259,7 @@ enum Permission: string
             self::VIEW_SETTINGS => 'Can view system settings',
             self::EDIT_SETTINGS => 'Can modify system settings',
             self::MANAGE_ORGANIZATION => 'Can manage organization details',
+            self::MANAGE_EXCHANGE_RATES => 'Can choose the exchange rate provider, synchronize rates and enter manual rates',
 
             self::VIEW_PLUGINS => 'Can view installed plugins',
             self::MANAGE_PLUGINS => 'Can install, activate, and delete plugins',
@@ -295,7 +301,7 @@ enum Permission: string
             self::VIEW_SUPPLIERS, self::CREATE_SUPPLIERS, self::EDIT_SUPPLIERS, self::DELETE_SUPPLIERS => 'Supplier Management',
             self::VIEW_PURCHASE_ORDERS, self::CREATE_PURCHASE_ORDERS, self::EDIT_PURCHASE_ORDERS,
             self::DELETE_PURCHASE_ORDERS, self::RECEIVE_PURCHASE_ORDERS,
-            self::APPROVE_PURCHASE_ORDERS => 'Purchase Order Management',
+            self::APPROVE_PURCHASE_ORDERS, self::OVERRIDE_PURCHASE_ORDER_EXCHANGE_RATE => 'Purchase Order Management',
             self::VIEW_ORDERS, self::CREATE_ORDERS, self::EDIT_ORDERS, self::DELETE_ORDERS,
             self::APPROVE_ORDERS => 'Order Management',
             self::VIEW_PAYMENTS, self::RECORD_PAYMENTS => 'Payments',
@@ -303,7 +309,7 @@ enum Permission: string
             self::DELETE_WAREHOUSES, self::MANAGE_WAREHOUSE_USERS, self::ACCESS_ALL_WAREHOUSES => 'Warehouse Management',
             self::MANAGE_RETURNS => 'Returns Management',
             self::VIEW_SHIPMENTS, self::CREATE_SHIPMENTS => 'Shipping',
-            self::VIEW_SETTINGS, self::EDIT_SETTINGS, self::MANAGE_ORGANIZATION => 'Settings',
+            self::VIEW_SETTINGS, self::EDIT_SETTINGS, self::MANAGE_ORGANIZATION, self::MANAGE_EXCHANGE_RATES => 'Settings',
             self::VIEW_PLUGINS, self::MANAGE_PLUGINS => 'Plugins',
             self::VIEW_REPORTS, self::EXPORT_DATA, self::IMPORT_DATA, self::VIEW_ACTIVITY_LOG => 'Reports & Data',
         };

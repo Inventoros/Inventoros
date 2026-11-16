@@ -6,6 +6,7 @@ namespace App\GraphQL\Types;
 
 use App\GraphQL\Support\ListResourceLimits;
 use App\Models\Purchasing\PurchaseOrder;
+use App\Support\ExchangeMath;
 use GraphQL\Type\Definition\Type;
 use Rebing\GraphQL\Support\Facades\GraphQL;
 use Rebing\GraphQL\Support\Type as GraphQLType;
@@ -94,6 +95,72 @@ class PurchaseOrderType extends GraphQLType
             'currency' => [
                 'type' => Type::string(),
                 'description' => 'Currency code',
+            ],
+            'organization_currency' => [
+                'type' => Type::string(),
+                'description' => 'The organization currency the PO is valued in',
+                'resolve' => fn (PurchaseOrder $po) => $po->organizationCurrency(),
+            ],
+            'exchange_rate' => [
+                'type' => Type::string(),
+                'description' => 'Exchange rate snapshot as a decimal string: 1 exchange_rate_from = exchange_rate exchange_rate_to. Null for a PO in the organization currency, or a foreign-currency PO with no rate recorded',
+                'resolve' => fn (PurchaseOrder $po) => $po->exchange_rate !== null ? ExchangeMath::rate((string) $po->exchange_rate) : null,
+            ],
+            'exchange_rate_from' => [
+                'type' => Type::string(),
+                'description' => 'Currency the rate converts from (the PO currency)',
+            ],
+            'exchange_rate_to' => [
+                'type' => Type::string(),
+                'description' => 'Currency the rate converts to (the organization currency)',
+            ],
+            'exchange_rate_provider' => [
+                'type' => Type::string(),
+                'description' => 'Provider id the rate came from (null for a rate entered by hand)',
+            ],
+            'exchange_rate_effective_date' => [
+                'type' => Type::string(),
+                'description' => 'Date the rate is for (YYYY-MM-DD)',
+                'resolve' => fn (PurchaseOrder $po) => $po->exchange_rate_effective_date?->format('Y-m-d'),
+            ],
+            'exchange_rate_retrieved_at' => [
+                'type' => Type::string(),
+                'description' => 'When the rate was retrieved or entered',
+                'resolve' => fn (PurchaseOrder $po) => $po->exchange_rate_retrieved_at?->toIso8601String(),
+            ],
+            'exchange_rate_source' => [
+                'type' => Type::string(),
+                'description' => 'provider, fallback, confirmed (a stale rate a user accepted) or manual',
+            ],
+            'exchange_rate_set_by' => [
+                'type' => Type::int(),
+                'description' => 'User who entered or confirmed the rate',
+            ],
+            'exchange_rate_locked_at' => [
+                'type' => Type::string(),
+                'description' => 'When the rate was locked (the PO left draft); it never changes after',
+                'resolve' => fn (PurchaseOrder $po) => $po->exchange_rate_locked_at?->toIso8601String(),
+            ],
+            'converted_subtotal' => [
+                'type' => Type::float(),
+                'description' => 'Subtotal in the organization currency',
+            ],
+            'converted_tax' => [
+                'type' => Type::float(),
+                'description' => 'Tax in the organization currency',
+            ],
+            'converted_shipping' => [
+                'type' => Type::float(),
+                'description' => 'Shipping in the organization currency',
+            ],
+            'converted_total' => [
+                'type' => Type::float(),
+                'description' => 'Total in the organization currency (null without a rate)',
+            ],
+            'organization_currency_total' => [
+                'type' => Type::float(),
+                'description' => 'Total in the organization currency: the total itself for a PO in that currency, the converted total otherwise, null when no rate was recorded',
+                'resolve' => fn (PurchaseOrder $po) => ($total = $po->organizationCurrencyTotal()) === null ? null : (float) $total,
             ],
             'notes' => [
                 'type' => Type::string(),
