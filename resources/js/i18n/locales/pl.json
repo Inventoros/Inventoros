@@ -2818,6 +2818,9 @@
       "listLabel": "Organizacje",
       "heading": "Zmień organizację"
     },
+    "emptyState": {
+      "filteredHint": "Spr?buj innego wyszukiwania lub wyczy?? filtry."
+    },
     "dataTable": {
       "noData": "Brak danych."
     },
@@ -3978,7 +3981,8 @@
       "from": "Z",
       "to": "Do",
       "items": "Pozycje",
-      "empty": "Nie znaleziono przesunięć magazynowych. Utwórz pierwsze przesunięcie, aby przenieść zapasy między lokalizacjami.",
+      "empty": "Brak przesuni?? magazynowych",
+      "emptyHint": "Utw?rz przesuni?cie, aby przenie?? zapasy mi?dzy lokalizacjami.",
       "itemCount": "Pozycje: {count} | Pozycje: {count}",
       "showingTransfers": "Wyświetlanie {from} do {to} z {total} przesunięć"
     },

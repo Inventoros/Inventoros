@@ -2818,6 +2818,9 @@
       "listLabel": "Kuruluşlar",
       "heading": "Kuruluş değiştir"
     },
+    "emptyState": {
+      "filteredHint": "Ba?ka bir arama deneyin veya filtreleri temizleyin."
+    },
     "dataTable": {
       "noData": "Veri yok."
     },
@@ -3978,7 +3981,8 @@
       "from": "Kaynak",
       "to": "Hedef",
       "items": "Kalemler",
-      "empty": "Stok transferi bulunamadı. Envanteri konumlar arasında taşımak için ilk transferinizi oluşturun.",
+      "empty": "Hen?z stok transferi yok",
+      "emptyHint": "Konumlar aras?nda stok ta??mak i?in bir transfer olu?turun.",
       "itemCount": "{count} kalem | {count} kalem",
       "showingTransfers": "{from} ile {to} arası, toplam {total} transfer"
     },

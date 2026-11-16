@@ -2818,6 +2818,9 @@
       "listLabel": "Organisations",
       "heading": "Changer d'organisation"
     },
+    "emptyState": {
+      "filteredHint": "Essayez une autre recherche ou effacez les filtres."
+    },
     "dataTable": {
       "noData": "Aucune donnée."
     },
@@ -3978,7 +3981,8 @@
       "from": "De",
       "to": "Vers",
       "items": "Articles",
-      "empty": "Aucun transfert de stock trouvé. Créez votre premier transfert pour déplacer l'inventaire entre emplacements.",
+      "empty": "Aucun transfert de stock pour le moment",
+      "emptyHint": "Cr?ez un transfert pour d?placer le stock entre les emplacements.",
       "itemCount": "{count} article | {count} articles",
       "showingTransfers": "Affichage de {from} à {to} sur {total} transferts"
     },

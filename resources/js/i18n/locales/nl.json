@@ -2818,6 +2818,9 @@
       "listLabel": "Organisaties",
       "heading": "Wisselen van organisatie"
     },
+    "emptyState": {
+      "filteredHint": "Probeer een andere zoekopdracht of wis de filters."
+    },
     "dataTable": {
       "noData": "Geen gegevens."
     },
@@ -3978,7 +3981,8 @@
       "from": "Van",
       "to": "Naar",
       "items": "Artikelen",
-      "empty": "Geen voorraadoverboekingen gevonden. Maak uw eerste overboeking aan om voorraad tussen locaties te verplaatsen.",
+      "empty": "Nog geen voorraadverplaatsingen",
+      "emptyHint": "Maak een verplaatsing aan om voorraad tussen locaties te verplaatsen.",
       "itemCount": "{count} artikel | {count} artikelen",
       "showingTransfers": "{from} tot {to} van {total} overboekingen"
     },

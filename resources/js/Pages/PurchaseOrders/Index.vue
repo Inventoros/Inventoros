@@ -4,6 +4,7 @@ import TableFilters from '@/Components/ui/TableFilters.vue';
 import PluginSlot from '@/Components/PluginSlot.vue';
 import PageHeader from '@/Components/ui/PageHeader.vue';
 import Button from '@/Components/ui/Button.vue';
+import EmptyState from '@/Components/ui/EmptyState.vue';
 import Badge from '@/Components/ui/Badge.vue';
 import DataTable from '@/Components/ui/DataTable.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
@@ -187,15 +188,20 @@ const selectClass =
                     </div>
                 </template>
                 <template #empty>
-                    <div class="flex flex-col items-center gap-3 py-10">
-                        <ClipboardList :size="22" class="text-text-tertiary" />
-                        <p class="text-sm font-medium text-text-secondary">{{ t('purchaseOrders.noPoFound') }}</p>
-                        <p class="text-sm text-text-tertiary">{{ t('purchaseOrders.getStarted') }}</p>
-                        <Button v-if="canVisit('purchase-orders.create')" variant="default" size="sm" as="Link" :href="route('purchase-orders.create')">
-                            <Plus :size="14" />
-                            {{ t('purchaseOrders.createPo') }}
-                        </Button>
-                    </div>
+                    <EmptyState
+                        :icon="ClipboardList"
+                        :title="t('purchaseOrders.noPoFound')"
+                        :description="canVisit('purchase-orders.create') ? t('purchaseOrders.getStarted') : null"
+                        :filtered="Boolean(filters?.search || filters?.status || filters?.supplier_id)"
+                        @clear="clearFilters"
+                    >
+                        <template #actions>
+                            <Button v-if="canVisit('purchase-orders.create')" variant="default" size="md" as="Link" :href="route('purchase-orders.create')">
+                                <Plus :size="14" />
+                                {{ t('purchaseOrders.createPo') }}
+                            </Button>
+                        </template>
+                    </EmptyState>
                 </template>
 
                 <template #footer>

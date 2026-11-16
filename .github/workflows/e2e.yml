@@ -70,6 +70,7 @@ jobs:
             e2e/tests/plugins.spec.ts \
             e2e/tests/mobile-layout.spec.ts \
             e2e/tests/table-viewport.spec.ts \
+            e2e/tests/feature-empty-states.spec.ts \
             e2e/tests/feature-section-tabs.spec.ts \
             e2e/tests/ui-foundations.spec.ts \
             e2e/tests/account-navigation.spec.ts \

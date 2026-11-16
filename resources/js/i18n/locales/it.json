@@ -2818,6 +2818,9 @@
       "listLabel": "Organizzazioni",
       "heading": "Cambia organizzazione"
     },
+    "emptyState": {
+      "filteredHint": "Prova un?altra ricerca o cancella i filtri."
+    },
     "dataTable": {
       "noData": "Nessun dato."
     },
@@ -3978,7 +3981,8 @@
       "from": "Da",
       "to": "A",
       "items": "Articoli",
-      "empty": "Nessun trasferimento di scorte trovato. Crea il tuo primo trasferimento per spostare l'inventario tra ubicazioni.",
+      "empty": "Nessun trasferimento di scorte",
+      "emptyHint": "Crea un trasferimento per spostare le scorte tra le ubicazioni.",
       "itemCount": "{count} articolo | {count} articoli",
       "showingTransfers": "Visualizzazione da {from} a {to} di {total} trasferimenti"
     },

@@ -2818,6 +2818,9 @@
       "listLabel": "Organisationen",
       "heading": "Organisation wechseln"
     },
+    "emptyState": {
+      "filteredHint": "Versuche eine andere Suche oder l?sche die Filter."
+    },
     "dataTable": {
       "noData": "Keine Daten."
     },
@@ -3978,7 +3981,8 @@
       "from": "Von",
       "to": "Nach",
       "items": "Artikel",
-      "empty": "Keine Umlagerungen gefunden. Erstellen Sie Ihre erste Umlagerung, um Bestand zwischen Lagerorten zu bewegen.",
+      "empty": "Noch keine Lagerumbuchungen",
+      "emptyHint": "Erstelle eine Umbuchung, um Bestand zwischen Standorten zu verschieben.",
       "itemCount": "{count} Artikel | {count} Artikel",
       "showingTransfers": "Anzeige {from} bis {to} von {total} Umlagerungen"
     },

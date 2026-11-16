@@ -2,7 +2,6 @@
 import { computed } from 'vue';
 import { Link } from '@inertiajs/vue3';
 import { cn } from '@/lib/utils';
-import { useI18n } from 'vue-i18n';
 import TableViewport from '@/Components/ui/TableViewport.vue';
 
 /**
@@ -23,8 +22,6 @@ const props = defineProps({
     dense: { type: Boolean, default: false },
 });
 
-const { t } = useI18n();
-
 const emit = defineEmits(['row-click']);
 
 const keyOf = (row, idx) => {
@@ -42,7 +39,7 @@ const cellPadding = computed(() => (props.dense ? 'px-3 py-2' : 'px-4 py-3'));
 </script>
 
 <template>
-    <TableViewport class="w-full rounded-lg border border-border-subtle bg-surface-raised">
+    <TableViewport :empty="rows.length === 0" class="w-full rounded-lg border border-border-subtle bg-surface-raised">
         <table class="w-full text-sm">
             <thead>
                 <tr class="border-b border-border-subtle">
@@ -92,15 +89,9 @@ const cellPadding = computed(() => (props.dense ? 'px-3 py-2' : 'px-4 py-3'));
                     </td>
                 </tr>
 
-                <tr v-if="rows.length === 0">
-                    <td :colspan="columns.length" class="px-4 py-12 text-center">
-                        <slot name="empty">
-                            <p class="text-sm text-text-tertiary">{{ t('components.dataTable.noData') }}</p>
-                        </slot>
-                    </td>
-                </tr>
             </tbody>
         </table>
+        <template v-if="$slots.empty" #empty><slot name="empty" /></template>
         <template v-if="$slots.footer" #footer><slot name="footer" /></template>
     </TableViewport>
 </template>

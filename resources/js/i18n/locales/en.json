@@ -2689,6 +2689,9 @@
       "listLabel": "Organizations",
       "heading": "Switch organization"
     },
+    "emptyState": {
+      "filteredHint": "Try another search or clear the filters."
+    },
     "dataTable": {
       "noData": "No data."
     },
@@ -3978,7 +3981,8 @@
       "from": "From",
       "to": "To",
       "items": "Items",
-      "empty": "No stock transfers found. Create your first transfer to move inventory between locations.",
+      "empty": "No stock transfers yet",
+      "emptyHint": "Create a transfer to move inventory between locations.",
       "itemCount": "{count} item | {count} items",
       "showingTransfers": "Showing {from} to {to} of {total} transfers"
     },

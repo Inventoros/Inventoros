@@ -5,6 +5,7 @@ import TableFilters from '@/Components/ui/TableFilters.vue';
 import TableViewport from '@/Components/ui/TableViewport.vue';
 import PageHeader from '@/Components/ui/PageHeader.vue';
 import Button from '@/Components/ui/Button.vue';
+import EmptyState from '@/Components/ui/EmptyState.vue';
 import Badge from '@/Components/ui/Badge.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { ref } from 'vue';
@@ -39,6 +40,11 @@ const searchWarehouses = () => {
         preserveState: true,
         preserveScroll: true,
     });
+};
+
+const clearFilters = () => {
+    search.value = '';
+    searchWarehouses();
 };
 
 const makeDefault = (warehouse) => {
@@ -100,7 +106,7 @@ const thClass =
         </TableFilters>
 
         <!-- Warehouses table -->
-        <TableViewport class="mt-4 w-full overflow-x-auto rounded-lg border border-border-subtle bg-surface-raised">
+        <TableViewport :empty="!warehouses.data?.length" class="mt-4 w-full overflow-x-auto rounded-lg border border-border-subtle bg-surface-raised">
             <table class="w-full text-sm">
                 <thead>
                     <tr class="border-b border-border-subtle">
@@ -114,19 +120,6 @@ const thClass =
                     </tr>
                 </thead>
                 <tbody>
-                    <tr v-if="warehouses.data.length === 0">
-                        <td colspan="7" class="px-4 py-12 text-center">
-                            <div class="flex flex-col items-center gap-3">
-                                <Warehouse :size="22" class="text-text-tertiary" />
-                                <p class="text-sm font-medium text-text-primary">{{ t('warehouses.noWarehouses') }}</p>
-                                <p class="text-sm text-text-tertiary">{{ t('warehouses.noWarehousesHint') }}</p>
-                                <Button v-if="hasPermission('create_warehouses')" variant="default" size="sm" as="Link" :href="route('warehouses.create')">
-                                    <Plus :size="14" />
-                                    {{ t('warehouses.addWarehouse') }}
-                                </Button>
-                            </div>
-                        </td>
-                    </tr>
                     <tr v-for="warehouse in warehouses.data" :key="warehouse.id" class="border-b border-border-subtle transition-colors last:border-b-0 hover:bg-surface-overlay">
                         <td class="px-4 py-3 text-text-primary">
                             <div class="font-medium text-text-primary">{{ warehouse.name }}</div>
@@ -206,6 +199,22 @@ const thClass =
                         </template>
                     </nav>
                 </div>
+            </template>
+            <template #empty>
+                <EmptyState
+                    :icon="Warehouse"
+                    :title="t('warehouses.noWarehouses')"
+                    :description="hasPermission('create_warehouses') ? t('warehouses.noWarehousesHint') : null"
+                    :filtered="Boolean(filters?.search)"
+                    @clear="clearFilters"
+                >
+                    <template #actions>
+                        <Button v-if="hasPermission('create_warehouses')" variant="default" size="md" as="Link" :href="route('warehouses.create')">
+                            <Plus :size="14" />
+                            {{ t('warehouses.addWarehouse') }}
+                        </Button>
+                    </template>
+                </EmptyState>
             </template>
         </TableViewport>
 
