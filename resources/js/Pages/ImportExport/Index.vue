@@ -46,6 +46,8 @@ const { hasPermission, canVisit } = usePermissions();
 const canExport = computed(() => hasPermission('export_data'));
 const canExportUsers = computed(() => canExport.value && hasPermission('view_users'));
 const canImport = computed(() => hasPermission('import_data'));
+// Product import creates and updates products, so it also needs a product permission.
+const canImportProducts = computed(() => canImport.value && (hasPermission('create_products') || hasPermission('edit_products')));
 const canImportOrders = computed(() => canImport.value && hasPermission('create_orders'));
 const canImportUsers = computed(() => canImport.value && hasPermission('create_users'));
 
@@ -334,7 +336,7 @@ const code = 'rounded bg-surface-overlay px-1 py-0.5 font-mono text-xs text-text
                     </Card>
 
                     <!-- Import Section -->
-                    <Card v-if="canImport">
+                    <Card v-if="canImportProducts">
                         <div class="mb-4 flex items-center gap-3">
                             <span class="flex h-10 w-10 items-center justify-center rounded-lg bg-brand-soft text-brand">
                                 <Upload :size="18" />
@@ -381,7 +383,7 @@ const code = 'rounded bg-surface-overlay px-1 py-0.5 font-mono text-xs text-text
                     </Card>
                 </div>
 
-                <Card v-if="canImport" class="mt-4">
+                <Card v-if="canImportProducts" class="mt-4">
                     <h3 class="mb-4 text-sm font-semibold text-text-primary">{{ t('importExport.import.instructions') }}</h3>
 
                     <div class="grid grid-cols-1 gap-6 md:grid-cols-2">

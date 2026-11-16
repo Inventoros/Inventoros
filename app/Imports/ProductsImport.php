@@ -95,6 +95,14 @@ final class ProductsImport extends ProductSpreadsheetValueBinder implements Skip
     protected int $rowOffset = 0;
 
     /**
+     * The importer's accessible warehouse ids, memoized (false = not yet
+     * looked up, null = unrestricted).
+     *
+     * @var array<int, int>|false|null
+     */
+    private array|false|null $accessibleWarehouseIds = false;
+
+    /**
      * Whether unknown price_xxx columns have already been reported, so the
      * warning is raised once per file rather than once per row.
      */
@@ -124,58 +132,79 @@ final class ProductsImport extends ProductSpreadsheetValueBinder implements Skip
      * exported before a sale and re-imported after it therefore shows up as
      * an audited recount rather than silently overwriting the count.
      *
-     * A stock change needs manage_stock, is refused when the organization's
+     * A stock change needs manage_stock, is skipped when the organization's
      * approval rules would hold the same adjustment, and a restricted
      * importer draws down only their own warehouses' bins and books units
-     * up only into one of their locations.
+     * up only into one of their locations. A skipped stock change leaves the
+     * row's other columns imported and adds a row warning saying why.
      */
-    private function bookImportedStock(Product $product, int $target): void
+    private function bookImportedStock(Product $product, int $target, int $rowNumber): void
     {
-        DB::transaction(function () use ($product, $target) {
-            $locked = Product::withoutGlobalScopes()->whereKey($product->id)->lockForUpdate()->firstOrFail();
-            $delta = $target - (int) $locked->stock;
+        try {
+            // Its own savepoint: a refused movement rolls back only the
+            // stock change, never the row's other columns.
+            $skipped = DB::transaction(fn (): ?string => $this->moveImportedStock($product, $target));
+        } catch (AuthorizationException) {
+            $skipped = 'this product\'s stock is not in your accessible warehouses, so the import cannot change it';
+        }
 
-            if ($delta === 0) {
-                return;
-            }
+        if ($skipped !== null) {
+            $this->warn($rowNumber, "Stock not changed: {$skipped}. The other columns were imported.");
+        }
+    }
 
-            $actor = $this->actingUser();
-            if ($actor !== null) {
-                $this->requirePermission($actor, Permission::MANAGE_STOCK, 'Changing stock needs the manage_stock permission; the row was skipped.');
-            }
+    /**
+     * @return string|null why the stock change was skipped, or null when it was booked (or there was none)
+     *
+     * @throws AuthorizationException when a restricted importer's warehouses cannot take the movement
+     */
+    private function moveImportedStock(Product $product, int $target): ?string
+    {
+        $locked = Product::withoutGlobalScopes()->whereKey($product->id)->lockForUpdate()->firstOrFail();
+        $delta = $target - (int) $locked->stock;
 
-            if (app(ApprovalService::class)->stockAdjustmentNeedsApproval($locked, null, $delta)) {
-                throw new InvalidArgumentException("Changing stock by {$delta} needs approval under this organization's stock adjustment rules; the row was skipped. Submit a stock adjustment instead.");
-            }
+        if ($delta === 0) {
+            return null;
+        }
 
-            $bins = app(ProductLocationStockService::class);
+        $actor = $this->actingUser();
+        if ($actor !== null && ! $actor->hasPermission(Permission::MANAGE_STOCK)) {
+            return 'changing stock needs the manage_stock permission';
+        }
 
-            // Draw bins down before the total falls (the lazy seed reads the
-            // pre-change stock); book them up after it rises.
-            if ($delta < 0) {
-                $bins->consume($locked, -$delta, actor: $actor);
-            } elseif ($actor !== null) {
-                $this->authorizeLocation($actor, $locked->location_id === null ? null : (int) $locked->location_id);
-            }
+        if (app(ApprovalService::class)->stockAdjustmentNeedsApproval($locked, null, $delta)) {
+            return "a change of {$delta} needs approval under this organization's stock adjustment rules; submit a stock adjustment instead";
+        }
 
-            StockAdjustment::adjust(
-                $locked,
-                $delta,
-                'recount',
-                'Product import',
-                "Stock set to {$target} by import",
-                actor: $this->actor,
-                // The bins move just above and below.
-                syncBins: false,
-            );
+        $bins = app(ProductLocationStockService::class);
 
-            if ($delta > 0) {
-                $bins->receive($locked, $delta);
-            }
+        // Draw bins down before the total falls (the lazy seed reads the
+        // pre-change stock); book them up after it rises.
+        if ($delta < 0) {
+            $bins->consume($locked, -$delta, actor: $actor);
+        } elseif ($actor !== null) {
+            $this->authorizeLocation($actor, $locked->location_id === null ? null : (int) $locked->location_id);
+        }
 
-            $product->setRawAttributes(array_merge($product->getAttributes(), ['stock' => $target]));
-            $product->syncOriginal();
-        });
+        StockAdjustment::adjust(
+            $locked,
+            $delta,
+            'recount',
+            'Product import',
+            "Stock set to {$target} by import",
+            actor: $this->actor,
+            // The bins move just above and below.
+            syncBins: false,
+        );
+
+        if ($delta > 0) {
+            $bins->receive($locked, $delta);
+        }
+
+        $product->setRawAttributes(array_merge($product->getAttributes(), ['stock' => $target]));
+        $product->syncOriginal();
+
+        return null;
     }
 
     public function registerEvents(): array
@@ -304,11 +333,43 @@ final class ProductsImport extends ProductSpreadsheetValueBinder implements Skip
     }
 
     /**
+     * The importer's accessible warehouse ids (null when unrestricted),
+     * looked up once per import rather than once per row.
+     *
+     * @return array<int, int>|null
+     */
+    private function accessibleWarehouseIds(User $user): ?array
+    {
+        if ($this->accessibleWarehouseIds === false) {
+            $this->accessibleWarehouseIds = app(WarehouseAccessService::class)->accessibleWarehouseIds($user);
+        }
+
+        return $this->accessibleWarehouseIds;
+    }
+
+    private function isRestricted(User $user): bool
+    {
+        return $this->accessibleWarehouseIds($user) !== null;
+    }
+
+    /**
+     * The WarehouseAccessService::authorizeLocation() rule, against the
+     * memoized warehouse ids.
+     *
      * @throws AuthorizationException
      */
     private function authorizeLocation(User $user, ?int $locationId): void
     {
-        app(WarehouseAccessService::class)->authorizeLocation($user, $locationId);
+        $ids = $this->accessibleWarehouseIds($user);
+        if ($ids === null) {
+            return;
+        }
+
+        $warehouseId = $locationId === null ? null : ProductLocation::withoutGlobalScopes()->whereKey($locationId)->value('warehouse_id');
+
+        if ($warehouseId === null || ! in_array((int) $warehouseId, $ids, true)) {
+            throw new AuthorizationException('You do not have access to this location\'s warehouse.');
+        }
     }
 
     /**
@@ -355,6 +416,13 @@ final class ProductsImport extends ProductSpreadsheetValueBinder implements Skip
                 ]
             );
             $locationId = $location->id;
+
+            // A location the import creates belongs to no warehouse, which a
+            // restricted importer cannot use (rolled back with the row).
+            $actor = $this->actingUser();
+            if ($location->wasRecentlyCreated && $actor !== null && $this->isRestricted($actor)) {
+                throw new AuthorizationException("Location '{$row['location']}' does not exist. Locations created by an import belong to no warehouse, so you cannot use them; ask an administrator to create it in one of your warehouses first.");
+            }
         }
 
         // Check if product exists (by SKU) — include soft-deleted rows:
@@ -373,6 +441,9 @@ final class ProductsImport extends ProductSpreadsheetValueBinder implements Skip
 
                 // Moving the product's primary location needs access to both.
                 $currentLocationId = $product->location_id === null ? null : (int) $product->location_id;
+                if ($locationId === null && $currentLocationId !== null && $this->isRestricted($actor)) {
+                    throw new AuthorizationException('The location column is blank, which would remove this product\'s location. You can only keep products in your assigned warehouses, so fill in its location.');
+                }
                 if ($currentLocationId !== $locationId) {
                     if ($currentLocationId !== null) {
                         $this->authorizeLocation($actor, $currentLocationId);
@@ -434,7 +505,7 @@ final class ProductsImport extends ProductSpreadsheetValueBinder implements Skip
             // The sheet's stock is booked as a ledgered recount
             // (locked, audited, binned), never written to the row.
             $product->update(Arr::except($productData, ['stock']));
-            $this->bookImportedStock($product, (int) $row['stock']);
+            $this->bookImportedStock($product, (int) $row['stock'], $rowNumber);
             $created = false;
         } else {
             // Create new product; its stock is an opening ledger row.

@@ -14,6 +14,7 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
@@ -78,6 +79,21 @@ final class ProductImportAccessTest extends TestCase
     }
 
     /**
+     * The row imported its other columns but skipped the stock change, with
+     * one warning saying so.
+     *
+     * @param  array<string, mixed>  $stats
+     */
+    private function assertStockSkipped(array $stats, int $rowNumber, string $reason): void
+    {
+        $this->assertSame([], $stats['errors'], json_encode($stats['errors']));
+        $warnings = collect($stats['warnings'])->firstWhere('row', $rowNumber)['warnings'] ?? [];
+        $this->assertCount(1, $warnings, json_encode($stats['warnings']));
+        $this->assertStringContainsString('Stock not changed', $warnings[0]);
+        $this->assertStringContainsString($reason, $warnings[0]);
+    }
+
+    /**
      * @param  array<string, mixed>  $stats
      */
     private function assertRowErrors(array $stats, int $count): void
@@ -121,9 +137,15 @@ final class ProductImportAccessTest extends TestCase
     {
         $editor = $this->userWith(['import_data', 'edit_products']);
 
-        $stats = $this->import($editor, [$this->row($this->productA, 120, $this->locationA)])->getStats();
-        $this->assertRowErrors($stats, 1);
+        // A re-imported export with a changed stock figure still updates
+        // the other columns; only the stock change is skipped, with a warning.
+        $stats = $this->import($editor, [$this->row($this->productA, 120, $this->locationA, ['price' => 12, 'name' => 'Repriced'])])->getStats();
+        $this->assertStockSkipped($stats, 2, 'manage_stock');
+        $this->assertSame(1, $stats['updated']);
         $this->assertSame(100, $this->productA->fresh()->stock);
+        $this->assertSame('Repriced', $this->productA->fresh()->name);
+        $this->assertEquals(12, $this->productA->fresh()->price);
+        $this->assertDatabaseCount('stock_adjustments', 0);
 
         $stats = $this->import($editor, [$this->row($this->productA, 100, $this->locationA, ['name' => 'Renamed'])])->getStats();
         $this->assertSame([], $stats['errors']);
@@ -132,19 +154,19 @@ final class ProductImportAccessTest extends TestCase
 
     // ---- Approvals -----------------------------------------------------
 
-    public function test_a_recount_that_would_need_approval_is_a_row_error(): void
+    public function test_a_recount_that_would_need_approval_skips_only_the_stock_change(): void
     {
         $this->organization->update(['settings' => ['approvals' => ['stock_adjustments_enabled' => true, 'stock_adjustments_quantity_threshold' => 10]]]);
 
         $stats = $this->import($this->admin, [
-            $this->row($this->productA, 150, $this->locationA),
+            $this->row($this->productA, 150, $this->locationA, ['name' => 'Alpha Renamed']),
             $this->row($this->productB, 55, $this->locationB),
         ])->getStats();
 
-        $this->assertCount(1, $stats['errors']);
-        $this->assertSame(2, $stats['errors'][0]['row']);
-        $this->assertSame(1, $stats['updated']);
+        $this->assertStockSkipped($stats, 2, 'approval');
+        $this->assertSame(2, $stats['updated']);
         $this->assertSame(100, $this->productA->fresh()->stock);
+        $this->assertSame('Alpha Renamed', $this->productA->fresh()->name);
         $this->assertSame(55, $this->productB->fresh()->stock);
         $this->assertDatabaseCount('stock_adjustment_requests', 0);
     }
@@ -155,7 +177,7 @@ final class ProductImportAccessTest extends TestCase
     {
         $stats = $this->import($this->restricted, [$this->row($this->productB, 5, $this->locationB)])->getStats();
 
-        $this->assertRowErrors($stats, 1);
+        $this->assertStockSkipped($stats, 2, 'accessible warehouses');
         $this->assertSame(50, $this->productB->fresh()->stock);
         $this->assertSame(50, $this->bin($this->productB, $this->locationB));
     }
@@ -187,13 +209,46 @@ final class ProductImportAccessTest extends TestCase
         $this->assertDatabaseMissing('product_locations', ['name' => 'Brand New Shelf']);
     }
 
+    public function test_restricted_importer_gets_clear_errors_for_blank_and_unknown_locations(): void
+    {
+        $stats = $this->import($this->restricted, [
+            $this->row($this->productA, 100, null),
+            ['sku' => 'NEW-SHELF', 'name' => 'New Shelf Item', 'price' => 10, 'stock' => 0, 'location' => 'Unknown Shelf'],
+        ])->getStats();
+
+        $this->assertRowErrors($stats, 2);
+        $this->assertStringContainsString('location column is blank', $stats['errors'][0]['errors'][0]);
+        $this->assertStringContainsString("Location 'Unknown Shelf' does not exist", $stats['errors'][1]['errors'][0]);
+        $this->assertSame($this->locationA->id, $this->productA->fresh()->location_id);
+        $this->assertDatabaseMissing('product_locations', ['name' => 'Unknown Shelf']);
+    }
+
+    public function test_accessible_warehouses_are_looked_up_once_per_import(): void
+    {
+        $rows = [];
+        foreach (range(1, 5) as $i) {
+            $rows[] = ['sku' => "BULK-{$i}", 'name' => "Bulk {$i}", 'price' => 10, 'stock' => 1, 'location' => $this->locationA->name];
+        }
+
+        DB::enableQueryLog();
+        $stats = $this->import($this->restricted, $rows)->getStats();
+        $lookups = collect(DB::getQueryLog())
+            ->filter(fn (array $query) => str_contains($query['query'], 'warehouse_user'))
+            ->count();
+        DB::disableQueryLog();
+
+        $this->assertSame([], $stats['errors']);
+        $this->assertSame(5, $stats['imported']);
+        $this->assertSame(1, $lookups);
+    }
+
     public function test_restricted_recount_down_draws_only_from_assigned_bins(): void
     {
         // productA: 60 in A, 40 in B. Warehouse B outranks A.
         $this->warehouseB->update(['priority' => 100]);
 
         $stats = $this->import($this->restricted, [$this->row($this->productA, 30, $this->locationA)])->getStats();
-        $this->assertRowErrors($stats, 1);
+        $this->assertStockSkipped($stats, 2, 'accessible warehouses');
         $this->assertSame(100, $this->productA->fresh()->stock);
         $this->assertSame(40, $this->bin($this->productA, $this->locationB));
 
