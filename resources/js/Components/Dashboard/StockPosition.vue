@@ -47,6 +47,8 @@ const level = computed(() => stockLevel(props.product));
     gap: 2px;
     color: hsl(var(--text-tertiary));
     font-size: 10px;
+    min-width: 0;
+    max-width: calc(50% - 6px);
 }
 .stock-position-values > span:last-child {
     text-align: end;
@@ -57,6 +59,7 @@ const level = computed(() => stockLevel(props.product));
     line-height: 28px;
     font-weight: 500;
     font-variant-numeric: tabular-nums;
+    overflow-wrap: anywhere;
 }
 .stock-position-values > span:first-child strong {
     color: hsl(var(--status-warning));

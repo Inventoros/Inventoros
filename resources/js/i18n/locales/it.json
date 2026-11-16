@@ -479,7 +479,8 @@
       "atCost": "Al costo",
       "reviewSystem": "Controlla sistema",
       "saveError": "Impossibile salvare le preferenze. Riprova.",
-      "shortfallHelp": "La carenza è la differenza rispetto alla scorta minima. Controlla il fornitore e le impostazioni di riordino prima di acquistare."
+      "shortfallHelp": "La carenza è la differenza rispetto alla scorta minima. Controlla il fornitore e le impostazioni di riordino prima di acquistare.",
+      "viewProduct": "Visualizza prodotto"
     }
   },
   "products": {
@@ -939,7 +940,8 @@
     "addSupplier": "Aggiungi un fornitore",
     "hint": "Crea una bozza di ordine di acquisto per ogni fornitore principale. I prodotti senza fornitore vengono ignorati.",
     "chooseVariants": "Scegli varianti",
-    "variantHint": "Seleziona gli SKU delle varianti in un ordine di acquisto per rifornire questo prodotto."
+    "variantHint": "Seleziona gli SKU delle varianti in un ordine di acquisto per rifornire questo prodotto.",
+    "createFailed": "Impossibile creare la bozza dell?ordine di acquisto. Riprova."
   },
   "suppliers": {
     "title": "Fornitori",

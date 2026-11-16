@@ -350,7 +350,8 @@
       "atCost": "At cost",
       "reviewSystem": "Review system",
       "saveError": "Preferences could not be saved. Try again.",
-      "shortfallHelp": "The shortfall is the gap to minimum stock. Check supplier and reorder settings before purchasing."
+      "shortfallHelp": "The shortfall is the gap to minimum stock. Check supplier and reorder settings before purchasing.",
+      "viewProduct": "View product"
     }
   },
   "products": {
@@ -810,7 +811,8 @@
     "addSupplier": "Add a supplier",
     "hint": "Creates one draft purchase order per primary supplier. Products without a supplier are skipped.",
     "chooseVariants": "Choose variants",
-    "variantHint": "Select variant SKUs on a purchase order to replenish this product."
+    "variantHint": "Select variant SKUs on a purchase order to replenish this product.",
+    "createFailed": "Could not create the draft purchase order. Try again."
   },
   "suppliers": {
     "title": "Suppliers",

@@ -1,0 +1,47 @@
+[
+  {
+    "name": "supplier-desktop",
+    "width": 1440,
+    "height": 1000,
+    "theme": "light",
+    "sku": "SKU-10014",
+    "text": "SKU-10014\n\nLaptop Stand Aluminum\n\nElectronics\nWarehouse B\n\n3\nOn hand\n10\nMinimum\n7\nbelow minimum\nReorder suggestions\nSupplier\nTechParts Global\nReorder at\n8\nSuggested qty\n20\n\nBelow reorder point. Suggested quantity comes from product config and the supplier minimum order.\n\nView product\nCreate PO",
+    "overflow": 0
+  },
+  {
+    "name": "supplier-phone",
+    "width": 375,
+    "height": 812,
+    "theme": "light",
+    "sku": "SKU-10014",
+    "text": "SKU-10014\n\nLaptop Stand Aluminum\n\nElectronics\nWarehouse B\n\n3\nOn hand\n10\nMinimum\n7\nbelow minimum\nReorder suggestions\nSupplier\nTechParts Global\nReorder at\n8\nSuggested qty\n20\n\nBelow reorder point. Suggested quantity comes from product config and the supplier minimum order.\n\nView product\nCreate PO",
+    "overflow": 0
+  },
+  {
+    "name": "supplier-dark",
+    "width": 1440,
+    "height": 1000,
+    "theme": "dark",
+    "sku": "SKU-10014",
+    "text": "SKU-10014\n\nLaptop Stand Aluminum\n\nElectronics\nWarehouse B\n\n3\nOn hand\n10\nMinimum\n7\nbelow minimum\nReorder suggestions\nSupplier\nTechParts Global\nReorder at\n8\nSuggested qty\n20\n\nBelow reorder point. Suggested quantity comes from product config and the supplier minimum order.\n\nView product\nCreate PO",
+    "overflow": 0
+  },
+  {
+    "name": "no-supplier",
+    "width": 1440,
+    "height": 1000,
+    "theme": "light",
+    "sku": "SKU-10001",
+    "text": "SKU-10001\n\nWireless Bluetooth Keyboard\n\nElectronics\nWarehouse A\n\n0\nOn hand\n20\nMinimum\n20\nbelow minimum\nReorder suggestions\nSupplier\nNo supplier\nReorder at\n20\nSuggested qty\n30\n\nBelow reorder point. Suggested quantity comes from product config and the supplier minimum order.\n\nView product\nAdd a supplier",
+    "overflow": 0
+  },
+  {
+    "name": "no-suggestion",
+    "width": 1440,
+    "height": 1000,
+    "theme": "light",
+    "sku": "SKU-10010",
+    "text": "SKU-10010\n\nCorrugated Shipping Box (L)\n\nPackaging\nReceiving Dock\n\n125\nOn hand\n500\nMinimum\n375\nbelow minimum\n\nThe shortfall is the gap to minimum stock. Check supplier and reorder settings before purchasing.\n\nView product",
+    "overflow": 0
+  }
+]

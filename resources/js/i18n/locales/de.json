@@ -479,7 +479,8 @@
       "atCost": "Zum Einkaufspreis",
       "reviewSystem": "System prüfen",
       "saveError": "Einstellungen konnten nicht gespeichert werden. Erneut versuchen.",
-      "shortfallHelp": "Die Fehlmenge ist die Differenz zum Mindestbestand. Vor dem Einkauf Lieferant und Nachbestelleinstellungen prüfen."
+      "shortfallHelp": "Die Fehlmenge ist die Differenz zum Mindestbestand. Vor dem Einkauf Lieferant und Nachbestelleinstellungen prüfen.",
+      "viewProduct": "Produkt ansehen"
     }
   },
   "products": {
@@ -939,7 +940,8 @@
     "addSupplier": "Lieferant hinzufügen",
     "hint": "Erstellt einen Entwurf einer Einkaufsbestellung pro Hauptlieferant. Produkte ohne Lieferant werden übersprungen.",
     "chooseVariants": "Varianten wählen",
-    "variantHint": "Wählen Sie die Varianten-SKUs in einer Bestellung, um dieses Produkt nachzubestellen."
+    "variantHint": "Wählen Sie die Varianten-SKUs in einer Bestellung, um dieses Produkt nachzubestellen.",
+    "createFailed": "Der Bestellentwurf konnte nicht erstellt werden. Versuchen Sie es erneut."
   },
   "suppliers": {
     "title": "Lieferanten",

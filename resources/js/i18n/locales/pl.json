@@ -479,7 +479,8 @@
       "atCost": "Według kosztu",
       "reviewSystem": "Sprawdź system",
       "saveError": "Nie udało się zapisać preferencji. Spróbuj ponownie.",
-      "shortfallHelp": "Niedobór to różnica względem minimalnego zapasu. Przed zakupem sprawdź dostawcę i ustawienia uzupełniania."
+      "shortfallHelp": "Niedobór to różnica względem minimalnego zapasu. Przed zakupem sprawdź dostawcę i ustawienia uzupełniania.",
+      "viewProduct": "Zobacz produkt"
     }
   },
   "products": {
@@ -939,7 +940,8 @@
     "addSupplier": "Dodaj dostawcę",
     "hint": "Tworzy jeden szkic zamówienia zakupu dla każdego głównego dostawcy. Produkty bez dostawcy są pomijane.",
     "chooseVariants": "Wybierz warianty",
-    "variantHint": "Wybierz SKU wariantów w zamówieniu zakupu, aby uzupełnić ten produkt."
+    "variantHint": "Wybierz SKU wariantów w zamówieniu zakupu, aby uzupełnić ten produkt.",
+    "createFailed": "Nie uda?o si? utworzy? wersji roboczej zam?wienia zakupu. Spr?buj ponownie."
   },
   "suppliers": {
     "title": "Dostawcy",
