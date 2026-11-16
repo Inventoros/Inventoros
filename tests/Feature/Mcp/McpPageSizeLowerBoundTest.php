@@ -133,7 +133,8 @@ class McpPageSizeLowerBoundTest extends TestCase
 
         $limits = [];
         DB::listen(function (QueryExecuted $event) use (&$limits): void {
-            if (str_contains($event->sql, 'from "product_categories"') && preg_match('/limit (\d+)/', $event->sql, $m)) {
+            // Identifier quoting differs by driver (" on SQLite/PostgreSQL, ` on MySQL).
+            if (preg_match('/from [`"]?product_categories[`"]?/i', $event->sql) && preg_match('/limit (\d+)/i', $event->sql, $m)) {
                 $limits[] = (int) $m[1];
             }
         });
