@@ -590,7 +590,10 @@ const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface
                                                 {{ entry.supplier_name || '-' }}
                                                 <span v-if="entry.variant_title" class="block text-xs text-text-tertiary">{{ entry.variant_title }}</span>
                                             </td>
-                                            <td class="px-4 py-2.5 text-end tabular-nums text-text-primary">{{ formatCurrency(entry.cost_price) }}</td>
+                                            <td class="px-4 py-2.5 text-end tabular-nums text-text-primary">
+                                                {{ entry.currency ? formatMoney(entry.cost_price, entry.currency) : formatCurrency(entry.cost_price) }}
+                                                <span v-if="entry.source_currency && entry.source_cost_price != null" class="block text-xs text-text-tertiary">{{ formatMoney(entry.source_cost_price, entry.source_currency) }}</span>
+                                            </td>
                                             <td class="px-4 py-2.5 text-text-secondary">
                                                 <Link
                                                     v-if="entry.source === 'purchase_order' && entry.purchase_order_id && canVisit('purchase-orders.show')"

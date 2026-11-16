@@ -287,9 +287,27 @@ class PurchaseOrderItem extends Model
     }
 
     /**
+     * This line's unit cost in the organization's currency: as is for a PO
+     * in that currency, at the PO's exchange rate otherwise, null when the
+     * PO is in a foreign currency with no rate recorded.
+     */
+    public function organizationCurrencyUnitCost(?PurchaseOrder $purchaseOrder = null): ?string
+    {
+        $purchaseOrder ??= $this->purchaseOrder;
+
+        return $purchaseOrder?->toOrganizationCurrency($this->unit_cost);
+    }
+
+    /**
      * Log the unit cost this line was received at to the supplier price
      * history, against the variant when the line names one. A line received
      * in several partial deliveries is logged once.
+     *
+     * The cost is booked in the organization's currency: a foreign-currency
+     * PO's line is converted at the PO's locked exchange rate, keeping the
+     * supplier's price and the rate beside it. With no rate recorded the
+     * supplier's price is logged in its own currency, never as if it were
+     * the organization's.
      */
     protected function recordSupplierCost(PurchaseOrder $purchaseOrder): void
     {
@@ -297,22 +315,39 @@ class PurchaseOrderItem extends Model
             return;
         }
 
+        $poCurrency = strtoupper(trim((string) $purchaseOrder->currency)) ?: null;
+        $converted = $purchaseOrder->isForeignCurrency() ? $this->organizationCurrencyUnitCost($purchaseOrder) : null;
+
+        if ($converted !== null) {
+            $cost = $converted;
+            $currency = [
+                'currency' => $purchaseOrder->organizationCurrency(),
+                'source_cost_price' => $this->unit_cost,
+                'source_currency' => $poCurrency,
+                'exchange_rate' => (string) $purchaseOrder->exchange_rate,
+            ];
+        } else {
+            $cost = $this->unit_cost;
+            $currency = ['currency' => $poCurrency];
+        }
+
         $alreadyRecorded = SupplierPriceHistory::withoutGlobalScopes()
             ->where('purchase_order_id', $purchaseOrder->id)
             ->where('product_id', $this->product_id)
             ->where('product_variant_id', $this->product_variant_id)
             ->where('source', SupplierPriceHistory::SOURCE_PURCHASE_ORDER)
-            ->where('cost_price', $this->unit_cost)
+            ->where('cost_price', $cost)
             ->exists();
 
         if (! $alreadyRecorded) {
             SupplierPriceHistory::record(
                 $this->product,
                 (int) $purchaseOrder->supplier_id,
-                $this->unit_cost,
+                $cost,
                 SupplierPriceHistory::SOURCE_PURCHASE_ORDER,
                 $purchaseOrder->id,
                 $this->variant,
+                $currency,
             );
         }
     }
