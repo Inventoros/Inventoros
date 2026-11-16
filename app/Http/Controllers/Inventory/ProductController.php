@@ -9,6 +9,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Product\StoreProductRequest;
 use App\Http\Requests\Product\UpdateProductRequest;
 use App\Models\ActivityLog;
+use App\Models\Auth\Organization;
 use App\Models\Inventory\Product;
 use App\Models\Inventory\ProductCategory;
 use App\Models\Inventory\ProductLocation;
@@ -152,8 +153,7 @@ class ProductController extends Controller
             ->active()
             ->get(['id', 'name', 'code']);
 
-        $currencies = config('currencies.supported');
-        $defaultCurrency = config('currencies.default');
+        [$currencies, $defaultCurrency] = $this->currencyOptions((int) $organizationId);
 
         $productTypes = [
             ['value' => 'standard', 'label' => 'Standard Product'],
@@ -352,8 +352,7 @@ class ProductController extends Controller
         // Load options, variants and supplier links
         $product->load(['options', 'variants', 'suppliers']);
 
-        $currencies = config('currencies.supported');
-        $defaultCurrency = config('currencies.default');
+        [$currencies, $defaultCurrency] = $this->currencyOptions((int) $organizationId);
 
         $productTypes = [
             ['value' => 'standard', 'label' => 'Standard Product'],
@@ -472,6 +471,25 @@ class ProductController extends Controller
 
         return redirect()->route('products.index')
             ->with('success', __('Product deleted successfully.'));
+    }
+
+    /**
+     * The currencies the product form offers and the one it starts on: the
+     * organization's currency (as orders and purchase orders use), which is
+     * kept in the list even if it has since left the supported set.
+     *
+     * @return array{0: array<string, array<string, string>>, 1: string}
+     */
+    private function currencyOptions(int $organizationId): array
+    {
+        $defaultCurrency = Organization::currencyFor($organizationId);
+        $currencies = (array) config('currencies.supported', []);
+
+        if (! array_key_exists($defaultCurrency, $currencies)) {
+            $currencies = [$defaultCurrency => ['symbol' => $defaultCurrency, 'name' => $defaultCurrency]] + $currencies;
+        }
+
+        return [$currencies, $defaultCurrency];
     }
 
     /**
