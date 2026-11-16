@@ -6,6 +6,8 @@ namespace App\Mcp\Tools;
 
 use App\Exceptions\DocumentEmailException;
 use App\Mcp\Concerns\AuthenticatesMcpRequest;
+use App\Mcp\Support\McpRecipients;
+use App\Mcp\Support\UntrustedText;
 use App\Models\Order\Order;
 use App\Services\Documents\DocumentRecipients;
 use App\Services\OrderInvoiceEmailService;
@@ -22,20 +24,23 @@ class EmailOrderInvoiceTool extends Tool
 
     protected string $name = 'email_order_invoice';
 
-    protected string $description = 'Email an order\'s invoice to the customer with the invoice PDF attached. Assigns the invoice number on first use. Can be re-sent. Fails when the order has no customer email address and no "to" is given.';
+    protected string $description = 'Email an order\'s invoice to the customer with the invoice PDF attached. Assigns the invoice number on first use. Can be re-sent. Only sends to addresses on file for the order\'s customer or to users of this organization; to reach someone else at the customer, pass a customer contact as `to`. Any other recipient needs the web UI. Fails when the order has no customer email address and no "to" is given.';
 
     public function schema(JsonSchema $schema): array
     {
         return [
             'id' => $schema->integer()->required()->description('Order id.'),
-            'to' => $schema->string()->description('Recipient override. Defaults to the order\'s customer email.'),
-            'cc' => $schema->array()->items($schema->string())->description('Up to '.DocumentRecipients::MAX_CC.' CC email addresses.'),
+            'to' => $schema->string()->description('A customer contact\'s email, the customer\'s email on file, or a user of this organization. Defaults to the order\'s customer email.'),
+            'cc' => $schema->array()->items($schema->string())->description('Up to '.DocumentRecipients::MAX_CC.' CC addresses: customer addresses on file or users of this organization.'),
             'message' => $schema->string()->description('Optional note included in the email body.'),
         ];
     }
 
     public function handle(Request $request): Response
     {
+        // Agents copy tool output into write calls; never store the envelope.
+        UntrustedText::stripArguments($request);
+
         $this->authorize(['edit_orders']);
 
         $request->validate([
@@ -52,6 +57,18 @@ class EmailOrderInvoiceTool extends Tool
 
         if (! $order) {
             return Response::error('Order not found in this organization.');
+        }
+
+        $refused = McpRecipients::violation(
+            $request->get('to'),
+            (array) ($request->get('cc') ?? []),
+            McpRecipients::forOrder($order),
+            $this->organizationId(),
+            'invoice',
+        );
+
+        if ($refused !== null) {
+            return Response::error($refused);
         }
 
         try {

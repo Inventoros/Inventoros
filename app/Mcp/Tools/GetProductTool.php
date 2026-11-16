@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Mcp\Tools;
 
 use App\Mcp\Concerns\AuthenticatesMcpRequest;
+use App\Mcp\Support\UntrustedText;
 use App\Models\Inventory\Product;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -48,7 +49,7 @@ class GetProductTool extends Tool
             'id' => $product->id,
             'sku' => $product->sku,
             'name' => $product->name,
-            'description' => $product->description,
+            'description' => UntrustedText::wrap($product->description),
             'barcode' => $product->barcode,
             'price' => $product->price,
             'selling_price' => $product->selling_price,
@@ -82,6 +83,7 @@ class GetProductTool extends Tool
             ])->all(),
             'created_at' => $product->created_at?->toIso8601String(),
             'updated_at' => $product->updated_at?->toIso8601String(),
+            UntrustedText::NOTICE_KEY => UntrustedText::NOTICE,
         ]);
     }
 }

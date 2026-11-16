@@ -20,6 +20,7 @@ use App\Http\Resources\OrderResource;
 use App\Models\Order\Order;
 use App\Services\OrderInvoiceEmailService;
 use App\Services\OrderService;
+use App\Support\ListSortColumns;
 use App\Support\PaymentVisibility;
 use Dedoc\Scramble\Attributes\QueryParameter;
 use Illuminate\Http\JsonResponse;
@@ -91,9 +92,9 @@ class OrderController extends Controller
             );
 
         // Sorting (allowlist to prevent SQL injection)
-        $allowedSortColumns = ['created_at', 'updated_at', 'order_number', 'customer_name', 'total', 'status', 'order_date'];
+        $allowedSortColumns = ListSortColumns::ORDERS;
         $sortBy = in_array($request->input('sort_by'), $allowedSortColumns) ? $request->input('sort_by') : 'created_at';
-        $sortDir = ($request->input('sort_dir') === 'asc') ? 'asc' : 'desc';
+        $sortDir = strtolower((string) $request->input('sort_dir')) === 'asc' ? 'asc' : 'desc';
         $query->orderBy($sortBy, $sortDir);
 
         $perPage = min($request->input('per_page', 15), 100);
@@ -122,7 +123,7 @@ class OrderController extends Controller
             'order_date' => ['nullable', 'date'],
             'notes' => ['nullable', 'string'],
             'metadata' => ['nullable', 'array'],
-            'items' => ['required', 'array', 'min:1'],
+            'items' => ['required', 'array', 'min:1', 'max:500'],
             'items.*.product_id' => ['required', 'integer', Rule::exists('products', 'id')->where('organization_id', $organizationId)],
             'items.*.product_variant_id' => ['nullable', 'integer', Rule::exists('product_variants', 'id')->where('organization_id', $organizationId)],
             'items.*.quantity' => ['required', 'integer', 'min:1'],

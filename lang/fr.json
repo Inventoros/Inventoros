@@ -120,6 +120,7 @@
     "The Administrator role cannot be edited.": "Le rôle Administrateur ne peut pas être modifié.",
     "System roles cannot be deleted.": "Les rôles système ne peuvent pas être supprimés.",
     "Cannot delete a role that is assigned to users. Please reassign users first.": "Impossible de supprimer un rôle attribué à des utilisateurs. Réaffectez d’abord les utilisateurs.",
+    "You cannot delete a role with permissions you do not hold.": "Vous ne pouvez pas supprimer un rôle comportant des autorisations que vous ne détenez pas.",
     "You cannot delete your own account.": "Vous ne pouvez pas supprimer votre propre compte.",
     "Cannot delete the last administrator.": "Impossible de supprimer le dernier administrateur.",
     "Please start the setup process again.": "Veuillez recommencer la configuration.",

@@ -739,7 +739,23 @@ final class ApprovalService
 
     // ==================== NOTIFY / LOG ====================
 
-    private function notifyApprovers(string $type, Model $subject, User $requester): void
+    /**
+     * A decided sales order went back to pending because its terms changed
+     * (see Order::requireReapprovalIfDecided()): log it and ask the
+     * approvers to decide again. Runs after the change is committed.
+     */
+    public function requestOrderReapproval(Order $order, ?User $editor): void
+    {
+        $order = $order->fresh() ?? $order;
+        // Null when nobody is known (a background job, a creator who left):
+        // the approvers are still told, with the change attributed to the system.
+        $requester = $editor ?? $order->creator;
+
+        $this->log($order, $requester, 'approval_requested', "Sales order {$order->order_number} changed after its approval decision and is waiting for approval again");
+        $this->notifyApprovers(self::SALES_ORDER, $order, $requester);
+    }
+
+    private function notifyApprovers(string $type, Model $subject, ?User $requester): void
     {
         $permission = self::permissionFor($type);
 
@@ -747,7 +763,7 @@ final class ApprovalService
         // the permission and warehouse access held THERE.
         $approvers = app(ActiveOrganization::class)
             ->membersIn((int) $subject->getAttribute('organization_id'), $permission)
-            ->reject(fn (User $u) => (int) $u->id === (int) $requester->id)
+            ->reject(fn (User $u) => $requester !== null && (int) $u->id === (int) $requester->id)
             ->filter(fn (User $u) => $this->canAccessWarehouseOf($u, $type, $subject))
             ->values();
 
@@ -789,11 +805,11 @@ final class ApprovalService
      *
      * @param  array<string, mixed>  $properties
      */
-    private function log(Model $subject, User $actor, string $action, string $description, array $properties = []): void
+    private function log(Model $subject, ?User $actor, string $action, string $description, array $properties = []): void
     {
         ActivityLog::create([
             'organization_id' => $subject->getAttribute('organization_id'),
-            'user_id' => $actor->id,
+            'user_id' => $actor?->id,
             'subject_type' => get_class($subject),
             'subject_id' => $subject->getKey(),
             'action' => $action,

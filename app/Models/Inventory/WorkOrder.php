@@ -7,6 +7,7 @@ namespace App\Models\Inventory;
 use App\Models\Auth\Organization;
 use App\Models\User;
 use App\Models\Warehouse;
+use App\Services\WarehouseAccessService;
 use App\Support\SequenceNumber;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -168,6 +169,25 @@ class WorkOrder extends Model
     public function scopeForOrganization($query, $organizationId)
     {
         return $query->where('organization_id', $organizationId);
+    }
+
+    /**
+     * Scope a query to the work orders a user may see: those in one of their
+     * warehouses, plus those bound to no warehouse (their stock movements
+     * are still scoped to the user's own bins). No-op when unrestricted.
+     *
+     * @param  Builder<static>  $query
+     * @return Builder<static>
+     */
+    public function scopeAccessibleTo($query, User $user)
+    {
+        $ids = app(WarehouseAccessService::class)->accessibleWarehouseIds($user);
+
+        if ($ids !== null) {
+            $query->where(fn ($q) => $q->whereIn('warehouse_id', $ids)->orWhereNull('warehouse_id'));
+        }
+
+        return $query;
     }
 
     /**

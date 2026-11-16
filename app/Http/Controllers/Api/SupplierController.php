@@ -9,6 +9,7 @@ use App\Http\Requests\Api\Supplier\StoreSupplierRequest;
 use App\Http\Requests\Api\Supplier\UpdateSupplierRequest;
 use App\Http\Resources\SupplierResource;
 use App\Models\Inventory\Supplier;
+use App\Support\ListSortColumns;
 use Dedoc\Scramble\Attributes\QueryParameter;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -41,9 +42,9 @@ class SupplierController extends Controller
             });
 
         // Sorting (allowlist to prevent SQL injection)
-        $allowedSortColumns = ['created_at', 'updated_at', 'name', 'email', 'phone'];
+        $allowedSortColumns = ListSortColumns::SUPPLIERS;
         $sortBy = in_array($request->input('sort_by'), $allowedSortColumns) ? $request->input('sort_by') : 'created_at';
-        $sortDir = ($request->input('sort_dir') === 'asc') ? 'asc' : 'desc';
+        $sortDir = strtolower((string) $request->input('sort_dir')) === 'asc' ? 'asc' : 'desc';
         $query->orderBy($sortBy, $sortDir);
 
         $perPage = min($request->input('per_page', 15), 100);

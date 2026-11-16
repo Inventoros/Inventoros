@@ -6,6 +6,7 @@ namespace App\Mcp\Tools;
 
 use App\Exceptions\BusinessRuleException;
 use App\Mcp\Concerns\AuthenticatesMcpRequest;
+use App\Mcp\Support\UntrustedText;
 use App\Services\OrderService;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Illuminate\Validation\Rule;
@@ -42,6 +43,9 @@ class CreateOrderTool extends Tool
 
     public function handle(Request $request): Response
     {
+        // Agents copy tool output into write calls; never store the envelope.
+        UntrustedText::stripArguments($request);
+
         $this->authorize(['create_orders']);
 
         $orgId = $this->organizationId();

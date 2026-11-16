@@ -39,6 +39,7 @@ class ListWorkOrdersTool extends Tool
 
         $query = WorkOrder::with(['product:id,name,sku', 'creator:id,name'])
             ->forOrganization($this->organizationId())
+            ->accessibleTo($this->user())
             ->when($request->get('search'), function ($q, $s) {
                 $q->where(function ($q) use ($s) {
                     $q->where('work_order_number', 'like', "%{$s}%")

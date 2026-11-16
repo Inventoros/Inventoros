@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Middleware;
 
+use App\Enums\Permission;
 use Closure;
 use Illuminate\Http\Request;
 use Laravel\Sanctum\PersonalAccessToken;
@@ -90,6 +91,19 @@ final class CheckApiPermission
         }
 
         return fn (string $p): bool => in_array($p, $abilities, true);
+    }
+
+    /**
+     * Whether the acting token carries the user's full authority: it is
+     * unrestricted (see declaredAbilities()) or it declares every known
+     * permission. Settings > API tokens offers no `*` option, so "select
+     * all" produces the full list; that token is a full-access token.
+     */
+    public static function grantsFullAccess(mixed $token): bool
+    {
+        $abilities = self::declaredAbilities($token);
+
+        return $abilities === null || array_diff(Permission::values(), $abilities) === [];
     }
 
     /**

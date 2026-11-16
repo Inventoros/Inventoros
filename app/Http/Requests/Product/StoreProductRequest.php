@@ -6,7 +6,9 @@ namespace App\Http\Requests\Product;
 
 use App\Enums\BarcodeType;
 use App\Http\Requests\Concerns\ValidatesProductSuppliers;
+use App\Rules\AccessibleProductLocation;
 use App\Rules\BarcodeMatchesType;
+use App\Services\WarehouseAccessService;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -50,7 +52,8 @@ final class StoreProductRequest extends FormRequest
             'barcode_type' => ['nullable', Rule::enum(BarcodeType::class)],
             'notes' => 'nullable|string',
             'category_id' => ['nullable', Rule::exists('product_categories', 'id')->where('organization_id', $organizationId)],
-            'location_id' => ['nullable', Rule::exists('product_locations', 'id')->where('organization_id', $organizationId)],
+            // In one of the user's warehouses; opening stock needs one.
+            'location_id' => [Rule::requiredIf(fn () => (int) $this->input('stock') > 0 && app(WarehouseAccessService::class)->isRestricted($this->user())), 'nullable', Rule::exists('product_locations', 'id')->where('organization_id', $organizationId), new AccessibleProductLocation($this->user())],
             'is_active' => 'boolean',
             'images' => 'nullable|array|max:5',
             'images.*.file' => 'nullable',
@@ -72,5 +75,15 @@ final class StoreProductRequest extends FormRequest
             'variants.*.min_stock' => 'nullable|integer|min:0',
             'variants.*.is_active' => 'boolean',
         ] + $this->productSupplierRules($organizationId), $this);
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return [
+            'location_id.required' => 'Choose a location in one of your warehouses for the opening stock.',
+        ];
     }
 }

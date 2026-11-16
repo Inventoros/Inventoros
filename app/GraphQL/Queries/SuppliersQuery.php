@@ -6,10 +6,12 @@ namespace App\GraphQL\Queries;
 
 use App\GraphQL\Concerns\RequiresPermissions;
 use App\Models\Inventory\Supplier;
+use App\Support\ListSortColumns;
 use Closure;
 use GraphQL\Type\Definition\ResolveInfo;
 use GraphQL\Type\Definition\Type;
 use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Validation\Rule;
 use Rebing\GraphQL\Support\Facades\GraphQL;
 use Rebing\GraphQL\Support\Query;
 
@@ -49,11 +51,13 @@ class SuppliersQuery extends Query
             ],
             'sort_by' => [
                 'type' => Type::string(),
-                'description' => 'Sort field (default: created_at)',
+                'rules' => ['nullable', 'string', Rule::in(ListSortColumns::SUPPLIERS)],
+                'description' => 'Sort field: '.implode(', ', ListSortColumns::SUPPLIERS).' (default: created_at)',
             ],
             'sort_dir' => [
                 'type' => Type::string(),
-                'description' => 'Sort direction: asc or desc (default: desc)',
+                'rules' => ['nullable', 'string', ListSortColumns::DIRECTION_RULE],
+                'description' => 'Sort direction: asc or desc, in any case (default: desc)',
             ],
             'limit' => [
                 'type' => Type::int(),
