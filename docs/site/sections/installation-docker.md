@@ -121,6 +121,10 @@ The usual setup runs nginx, Traefik, Caddy or a cloud load balancer in front of 
 2. The proxy sends the standard forwarding headers: `Host`, `X-Forwarded-For`, `X-Forwarded-Proto`, `X-Forwarded-Host` and `X-Forwarded-Port`.
 3. Inventoros trusts the proxy, so it believes those headers. `TRUSTED_PROXIES` defaults to `private_ranges`, which covers a proxy running on the Docker host or in another container. For a proxy elsewhere, set its address: `TRUSTED_PROXIES=203.0.113.20`, or a comma-separated list of addresses and CIDR ranges.
 
+`private_ranges` also trusts every other machine on a private network. If people reach Inventoros directly on your LAN (no proxy in front), any of them could send their own `X-Forwarded-For` header and appear to come from another address, which weakens per-address rate limits and the IP addresses recorded in the activity log. In that case, or once you know your proxy's address, set `TRUSTED_PROXIES` to exactly that address (for example the Docker bridge gateway, `172.17.0.1`), or leave it empty to trust no proxy at all.
+
+The image keeps the application code owned by `root`; the app user can write only to `storage/`, `bootstrap/cache/`, `public/`, `plugins/` and `.env`. Upgrade by pulling a new image, never with the in-app updater.
+
 `TRUSTED_PROXIES` support landed after v2.0.0: the published `2.0.0` image does not read it and trusts no proxy, so behind a TLS-terminating proxy it builds `http://` URLs. Until the next release is published, [build the image yourself](#building-the-image-yourself) from the main branch.
 
 If the proxy is not trusted, the app sees plain HTTP: the page's scripts and styles are requested over `http://`, the browser blocks them as mixed content, and you see an empty page (or only the browser tab icon) with "Mixed Content" errors in the browser console.

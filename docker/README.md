@@ -73,6 +73,7 @@ docker compose exec app npm run build
 - **Port** — set `APP_PORT=8088` in a `.env` next to `docker-compose.yml` (or in your shell) before `docker compose up` to expose the app on a different host port. `APP_URL` follows it (`http://localhost:8088`); set `APP_URL` yourself if you open the app by another name or IP. Only change `APP_PORT`, not the `ports:` mapping: the app listens on port 80 inside the container.
 - **Behind a reverse proxy** — proxies on private networks (the Docker host, another container) are trusted by default through `TRUSTED_PROXIES=private_ranges`, so `X-Forwarded-Proto: https` produces https URLs. See "Behind a reverse proxy" in `docs/site/sections/installation-docker.md`.
 - **Mailpit ports** — `MAILPIT_PORT=8025`, `MAILPIT_SMTP_PORT=1025` (defaults).
+- **Service ports listen on this machine only** — Mailpit, Postgres and Redis use development credentials, so their host ports bind to `127.0.0.1`. Set `DEV_SERVICES_BIND=0.0.0.0` to reach them from another device on your network.
 - **PHP version** — change `PHP_VERSION` build arg in `docker-compose.yml`. Tested on 8.4 (matches CI). Inventoros requires PHP 8.4.1 or newer.
 
 ## Production
