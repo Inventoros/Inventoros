@@ -234,7 +234,7 @@ paths:
         - { name: warehouse_id, in: query, schema: { type: integer } }
         - { name: is_active, in: query, schema: { type: boolean } }
         - { name: low_stock, in: query, schema: { type: boolean } }
-        - { name: sort_by, in: query, schema: { type: string, enum: [created_at, updated_at, name, sku, price, stock, status, is_active] } }
+        - { name: sort_by, in: query, schema: { type: string, enum: [id, created_at, updated_at, name, sku, price, stock, is_active] } }
         - { name: sort_dir, in: query, schema: { type: string, enum: [asc, desc] } }
         - $ref: '#/components/parameters/PerPage'
         - $ref: '#/components/parameters/Page'
@@ -799,7 +799,7 @@ paths:
         - { name: warehouse_id, in: query, schema: { type: integer } }
         - { name: date_from, in: query, schema: { type: string, format: date } }
         - { name: date_to, in: query, schema: { type: string, format: date } }
-        - { name: sort_by, in: query, schema: { type: string, enum: [created_at, updated_at, order_number, customer_name, total, status, order_date] } }
+        - { name: sort_by, in: query, schema: { type: string, enum: [id, created_at, updated_at, order_number, customer_name, total, status, order_date] } }
         - { name: sort_dir, in: query, schema: { type: string, enum: [asc, desc] } }
         - $ref: '#/components/parameters/PerPage'
         - $ref: '#/components/parameters/Page'
@@ -879,7 +879,7 @@ paths:
         - { name: type, in: query, schema: { type: string, enum: [manual, count, damage, return, transfer] } }
         - { name: date_from, in: query, schema: { type: string, format: date } }
         - { name: date_to, in: query, schema: { type: string, format: date } }
-        - { name: sort_by, in: query, schema: { type: string, enum: [created_at, updated_at, type, adjustment_quantity] } }
+        - { name: sort_by, in: query, schema: { type: string, enum: [id, created_at, updated_at, type, adjustment_quantity] } }
         - { name: sort_dir, in: query, schema: { type: string, enum: [asc, desc] } }
         - $ref: '#/components/parameters/PerPage'
         - $ref: '#/components/parameters/Page'
@@ -957,7 +957,7 @@ paths:
       parameters:
         - { name: search, in: query, schema: { type: string } }
         - { name: is_active, in: query, schema: { type: boolean } }
-        - { name: sort_by, in: query, schema: { type: string, enum: [created_at, updated_at, name, email, phone] } }
+        - { name: sort_by, in: query, schema: { type: string, enum: [id, created_at, updated_at, name, email, phone] } }
         - { name: sort_dir, in: query, schema: { type: string, enum: [asc, desc] } }
         - $ref: '#/components/parameters/PerPage'
         - $ref: '#/components/parameters/Page'
@@ -996,7 +996,7 @@ paths:
         - { name: search, in: query, schema: { type: string } }
         - { name: status, in: query, schema: { type: string, enum: [draft, sent, partial, received, cancelled] } }
         - { name: supplier_id, in: query, schema: { type: integer } }
-        - { name: sort_by, in: query, schema: { type: string, enum: [created_at, updated_at, order_date, po_number, status, total] } }
+        - { name: sort_by, in: query, schema: { type: string, enum: [id, created_at, updated_at, order_date, po_number, status, total] } }
         - { name: sort_dir, in: query, schema: { type: string, enum: [asc, desc] } }
         - $ref: '#/components/parameters/PerPage'
         - $ref: '#/components/parameters/Page'

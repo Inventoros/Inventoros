@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Http\Middleware\CheckApiPermission;
 use App\Models\Inventory\Product;
 use App\Models\User;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -208,7 +209,10 @@ class ReportDataService
     {
         $permission = self::SOURCE_PERMISSION[$dataSource] ?? null;
 
-        if ($permission !== null && ! $user->hasPermission($permission)) {
+        // The route checks only view_reports against a scoped token; the
+        // source permission must be allowed by the token too.
+        if ($permission !== null && (! $user->hasPermission($permission)
+            || ! CheckApiPermission::tokenAllows($user->currentAccessToken())($permission))) {
             throw new AuthorizationException(
                 "You do not have permission to report on the {$dataSource} data source."
             );

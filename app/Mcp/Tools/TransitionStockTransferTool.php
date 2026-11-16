@@ -6,6 +6,7 @@ namespace App\Mcp\Tools;
 
 use App\Exceptions\BusinessRuleException;
 use App\Mcp\Concerns\AuthenticatesMcpRequest;
+use App\Mcp\Support\UntrustedText;
 use App\Models\Inventory\StockTransfer;
 use App\Services\StockTransferService;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
@@ -35,6 +36,9 @@ class TransitionStockTransferTool extends Tool
 
     public function handle(Request $request): Response
     {
+        // Agents copy tool output into write calls; never store the envelope.
+        UntrustedText::stripArguments($request);
+
         $this->authorize(['transfer_stock']);
         $data = $request->validate([
             'id' => ['required', 'integer'], 'action' => ['required', 'in:prepare,ship,complete,cancel'],

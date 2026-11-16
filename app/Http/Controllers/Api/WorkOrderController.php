@@ -7,11 +7,14 @@ namespace App\Http\Controllers\Api;
 use App\Exceptions\BusinessRuleException;
 use App\Exceptions\InsufficientStockException;
 use App\Exceptions\InvalidStateException;
+use App\Http\Controllers\Api\Concerns\HandlesApiResponses;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\WorkOrder\StoreWorkOrderRequest;
 use App\Models\Inventory\WorkOrder;
+use App\Services\WarehouseAccessService;
 use App\Services\WorkOrderService;
 use Dedoc\Scramble\Attributes\QueryParameter;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -20,6 +23,8 @@ use Illuminate\Http\Request;
  */
 class WorkOrderController extends Controller
 {
+    use HandlesApiResponses;
+
     /**
      * List work orders.
      */
@@ -34,6 +39,9 @@ class WorkOrderController extends Controller
 
         $query = WorkOrder::with(['product:id,name,sku,thumbnail', 'creator:id,name'])
             ->forOrganization($organizationId)
+            // A restricted user sees their warehouses' work orders (and
+            // those bound to no warehouse).
+            ->accessibleTo($request->user())
             ->when($request->input('search'), function ($query, $search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('work_order_number', 'like', "%{$search}%")
@@ -53,7 +61,7 @@ class WorkOrderController extends Controller
         $sortDir = ($request->input('sort_dir') === 'asc') ? 'asc' : 'desc';
         $query->orderBy($sortBy, $sortDir);
 
-        $perPage = min($request->input('per_page', 15), 100);
+        $perPage = $this->perPage($request);
         $workOrders = $query->paginate($perPage);
 
         return response()->json($workOrders);
@@ -106,6 +114,8 @@ class WorkOrderController extends Controller
             ], 404);
         }
 
+        $this->authorizeWarehouse($request, $workOrder);
+
         $workOrder->load([
             'product:id,name,sku,thumbnail,type,tracking_type',
             'variant:id,product_id,title,sku,stock',
@@ -144,10 +154,14 @@ class WorkOrderController extends Controller
             ], 404);
         }
 
+        $this->authorizeWarehouse($request, $workOrder);
+
         try {
-            app(WorkOrderService::class)->start($workOrder);
+            app(WorkOrderService::class)->start($workOrder, $request->user());
         } catch (BusinessRuleException $e) {
             return $this->refusal($e);
+        } catch (AuthorizationException $e) {
+            return $this->warehouseRefusal($e);
         }
 
         $workOrder->refresh()->load(['product:id,name,sku,thumbnail', 'creator:id,name']);
@@ -182,6 +196,8 @@ class WorkOrderController extends Controller
             ], 404);
         }
 
+        $this->authorizeWarehouse($request, $workOrder);
+
         if ($workOrder->status !== 'in_progress') {
             return response()->json([
                 'message' => 'Only in-progress work orders can be completed.',
@@ -192,9 +208,11 @@ class WorkOrderController extends Controller
         $validated = $request->validate(WorkOrderService::completionRules($workOrder->quantity));
 
         try {
-            $quantityProduced = app(WorkOrderService::class)->complete($workOrder, $validated);
+            $quantityProduced = app(WorkOrderService::class)->complete($workOrder, $validated, $request->user());
         } catch (BusinessRuleException $e) {
             return $this->refusal($e);
+        } catch (AuthorizationException $e) {
+            return $this->warehouseRefusal($e);
         }
 
         $workOrder->refresh()->load(['product:id,name,sku,thumbnail', 'creator:id,name', 'items.allocations', 'outputs']);
@@ -224,6 +242,8 @@ class WorkOrderController extends Controller
             ], 404);
         }
 
+        $this->authorizeWarehouse($request, $workOrder);
+
         if (! in_array($workOrder->status, ['draft', 'pending', 'in_progress'])) {
             return response()->json([
                 'message' => 'Only draft, pending, or in-progress work orders can be cancelled.',
@@ -232,9 +252,11 @@ class WorkOrderController extends Controller
         }
 
         try {
-            app(WorkOrderService::class)->cancel($workOrder);
+            app(WorkOrderService::class)->cancel($workOrder, $request->user());
         } catch (BusinessRuleException $e) {
             return $this->refusal($e);
+        } catch (AuthorizationException $e) {
+            return $this->warehouseRefusal($e);
         }
 
         $workOrder->refresh()->load(['product:id,name,sku,thumbnail', 'creator:id,name']);
@@ -260,13 +282,40 @@ class WorkOrderController extends Controller
             ], 404);
         }
 
+        $this->authorizeWarehouse($request, $workOrder);
+
         try {
-            $workOrders->delete($workOrder);
+            $workOrders->delete($workOrder, $request->user());
         } catch (InvalidStateException $e) {
             return response()->json(['message' => $e->getMessage(), 'error' => $e->errorCode], 422);
         }
 
         return response()->json(['message' => 'Work order deleted successfully']);
+    }
+
+    /**
+     * A restricted user may only reach work orders in their own warehouses
+     * (or bound to no warehouse).
+     *
+     * @throws AuthorizationException
+     */
+    private function authorizeWarehouse(Request $request, WorkOrder $workOrder): void
+    {
+        if ($workOrder->warehouse_id !== null) {
+            app(WarehouseAccessService::class)->authorizeWarehouse($request->user(), (int) $workOrder->warehouse_id);
+        }
+    }
+
+    /**
+     * The 403 for a movement the user's warehouse assignments do not allow
+     * (stock in another warehouse's bins or location).
+     */
+    private function warehouseRefusal(AuthorizationException $e): JsonResponse
+    {
+        return response()->json([
+            'message' => $e->getMessage(),
+            'error' => 'warehouse_access_denied',
+        ], 403);
     }
 
     /**

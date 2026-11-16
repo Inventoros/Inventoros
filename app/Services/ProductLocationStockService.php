@@ -216,7 +216,7 @@ final class ProductLocationStockService
         if ($actor !== null && app(WarehouseAccessService::class)->isRestricted($actor)) {
             $available = $bins->sum(fn ($bin) => max(0, (int) $bin->quantity - ($respectHolds ? ($held[(int) $bin->location_id] ?? 0) : 0)));
             if ($available < $quantity) {
-                throw new AuthorizationException('Your accessible warehouses do not contain enough available stock for this order.');
+                throw new AuthorizationException('Your accessible warehouses do not contain enough available stock for this movement.');
             }
         }
         $remaining = $quantity;

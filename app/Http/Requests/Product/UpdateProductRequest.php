@@ -7,6 +7,7 @@ namespace App\Http\Requests\Product;
 use App\Enums\BarcodeType;
 use App\Http\Requests\Concerns\ValidatesProductSuppliers;
 use App\Models\Inventory\Product;
+use App\Rules\AccessibleProductLocation;
 use App\Rules\BarcodeMatchesType;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -51,7 +52,7 @@ final class UpdateProductRequest extends FormRequest
             'barcode_type' => ['nullable', Rule::enum(BarcodeType::class)],
             'notes' => 'nullable|string',
             'category_id' => ['nullable', Rule::exists('product_categories', 'id')->where('organization_id', $organizationId)],
-            'location_id' => ['nullable', Rule::exists('product_locations', 'id')->where('organization_id', $organizationId)],
+            'location_id' => ['nullable', Rule::exists('product_locations', 'id')->where('organization_id', $organizationId), new AccessibleProductLocation($this->user(), $product instanceof Product ? $product : null)],
             'is_active' => 'boolean',
             'images' => 'nullable|array|max:5',
             'images.*.file' => 'nullable',

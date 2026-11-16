@@ -45,7 +45,7 @@ class DeleteWorkOrderTool extends Tool
         }
 
         try {
-            app(WorkOrderService::class)->delete($wo);
+            app(WorkOrderService::class)->delete($wo, $this->user());
         } catch (InvalidStateException $e) {
             return Response::error($e->getMessage());
         }
