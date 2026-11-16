@@ -84,7 +84,9 @@ test.describe('Runtime plugin UI', () => {
         const hello = page.getByRole('tab', { name: 'Hello' });
         await expect(overview).toHaveAttribute('aria-selected', 'true');
 
-        await hello.click();
+        await overview.focus();
+        await page.keyboard.press('ArrowRight');
+        await expect(hello).toBeFocused();
         await expect(hello).toHaveAttribute('aria-selected', 'true');
         await expect(page.getByText('Hello, E2E-PRODUCT-1')).toBeVisible();
 
