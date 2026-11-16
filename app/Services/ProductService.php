@@ -219,16 +219,23 @@ final class ProductService
      * warehouse-restricted user may only book it into one of their
      * warehouses (stock with no location belongs to none).
      *
+     * $locationAuthorized is for callers that have already authorized this
+     * product's location for $actor themselves (the product import does, per
+     * row, against warehouse ids it looks up once per file); every other
+     * caller leaves it false so the location is checked here.
+     *
      * @throws AuthorizationException
      */
-    public function recordOpeningStock(Product $product, ?User $actor = null): void
+    public function recordOpeningStock(Product $product, ?User $actor = null, bool $locationAuthorized = false): void
     {
         $quantity = (int) $product->stock;
         if ($quantity <= 0) {
             return;
         }
 
-        $this->authorizeLocation($product->location_id === null ? null : (int) $product->location_id, $actor);
+        if (! $locationAuthorized) {
+            $this->authorizeLocation($product->location_id === null ? null : (int) $product->location_id, $actor);
+        }
 
         $userId = $actor?->id ?? auth()->id();
         if ($userId !== null) {
