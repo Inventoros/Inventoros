@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Schema;
  * hand but promised to an owner (a plugin slug, or "core") under the owner's
  * own reference. available = on hand - SUM(quantity of active holds), computed
  * when needed and never stored. See App\Services\StockReservationService and
- * docs/plans/2026-10-05-stock-reservations-design.md.
+ * docs/architecture/stock-reservations.md.
  *
  * A hold is against the product total (location_id null), one location bin
  * (location_id set), one variant (product_variant_id set), one serial

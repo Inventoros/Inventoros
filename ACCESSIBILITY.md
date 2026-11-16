@@ -12,7 +12,7 @@ Inventoros is **partially conformant** with WCAG 2.2 Level AA. Some parts of the
 
 ## What we do today
 
-- **Automated checks.** The [`ui-ux-audit`](.github/workflows/ui-ux-audit.yml) workflow renders the application in a real browser and scans pages with [axe-core](https://github.com/dequelabs/axe-core) using the WCAG 2.0, 2.1 and 2.2 Level A and AA rule sets. It also checks for page-level horizontal overflow and JavaScript errors at widths from 320 to 1920 pixels. The most recent recorded run is summarised in [`docs/audits/ui-ux-verification.json`](docs/audits/ui-ux-verification.json). Automated checks find only part of the possible problems, so a clean scan does not mean full conformance.
+- **Automated checks.** The [`ui-ux-audit`](.github/workflows/ui-ux-audit.yml) workflow renders the application in a real browser and scans pages with [axe-core](https://github.com/dequelabs/axe-core) using the WCAG 2.0, 2.1 and 2.2 Level A and AA rule sets. It also checks for page-level horizontal overflow and JavaScript errors at widths from 320 to 1920 pixels. The most recent recorded run is summarised in [the v2.5.0 verification record](https://github.com/Inventoros/Inventoros/blob/v2.5.0/docs/audits/ui-ux-verification.json). Automated checks find only part of the possible problems, so a clean scan does not mean full conformance.
 - **Keyboard and focus.** Pop-up menus such as the warehouse switcher have regression tests for keyboard use and for returning to the page after they close.
 - **Reduced motion.** Animations and transitions are shortened when the operating system's "reduce motion" setting is on.
 - **Languages and direction.** The interface is available in 14 languages. Arabic is shown right-to-left.

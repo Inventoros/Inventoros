@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Schema;
  * the user's home organization (the one that owns the account) and
  * `users.role` the role there; every existing user gets a membership row for
  * their home organization, so single-organization installs behave exactly as
- * before. See docs/plans/2026-10-05-multi-company-and-3pl-design.md.
+ * before. See docs/architecture/multi-company-and-3pl.md.
  */
 return new class extends Migration
 {
