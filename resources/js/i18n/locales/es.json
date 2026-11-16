@@ -2865,6 +2865,10 @@
       "sourceError": "No se pudieron cargar las existencias en origen",
       "refine": "Mostrando {shown} de {total}. Precisa la búsqueda.",
       "results": "{count} productos"
+    },
+    "formFeedback": {
+      "title": "Revisa estos campos",
+      "hint": "Tus datos se conservan. Corrige los problemas siguientes e inténtalo de nuevo."
     }
   },
   "warehouses": {

@@ -66,6 +66,7 @@ jobs:
             e2e/tests/dashboard-review.spec.ts \
             e2e/tests/products.spec.ts \
             e2e/tests/product-form-actions.spec.ts \
+            e2e/tests/form-feedback.spec.ts \
             e2e/tests/orders.spec.ts \
             e2e/tests/product-picker.spec.ts \
             e2e/tests/plugins.spec.ts \

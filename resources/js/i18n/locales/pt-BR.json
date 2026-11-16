@@ -2865,6 +2865,10 @@
       "sourceError": "Não foi possível carregar o estoque de origem",
       "refine": "Exibindo {shown} de {total}. Refine a busca.",
       "results": "{count} produtos"
+    },
+    "formFeedback": {
+      "title": "Verifique estes campos",
+      "hint": "Seus dados foram mantidos. Corrija os problemas abaixo e tente novamente."
     }
   },
   "warehouses": {

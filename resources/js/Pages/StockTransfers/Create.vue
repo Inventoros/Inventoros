@@ -5,6 +5,9 @@ import AppLayout from '@/Layouts/AppLayout.vue';
 import PageHeader from '@/Components/ui/PageHeader.vue';
 import Card from '@/Components/ui/Card.vue';
 import Button from '@/Components/ui/Button.vue';
+import FormActions from '@/Components/ui/FormActions.vue';
+import FormErrorSummary from '@/Components/ui/FormErrorSummary.vue';
+import { useFormFeedback } from '@/composables/useFormFeedback';
 import ProductPicker from '@/Components/ui/ProductPicker.vue';
 import axios from 'axios';
 import { Head, Link, useForm } from '@inertiajs/vue3';
@@ -38,6 +41,15 @@ const form = useForm({
         { product_id: '', product_variant_id: '', quantity: 1, notes: '' },
     ],
 });
+const { errorSummary, errorId, fieldErrorAttrs, focusErrors } = useFormFeedback(form);
+const errorTargets = computed(() => ({
+    from_location_id: fieldIdPrefix + '-1',
+    to_location_id: fieldIdPrefix + '-2',
+    notes: fieldIdPrefix + '-3',
+    items: fieldIdPrefix + '-repeat-1-0',
+    ...Object.fromEntries(form.items.flatMap((_, index) => [[`items.${index}.product_id`, fieldIdPrefix + '-repeat-1-' + index], [`items.${index}.product_variant_id`, fieldIdPrefix + '-repeat-2-' + index], [`items.${index}.quantity`, fieldIdPrefix + '-repeat-3-' + index], [`items.${index}.notes`, fieldIdPrefix + '-repeat-4-' + index]])),
+}));
+
 
 const sourceStock = ref(null);
 const sourceStockState = ref('idle');
@@ -152,8 +164,10 @@ const onScannedCode = async (code) => {
 useBarcodeWedge(onScannedCode, { enabled: () => !showScanner.value });
 
 const submit = () => {
+    if (form.processing) return;
     form.post(route('stock-transfers.store'), {
         preserveScroll: true,
+        onError: focusErrors,
     });
 };
 
@@ -187,6 +201,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
         </PageHeader>
 
         <form @submit.prevent="submit" class="mt-6 space-y-4">
+            <FormErrorSummary ref="errorSummary" :errors="form.errors" :targets="errorTargets" />
             <!-- Location Selection -->
             <Card :padded="false">
                 <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">{{ t('stockTransfers.transferDetails') }}</h3></div>
@@ -199,13 +214,13 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                 v-model="form.from_location_id"
                                 required
                                 :class="fieldInput"
-                            >
+                                v-bind="fieldErrorAttrs('from_location_id')">
                                 <option value="">{{ t('stockTransfers.create.selectSource') }}</option>
                                 <option v-for="location in availableFromLocations" :key="location.id" :value="location.id">
                                     {{ location.name }} {{ location.code ? `(${location.code})` : '' }}
                                 </option>
                             </select>
-                            <p v-if="form.errors.from_location_id" :class="fieldError">
+                            <p v-if="form.errors.from_location_id" :class="fieldError" :id="errorId('from_location_id')">
                                 {{ form.errors.from_location_id }}
                             </p>
                         </div>
@@ -217,13 +232,13 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                 v-model="form.to_location_id"
                                 required
                                 :class="fieldInput"
-                            >
+                                v-bind="fieldErrorAttrs('to_location_id')">
                                 <option value="">{{ t('stockTransfers.create.selectDestination') }}</option>
                                 <option v-for="location in availableToLocations" :key="location.id" :value="location.id">
                                     {{ location.name }} {{ location.code ? `(${location.code})` : '' }}
                                 </option>
                             </select>
-                            <p v-if="form.errors.to_location_id" :class="fieldError">
+                            <p v-if="form.errors.to_location_id" :class="fieldError" :id="errorId('to_location_id')">
                                 {{ form.errors.to_location_id }}
                             </p>
                         </div>
@@ -246,8 +261,8 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                             rows="3"
                             :class="fieldArea"
                             :placeholder="t('stockTransfers.create.notesPlaceholder')"
-                        ></textarea>
-                        <p v-if="form.errors.notes" :class="fieldError">
+                            v-bind="fieldErrorAttrs('notes')"></textarea>
+                        <p v-if="form.errors.notes" :class="fieldError" :id="errorId('notes')">
                             {{ form.errors.notes }}
                         </p>
                     </div>
@@ -286,7 +301,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                     </p>
                 </div>
                 <div class="p-5">
-                    <p v-if="form.errors.items" :class="fieldError" class="mb-4">
+                    <p v-if="form.errors.items" :class="fieldError" class="mb-4" :id="errorId('items')">
                         {{ form.errors.items }}
                     </p>
 
@@ -299,19 +314,19 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                             <!-- Product -->
                             <div class="min-w-0 flex-1 basis-full sm:basis-auto sm:min-w-[200px]">
                                 <label :for="fieldIdPrefix + '-repeat-1-' + index" :class="fieldLabel">{{ t('common.product') }} <span class="text-status-danger">*</span></label>
-                                <ProductPicker :id="fieldIdPrefix + '-repeat-1-' + index" v-model="item.product_id" :products="products" :stock-by-product="stockByProduct" :stock-label="sourceStockState === 'ready' ? t('components.productPicker.atSource') : null" required :invalid="Boolean(form.errors[`items.${index}.product_id`])" @change="item.product_variant_id = ''" />
-                                <p v-if="form.errors[`items.${index}.product_id`]" :class="fieldError">
+                                <ProductPicker :id="fieldIdPrefix + '-repeat-1-' + index" v-model="item.product_id" :products="products" :stock-by-product="stockByProduct" :stock-label="sourceStockState === 'ready' ? t('components.productPicker.atSource') : null" required :invalid="Boolean(form.errors[`items.${index}.product_id`])" :describedby="form.errors[`items.${index}.product_id`] ? errorId(`items.${index}.product_id`) : null" @change="item.product_variant_id = ''" />
+                                <p v-if="form.errors[`items.${index}.product_id`]" :class="fieldError" :id="errorId(`items.${index}.product_id`)">
                                     {{ form.errors[`items.${index}.product_id`] }}
                                 </p>
                             </div>
 
                             <div v-if="getProduct(item.product_id)?.active_variants?.length" class="min-w-48 flex-1">
                                 <label :for="fieldIdPrefix + '-repeat-2-' + index" :class="fieldLabel">{{ t('orders.create.variant') }}</label>
-                                <select :id="fieldIdPrefix + '-repeat-2-' + index" v-model="item.product_variant_id" required :class="fieldInput">
+                                <select :id="fieldIdPrefix + '-repeat-2-' + index" v-model="item.product_variant_id" v-bind="fieldErrorAttrs(`items.${index}.product_variant_id`)" required :class="fieldInput">
                                     <option value="">{{ t('orders.create.chooseVariant') }}</option>
                                     <option v-for="variant in getProduct(item.product_id).active_variants" :key="variant.id" :value="variant.id">{{ variant.sku || variant.title }}<template v-if="sourceStockState === 'ready'"> · {{ t('components.productPicker.atSource') }}: {{ sourceAvailable(item.product_id, variant.id) }}</template></option>
                                 </select>
-                                <p v-if="form.errors[`items.${index}.product_variant_id`]" :class="fieldError">{{ form.errors[`items.${index}.product_variant_id`] }}</p>
+                                <p v-if="form.errors[`items.${index}.product_variant_id`]" :class="fieldError" :id="errorId(`items.${index}.product_variant_id`)">{{ form.errors[`items.${index}.product_variant_id`] }}</p>
                             </div>
                             <!-- Quantity -->
                             <div class="w-32">
@@ -322,12 +337,12 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                     min="1"
                                     required
                                     :class="fieldInput"
-                                />
+                                    v-bind="fieldErrorAttrs(`items.${index}.quantity`)" />
                                 <p v-if="item.product_id" class="mt-1 text-xs text-text-secondary" role="status">
                                     {{ sourceStockMessage }}<template v-if="sourceStockState === 'ready' && (!getProduct(item.product_id)?.has_variants || item.product_variant_id)">: {{ sourceAvailable(item.product_id, item.product_variant_id) }}</template>
                                 </p>
                                 <Button v-if="index === 0 && sourceStockState === 'error'" type="button" variant="secondary" size="sm" class="mt-2" @click="loadSourceStock(form.from_location_id)">{{ t('common.retry') }}</Button>
-                                <p v-if="form.errors[`items.${index}.quantity`]" :class="fieldError">
+                                <p v-if="form.errors[`items.${index}.quantity`]" :class="fieldError" :id="errorId(`items.${index}.quantity`)">
                                     {{ form.errors[`items.${index}.quantity`] }}
                                 </p>
                             </div>
@@ -340,7 +355,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                     type="text"
                                     :class="fieldInput"
                                     :placeholder="t('stockTransfers.create.itemNotesPlaceholder')"
-                                />
+                                    v-bind="fieldErrorAttrs(`items.${index}.notes`)" />
                             </div>
 
                             <!-- Remove button -->
@@ -371,18 +386,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                 </div>
             </Card>
 
-            <!-- Actions -->
-            <div class="flex justify-end gap-3">
-                <Button variant="secondary" as="Link" :href="route('stock-transfers.index')">{{ t('common.cancel') }}</Button>
-                <Button
-                    type="submit"
-                    variant="default"
-                    :loading="form.processing"
-                    :disabled="form.processing || !form.from_location_id || !form.to_location_id || !hasValidItems"
-                >
-                    {{ form.processing ? t('common.creating') : t('stockTransfers.create.createTransfer') }}
-                </Button>
-            </div>
+            <FormActions :label="t('stockTransfers.create.createTransfer')" :cancel-href="route('stock-transfers.index')" :processing="form.processing" :disabled="!form.from_location_id || !form.to_location_id || !hasValidItems" />
         </form>
 
         <!-- Barcode Scanner Modal -->

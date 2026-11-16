@@ -8,6 +8,9 @@ import AppLayout from '@/Layouts/AppLayout.vue';
 import PageHeader from '@/Components/ui/PageHeader.vue';
 import Card from '@/Components/ui/Card.vue';
 import Button from '@/Components/ui/Button.vue';
+import FormActions from '@/Components/ui/FormActions.vue';
+import FormErrorSummary from '@/Components/ui/FormErrorSummary.vue';
+import { useFormFeedback } from '@/composables/useFormFeedback';
 import ProductPicker from '@/Components/ui/ProductPicker.vue';
 import TaxInput from '@/Components/TaxInput.vue';
 import PluginSlot from '@/Components/PluginSlot.vue';
@@ -40,6 +43,19 @@ const form = useForm({
     notes: '',
     items: [],
 });
+const { errorSummary, errorId, fieldErrorAttrs, focusErrors } = useFormFeedback(form);
+const errorTargets = computed(() => ({
+    supplier_id: 'supplier_id',
+    currency: 'currency',
+    order_date: 'order_date',
+    expected_date: 'expected_date',
+    notes: 'notes',
+    shipping: 'shipping',
+    tax: 'tax',
+    items: 'product',
+    ...Object.fromEntries(form.items.flatMap((_, index) => [[`items.${index}.quantity`, fieldIdPrefix + '-repeat-1-' + index], [`items.${index}.unit_cost`, fieldIdPrefix + '-repeat-2-' + index]])),
+}));
+
 
 const showScanner = ref(false);
 const selectedProductId = ref('');
@@ -169,7 +185,8 @@ const onProductFound = (product, variant = null) => {
 };
 
 const submit = () => {
-    form.post(route('purchase-orders.store'));
+    if (form.processing) return;
+    form.post(route('purchase-orders.store'), { preserveScroll: true, onError: focusErrors });
 };
 
 const formatCurrency = (value) => {
@@ -209,6 +226,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
         <PluginSlot slot="header" :components="pluginComponents?.header" />
 
         <form @submit.prevent="submit" class="mt-6 space-y-4">
+            <FormErrorSummary ref="errorSummary" :errors="form.errors" :targets="errorTargets" />
             <!-- Order Details -->
             <Card :padded="false">
                 <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">{{ t('purchaseOrders.create.orderDetails') }}</h3></div>
@@ -216,38 +234,38 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                     <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
                         <div>
                             <label for="supplier_id" :class="fieldLabel">{{ t('purchaseOrders.supplier') }} *</label>
-                            <select id="supplier_id" v-model="form.supplier_id" required :class="fieldInput">
+                            <select id="supplier_id" v-model="form.supplier_id" required :class="fieldInput" v-bind="fieldErrorAttrs('supplier_id')">
                                 <option value="">{{ t('purchaseOrders.create.selectSupplier') }}</option>
                                 <option v-for="supplier in suppliers" :key="supplier.id" :value="supplier.id">
                                     {{ supplier.name }}
                                 </option>
                             </select>
-                            <p v-if="form.errors.supplier_id" :class="fieldError">{{ form.errors.supplier_id }}</p>
+                            <p v-if="form.errors.supplier_id" :class="fieldError" :id="errorId('supplier_id')">{{ form.errors.supplier_id }}</p>
                         </div>
 
                         <div>
                             <label for="currency" :class="fieldLabel">{{ t('common.currency') }}</label>
-                            <CurrencySelect id="currency" v-model="form.currency" :class="fieldInput" />
-                            <p v-if="form.errors.currency" :class="fieldError">{{ form.errors.currency }}</p>
+                            <CurrencySelect id="currency" v-model="form.currency" :class="fieldInput" v-bind="fieldErrorAttrs('currency')" />
+                            <p v-if="form.errors.currency" :class="fieldError" :id="errorId('currency')">{{ form.errors.currency }}</p>
                         </div>
 
                         <div>
                             <label for="order_date" :class="fieldLabel">{{ t('purchaseOrders.create.orderDate') }}</label>
-                            <input id="order_date" v-model="form.order_date" type="date" :class="fieldInput" required />
-                            <p v-if="form.errors.order_date" :class="fieldError">{{ form.errors.order_date }}</p>
+                            <input id="order_date" v-model="form.order_date" type="date" :class="fieldInput" required v-bind="fieldErrorAttrs('order_date')" />
+                            <p v-if="form.errors.order_date" :class="fieldError" :id="errorId('order_date')">{{ form.errors.order_date }}</p>
                         </div>
 
                         <div>
                             <label for="expected_date" :class="fieldLabel">{{ t('purchaseOrders.create.expectedDelivery') }}</label>
-                            <input id="expected_date" v-model="form.expected_date" type="date" :class="fieldInput" />
-                            <p v-if="form.errors.expected_date" :class="fieldError">{{ form.errors.expected_date }}</p>
+                            <input id="expected_date" v-model="form.expected_date" type="date" :class="fieldInput" v-bind="fieldErrorAttrs('expected_date')" />
+                            <p v-if="form.errors.expected_date" :class="fieldError" :id="errorId('expected_date')">{{ form.errors.expected_date }}</p>
                         </div>
                     </div>
 
                     <div>
                         <label for="notes" :class="fieldLabel">{{ t('common.notes') }}</label>
-                        <textarea id="notes" v-model="form.notes" rows="3" :class="fieldArea"></textarea>
-                        <p v-if="form.errors.notes" :class="fieldError">{{ form.errors.notes }}</p>
+                        <textarea id="notes" v-model="form.notes" rows="3" :class="fieldArea" v-bind="fieldErrorAttrs('notes')"></textarea>
+                        <p v-if="form.errors.notes" :class="fieldError" :id="errorId('notes')">{{ form.errors.notes }}</p>
                     </div>
                 </div>
             </Card>
@@ -303,7 +321,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                         </div>
                     </div>
 
-                    <p v-if="form.errors.items" :class="fieldError">{{ form.errors.items }}</p>
+                    <p v-if="form.errors.items" :class="fieldError" :id="errorId('items')">{{ form.errors.items }}</p>
                 </div>
             </Card>
 
@@ -320,15 +338,17 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                     SKU: {{ item.sku || '-' }}
                                     <span v-if="item.supplier_sku"> &middot; {{ t('purchaseOrders.create.supplierSku') }}: {{ item.supplier_sku }}</span>
                                 </p>
-                                <p v-if="form.errors[`items.${index}.product_variant_id`]" :class="fieldError">{{ form.errors[`items.${index}.product_variant_id`] }}</p>
+                                <p v-if="form.errors[`items.${index}.product_variant_id`]" :class="fieldError" :id="errorId(`items.${index}.product_variant_id`)">{{ form.errors[`items.${index}.product_variant_id`] }}</p>
                             </div>
                             <div class="w-20">
                                 <label :for="fieldIdPrefix + '-repeat-1-' + index" class="mb-1 block text-[11px] text-text-tertiary">{{ t('common.quantity') }}</label>
-                                <input :id="fieldIdPrefix + '-repeat-1-' + index" :value="item.quantity" @input="updateItemQuantity(index, parseInt($event.target.value))" type="number" min="1" :class="fieldInput" />
+                                <input :id="fieldIdPrefix + '-repeat-1-' + index" :value="item.quantity" @input="updateItemQuantity(index, parseInt($event.target.value))" type="number" min="1" :class="fieldInput" v-bind="fieldErrorAttrs(`items.${index}.quantity`)" />
+                                <p v-if="form.errors[`items.${index}.quantity`]" :id="errorId(`items.${index}.quantity`)" :class="fieldError">{{ form.errors[`items.${index}.quantity`] }}</p>
                             </div>
                             <div class="w-28">
                                 <label :for="fieldIdPrefix + '-repeat-2-' + index" class="mb-1 block text-[11px] text-text-tertiary">{{ t('purchaseOrders.create.unitCost') }}</label>
-                                <input :id="fieldIdPrefix + '-repeat-2-' + index" :value="item.unit_cost" @input="updateItemCost(index, $event.target.value)" type="number" step="0.01" min="0" :class="fieldInput" />
+                                <input :id="fieldIdPrefix + '-repeat-2-' + index" :value="item.unit_cost" @input="updateItemCost(index, $event.target.value)" type="number" step="0.01" min="0" :class="fieldInput" v-bind="fieldErrorAttrs(`items.${index}.unit_cost`)" />
+                                <p v-if="form.errors[`items.${index}.unit_cost`]" :id="errorId(`items.${index}.unit_cost`)" :class="fieldError">{{ form.errors[`items.${index}.unit_cost`] }}</p>
                             </div>
                             <div class="w-28 text-end">
                                 <label class="mb-1 block text-[11px] text-text-tertiary">{{ t('common.subtotal') }}</label>
@@ -348,7 +368,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                             <TaxInput v-model="form.tax" :base="subtotal" :error="form.errors.tax" />
                             <div class="flex items-center justify-between text-sm">
                                 <label for="shipping" class="text-text-secondary">{{ t('common.shipping') }}</label>
-                                <input id="shipping" v-model.number="form.shipping" type="number" step="0.01" min="0" class="h-9 w-28 rounded-md border border-border-subtle bg-surface-canvas px-3 text-end text-sm text-text-primary placeholder:text-text-tertiary ds-focus-ring" />
+                                <input id="shipping" v-model.number="form.shipping" type="number" step="0.01" min="0" class="h-9 w-28 rounded-md border border-border-subtle bg-surface-canvas px-3 text-end text-sm text-text-primary placeholder:text-text-tertiary ds-focus-ring" v-bind="fieldErrorAttrs('shipping')" />
                             </div>
                             <div class="flex items-center justify-between border-t border-border-subtle pt-3">
                                 <span class="text-sm font-semibold text-text-primary">{{ t('common.total') }}</span>
@@ -359,13 +379,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                 </div>
             </Card>
 
-            <!-- Actions -->
-            <div class="flex items-center justify-end gap-2">
-                <Button variant="secondary" size="lg" as="Link" :href="route('purchase-orders.index')">{{ t('common.cancel') }}</Button>
-                <Button type="submit" variant="default" size="lg" :loading="form.processing" :disabled="form.processing || form.items.length === 0">
-                    {{ t('purchaseOrders.create.createPo') }}
-                </Button>
-            </div>
+            <FormActions :label="t('purchaseOrders.create.createPo')" :cancel-href="route('purchase-orders.index')" :processing="form.processing" :disabled="form.items.length === 0" />
         </form>
 
         <!-- Plugin Slot: Footer -->

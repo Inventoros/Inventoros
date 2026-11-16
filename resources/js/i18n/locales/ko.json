@@ -2865,6 +2865,10 @@
       "sourceError": "출발지 재고를 불러올 수 없습니다",
       "refine": "{total}개 중 {shown}개 표시. 검색 범위를 좁히세요.",
       "results": "제품 {count}개"
+    },
+    "formFeedback": {
+      "title": "다음 항목을 확인하세요",
+      "hint": "입력한 내용은 유지됩니다. 아래 문제를 수정하고 다시 시도하세요."
     }
   },
   "warehouses": {

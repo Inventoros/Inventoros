@@ -2865,6 +2865,10 @@
       "sourceError": "Bronvoorraad kon niet worden geladen",
       "refine": "{shown} van {total}. Verfijn je zoekopdracht.",
       "results": "{count} producten"
+    },
+    "formFeedback": {
+      "title": "Controleer deze velden",
+      "hint": "Je invoer blijft bewaard. Los de onderstaande problemen op en probeer het opnieuw."
     }
   },
   "warehouses": {

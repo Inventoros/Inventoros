@@ -2865,6 +2865,10 @@
       "sourceError": "Kaynak stoku yüklenemedi",
       "refine": "{total} sonuçtan {shown} gösteriliyor. Aramayı daraltın.",
       "results": "{count} ürün"
+    },
+    "formFeedback": {
+      "title": "Bu alanları kontrol edin",
+      "hint": "Girdileriniz korunur. Aşağıdaki sorunları düzeltip tekrar deneyin."
     }
   },
   "warehouses": {

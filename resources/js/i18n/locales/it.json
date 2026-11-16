@@ -2865,6 +2865,10 @@
       "sourceError": "Impossibile caricare le scorte all’origine",
       "refine": "{shown} di {total}. Affina la ricerca.",
       "results": "{count} prodotti"
+    },
+    "formFeedback": {
+      "title": "Controlla questi campi",
+      "hint": "I dati inseriti sono conservati. Correggi i problemi seguenti e riprova."
     }
   },
   "warehouses": {
