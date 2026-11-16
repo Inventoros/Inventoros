@@ -3111,6 +3111,17 @@
       "batchNumber": "Chargennummer",
       "batchNumberHint": "Leer lassen, um eine zu erzeugen. Eine vorhandene Charge dieses Produkts mit derselben Nummer wird aufgefüllt.",
       "expiryDate": "Ablaufdatum"
+    },
+    "setup": {
+      "title": "Zuerst eine Baugruppe einrichten",
+      "description": "Fertigungsauftr?ge ben?tigen eine aktive Baugruppe mit St?ckliste. Erstellen Sie das Produkt und f?gen Sie Komponenten und Mengen hinzu.",
+      "createAssembly": "Baugruppe erstellen",
+      "requestSetup": "Bitten Sie die Produktverwaltung, eine Baugruppe und ihre Komponenten einzurichten.",
+      "chooseAssembly": "W?hlen Sie eine Baugruppe, um vor dem Entwurf den Materialbedarf zu pr?fen.",
+      "reviewHint": "Pr?fen Sie die St?ckliste, bevor Sie einen Fertigungsauftrag erstellen.",
+      "reviewComponents": "St?ckliste pr?fen",
+      "draftHint": "Ein Entwurf wird erstellt. Der Bestand wird beim Produktionsstart erneut gepr?ft.",
+      "productHint": "?ffnen Sie nach dem Speichern das Produkt und erg?nzen Sie die Komponenten in der St?ckliste."
     }
   },
   "reportBuilder": {

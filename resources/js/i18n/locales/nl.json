@@ -3111,6 +3111,17 @@
       "batchNumber": "Batchnummer",
       "batchNumberHint": "Laat leeg om er een te genereren. Een bestaande batch van dit product met hetzelfde nummer wordt aangevuld.",
       "expiryDate": "Vervaldatum"
+    },
+    "setup": {
+      "title": "Stel eerst een assemblage in",
+      "description": "Werkorders vereisen een actief assemblageproduct met een stuklijst. Maak het product en voeg onderdelen en aantallen toe.",
+      "createAssembly": "Assemblageproduct maken",
+      "requestSetup": "Vraag de productbeheerder een assemblage met onderdelen in te stellen.",
+      "chooseAssembly": "Kies een assemblage om de benodigde materialen te bekijken voordat je een concept maakt.",
+      "reviewHint": "Controleer de stuklijst voordat je een werkorder maakt.",
+      "reviewComponents": "Stuklijst controleren",
+      "draftHint": "Dit maakt een concept. De voorraad wordt opnieuw gecontroleerd bij de productiestart.",
+      "productHint": "Open na het opslaan het product en voeg onderdelen toe aan de stuklijst."
     }
   },
   "reportBuilder": {

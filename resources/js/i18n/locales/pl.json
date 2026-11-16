@@ -3111,6 +3111,17 @@
       "batchNumber": "Numer partii",
       "batchNumberHint": "Zostaw puste, aby go wygenerować. Istniejąca partia tego produktu o tym samym numerze zostanie uzupełniona.",
       "expiryDate": "Data ważności"
+    },
+    "setup": {
+      "title": "Najpierw skonfiguruj produkt monta?owy",
+      "description": "Zlecenia wymagaj? aktywnego produktu monta?owego z zestawieniem materia??w. Utw?rz produkt, a nast?pnie dodaj komponenty i ilo?ci.",
+      "createAssembly": "Utw?rz produkt monta?owy",
+      "requestSetup": "Popro? osob? zarz?dzaj?c? produktami o skonfigurowanie produktu monta?owego i jego komponent?w.",
+      "chooseAssembly": "Wybierz produkt monta?owy, aby sprawdzi? materia?y przed utworzeniem wersji roboczej.",
+      "reviewHint": "Sprawd? zestawienie materia??w przed utworzeniem zlecenia.",
+      "reviewComponents": "Sprawd? zestawienie materia??w",
+      "draftHint": "Powstanie wersja robocza. Stan magazynowy zostanie ponownie sprawdzony przy rozpocz?ciu produkcji.",
+      "productHint": "Po zapisaniu otw?rz produkt i dodaj komponenty w zestawieniu materia??w."
     }
   },
   "reportBuilder": {

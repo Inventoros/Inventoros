@@ -3111,6 +3111,17 @@
       "batchNumber": "Numero di lotto",
       "batchNumberHint": "Lascia vuoto per generarne uno. Un lotto esistente di questo prodotto con lo stesso numero viene incrementato.",
       "expiryDate": "Data di scadenza"
+    },
+    "setup": {
+      "title": "Configura prima un assemblaggio",
+      "description": "Gli ordini di produzione richiedono un prodotto di assemblaggio attivo con una distinta base. Crea il prodotto, poi aggiungi componenti e quantit?.",
+      "createAssembly": "Crea prodotto di assemblaggio",
+      "requestSetup": "Chiedi al responsabile dei prodotti di configurare un assemblaggio e i suoi componenti.",
+      "chooseAssembly": "Scegli un assemblaggio per verificare i materiali prima di creare una bozza.",
+      "reviewHint": "Verifica la distinta base prima di creare un ordine di produzione.",
+      "reviewComponents": "Verifica distinta base",
+      "draftHint": "Verr? creata una bozza. Le scorte saranno ricontrollate all?avvio della produzione.",
+      "productHint": "Dopo il salvataggio, apri il prodotto e aggiungi i componenti nella distinta base."
     }
   },
   "reportBuilder": {

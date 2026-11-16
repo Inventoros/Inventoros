@@ -31,6 +31,7 @@ const props = defineProps({
     defaultCurrency: String,
     barcodeTypes: { type: Array, default: () => [] },
     pluginComponents: Object,
+    initialType: { type: String, default: 'standard' },
 });
 
 const form = useForm({
@@ -53,7 +54,7 @@ const form = useForm({
     images: [],
     has_variants: false,
     tracking_type: 'none',
-    type: 'standard',
+    type: ['standard', 'kit', 'assembly'].includes(props.initialType) ? props.initialType : 'standard',
     options: [],
     variants: [],
     suppliers: [],
@@ -285,6 +286,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                 <p class="mt-1 text-xs text-text-tertiary">
                                     {{ t('products.form.productTypeHint') }}
                                 </p>
+                                <p v-if="form.type === 'assembly'" class="mt-2 text-xs text-text-secondary">{{ t('workOrders.setup.productHint') }}</p>
                                 <p v-if="form.errors.type" :class="fieldError">{{ form.errors.type }}</p>
                             </div>
 
