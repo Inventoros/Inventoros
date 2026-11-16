@@ -13,11 +13,15 @@ use App\Models\User;
 use App\Models\Warehouse;
 use App\Rules\OrganizationMember;
 use App\Services\CycleCountService;
+use App\Services\WarehouseAccessService;
 use Closure;
+use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -30,13 +34,16 @@ use Inertia\Response;
  */
 class CycleCountScheduleController extends Controller
 {
+    public function __construct(private readonly WarehouseAccessService $warehouseAccess) {}
+
     public function index(Request $request): Response
     {
         $schedules = CycleCountSchedule::with(['assignee:id,name', 'lastAudit:id,audit_number,status'])
+            ->tap(fn (Builder $query) => $this->scopeToAccessibleWarehouses($query, $request->user()))
             ->orderBy('name')
             ->get();
 
-        $options = $this->options($request->user()->organization_id);
+        $options = $this->options($request->user());
 
         return Inertia::render('StockAudits/CycleCounts/Index', [
             'pluginComponents' => plugin_slots('cycle-counts.index', ['header', 'footer']),
@@ -66,12 +73,13 @@ class CycleCountScheduleController extends Controller
     {
         return Inertia::render('StockAudits/CycleCounts/Form', [
             'schedule' => null,
-        ] + $this->options($request->user()->organization_id));
+        ] + $this->options($request->user()));
     }
 
     public function store(Request $request): RedirectResponse
     {
         $validated = $this->validated($request);
+        $this->validateScopeAccess($request->user(), $validated['scope_type'], $validated['scope_id'] ?? null);
 
         CycleCountSchedule::create([
             'organization_id' => $request->user()->organization_id,
@@ -91,6 +99,8 @@ class CycleCountScheduleController extends Controller
 
     public function edit(Request $request, CycleCountSchedule $cycleCount): Response
     {
+        $this->authorizeSchedule($request->user(), $cycleCount);
+
         return Inertia::render('StockAudits/CycleCounts/Form', [
             'schedule' => [
                 'id' => $cycleCount->id,
@@ -103,12 +113,14 @@ class CycleCountScheduleController extends Controller
                 'is_active' => $cycleCount->is_active,
                 'next_run_at' => $cycleCount->next_run_at?->format('Y-m-d\TH:i'),
             ],
-        ] + $this->options($request->user()->organization_id));
+        ] + $this->options($request->user()));
     }
 
     public function update(Request $request, CycleCountSchedule $cycleCount): RedirectResponse
     {
+        $this->authorizeSchedule($request->user(), $cycleCount);
         $validated = $this->validated($request);
+        $this->validateScopeAccess($request->user(), $validated['scope_type'], $validated['scope_id'] ?? null);
 
         $cycleCount->update([
             'name' => $validated['name'],
@@ -126,8 +138,10 @@ class CycleCountScheduleController extends Controller
         return redirect()->route('cycle-counts.index')->with('success', __('Cycle count schedule updated.'));
     }
 
-    public function destroy(CycleCountSchedule $cycleCount): RedirectResponse
+    public function destroy(Request $request, CycleCountSchedule $cycleCount): RedirectResponse
     {
+        $this->authorizeSchedule($request->user(), $cycleCount);
+
         $cycleCount->delete();
 
         return redirect()->route('cycle-counts.index')->with('success', __('Cycle count schedule deleted.'));
@@ -136,8 +150,10 @@ class CycleCountScheduleController extends Controller
     /**
      * Create this schedule's audit now, leaving its regular run time alone.
      */
-    public function run(CycleCountSchedule $cycleCount, CycleCountService $cycleCounts): RedirectResponse
+    public function run(Request $request, CycleCountSchedule $cycleCount, CycleCountService $cycleCounts): RedirectResponse
     {
+        $this->authorizeSchedule($request->user(), $cycleCount);
+
         $audit = $cycleCounts->run($cycleCount, advance: false);
 
         if (! $audit) {
@@ -146,6 +162,76 @@ class CycleCountScheduleController extends Controller
 
         return redirect()->route('stock-audits.show', $audit)
             ->with('success', "Cycle count {$audit->audit_number} created with {$audit->items()->count()} product(s).");
+    }
+
+    /**
+     * @throws AuthorizationException
+     */
+    private function authorizeSchedule(User $user, CycleCountSchedule $schedule): void
+    {
+        $this->authorizeScope($user, (string) $schedule->scope_type, $schedule->scope_id !== null ? (int) $schedule->scope_id : null);
+    }
+
+    /**
+     * A warehouse or location scope needs access to that warehouse. Category
+     * and whole-organization scopes count products in every warehouse
+     * (CycleCountService does not narrow them by location), so only
+     * unrestricted users may manage them.
+     *
+     * @throws AuthorizationException
+     */
+    private function authorizeScope(User $user, string $scopeType, int|string|null $scopeId): void
+    {
+        $scopeId = $scopeId !== null ? (int) $scopeId : null;
+
+        match ($scopeType) {
+            'warehouse' => $this->warehouseAccess->authorizeWarehouse($user, $scopeId),
+            'location' => $this->warehouseAccess->authorizeLocation($user, $scopeId),
+            default => $this->warehouseAccess->isRestricted($user)
+                ? throw new AuthorizationException('You do not have access to every warehouse.')
+                : null,
+        };
+    }
+
+    /**
+     * The requested scope of a store or update, refused as a field error so
+     * the form can show it.
+     *
+     * @throws ValidationException
+     */
+    private function validateScopeAccess(User $user, string $scopeType, int|string|null $scopeId): void
+    {
+        $scopeId = $scopeId !== null ? (int) $scopeId : null;
+
+        $allowed = match ($scopeType) {
+            'warehouse' => $this->warehouseAccess->canAccessWarehouse($user, $scopeId),
+            'location' => $this->warehouseAccess->canAccessLocation($user, $scopeId),
+            default => ! $this->warehouseAccess->isRestricted($user),
+        };
+
+        if ($allowed) {
+            return;
+        }
+
+        throw in_array($scopeType, ['warehouse', 'location'], true)
+            ? ValidationException::withMessages(['scope_id' => __('Choose a warehouse or location you have access to.')])
+            : ValidationException::withMessages(['scope_type' => __('Only users with access to every warehouse can schedule counts across all warehouses or by category.')]);
+    }
+
+    /**
+     * @param  Builder<CycleCountSchedule>  $query
+     */
+    private function scopeToAccessibleWarehouses(Builder $query, User $user): void
+    {
+        $ids = $this->warehouseAccess->accessibleWarehouseIds($user);
+
+        if ($ids === null) {
+            return;
+        }
+
+        $query->where(fn (Builder $q) => $q
+            ->where(fn (Builder $w) => $w->where('scope_type', 'warehouse')->whereIn('scope_id', $ids))
+            ->orWhere(fn (Builder $l) => $this->warehouseAccess->scopeByLocation($l->where('scope_type', 'location'), $user, 'scope_id')));
     }
 
     /**
@@ -190,15 +276,22 @@ class CycleCountScheduleController extends Controller
     /**
      * @return array<string, mixed>
      */
-    private function options(int $organizationId): array
+    private function options(User $user): array
     {
+        $organizationId = (int) $user->organization_id;
+        // Category and whole-organization scopes span every warehouse.
+        $restricted = $this->warehouseAccess->isRestricted($user);
+
         return [
-            'locations' => ProductLocation::forOrganization($organizationId)->active()->orderBy('name')->get(['id', 'name', 'code']),
-            'warehouses' => Warehouse::where('organization_id', $organizationId)->orderBy('name')->get(['id', 'name', 'code']),
-            'categories' => ProductCategory::where('organization_id', $organizationId)->orderBy('name')->get(['id', 'name']),
+            'locations' => $this->warehouseAccess->scopeLocations(ProductLocation::forOrganization($organizationId)->active(), $user)
+                ->orderBy('name')->get(['id', 'name', 'code']),
+            'warehouses' => $this->warehouseAccess->accessibleWarehousesQuery($user)->orderBy('name')->get(['id', 'name', 'code']),
+            'categories' => $restricted ? collect() : ProductCategory::where('organization_id', $organizationId)->orderBy('name')->get(['id', 'name']),
             'users' => User::query()->memberOf($organizationId)->orderBy('name')->get(['id', 'name']),
             'frequencies' => CycleCountSchedule::FREQUENCIES,
-            'scopes' => CycleCountSchedule::SCOPES,
+            'scopes' => $restricted
+                ? array_values(array_intersect(CycleCountSchedule::SCOPES, ['location', 'warehouse']))
+                : CycleCountSchedule::SCOPES,
         ];
     }
 
