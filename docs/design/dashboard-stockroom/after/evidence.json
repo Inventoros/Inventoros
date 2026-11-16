@@ -1,0 +1,150 @@
+[
+  {
+    "variant": "desktop",
+    "width": 1440,
+    "height": 1000,
+    "theme": "light",
+    "overflow": 0,
+    "pageHeight": 1469,
+    "metrics": [
+      {
+        "key": "dashboard-metric-products",
+        "text": "Total Products165 Categories · 4 Locations",
+        "exact": "16"
+      },
+      {
+        "key": "dashboard-metric-value",
+        "text": "Inventory Value$94.4Kat selling price · USD",
+        "exact": "$94,390.62"
+      },
+      {
+        "key": "dashboard-metric-pending",
+        "text": "Pending Orders39 Orders · all time",
+        "exact": "3"
+      },
+      {
+        "key": "dashboard-metric-revenue",
+        "text": "Revenue This Month$2.7KMonth to date · USD",
+        "exact": "$2,721.85"
+      }
+    ],
+    "stock": [
+      "SKU-10001Wireless Bluetooth KeyboardElectronics · Warehouse A0On hand20Minimum20 below minimumReview stock",
+      "SKU-10014Laptop Stand AluminumElectronics · Warehouse B3On hand10Minimum7 below minimumReview stock",
+      "SKU-10010Corrugated Shipping Box (L)Packaging · Receiving Dock125On hand500Minimum375 below minimumReview stock"
+    ],
+    "stockTop": 318,
+    "valuationTotal": "$94,390.62"
+  },
+  {
+    "variant": "wide",
+    "width": 3440,
+    "height": 1440,
+    "theme": "light",
+    "overflow": 0,
+    "pageHeight": 1440,
+    "metrics": [
+      {
+        "key": "dashboard-metric-products",
+        "text": "Total Products165 Categories · 4 Locations",
+        "exact": "16"
+      },
+      {
+        "key": "dashboard-metric-value",
+        "text": "Inventory Value$94.4Kat selling price · USD",
+        "exact": "$94,390.62"
+      },
+      {
+        "key": "dashboard-metric-pending",
+        "text": "Pending Orders39 Orders · all time",
+        "exact": "3"
+      },
+      {
+        "key": "dashboard-metric-revenue",
+        "text": "Revenue This Month$2.7KMonth to date · USD",
+        "exact": "$2,721.85"
+      }
+    ],
+    "stock": [
+      "SKU-10001Wireless Bluetooth KeyboardElectronics · Warehouse A0On hand20Minimum20 below minimumReview stock",
+      "SKU-10014Laptop Stand AluminumElectronics · Warehouse B3On hand10Minimum7 below minimumReview stock",
+      "SKU-10010Corrugated Shipping Box (L)Packaging · Receiving Dock125On hand500Minimum375 below minimumReview stock"
+    ],
+    "stockTop": 318,
+    "valuationTotal": "$94,390.62"
+  },
+  {
+    "variant": "phone",
+    "width": 375,
+    "height": 812,
+    "theme": "light",
+    "overflow": 0,
+    "pageHeight": 2521,
+    "metrics": [
+      {
+        "key": "dashboard-metric-products",
+        "text": "Total Products165 Categories · 4 Locations",
+        "exact": "16"
+      },
+      {
+        "key": "dashboard-metric-value",
+        "text": "Inventory Value$94.4Kat selling price · USD",
+        "exact": "$94,390.62"
+      },
+      {
+        "key": "dashboard-metric-pending",
+        "text": "Pending Orders39 Orders · all time",
+        "exact": "3"
+      },
+      {
+        "key": "dashboard-metric-revenue",
+        "text": "Revenue This Month$2.7KMonth to date · USD",
+        "exact": "$2,721.85"
+      }
+    ],
+    "stock": [
+      "SKU-10001Wireless Bluetooth KeyboardElectronics · Warehouse A0On hand20Minimum20 below minimumReview stock",
+      "SKU-10014Laptop Stand AluminumElectronics · Warehouse B3On hand10Minimum7 below minimumReview stock",
+      "SKU-10010Corrugated Shipping Box (L)Packaging · Receiving Dock125On hand500Minimum375 below minimumReview stock"
+    ],
+    "stockTop": 450,
+    "valuationTotal": "$94,390.62"
+  },
+  {
+    "variant": "dark",
+    "width": 1440,
+    "height": 1000,
+    "theme": "dark",
+    "overflow": 0,
+    "pageHeight": 1469,
+    "metrics": [
+      {
+        "key": "dashboard-metric-products",
+        "text": "Total Products165 Categories · 4 Locations",
+        "exact": "16"
+      },
+      {
+        "key": "dashboard-metric-value",
+        "text": "Inventory Value$94.4Kat selling price · USD",
+        "exact": "$94,390.62"
+      },
+      {
+        "key": "dashboard-metric-pending",
+        "text": "Pending Orders39 Orders · all time",
+        "exact": "3"
+      },
+      {
+        "key": "dashboard-metric-revenue",
+        "text": "Revenue This Month$2.7KMonth to date · USD",
+        "exact": "$2,721.85"
+      }
+    ],
+    "stock": [
+      "SKU-10001Wireless Bluetooth KeyboardElectronics · Warehouse A0On hand20Minimum20 below minimumReview stock",
+      "SKU-10014Laptop Stand AluminumElectronics · Warehouse B3On hand10Minimum7 below minimumReview stock",
+      "SKU-10010Corrugated Shipping Box (L)Packaging · Receiving Dock125On hand500Minimum375 below minimumReview stock"
+    ],
+    "stockTop": 318,
+    "valuationTotal": "$94,390.62"
+  }
+]

@@ -1,12 +1,12 @@
 <script setup>
 import TableViewport from '@/Components/ui/TableViewport.vue';
-/** Workspace overview: a divided metric strip and operational record panels.
- * Secondary financial facts and shortcuts share a compact surface on wide
- * screens. Existing plugin slots and widget keys stay intact.
- * Values and freshness come from the server; no synthetic trends. */
+/** The established primary stats remain first. Replenishment adds SKU labels
+ * and minimum-stock rulers below them, with record tickets on wide screens.
+ * Plugin slots, widget keys, values, and freshness retain their existing sources. */
 import AppLayout from '@/Layouts/AppLayout.vue';
 import PluginSlot from '@/Components/PluginSlot.vue';
 import PluginWidgets from '@/Components/PluginWidgets.vue';
+import StockPosition from '@/Components/Dashboard/StockPosition.vue';
 import MetricCard from '@/Components/Dashboard/MetricCard.vue';
 import Modal from '@/Components/Modal.vue';
 import Card from '@/Components/ui/Card.vue';
@@ -224,7 +224,6 @@ const ordersStatusIcon = (status) => (status === 'delivered' ? Check : status ==
             <PluginSlot slot="header" :components="pluginComponents.header" />
             <header class="dashboard-heading">
                 <div>
-                    <p class="dashboard-eyebrow">{{ t('dashboard.design.overview') }}</p>
                     <h1>{{ t('dashboard.title') }}</h1>
                 </div>
                 <div class="dashboard-heading-actions">
@@ -276,7 +275,7 @@ const ordersStatusIcon = (status) => (status === 'delivered' ? Check : status ==
             >
                 <div class="dashboard-panel-heading">
                     <div class="dashboard-panel-title">
-                        <AlertTriangle v-if="lowStockProducts.length" :size="16" class="text-status-warning" aria-hidden="true" />
+                        <span class="dashboard-section-marker" aria-hidden="true"></span>
                         <h2 id="replenishment-title">{{ t('dashboard.design.replenishment') }}</h2>
                         <span v-if="stats.lowStockProducts" class="dashboard-warning-badge"
                             >{{ formatNumber(stats.lowStockProducts) }} {{ t('dashboard.lowStock') }}</span
@@ -303,8 +302,8 @@ const ordersStatusIcon = (status) => (status === 'delivered' ? Check : status ==
                 <ul v-else class="dashboard-replenishment-list">
                     <li v-for="product in lowStockProducts" :key="product.id" class="dashboard-stock-row">
                         <div class="dashboard-product">
-                            <span class="dashboard-product-icon"><Package :size="22" :stroke-width="1.5" aria-hidden="true" /></span>
                             <div>
+                                <p v-if="product.sku" class="dashboard-stock-code">{{ product.sku }}</p>
                                 <Link :href="route('products.show', product.id)" class="dashboard-product-name ds-focus-ring"
                                     >{{ product.name }}<ArrowUpRight :size="12" aria-hidden="true"
                                 /></Link>
@@ -314,34 +313,12 @@ const ordersStatusIcon = (status) => (status === 'delivered' ? Check : status ==
                                 </p>
                             </div>
                         </div>
-                        <div class="dashboard-stock-level">
-                            <div>
-                                <span
-                                    >{{ t('warehouses.stockLevels.onHand') }}
-                                    <strong>{{ formatPlainNumber(stockLevel(product).stock) }}</strong></span
-                                ><span
-                                    >{{ t('dashboard.design.minimum') }}
-                                    <strong>{{ formatPlainNumber(stockLevel(product).minimum) }}</strong></span
-                                >
-                            </div>
-                            <div
-                                class="dashboard-stock-track"
-                                role="img"
-                                :aria-label="
-                                    t('dashboard.design.stockLevel', {
-                                        stock: formatPlainNumber(stockLevel(product).stock),
-                                        minimum: formatPlainNumber(stockLevel(product).minimum),
-                                    })
-                                "
-                            >
-                                <span :style="{ width: `${stockLevel(product).percent}%` }"></span><b aria-hidden="true"></b>
-                            </div>
-                        </div>
+                        <StockPosition :product="product" />
                         <p class="dashboard-shortfall">
                             {{ t('dashboard.design.shortfall', { count: formatPlainNumber(stockLevel(product).shortfall) }) }}
                         </p>
                         <button type="button" class="dashboard-review ds-focus-ring" @click="selectedProduct = product">
-                            <ClipboardList :size="14" aria-hidden="true" />{{ t('dashboard.design.reviewStock')
+                            {{ t('dashboard.design.reviewStock')
                             }}<ArrowRight :size="14" aria-hidden="true" />
                         </button>
                     </li>
