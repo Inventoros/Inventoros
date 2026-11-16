@@ -346,12 +346,14 @@
 }
 .table-quick-search > button {
     display: inline-flex;
+    flex-shrink: 0;
     align-items: center;
     justify-content: center;
     height: 100%;
     padding-inline: 8px;
     border-inline-start: 1px solid hsl(var(--border-subtle));
     font-size: 12px;
+    white-space: nowrap;
     color: hsl(var(--text-secondary));
 }
 @media (max-width: 767px) {
