@@ -242,6 +242,10 @@
     }
   },
   "common": {
+    "sortBy": "Sorteren op",
+    "sortDirection": "Richting",
+    "ascending": "Oplopend",
+    "descending": "Aflopend",
     "pagination": "Paginering",
     "save": "Opslaan",
     "saveChanges": "Wijzigingen opslaan",
@@ -4038,6 +4042,7 @@
     "rateHint": "Optioneel: voer een belastingtarief in om het bedrag te berekenen op basis van het subtotaal na kortingen. Alleen het bedrag wordt opgeslagen."
   },
   "warehouseStock": {
+    "onHand": "Op voorraad",
     "title": "Voorraad per magazijn",
     "includeZero": "Nulstanden tonen"
   },

@@ -242,6 +242,10 @@
     }
   },
   "common": {
+    "sortBy": "Ordenar por",
+    "sortDirection": "Dirección",
+    "ascending": "Ascendente",
+    "descending": "Descendente",
     "pagination": "Paginación",
     "save": "Guardar",
     "saveChanges": "Guardar cambios",
@@ -4038,6 +4042,7 @@
     "rateHint": "Opcional: introduzca un tipo impositivo para calcular el importe a partir del subtotal después de los descuentos. Solo se guarda el importe."
   },
   "warehouseStock": {
+    "onHand": "Existencias",
     "title": "Existencias por almacén",
     "includeZero": "Incluir saldos cero"
   },
