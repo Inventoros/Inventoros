@@ -27,7 +27,7 @@ class ListStockBalancesTool extends Tool
             'search' => $schema->string(), 'warehouse_id' => $schema->integer(), 'location_id' => $schema->integer(),
             'out_of_stock' => $schema->boolean(), 'include_zero' => $schema->boolean(),
             'sort_by' => $schema->string()->enum(StockBalanceService::SORTS), 'sort_dir' => $schema->string()->enum(['asc', 'desc']),
-            'page' => $schema->integer(), 'per_page' => $schema->integer()->description('Maximum 100.'),
+            'page' => $schema->integer(), 'per_page' => $schema->integer()->min(1)->max(100)->description('Maximum 100.'),
         ];
     }
 

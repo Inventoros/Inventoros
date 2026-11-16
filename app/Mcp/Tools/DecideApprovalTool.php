@@ -6,6 +6,7 @@ namespace App\Mcp\Tools;
 
 use App\Exceptions\ApprovalException;
 use App\Mcp\Concerns\AuthenticatesMcpRequest;
+use App\Mcp\Support\UntrustedText;
 use App\Services\ApprovalService;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
@@ -35,6 +36,9 @@ class DecideApprovalTool extends Tool
 
     public function handle(Request $request): Response
     {
+        // Agents copy tool output into write calls; never store the envelope.
+        UntrustedText::stripArguments($request);
+
         $validated = $request->validate([
             'type' => ['required', 'string', 'in:'.implode(',', ApprovalService::TYPES)],
             'id' => ['required', 'integer'],

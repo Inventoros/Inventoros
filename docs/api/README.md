@@ -100,6 +100,12 @@ and be accessible to the receiver. Planned receipts remain within their planned
 warehouse. Invalid selections roll back the whole delivery and return a nested
 validation error; unauthorized warehouse access returns `403`.
 
+Purchase-order create, update and receive accept at most 500 `items` per
+request, like orders, transfers and returns. A purchase order created in the
+web app with more than 500 lines cannot have all its lines replaced or received
+in one API call: receive it in batches of up to 500 lines, or edit it in the
+web app.
+
 See the [receiving guide](../features/purchase-order-receiving.md) for an example.
 
 ## Rate limiting
@@ -427,6 +433,9 @@ Every field is gated like the matching REST route: the user must hold the permis
 
 Collection fields, including nested relationships, return at most 100 records.
 The endpoint accepts one operation per request; array batching is disabled.
+A mutation operation may contain at most 10 root fields, aliases included
+(`GRAPHQL_MUTATION_MAX_ROOT_FIELDS`). Orders accept at most 500 lines over
+REST and GraphQL, like purchase orders, transfers and returns.
 Queries must fit the existing depth/field-complexity limits and a separate
 50,000-response-node budget that accounts for nested collection cardinality.
 Oversized queries are rejected before their resolvers execute. Use the REST

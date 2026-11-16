@@ -74,7 +74,7 @@ class StockAuditController extends Controller
         $sortDir = ($request->input('sort_dir') === 'asc') ? 'asc' : 'desc';
         $query->orderBy($sortBy, $sortDir);
 
-        $perPage = min($request->input('per_page', 15), 100);
+        $perPage = $this->perPage($request);
         $audits = $query->paginate($perPage);
 
         return StockAuditResource::collection($audits);

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Api;
 
 use App\Enums\TrackingType;
+use App\Http\Controllers\Api\Concerns\HandlesApiResponses;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\ProductSerialResource;
 use App\Models\Inventory\Product;
@@ -21,6 +22,8 @@ use Illuminate\Validation\Rule;
  */
 class SerialTrackingController extends Controller
 {
+    use HandlesApiResponses;
+
     /**
      * List serial numbers for a product.
      */
@@ -36,7 +39,7 @@ class SerialTrackingController extends Controller
             $query->withStatus($request->input('status'));
         }
 
-        $serials = $query->latest()->paginate(min((int) $request->input('per_page', 15), 100));
+        $serials = $query->latest()->paginate($this->perPage($request));
 
         return ProductSerialResource::collection($serials);
     }

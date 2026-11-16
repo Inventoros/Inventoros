@@ -8,6 +8,7 @@ use App\Exceptions\ApprovalException;
 use App\Exceptions\BusinessRuleException;
 use App\Exceptions\DocumentEmailException;
 use App\Exceptions\InvalidStateException;
+use App\Http\Controllers\Api\Concerns\HandlesApiResponses;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\PurchaseOrder\ReceivePurchaseOrderRequest;
 use App\Http\Requests\Api\PurchaseOrder\StorePurchaseOrderRequest;
@@ -18,6 +19,7 @@ use App\Models\Purchasing\PurchaseOrder;
 use App\Services\ApprovalService;
 use App\Services\PurchaseOrderEmailService;
 use App\Services\PurchaseOrderService;
+use App\Support\ListSortColumns;
 use Dedoc\Scramble\Attributes\QueryParameter;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -28,6 +30,8 @@ use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
  */
 class PurchaseOrderController extends Controller
 {
+    use HandlesApiResponses;
+
     /**
      * List purchase orders.
      */
@@ -55,12 +59,12 @@ class PurchaseOrderController extends Controller
             });
 
         // Sorting (allowlist to prevent SQL injection)
-        $allowedSortColumns = ['created_at', 'updated_at', 'order_date', 'po_number', 'status', 'total'];
+        $allowedSortColumns = ListSortColumns::PURCHASE_ORDERS;
         $sortBy = in_array($request->input('sort_by'), $allowedSortColumns) ? $request->input('sort_by') : 'order_date';
-        $sortDir = ($request->input('sort_dir') === 'asc') ? 'asc' : 'desc';
+        $sortDir = strtolower((string) $request->input('sort_dir')) === 'asc' ? 'asc' : 'desc';
         $query->orderBy($sortBy, $sortDir);
 
-        $perPage = min($request->input('per_page', 15), 100);
+        $perPage = $this->perPage($request);
         $purchaseOrders = $query->paginate($perPage);
 
         return PurchaseOrderResource::collection($purchaseOrders);

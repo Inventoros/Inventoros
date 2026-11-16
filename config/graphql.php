@@ -264,6 +264,9 @@ return [
         'query_max_complexity' => 200,
         'query_max_depth' => 10,
         'disable_introspection' => env('APP_ENV') === 'production',
+        // Most root fields (aliased writes) one mutation operation may carry;
+        // each HTTP request counts once against the API rate limiter.
+        'mutation_max_root_fields' => (int) env('GRAPHQL_MUTATION_MAX_ROOT_FIELDS', 10),
     ],
 
     /*
@@ -344,6 +347,7 @@ return [
         // temporary parsed request data is also used by the GraphQLUploadMiddleware
         \Rebing\GraphQL\Support\ExecutionMiddleware\AutomaticPersistedQueriesMiddleware::class,
         \App\GraphQL\Middleware\EnforceListResourceLimits::class,
+        \App\GraphQL\Middleware\EnforceMutationRootFieldLimit::class,
         \Rebing\GraphQL\Support\ExecutionMiddleware\AddAuthUserContextValueMiddleware::class,
     ],
 ];

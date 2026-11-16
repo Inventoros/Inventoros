@@ -31,7 +31,7 @@ final class UpdatePurchaseOrderRequest extends FormRequest
             'shipping' => ['nullable', 'numeric', 'decimal:0,2', 'min:0'],
             'tax' => ['nullable', 'numeric', 'decimal:0,2', 'min:0'],
             'notes' => ['nullable', 'string'],
-            'items' => ['sometimes', 'array', 'min:1'],
+            'items' => ['sometimes', 'array', 'min:1', 'max:500'],
             // parent purchase_order is already org-scoped via route-model binding
             'items.*.id' => ['nullable', 'exists:purchase_order_items,id'],
             'items.*.product_id' => ['required_with:items', Rule::exists('products', 'id')->where('organization_id', $organizationId)],

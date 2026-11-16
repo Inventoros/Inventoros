@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Api;
 
 use App\Exceptions\InsufficientStockException;
+use App\Http\Controllers\Api\Concerns\HandlesApiResponses;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\StockAdjustment\StoreStockAdjustmentRequest;
 use App\Http\Resources\StockAdjustmentResource;
@@ -14,6 +15,7 @@ use App\Models\Inventory\StockAdjustment;
 use App\Models\Inventory\StockAdjustmentRequest;
 use App\Services\ApprovalService;
 use App\Services\WarehouseAccessService;
+use App\Support\ListSortColumns;
 use Dedoc\Scramble\Attributes\QueryParameter;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -24,6 +26,8 @@ use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
  */
 class StockAdjustmentController extends Controller
 {
+    use HandlesApiResponses;
+
     /**
      * List stock adjustments.
      */
@@ -55,12 +59,12 @@ class StockAdjustmentController extends Controller
             });
 
         // Sorting (allowlist to prevent SQL injection)
-        $allowedSortColumns = ['created_at', 'updated_at', 'type', 'adjustment_quantity'];
+        $allowedSortColumns = ListSortColumns::STOCK_ADJUSTMENTS;
         $sortBy = in_array($request->input('sort_by'), $allowedSortColumns) ? $request->input('sort_by') : 'created_at';
-        $sortDir = ($request->input('sort_dir') === 'asc') ? 'asc' : 'desc';
+        $sortDir = strtolower((string) $request->input('sort_dir')) === 'asc' ? 'asc' : 'desc';
         $query->orderBy($sortBy, $sortDir);
 
-        $perPage = min($request->input('per_page', 15), 100);
+        $perPage = $this->perPage($request);
         $adjustments = $query->paginate($perPage);
 
         return StockAdjustmentResource::collection($adjustments);

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api;
 
+use App\Http\Controllers\Api\Concerns\HandlesApiResponses;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\SavedReport\StoreSavedReportRequest;
 use App\Http\Requests\Api\SavedReport\UpdateSavedReportRequest;
@@ -15,6 +16,7 @@ use Dedoc\Scramble\Attributes\QueryParameter;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -23,6 +25,8 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
  */
 class SavedReportController extends Controller
 {
+    use HandlesApiResponses;
+
     public function __construct(
         private readonly ReportDataService $reportDataService,
         private readonly SavedReportRenderer $renderer,
@@ -39,8 +43,9 @@ class SavedReportController extends Controller
         $reports = SavedReport::accessibleBy($user)
             ->with('creator:id,name')
             ->orderBy('updated_at', 'desc')
-            ->get()
-            ->map(function (SavedReport $report) use ($user) {
+            ->orderBy('id', 'desc')
+            ->paginate($this->perPage($request))
+            ->through(function (SavedReport $report) use ($user) {
                 return [
                     'id' => $report->id,
                     'name' => $report->name,
@@ -57,9 +62,8 @@ class SavedReportController extends Controller
                 ];
             });
 
-        return response()->json([
-            'data' => $reports,
-        ]);
+        // Same data/links/meta envelope as the other paginated REST lists.
+        return JsonResource::collection($reports)->response();
     }
 
     /**
