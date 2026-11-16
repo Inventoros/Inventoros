@@ -32,6 +32,9 @@ final class UpdateReleasePackageTest extends TestCase
 
     private string $web;
 
+    /** The updater's temp directory (storage/app/temp on a real install). */
+    private string $temp;
+
     private string $secretKey;
 
     /** @var array<int, string> */
@@ -46,6 +49,7 @@ final class UpdateReleasePackageTest extends TestCase
         $this->root = storage_path('app/testing/release_'.uniqid());
         $this->base = $this->root.'/home/inventoros';
         $this->web = $this->root.'/home/public_html';
+        $this->temp = $this->root.'/home/inventoros/storage/app/temp';
 
         $keypair = sodium_crypto_sign_keypair();
         $this->secretKey = sodium_crypto_sign_secretkey($keypair);
@@ -59,7 +63,7 @@ final class UpdateReleasePackageTest extends TestCase
 
         $this->makeInstalledApp();
 
-        $this->app->instance(FileUpdateService::class, new FileUpdateService($this->base, $this->web));
+        $this->app->instance(FileUpdateService::class, new FileUpdateService($this->base, $this->web, $this->temp));
 
         Artisan::shouldReceive('call')->andReturnUsing(function (string $command) {
             $this->artisanCalls[] = $command;
@@ -278,6 +282,9 @@ final class UpdateReleasePackageTest extends TestCase
 
         // Caches are cleared before migrating and rebuilt after.
         $this->assertSame(['down', 'optimize:clear', 'migrate', 'optimize', 'queue:restart', 'up'], $this->artisanCalls);
+
+        // The downloaded and extracted package are gone.
+        $this->assertTempIsEmpty();
     }
 
     public function test_index_php_points_at_the_real_app_directory_when_it_is_not_named_inventoros(): void
@@ -285,7 +292,7 @@ final class UpdateReleasePackageTest extends TestCase
         $custom = $this->root.'/home/apps/stock';
         File::moveDirectory($this->base, $custom);
         $this->base = $custom;
-        $this->app->instance(FileUpdateService::class, new FileUpdateService($this->base, $this->web));
+        $this->app->instance(FileUpdateService::class, new FileUpdateService($this->base, $this->web, $this->temp));
 
         $this->fakeGitHub($this->makeRelease());
 
@@ -325,6 +332,7 @@ final class UpdateReleasePackageTest extends TestCase
         $this->assertNotContains('migrate', $this->artisanCalls);
         $this->assertSame('1.0.8', File::get($this->base.'/VERSION'));
         $this->assertFileExists($this->base.'/app/OldService.php');
+        $this->assertTempIsEmpty();
     }
 
     /**
@@ -393,7 +401,7 @@ final class UpdateReleasePackageTest extends TestCase
     {
         // e.g. `php artisan update` on cPanel without APP_PUBLIC_PATH: the
         // default public path does not exist.
-        $this->app->instance(FileUpdateService::class, new FileUpdateService($this->base, $this->base.'/public'));
+        $this->app->instance(FileUpdateService::class, new FileUpdateService($this->base, $this->base.'/public', $this->temp));
         $this->fakeGitHub($this->makeRelease());
 
         $result = $this->updater()->update();
@@ -449,6 +457,11 @@ final class UpdateReleasePackageTest extends TestCase
         $this->assertStringContainsString('restored', $result['message']);
         $this->assertTrue($state->restoredDatabase, 'The database dump must be restored.');
 
+        // Neither the package nor the unpacked backup is left in temp; the
+        // backup archive itself stays where it was.
+        $this->assertTempIsEmpty();
+        $this->assertNotEmpty(glob($this->root.'/backups/backup_*.zip'));
+
         $this->assertFileExists($this->base.'/app/OldService.php');
         $this->assertFileDoesNotExist($this->base.'/app/NewService.php');
         $this->assertSame('<?php // old vendor', File::get($this->base.'/vendor/autoload.php'));
@@ -458,5 +471,119 @@ final class UpdateReleasePackageTest extends TestCase
         $this->assertFileDoesNotExist($this->web.'/build/assets/app-NEW.js');
         $this->assertStringContainsString('1.0.8', File::get($this->web.'/index.php'));
         $this->assertSame('USER UPLOAD', File::get($this->base.'/storage/app/uploads/invoice.pdf'));
+    }
+
+    // ------------------------------------------------------- temp file cleanup
+
+    private function assertTempIsEmpty(): void
+    {
+        $left = is_dir($this->temp) ? array_values(array_diff(scandir($this->temp) ?: [], ['.', '..'])) : [];
+
+        $this->assertSame([], $left, 'The update left files in its temp directory.');
+    }
+
+    public function test_a_failed_download_leaves_no_temp_files(): void
+    {
+        config(['update.max_download_bytes' => 16]);
+        $this->fakeGitHub($this->makeRelease());
+
+        $result = $this->updater()->update();
+
+        $this->assertFalse($result['success']);
+        $this->assertStringContainsString('size limit', $result['message']);
+        $this->assertTempIsEmpty();
+    }
+
+    public function test_a_failed_signature_check_leaves_no_temp_files(): void
+    {
+        $this->fakeGitHub($this->makeRelease());
+        // Signed with a different key than the one the install trusts.
+        config(['update.signature.public_key' => base64_encode(sodium_crypto_sign_publickey(sodium_crypto_sign_keypair()))]);
+
+        $result = $this->updater()->update();
+
+        $this->assertFalse($result['success']);
+        $this->assertNotContains('down', $this->artisanCalls);
+        $this->assertTempIsEmpty();
+    }
+
+    public function test_a_failed_extraction_leaves_no_temp_files(): void
+    {
+        // Correctly signed, but not a ZIP archive.
+        $path = $this->root.'/broken.zip';
+        File::put($path, str_repeat('not a zip archive ', 64));
+        $this->fakeGitHub($path);
+
+        $result = $this->updater()->update();
+
+        $this->assertFalse($result['success']);
+        $this->assertStringContainsString('ZIP', $result['message']);
+        $this->assertTempIsEmpty();
+    }
+
+    public function test_a_failed_backup_leaves_no_temp_files(): void
+    {
+        $backups = Mockery::mock(BackupService::class);
+        $backups->shouldReceive('createBackup')->andThrow(new \RuntimeException('disk full'));
+        $this->fakeGitHub($this->makeRelease());
+
+        $result = $this->updater($backups)->update();
+
+        $this->assertFalse($result['success']);
+        $this->assertStringContainsString('disk full', $result['message']);
+        $this->assertTempIsEmpty();
+    }
+
+    public function test_an_update_sweeps_stale_leftovers_of_earlier_runs_only(): void
+    {
+        File::ensureDirectoryExists($this->temp.'/extracted_1700000000/inventoros');
+        File::put($this->temp.'/extracted_1700000000/inventoros/VERSION', '1.0.0');
+        File::put($this->temp.'/update_1700000000_abcd1234.zip', 'old package');
+        File::put($this->temp.'/signature_abcdef.sig', 'old signature');
+        File::ensureDirectoryExists($this->temp.'/restore_1700000000');
+        // Recent leftovers (another run's, as far as this one knows) and
+        // files that are not the updater's are left alone.
+        File::put($this->temp.'/update_9999999999_feedbeef.zip', 'recent package');
+        File::put($this->temp.'/upload-0123456789abcdef.zip', 'plugin upload');
+        File::put($this->temp.'/notes.txt', 'operator notes');
+
+        $old = time() - UpdateService::STALE_TEMP_SECONDS - 60;
+        foreach (['extracted_1700000000', 'update_1700000000_abcd1234.zip', 'signature_abcdef.sig', 'restore_1700000000'] as $name) {
+            touch($this->temp.'/'.$name, $old);
+        }
+
+        config(['update.max_download_bytes' => 16]);
+        $this->fakeGitHub($this->makeRelease());
+        $this->updater()->update();
+
+        $left = array_values(array_diff(scandir($this->temp) ?: [], ['.', '..']));
+        sort($left);
+        $this->assertSame(['notes.txt', 'update_9999999999_feedbeef.zip', 'upload-0123456789abcdef.zip'], $left);
+    }
+
+    public function test_the_sweep_removes_a_link_but_never_what_it_points_at(): void
+    {
+        $outside = $this->root.'/outside';
+        File::ensureDirectoryExists($outside);
+        File::put($outside.'/keep.txt', 'must survive');
+        File::ensureDirectoryExists($this->temp);
+
+        $link = $this->temp.'/extracted_1700000000';
+        if (@symlink($outside, $link) === false) {
+            $this->markTestSkipped('Symlinks are not supported in this environment.');
+        }
+
+        $nested = $this->temp.'/restore_1700000000';
+        File::ensureDirectoryExists($nested);
+        $nestedLink = @symlink($outside, $nested.'/escape');
+
+        $result = (new FileUpdateService($this->base, $this->web, $this->temp))->removeTempArtifacts();
+
+        $this->assertContains('extracted_1700000000', $result['removed']);
+        $this->assertFalse(is_link($link) || file_exists($link));
+        if ($nestedLink) {
+            $this->assertFalse(is_link($nested.'/escape'));
+        }
+        $this->assertSame('must survive', File::get($outside.'/keep.txt'));
     }
 }
