@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Mcp\Tools;
 
 use App\Mcp\Concerns\AuthenticatesMcpRequest;
+use App\Mcp\Support\UntrustedText;
 use App\Models\Inventory\ProductLocation;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Laravel\Mcp\Request;
@@ -45,7 +46,8 @@ class ListLocationsTool extends Tool
 
         return Response::json([
             'count' => $locations->count(),
-            'locations' => $locations->all(),
+            'locations' => $locations->map(fn (ProductLocation $l) => UntrustedText::wrapKeys($l->toArray(), ['description']))->all(),
+            UntrustedText::NOTICE_KEY => UntrustedText::NOTICE,
         ]);
     }
 }
