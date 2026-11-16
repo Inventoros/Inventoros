@@ -129,20 +129,17 @@ class MobileLayoutMarkupTest extends TestCase
     }
 
     /**
-     * Underlined tab bars scroll sideways (.ds-tabs) rather than widening the
-     * page; these tab bars previously overflowed a phone by 17-22px. Account
-     * settings use a wrapping section grid, covered separately below.
+     * The legacy Email tab bar still scrolls rather than widening the page.
+     * Shared SectionTabs consumers are covered by feature-section-tabs.spec.ts,
+     * which checks rendered geometry, panel relationships and keyboard access.
      */
-    public function test_tab_bars_scroll_rather_than_overflow(): void
+    public function test_legacy_email_tab_bar_scrolls_rather_than_overflows(): void
     {
         $this->assertStringContainsString('.ds-tabs', (string) file_get_contents(base_path('resources/css/app.css')));
 
-        foreach (['Pages/Settings/Organization/Index.vue', 'Pages/Settings/Email.vue', 'Pages/ImportExport/Index.vue'] as $path) {
-            $source = $this->source($path);
-
-            $this->assertStringNotContainsString('<nav class="-mb-px flex gap-8"', $source, "{$path} has a tab bar that cannot scroll.");
-            $this->assertStringContainsString('<nav class="ds-tabs', $source, "{$path} has a tab bar that cannot scroll.");
-        }
+        $source = $this->source('Pages/Settings/Email.vue');
+        $this->assertStringNotContainsString('<nav class="-mb-px flex gap-8"', $source);
+        $this->assertStringContainsString('<nav class="ds-tabs', $source);
     }
 
     /**
