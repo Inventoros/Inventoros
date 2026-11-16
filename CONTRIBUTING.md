@@ -69,6 +69,8 @@ We actively welcome your pull requests! Here's the process:
 7. **Write a clear commit message**
 8. **Submit your pull request**
 
+For UI changes, include before-and-after screenshots in the PR using attachments or external review storage. Keep design review notes, capture helpers, and screenshot evidence outside the application repository; do not commit `docs/design` or `.github/pr-evidence` bundles.
+
 ## Development Setup
 
 ### Prerequisites

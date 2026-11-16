@@ -48,3 +48,7 @@ AGENTS.md
 # Planning and agent scratch notes stay out of the repository.
 docs/superpowers/
 docs/plans/
+
+# UI review evidence belongs in PR attachments or external review storage.
+/docs/design/
+/.github/pr-evidence/
