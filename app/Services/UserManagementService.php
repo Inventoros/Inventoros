@@ -130,7 +130,7 @@ final class UserManagementService
         // Attaching the Administrator system role makes the user an admin
         // just like the base role does, so admins are alerted the same way.
         // A base-role promotion is alerted by UserSecurityObserver instead.
-        $grantsAdmin = Role::whereIn('id', $changes['attached'])->where('slug', 'system-administrator')->exists();
+        $grantsAdmin = Role::whereIn('id', $changes['attached'])->systemRole()->where('slug', 'system-administrator')->exists();
         if ($grantsAdmin && $user->role !== 'admin') {
             app(UserActivityAlertService::class)->notifyPromotedToAdmin($user, $actor);
         }

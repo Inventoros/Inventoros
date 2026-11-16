@@ -79,7 +79,7 @@ trait HasRolesAndPermissions
     public function isAdmin(): bool
     {
         // Check if user has the Administrator system role
-        return $this->hasRole('system-administrator') || $this->role === 'admin';
+        return $this->holdsSystemRole(['system-administrator']) || $this->role === 'admin';
     }
 
     /**
@@ -88,7 +88,19 @@ trait HasRolesAndPermissions
     public function isManager(): bool
     {
         // Check if user has Administrator or Manager roles
-        return $this->isAdmin() || $this->hasAnyRole(['manager', 'system-manager']);
+        return $this->isAdmin() || $this->holdsSystemRole(['manager', 'system-manager']);
+    }
+
+    /**
+     * Whether the user holds one of the given built-in roles. Role names are
+     * free text in each organization, so a custom role whose slug happens to
+     * match (an organization's own "Manager" role) never counts.
+     *
+     * @param  array<string>  $roleSlugs
+     */
+    public function holdsSystemRole(array $roleSlugs): bool
+    {
+        return $this->roles()->whereIn('slug', $roleSlugs)->systemRole()->exists();
     }
 
     /**
@@ -133,7 +145,10 @@ trait HasRolesAndPermissions
 
         // Check base role (admin, manager, member) permissions
         if ($this->role) {
-            $systemRole = Role::where('slug', 'system-'.$this->role)->first();
+            // Only the built-in role: an organization's own role with the
+            // same slug must not grant its permissions to every user with
+            // this base role in every organization.
+            $systemRole = Role::systemBySlug('system-'.$this->role);
             if ($systemRole && $systemRole->hasPermission($permissionValue)) {
                 return true;
             }
@@ -217,7 +232,10 @@ trait HasRolesAndPermissions
 
         // Get permissions from base role (admin, manager, member)
         if ($this->role) {
-            $systemRole = Role::where('slug', 'system-'.$this->role)->first();
+            // Only the built-in role: an organization's own role with the
+            // same slug must not grant its permissions to every user with
+            // this base role in every organization.
+            $systemRole = Role::systemBySlug('system-'.$this->role);
             if ($systemRole && $systemRole->permissions) {
                 $permissions = array_merge($permissions, $systemRole->permissions);
             }

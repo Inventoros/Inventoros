@@ -46,6 +46,17 @@ class Role extends Model
     ];
 
     /**
+     * Slugs are unique across all organizations (roles.slug has a global
+     * unique index, and system roles are looked up by slug), so a new slug is
+     * checked against every role, not only the organization's own. Otherwise
+     * a name another organization already uses fails with a database error.
+     */
+    protected function getSlugScopeColumn(): ?string
+    {
+        return null;
+    }
+
+    /**
      * Get the organization that owns the role.
      *
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\Auth\Organization, $this>
@@ -244,5 +255,28 @@ class Role extends Model
     public function scopeCustom($query)
     {
         return $query->where('is_system', false);
+    }
+
+    /**
+     * Scope a query to the built-in system roles: flagged is_system and owned
+     * by no organization (RoleSeeder creates them; an organization's own role
+     * is never flagged and always has an organization). Columns are
+     * qualified because role_user also has an organization_id.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder<static> $query
+     * @return \Illuminate\Database\Eloquent\Builder<static>
+     */
+    public function scopeSystemRole($query)
+    {
+        return $query->where('roles.is_system', true)->whereNull('roles.organization_id');
+    }
+
+    /**
+     * The built-in system role with this slug, never an organization's own
+     * role that happens to have the same slug.
+     */
+    public static function systemBySlug(string $slug): ?self
+    {
+        return static::query()->systemRole()->where('slug', $slug)->first();
     }
 }

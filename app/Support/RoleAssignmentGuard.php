@@ -141,7 +141,7 @@ final class RoleAssignmentGuard
                     return $scopedAdmin ? self::SCOPED_TOKEN_MESSAGE : 'You do not have permission to manage an administrator.';
                 }
 
-                if ($member->role === 'manager' || $member->hasRole('system-manager')) {
+                if ($member->role === 'manager' || $member->holdsSystemRole(['system-manager'])) {
                     return $scopedAdmin ? self::SCOPED_TOKEN_MESSAGE : 'You do not have permission to manage a manager.';
                 }
 
