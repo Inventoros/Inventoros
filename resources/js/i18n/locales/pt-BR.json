@@ -243,7 +243,7 @@
   },
   "common": {
     "sortBy": "Ordenar por",
-    "sortDirection": "Dire??o",
+    "sortDirection": "Direção",
     "ascending": "Crescente",
     "descending": "Decrescente",
     "pagination": "Paginação",
@@ -4015,7 +4015,7 @@
     "rateHint": "Opcional: informe uma alíquota para calcular o valor a partir do subtotal após os descontos. Somente o valor é salvo."
   },
   "warehouseStock": {
-    "onHand": "Estoque f?sico",
+    "onHand": "Em estoque",
     "title": "Estoque por depósito",
     "includeZero": "Incluir saldos zerados"
   },

@@ -242,10 +242,10 @@
     }
   },
   "common": {
-    "sortBy": "????",
-    "sortDirection": "??",
-    "ascending": "??",
-    "descending": "??",
+    "sortBy": "排序依据",
+    "sortDirection": "顺序",
+    "ascending": "升序",
+    "descending": "降序",
     "pagination": "分页",
     "save": "保存",
     "saveChanges": "保存更改",
@@ -4015,7 +4015,7 @@
     "rateHint": "可选：输入税率，即可根据折扣后的小计计算税额。仅保存税额。"
   },
   "warehouseStock": {
-    "onHand": "????",
+    "onHand": "现有库存",
     "title": "按仓库查看库存",
     "includeZero": "包含零库存"
   },

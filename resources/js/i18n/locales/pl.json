@@ -242,10 +242,10 @@
     }
   },
   "common": {
-    "sortBy": "Sortuj wed?ug",
+    "sortBy": "Sortuj według",
     "sortDirection": "Kierunek",
-    "ascending": "Rosn?co",
-    "descending": "Malej?co",
+    "ascending": "Rosnąco",
+    "descending": "Malejąco",
     "pagination": "Stronicowanie",
     "save": "Zapisz",
     "saveChanges": "Zapisz zmiany",
@@ -4015,7 +4015,7 @@
     "rateHint": "Opcjonalnie: wpisz stawkę podatku, aby obliczyć kwotę od sumy częściowej po rabatach. Zapisywana jest tylko kwota."
   },
   "warehouseStock": {
-    "onHand": "Stan fizyczny",
+    "onHand": "Stan magazynowy",
     "title": "Stan według magazynu",
     "includeZero": "Uwzględnij stany zerowe"
   },

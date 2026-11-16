@@ -4015,7 +4015,7 @@
     "rateHint": "Facoltativo: inserisci un'aliquota per calcolare l'importo dal subtotale dopo gli sconti. Viene salvato solo l'importo."
   },
   "warehouseStock": {
-    "onHand": "Scorte fisiche",
+    "onHand": "Giacenza",
     "title": "Scorte per magazzino",
     "includeZero": "Includi saldi a zero"
   },

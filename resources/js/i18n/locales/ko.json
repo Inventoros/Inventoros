@@ -242,10 +242,10 @@
     }
   },
   "common": {
-    "sortBy": "?? ??",
-    "sortDirection": "??",
-    "ascending": "????",
-    "descending": "????",
+    "sortBy": "정렬 기준",
+    "sortDirection": "방향",
+    "ascending": "오름차순",
+    "descending": "내림차순",
     "pagination": "페이지 탐색",
     "save": "저장",
     "saveChanges": "변경사항 저장",
@@ -4015,7 +4015,7 @@
     "rateHint": "선택 사항: 세율을 입력하면 할인 후 소계에서 세액을 계산합니다. 세액만 저장됩니다."
   },
   "warehouseStock": {
-    "onHand": "???",
+    "onHand": "보유 재고",
     "title": "창고별 재고",
     "includeZero": "재고 0 포함"
   },
