@@ -69,6 +69,7 @@ jobs:
             e2e/tests/orders.spec.ts \
             e2e/tests/plugins.spec.ts \
             e2e/tests/mobile-layout.spec.ts \
+            e2e/tests/mobile-receiving.spec.ts \
             e2e/tests/table-viewport.spec.ts \
             e2e/tests/ui-foundations.spec.ts \
             e2e/tests/account-navigation.spec.ts \

@@ -877,6 +877,8 @@
       "cannotUndo": "Questa azione non può essere annullata."
     },
     "receive": {
+      "fillAll": "Compila tutte le quantit? rimanenti",
+      "fillRemaining": "Compila la quantit? rimanente",
       "title": "Ricevi articoli - {poNumber}",
       "orderTotal": "Totale ordine: {total}",
       "itemsToReceive": "Articoli da ricevere",
