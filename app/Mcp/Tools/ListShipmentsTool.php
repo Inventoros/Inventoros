@@ -7,6 +7,7 @@ namespace App\Mcp\Tools;
 use App\Enums\ShipmentStatus;
 use App\Mcp\Concerns\AuthenticatesMcpRequest;
 use App\Models\Shipping\Shipment;
+use App\Support\PageSize;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
@@ -28,7 +29,7 @@ class ListShipmentsTool extends Tool
             'order_id' => $schema->integer()->description('Restrict to one sales order.'),
             'status' => $schema->string()->enum(ShipmentStatus::values())->description('Restrict to a status.'),
             'page' => $schema->integer()->description('1-indexed page.'),
-            'per_page' => $schema->integer()->description('Default 15, max 100.'),
+            'per_page' => $schema->integer()->min(1)->max(100)->description('Default 15, max 100.'),
         ];
     }
 
@@ -36,7 +37,7 @@ class ListShipmentsTool extends Tool
     {
         $this->authorize(['view_shipments']);
 
-        $perPage = min(max((int) ($request->get('per_page') ?? 15), 1), 100);
+        $perPage = PageSize::resolve($request->get('per_page'), 15, 100);
         $page = max((int) ($request->get('page') ?? 1), 1);
 
         $paginator = Shipment::where('organization_id', $this->organizationId())

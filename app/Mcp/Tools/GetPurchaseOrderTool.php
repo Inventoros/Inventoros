@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Mcp\Tools;
 
 use App\Mcp\Concerns\AuthenticatesMcpRequest;
+use App\Mcp\Support\UntrustedText;
 use App\Models\Purchasing\PurchaseOrder;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Laravel\Mcp\Request;
@@ -56,7 +57,7 @@ class GetPurchaseOrderTool extends Tool
             'shipping' => $po->shipping,
             'total' => $po->total,
             'currency' => $po->currency,
-            'notes' => $po->notes,
+            'notes' => UntrustedText::wrap($po->notes),
             'items' => $po->items->map(fn ($i) => [
                 'id' => $i->id,
                 'product_id' => $i->product_id,
@@ -70,6 +71,7 @@ class GetPurchaseOrderTool extends Tool
                 'subtotal' => $i->subtotal,
                 'total' => $i->total,
             ])->all(),
+            UntrustedText::NOTICE_KEY => UntrustedText::NOTICE,
         ]);
     }
 }

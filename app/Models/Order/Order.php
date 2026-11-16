@@ -49,6 +49,7 @@ use Illuminate\Support\Facades\DB;
  * @property string|null $customer_address
  * @property string $status
  * @property string $approval_status
+ * @property int|null $approval_requested_by Who sent the order back for approval by changing its terms
  * @property int|null $approved_by
  * @property Carbon|null $approved_at
  * @property string|null $approval_notes
@@ -122,6 +123,7 @@ class Order extends Model
         'customer_address',
         'status',
         'approval_status',
+        'approval_requested_by',
         'approved_by',
         'approved_at',
         'approval_notes',
@@ -211,6 +213,16 @@ class Order extends Model
     public function approver(): BelongsTo
     {
         return $this->belongsTo(User::class, 'approved_by');
+    }
+
+    /**
+     * Get the user who sent the order back for approval.
+     *
+     * @return BelongsTo<User, $this>
+     */
+    public function approvalRequester(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'approval_requested_by');
     }
 
     /**
@@ -411,10 +423,11 @@ class Order extends Model
             }
 
             $order->reapprovalRequested = false;
-            $editor = auth()->user();
+            $editor = $order->approval_requested_by !== null
+                ? User::query()->find($order->approval_requested_by)
+                : null;
 
-            DB::afterCommit(fn () => app(ApprovalService::class)
-                ->requestOrderReapproval($order, $editor instanceof User ? $editor : null));
+            DB::afterCommit(fn () => app(ApprovalService::class)->requestOrderReapproval($order, $editor));
         });
 
         static::saved(function (Order $order) {
@@ -450,8 +463,12 @@ class Order extends Model
      * and once a shipment exists (pending, label bought, or partly sent) or
      * its goods have left, holding the order would make the next carrier
      * update fail when it moves the order to shipped or delivered.
+     *
+     * $editor (default: the signed-in user) is recorded as the requester of
+     * the new decision, so they cannot approve or reject it themselves (see
+     * OrderApprovalGate).
      */
-    public function requireReapprovalIfDecided(): bool
+    public function requireReapprovalIfDecided(?User $editor = null): bool
     {
         if (! $this->exists || $this->isDirty('approval_status')) {
             return false;
@@ -480,7 +497,10 @@ class Order extends Model
             return false;
         }
 
+        $editor ??= auth()->user() instanceof User ? auth()->user() : null;
+
         $this->approval_status = OrderApprovalStatus::PENDING;
+        $this->approval_requested_by = $editor?->id;
         $this->approved_by = null;
         $this->approved_at = null;
         $this->approval_notes = null;

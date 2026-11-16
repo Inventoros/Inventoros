@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Api\Concerns;
 use App\Exceptions\ApprovalException;
 use App\Exceptions\BusinessRuleException;
 use App\Exceptions\InvalidStateException;
+use App\Support\PageSize;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\JsonResponse;
@@ -20,11 +21,12 @@ use Illuminate\Http\Request;
 trait HandlesApiResponses
 {
     /**
-     * The requested page size, defaulting to 15 and capped at 100.
+     * The requested page size: 15 when missing, empty, non-numeric or below
+     * 1, and capped at 100.
      */
     protected function perPage(Request $request): int
     {
-        return max(1, min((int) $request->input('per_page', 15), 100));
+        return PageSize::resolve($request->input('per_page'));
     }
 
     /**

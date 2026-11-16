@@ -47,7 +47,7 @@ class StartWorkOrderTool extends Tool
         // The same checks the web and REST surfaces run: status under a row
         // lock, variant and kit lines, stock and tracked serials / batches.
         try {
-            app(WorkOrderService::class)->start($wo);
+            app(WorkOrderService::class)->start($wo, $this->user());
         } catch (BusinessRuleException $e) {
             return Response::error($e->getMessage());
         }

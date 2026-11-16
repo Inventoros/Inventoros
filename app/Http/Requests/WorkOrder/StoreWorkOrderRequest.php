@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Requests\WorkOrder;
 
+use App\Services\WarehouseAccessService;
 use App\Services\WorkOrderService;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -30,6 +31,8 @@ final class StoreWorkOrderRequest extends FormRequest
             ],
             'quantity' => 'required|integer|min:1|max:999999',
             'warehouse_id' => [
+                // A warehouse-restricted user must say which of their warehouses.
+                Rule::requiredIf(fn () => app(WarehouseAccessService::class)->isRestricted($this->user())),
                 'nullable',
                 'integer',
                 Rule::exists('warehouses', 'id')->where('organization_id', $organizationId),

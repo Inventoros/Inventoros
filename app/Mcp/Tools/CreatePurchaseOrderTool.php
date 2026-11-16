@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Mcp\Tools;
 
 use App\Mcp\Concerns\AuthenticatesMcpRequest;
+use App\Mcp\Support\UntrustedText;
 use App\Models\Inventory\Product;
 use App\Models\Purchasing\PurchaseOrder;
 use App\Models\Purchasing\PurchaseOrderItem;
@@ -43,6 +44,9 @@ class CreatePurchaseOrderTool extends Tool
 
     public function handle(Request $request): Response
     {
+        // Agents copy tool output into write calls; never store the envelope.
+        UntrustedText::stripArguments($request);
+
         $this->authorize(['create_purchase_orders']);
 
         $orgId = $this->organizationId();

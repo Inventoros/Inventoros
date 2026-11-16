@@ -6,6 +6,7 @@ namespace App\Mcp\Tools;
 
 use App\Mcp\Concerns\AuthenticatesMcpRequest;
 use App\Models\Order\Order;
+use App\Support\PageSize;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
@@ -33,7 +34,7 @@ class ListOrdersTool extends Tool
             'sort_by' => $schema->string()->enum(['created_at', 'updated_at', 'order_number', 'customer_name', 'total', 'status', 'order_date'])->description('Sort column.'),
             'sort_dir' => $schema->string()->enum(['asc', 'desc'])->description('Sort direction (default: desc).'),
             'page' => $schema->integer()->description('1-indexed page.'),
-            'per_page' => $schema->integer()->description('Default 15, max 100.'),
+            'per_page' => $schema->integer()->min(1)->max(100)->description('Default 15, max 100.'),
         ];
     }
 
@@ -67,7 +68,7 @@ class ListOrdersTool extends Tool
         $sortDir = $request->get('sort_dir') === 'asc' ? 'asc' : 'desc';
         $query->orderBy($sortBy, $sortDir);
 
-        $perPage = min((int) ($request->get('per_page') ?? 15), 100);
+        $perPage = PageSize::resolve($request->get('per_page'), 15, 100);
         $page = max((int) ($request->get('page') ?? 1), 1);
 
         $paginator = $query->paginate(perPage: $perPage, page: $page);
