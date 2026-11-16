@@ -21,6 +21,8 @@ If any step after the backup fails (replacing files, migrating or caching), the 
 
 You can run the same update from the command line with `php artisan app:update` (`--check` only reports whether a newer release exists).
 
+The updater downloads and unpacks each release in `storage/app/temp` and deletes those files when it finishes, whether the update succeeded, failed or was rolled back. Leftovers more than a day old (for example from an update that was interrupted) are removed when the next update or backup starts, and the scheduler removes them nightly. To remove them now, run `php artisan update:clean-temp` (`--dry-run` lists what it would delete, `--older-than=24` keeps anything newer than 24 hours). It only deletes the updater's own files and does nothing while an update is running.
+
 On Docker, do not use the in-app updater: the files it replaces are lost when the container is recreated. Pull the new image instead, as described in [Install with Docker](installation-docker#updating).
 
 The updater rebuilds the caches itself. If you run a manual install (cPanel or VPS from source), you can also re-cache yourself:
@@ -75,7 +77,7 @@ The Sodium PHP extension must be enabled for signature verification to work.
 
 ## Automatic backups
 
-The updater takes a backup before it changes any files or the database, and you can take one yourself from Settings, then Updates (or with `php artisan app:update --backup`). `php artisan app:update --list-backups` lists them. Backups are ZIP files in `storage/app/backups` holding the application files (including `vendor/` and the web root) and the database. Old backups are not deleted automatically; remove the ones you no longer need from the Updates page. The database is captured the best way available:
+The updater takes a backup before it changes any files or the database, and you can take one yourself from Settings, then Updates (or with `php artisan app:update --backup`). `php artisan app:update --list-backups` lists them. Backups are ZIP files in `storage/app/backups` holding the application files (including `vendor/` and the web root) and the database. They leave out `storage/app/temp` and the regenerable `storage/framework/cache`, `storage/framework/sessions` and `storage/framework/views` folders. Old backups are not deleted automatically; remove the ones you no longer need from the Updates page. The database is captured the best way available:
 
 | Database | Method |
 |---|---|

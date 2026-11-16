@@ -62,6 +62,11 @@ Schedule::command('webhooks:prune')->dailyAt('03:30');
 // (see PruneDataExportsCommand) so a backlog clears over several nights.
 Schedule::command('exports:prune')->dailyAt('03:45')->withoutOverlapping();
 
+// Update downloads and extracted packages a crashed or interrupted update
+// left in storage/app/temp (see CleanUpdateTempFilesCommand). A day old at
+// least, so a running update's files are never touched.
+Schedule::command('update:clean-temp --older-than=24')->dailyAt('04:00');
+
 // Paid plugin licences: refresh each connected organization's signed
 // entitlements from the marketplace once a day.
 Schedule::command('marketplace:refresh-entitlements')->dailyAt('04:15')->withoutOverlapping();

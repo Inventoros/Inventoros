@@ -158,11 +158,9 @@ class BackupService
 
         $basePath = $this->basePath();
 
-        // Never recurse into the backup directory itself: it lives under
-        // storage/, so backing "storage" up unguarded would embed every prior
-        // backup (and the in-progress archive) into each new one, ballooning
-        // disk use until backups fail.
-        $excludePaths = [realpath($this->backupPath) ?: $this->backupPath];
+        // Never recurse into the backup directory itself (see excludedPaths()),
+        // nor into update temp files and other regenerable storage folders.
+        $excludePaths = $this->excludedPaths($basePath);
 
         foreach ($this->itemsToBackup() as $item) {
             $path = "{$basePath}/{$item}";
@@ -212,6 +210,57 @@ class BackupService
         $this->restrictToOwner($backupFile);
 
         return $backupFile;
+    }
+
+    /**
+     * storage/ folders that are never archived, relative to the application
+     * directory. Each holds only data the application rebuilds by itself:
+     *
+     * - app/temp: the updater's downloaded and extracted packages and the
+     *   folder a backup is unpacked into during a restore;
+     * - framework/cache: the file cache store (php artisan cache:clear);
+     * - framework/sessions: file sessions (signed-in users sign in again);
+     * - framework/views: compiled Blade templates (php artisan view:clear).
+     *
+     * A restore never writes storage/ back (see FileUpdateService::replaceFiles),
+     * so leaving these out cannot affect a rollback. Uploads, logs, exports
+     * and everything else under storage/ are still archived.
+     */
+    public const EXCLUDED_STORAGE_PATHS = [
+        'storage/app/temp',
+        'storage/framework/cache',
+        'storage/framework/sessions',
+        'storage/framework/views',
+    ];
+
+    /**
+     * Directories whose contents are left out of a backup: the backup
+     * directory itself (it lives under storage/, so backing "storage" up
+     * unguarded would embed every prior backup, and the in-progress
+     * archive, into each new one) and the regenerable storage folders.
+     *
+     * @return array<int, string>
+     */
+    protected function excludedPaths(string $basePath): array
+    {
+        $paths = [$this->backupPath];
+
+        foreach (self::EXCLUDED_STORAGE_PATHS as $relative) {
+            $paths[] = "{$basePath}/{$relative}";
+
+            // The same folder where the application actually keeps it, in
+            // case storage/ was moved out of the application directory.
+            if ($basePath === base_path()) {
+                $paths[] = storage_path(substr($relative, strlen('storage/')));
+            }
+        }
+
+        // Files are compared by their real path, so compare against the
+        // folders' real paths too (symlinked or 8.3-style paths).
+        return array_values(array_unique(array_map(
+            fn (string $path): string => realpath($path) ?: $path,
+            $paths,
+        )));
     }
 
     /**

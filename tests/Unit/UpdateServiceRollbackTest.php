@@ -80,7 +80,9 @@ final class UpdateServiceRollbackTest extends TestCase
         $files->shouldReceive('validateRelease')->once()->andReturn(['version' => '9.9.9', 'layout' => 'cpanel-v1']);
         $files->shouldReceive('installRelease')->once(); // files install fine; migration is what fails
         $files->shouldReceive('writeVersion')->never();
-        $files->shouldReceive('cleanup')->never();     // must not clean up after a failed apply
+        // The rollback restores from the backup archive, never from the
+        // downloaded package, so this run's temp files go either way.
+        $files->shouldReceive('cleanup')->once()->with('/tmp/update.zip', '/tmp/extracted');
 
         $service = Mockery::mock(UpdateService::class, [$github, $backups, $files])
             ->makePartial()

@@ -125,6 +125,46 @@ final class BackupServiceTest extends TestCase
         $this->assertContains('app/Foo.php', $names);
     }
 
+    public function test_backup_leaves_out_update_temp_files_and_regenerable_storage(): void
+    {
+        $files = [
+            'storage/app/temp/update_1700000000_abcd1234.zip' => 'downloaded package',
+            'storage/app/temp/extracted_1700000000/inventoros/VERSION' => '2.5.0',
+            'storage/framework/cache/data/ab/cd/abcdef' => 'cached value',
+            'storage/framework/sessions/session-id' => 'session payload',
+            'storage/framework/views/compiled.php' => '<?php // compiled view',
+            // Kept: user data, logs, and the folders' near namesakes.
+            'storage/app/uploads/invoice.pdf' => 'user upload',
+            'storage/app/temporary-notes.txt' => 'not the temp folder',
+            'storage/logs/laravel.log' => 'log line',
+            'storage/framework/down' => '{"retry":60}',
+        ];
+
+        foreach ($files as $path => $contents) {
+            File::ensureDirectoryExists(dirname($this->base.'/'.$path));
+            File::put($this->base.'/'.$path, $contents);
+        }
+
+        $zip = new ZipArchive;
+        $this->assertTrue($zip->open($this->service()->createBackup()) === true);
+        $names = [];
+        for ($i = 0; $i < $zip->numFiles; $i++) {
+            $names[] = $zip->getNameIndex($i);
+        }
+        $zip->close();
+
+        foreach (['storage/app/temp/', 'storage/framework/cache/', 'storage/framework/sessions/', 'storage/framework/views/'] as $excluded) {
+            foreach ($names as $name) {
+                $this->assertStringStartsNotWith($excluded, $name);
+            }
+        }
+
+        $this->assertContains('storage/app/uploads/invoice.pdf', $names);
+        $this->assertContains('storage/app/temporary-notes.txt', $names);
+        $this->assertContains('storage/logs/laravel.log', $names);
+        $this->assertContains('storage/framework/down', $names);
+    }
+
     public function test_restore_refuses_a_legacy_mysql_dump_on_another_driver(): void
     {
         // A manifest-less backup with database.sql came from mysqldump. On a

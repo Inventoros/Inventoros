@@ -26,6 +26,18 @@ class UpdateService
     public const MAINTENANCE_RETRY_SECONDS = 60;
 
     /**
+     * Update leftovers older than this are swept from the temp directory
+     * whenever an update or a backup starts. No update runs this long (the
+     * update lock expires after 15 minutes), so nothing in use is touched.
+     */
+    public const STALE_TEMP_SECONDS = 86400;
+
+    /** The cache lock that serializes updates. */
+    public const LOCK = 'inventoros:update';
+
+    public const LOCK_SECONDS = 900;
+
+    /**
      * @var string The current installed version of the application
      */
     protected string $currentVersion;
@@ -82,7 +94,75 @@ class UpdateService
      */
     public function createBackup(): string
     {
+        // Leftovers from earlier update runs would otherwise be archived into
+        // this backup (and every later one).
+        $this->sweepStaleTempFiles();
+
         return $this->backupService->createBackup();
+    }
+
+    /**
+     * Delete update leftovers (downloaded and extracted packages, signatures,
+     * restore folders) from the update temp directory.
+     *
+     * Refuses while an update holds the update lock, since its own files are
+     * in that directory.
+     *
+     * @param  int|null  $olderThanSeconds  Only entries at least this old; null for all.
+     * @return array{removed: list<string>, failed: list<string>, bytes: int}|null Null while an update is running
+     */
+    public function cleanTempFiles(?int $olderThanSeconds = null, bool $dryRun = false): ?array
+    {
+        $lock = Cache::lock(self::LOCK, self::LOCK_SECONDS);
+
+        if (! $lock->get()) {
+            return null;
+        }
+
+        try {
+            return $this->fileService->removeTempArtifacts($olderThanSeconds, $dryRun);
+        } finally {
+            $lock->release();
+        }
+    }
+
+    /**
+     * Remove update leftovers older than STALE_TEMP_SECONDS. Best effort: a
+     * failure is logged and never stops the update or backup that called it.
+     */
+    protected function sweepStaleTempFiles(): void
+    {
+        try {
+            $result = $this->fileService->removeTempArtifacts(self::STALE_TEMP_SECONDS);
+
+            if ($result['removed'] !== [] || $result['failed'] !== []) {
+                Log::info('Removed stale update temp files', [
+                    'component' => 'update_service',
+                    'removed' => $result['removed'],
+                    'failed' => $result['failed'],
+                ]);
+            }
+        } catch (\Throwable $e) {
+            Log::warning('Could not sweep stale update temp files', ['component' => 'update_service', 'error' => $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Remove this run's download and extracted package. Best effort: these
+     * are temp artifacts only, so a failure is logged and must never turn a
+     * finished update (or a rolled-back one) into a different outcome.
+     */
+    protected function removeRunTempFiles(?string $zipPath, ?string $extractPath): void
+    {
+        if ($zipPath === null && $extractPath === null) {
+            return;
+        }
+
+        try {
+            $this->fileService->cleanup($zipPath, $extractPath);
+        } catch (\Throwable $e) {
+            Log::warning('Could not remove update temp files', ['component' => 'update_service', 'error' => $e->getMessage()]);
+        }
     }
 
     /**
@@ -118,7 +198,7 @@ class UpdateService
         // Serialize updates: a second admin (or a scheduled trigger) must never run a
         // concurrent update — parallel file replacement + migrations would corrupt the
         // install — so fail fast if another update already holds the lock.
-        $lock = Cache::lock('inventoros:update', 900);
+        $lock = Cache::lock(self::LOCK, self::LOCK_SECONDS);
 
         if (! $lock->get()) {
             return [
@@ -132,8 +212,15 @@ class UpdateService
         $wasInMaintenance = app()->isDownForMaintenance();
         $safeToResume = true;
 
+        // This run's temp files. Whatever happens below, the finally block
+        // removes them: neither the rollback (which restores from the backup
+        // archive) nor the operator needs the downloaded package afterwards.
+        $zipPath = null;
+        $extractPath = null;
+
         try {
             $this->log($progressCallback, 'Starting update process...');
+            $this->sweepStaleTempFiles();
 
             // Step 1: Get latest release info
             if (! $downloadUrl) {
@@ -175,13 +262,7 @@ class UpdateService
             // web root) while the site is still up; a bad package must never
             // take the site down.
             $this->log($progressCallback, 'Checking the release package...');
-            try {
-                $manifest = $this->fileService->validateRelease($extractPath, $expectedVersion);
-            } catch (\Throwable $invalid) {
-                $this->fileService->cleanup($zipPath, $extractPath);
-
-                throw $invalid;
-            }
+            $manifest = $this->fileService->validateRelease($extractPath, $expectedVersion);
             $newVersion = $manifest['version'];
 
             // Step 5: Put application in maintenance mode
@@ -264,7 +345,8 @@ class UpdateService
             // Step 11: Cleanup temp files. Benign — these are temp artifacts only,
             // so a cleanup failure must not roll back an otherwise-successful update.
             $this->log($progressCallback, 'Cleaning up temporary files...');
-            $this->fileService->cleanup($zipPath, $extractPath);
+            $this->removeRunTempFiles($zipPath, $extractPath);
+            $zipPath = $extractPath = null;
 
             $this->log($progressCallback, 'Update completed successfully!');
 
@@ -292,6 +374,8 @@ class UpdateService
                 'error' => $e->getMessage(),
             ];
         } finally {
+            $this->removeRunTempFiles($zipPath, $extractPath);
+
             if ($maintenanceStarted && $safeToResume && ! $wasInMaintenance) {
                 $this->log($progressCallback, 'Disabling maintenance mode...');
                 try {
@@ -316,6 +400,7 @@ class UpdateService
         $maintenanceStarted = false;
         $wasInMaintenance = app()->isDownForMaintenance();
         $safeToResume = true;
+        $extractPath = null;
 
         try {
             if (! File::exists($backupPath)) {
@@ -328,7 +413,7 @@ class UpdateService
             }
             $maintenanceStarted = true;
 
-            $extractPath = $this->fileService->getTempPath().'/restore_'.time();
+            $extractPath = $this->fileService->getTempPath().'/restore_'.time().'_'.bin2hex(random_bytes(4));
             File::makeDirectory($extractPath, 0755, true, true);
 
             $zip = new \ZipArchive;
@@ -366,9 +451,6 @@ class UpdateService
             $this->artisan('queue:restart');
             $safeToResume = true;
 
-            // Cleanup
-            File::deleteDirectory($extractPath);
-
             return [
                 'success' => true,
                 'message' => 'Backup restored successfully',
@@ -383,6 +465,16 @@ class UpdateService
                 'error' => $e->getMessage(),
             ];
         } finally {
+            // The unpacked backup is only read during the restore; the archive
+            // itself stays in the backups folder for a retry by hand.
+            if ($extractPath !== null && File::isDirectory($extractPath)) {
+                try {
+                    File::deleteDirectory($extractPath);
+                } catch (\Throwable $cleanupError) {
+                    Log::warning('Could not remove the unpacked backup', ['error' => $cleanupError->getMessage()]);
+                }
+            }
+
             if ($maintenanceStarted && $safeToResume && ! $wasInMaintenance) {
                 try {
                     Artisan::call('up');

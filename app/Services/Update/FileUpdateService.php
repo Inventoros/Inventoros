@@ -50,6 +50,20 @@ class FileUpdateService
      */
     private const WEB_KEEP_IF_PRESENT = ['.htaccess', '.user.ini', 'web.config', 'robots.txt'];
 
+    /**
+     * Names of the entries an update run leaves in the temp directory: the
+     * downloaded package, its extracted copy (and the `_final` folder used
+     * while flattening it), the detached signature, and the folder a backup
+     * is unpacked into during a restore. Only these are ever swept; anything
+     * else in the directory (a plugin upload in flight, say) is left alone.
+     */
+    private const TEMP_ARTIFACT_PATTERNS = [
+        '/^update_[A-Za-z0-9_]+\.zip$/',
+        '/^extracted_[A-Za-z0-9_]+$/',
+        '/^signature_[A-Za-z0-9_]+\.sig$/',
+        '/^restore_[A-Za-z0-9_]+$/',
+    ];
+
     /** Matches the line of the cPanel front controller that locates the app. */
     private const LARAVEL_PATH_LINE = '/^([ \t]*)\$laravelPath\s*=\s*[^;]+;/m';
 
@@ -64,12 +78,15 @@ class FileUpdateService
      * @param  string|null  $publicPath  The web root to install into (defaults
      *                                   to public_path(), which honours
      *                                   APP_PUBLIC_PATH on split installs).
+     * @param  string|null  $tempPath  Where downloads are unpacked (defaults
+     *                                 to storage/app/temp).
      */
     public function __construct(
         protected ?string $basePath = null,
         protected ?string $publicPath = null,
+        ?string $tempPath = null,
     ) {
-        $this->tempPath = storage_path('app/temp');
+        $this->tempPath = rtrim($tempPath ?? storage_path('app/temp'), '/\\');
     }
 
     /**
@@ -104,7 +121,13 @@ class FileUpdateService
 
         $zipPath = "{$this->tempPath}/update_".time().'_'.bin2hex(random_bytes(4)).'.zip';
 
-        $this->fetch($url, $zipPath, (int) config('update.max_download_bytes', 200 * 1024 * 1024), 'release');
+        try {
+            $this->fetch($url, $zipPath, (int) config('update.max_download_bytes', 200 * 1024 * 1024), 'release');
+        } catch (\Throwable $e) {
+            $this->removeTempEntry($zipPath);
+
+            throw $e;
+        }
 
         return $zipPath;
     }
@@ -424,35 +447,45 @@ class FileUpdateService
      */
     public function extractZip(string $zipPath): string
     {
-        $extractPath = "{$this->tempPath}/extracted_".time();
-        File::makeDirectory($extractPath, 0755, true, true);
-
-        $zip = new ZipArchive;
-        if ($zip->open($zipPath) !== true) {
-            throw new Exception('Could not open downloaded ZIP file');
-        }
+        $extractPath = "{$this->tempPath}/extracted_".time().'_'.bin2hex(random_bytes(4));
 
         try {
-            SafeZipExtractor::validate($zip, $extractPath, [
-                'max_entries' => (int) config('update.max_entry_count', 50000),
-                'max_bytes' => (int) config('update.max_extracted_bytes', 300 * 1024 * 1024),
-            ]);
+            File::makeDirectory($extractPath, 0755, true, true);
 
-            // GitHub releases often have a root folder, we need to handle that
-            $zip->extractTo($extractPath);
-        } finally {
-            $zip->close();
-        }
+            $zip = new ZipArchive;
+            if ($zip->open($zipPath) !== true) {
+                throw new Exception('Could not open downloaded ZIP file');
+            }
 
-        // Check if there's a single root directory
-        $contents = File::directories($extractPath);
-        if (count($contents) === 1 && count(File::files($extractPath)) === 0) {
-            // Move contents up one level
-            $rootDir = $contents[0];
-            $tempExtractPath = $extractPath.'_final';
-            File::moveDirectory($rootDir, $tempExtractPath);
-            File::deleteDirectory($extractPath);
-            File::moveDirectory($tempExtractPath, $extractPath);
+            try {
+                SafeZipExtractor::validate($zip, $extractPath, [
+                    'max_entries' => (int) config('update.max_entry_count', 50000),
+                    'max_bytes' => (int) config('update.max_extracted_bytes', 300 * 1024 * 1024),
+                ]);
+
+                // GitHub releases often have a root folder, we need to handle that
+                $zip->extractTo($extractPath);
+            } finally {
+                $zip->close();
+            }
+
+            // Check if there's a single root directory
+            $contents = File::directories($extractPath);
+            if (count($contents) === 1 && count(File::files($extractPath)) === 0) {
+                // Move contents up one level
+                $rootDir = $contents[0];
+                $tempExtractPath = $extractPath.'_final';
+                File::moveDirectory($rootDir, $tempExtractPath);
+                File::deleteDirectory($extractPath);
+                File::moveDirectory($tempExtractPath, $extractPath);
+            }
+        } catch (\Throwable $e) {
+            // The caller never learns the folder's name when extraction
+            // fails, so nothing may be left behind here.
+            $this->removeTempEntry($extractPath);
+            $this->removeTempEntry($extractPath.'_final');
+
+            throw $e;
         }
 
         return $extractPath;
@@ -973,20 +1006,144 @@ class FileUpdateService
     }
 
     /**
-     * Cleanup temporary files after update.
+     * Remove one update run's temporary files: the downloaded package and
+     * its extracted copy (plus the `_final` folder used while flattening it).
+     * Either may be null when the run stopped before creating it.
      *
-     * @param  string  $zipPath  Path to the downloaded ZIP file
-     * @param  string  $extractPath  Path to the extracted directory
+     * @param  string|null  $zipPath  Path to the downloaded ZIP file
+     * @param  string|null  $extractPath  Path to the extracted directory
+     *
+     * @throws \RuntimeException When an entry exists but cannot be removed.
      */
-    public function cleanup(string $zipPath, string $extractPath): void
+    public function cleanup(?string $zipPath, ?string $extractPath): void
     {
-        if (File::exists($zipPath)) {
-            File::delete($zipPath);
+        $failed = [];
+        $paths = array_filter([$zipPath, $extractPath, $extractPath === null ? null : $extractPath.'_final']);
+
+        foreach ($paths as $path) {
+            if (! $this->removeTempEntry($path)) {
+                $failed[] = basename($path);
+            }
         }
 
-        if (File::exists($extractPath)) {
-            File::deleteDirectory($extractPath);
+        if ($failed !== []) {
+            throw new \RuntimeException('Could not remove update temp files: '.implode(', ', $failed));
         }
+    }
+
+    /**
+     * Delete update leftovers from the temp directory: downloaded packages,
+     * extracted packages, signatures and restore folders (see
+     * TEMP_ARTIFACT_PATTERNS). Nothing else in the directory is touched.
+     *
+     * @param  int|null  $olderThanSeconds  Only entries last modified at least
+     *                                      this long ago; null for all of them.
+     * @param  bool  $dryRun  Report what would be removed without removing it.
+     * @return array{removed: list<string>, failed: list<string>, bytes: int}
+     */
+    public function removeTempArtifacts(?int $olderThanSeconds = null, bool $dryRun = false): array
+    {
+        $result = ['removed' => [], 'failed' => [], 'bytes' => 0];
+        $cutoff = $olderThanSeconds === null ? null : time() - max(0, $olderThanSeconds);
+
+        // A temp directory that is itself a link is not swept: deleting
+        // through it would reach outside storage.
+        if (! is_dir($this->tempPath) || is_link($this->tempPath)) {
+            return $result;
+        }
+
+        foreach ($this->entries($this->tempPath) as $name) {
+            if (! $this->isTempArtifact($name)) {
+                continue;
+            }
+
+            $path = "{$this->tempPath}/{$name}";
+            $stat = @lstat($path);
+            if ($stat === false || ($cutoff !== null && $stat['mtime'] > $cutoff)) {
+                continue;
+            }
+
+            $bytes = $this->entrySize($path);
+
+            if (! $dryRun && ! $this->removeTempEntry($path)) {
+                $result['failed'][] = $name;
+
+                continue;
+            }
+
+            $result['removed'][] = $name;
+            $result['bytes'] += $bytes;
+        }
+
+        return $result;
+    }
+
+    /**
+     * Whether a temp directory entry name is one an update run creates.
+     */
+    public function isTempArtifact(string $name): bool
+    {
+        foreach (self::TEMP_ARTIFACT_PATTERNS as $pattern) {
+            if (preg_match($pattern, $name) === 1) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Remove one temp file or folder without following symbolic links: a
+     * link is removed itself, never what it points at, and links inside a
+     * folder are unlinked rather than descended into.
+     *
+     * @return bool False when the entry exists but could not be removed.
+     */
+    protected function removeTempEntry(string $path): bool
+    {
+        if (is_link($path)) {
+            // A link to a directory is removed with rmdir() on Windows.
+            return @unlink($path) || @rmdir($path) || ! is_link($path);
+        }
+
+        if (is_dir($path)) {
+            File::deleteDirectory($path);
+
+            return ! file_exists($path);
+        }
+
+        if (! file_exists($path)) {
+            return true;
+        }
+
+        return @unlink($path) || ! file_exists($path);
+    }
+
+    /**
+     * Bytes held by a temp entry, not counting anything behind a link.
+     */
+    protected function entrySize(string $path): int
+    {
+        if (is_link($path)) {
+            return 0;
+        }
+
+        if (! is_dir($path)) {
+            return (int) @filesize($path);
+        }
+
+        $bytes = 0;
+        $items = new \RecursiveIteratorIterator(
+            new \RecursiveDirectoryIterator($path, \FilesystemIterator::SKIP_DOTS),
+        );
+
+        foreach ($items as $item) {
+            if (! $item->isLink() && $item->isFile()) {
+                $bytes += (int) $item->getSize();
+            }
+        }
+
+        return $bytes;
     }
 
     /**
