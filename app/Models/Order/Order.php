@@ -14,6 +14,8 @@ use App\Models\Concerns\BelongsToOrganization;
 use App\Models\Customer;
 use App\Models\User;
 use App\Models\Warehouse;
+use App\Services\ApprovalService;
+use App\Support\ApprovalSettings;
 use App\Support\Money;
 use App\Support\SequenceNumber;
 use App\Traits\LogsActivity;
@@ -25,6 +27,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Represents an order in the system.
@@ -391,14 +394,99 @@ class Order extends Model
                 }
             }
 
+            // Before the approval check below, so terms changed in the same
+            // save as a ship/deliver are held for approval too.
+            if ($order->exists && $order->isDirty(self::APPROVED_TERMS)) {
+                $order->requireReapprovalIfDecided();
+            }
+
             if ($order->isDirty('status') && $order->approvalBlocks($order->status)) {
                 throw new InvalidStateException(self::APPROVAL_PENDING_MESSAGE, 'approval_pending');
             }
         });
 
+        static::updated(function (Order $order) {
+            if (! $order->reapprovalRequested) {
+                return;
+            }
+
+            $order->reapprovalRequested = false;
+            $editor = auth()->user();
+
+            DB::afterCommit(fn () => app(ApprovalService::class)
+                ->requestOrderReapproval($order, $editor instanceof User ? $editor : null));
+        });
+
         static::saved(function (Order $order) {
             $order->mistakenShipmentRevertPermitted = false;
         });
+    }
+
+    /**
+     * Fields that change what an approval decision covered: who the order is
+     * for and what it costs. Line changes are caught by
+     * OrderService::replaceItems(), which also calls
+     * requireReapprovalIfDecided().
+     *
+     * @var array<int, string>
+     */
+    public const APPROVED_TERMS = [
+        'customer_id', 'customer_name', 'customer_email', 'customer_address',
+        'subtotal', 'discount_type', 'discount_value', 'discount_amount',
+        'tax', 'shipping', 'total', 'currency',
+    ];
+
+    /** Set when this save sent a decided order back for approval. */
+    private bool $reapprovalRequested = false;
+
+    /**
+     * Send an approved (or rejected) order back to pending approval because
+     * its terms are changing, the way an approved purchase order goes back
+     * for approval. Sets the attributes without saving; the caller's save
+     * persists them and notifies the approvers once committed.
+     *
+     * Only while approval is required by the organization and the order is
+     * still open with no shipment under way: a cancelled order cannot ship,
+     * and once a shipment exists (pending, label bought, or partly sent) or
+     * its goods have left, holding the order would make the next carrier
+     * update fail when it moves the order to shipped or delivered.
+     */
+    public function requireReapprovalIfDecided(): bool
+    {
+        if (! $this->exists || $this->isDirty('approval_status')) {
+            return false;
+        }
+
+        $decision = OrderApprovalStatus::tryFrom((string) $this->getRawOriginal('approval_status'));
+        if (! in_array($decision, [OrderApprovalStatus::APPROVED, OrderApprovalStatus::REJECTED], true)) {
+            return false;
+        }
+
+        $status = OrderStatus::tryFrom((string) $this->getRawOriginal('status'));
+        if (! in_array($status, [OrderStatus::PENDING, OrderStatus::PROCESSING], true)
+            || $this->getRawOriginal('shipped_at') !== null) {
+            return false;
+        }
+
+        $hasShipment = \App\Models\Shipping\Shipment::withoutGlobalScopes()
+            ->where('order_id', $this->getKey())
+            ->active()
+            ->exists();
+        if ($hasShipment) {
+            return false;
+        }
+
+        if (! ApprovalSettings::forOrganization((int) $this->organization_id)->ordersEnabled) {
+            return false;
+        }
+
+        $this->approval_status = OrderApprovalStatus::PENDING;
+        $this->approved_by = null;
+        $this->approved_at = null;
+        $this->approval_notes = null;
+        $this->reapprovalRequested = true;
+
+        return true;
     }
 
     /**
