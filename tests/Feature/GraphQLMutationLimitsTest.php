@@ -78,6 +78,27 @@ final class GraphQLMutationLimitsTest extends TestCase
         $this->assertDatabaseMissing('customers', ['organization_id' => $this->org->id]);
     }
 
+    public function test_the_limit_is_read_from_the_environment(): void
+    {
+        $previous = [$_ENV['GRAPHQL_MUTATION_MAX_ROOT_FIELDS'] ?? null, $_SERVER['GRAPHQL_MUTATION_MAX_ROOT_FIELDS'] ?? null];
+        $_ENV['GRAPHQL_MUTATION_MAX_ROOT_FIELDS'] = $_SERVER['GRAPHQL_MUTATION_MAX_ROOT_FIELDS'] = '4';
+
+        try {
+            $config = require config_path('graphql.php');
+            $this->assertSame(4, $config['security']['mutation_max_root_fields']);
+        } finally {
+            unset($_ENV['GRAPHQL_MUTATION_MAX_ROOT_FIELDS'], $_SERVER['GRAPHQL_MUTATION_MAX_ROOT_FIELDS']);
+            if ($previous[0] !== null) {
+                $_ENV['GRAPHQL_MUTATION_MAX_ROOT_FIELDS'] = $previous[0];
+            }
+            if ($previous[1] !== null) {
+                $_SERVER['GRAPHQL_MUTATION_MAX_ROOT_FIELDS'] = $previous[1];
+            }
+        }
+
+        $this->assertSame(10, (require config_path('graphql.php'))['security']['mutation_max_root_fields']);
+    }
+
     public function test_query_operations_are_not_subject_to_the_mutation_limit(): void
     {
         $fields = implode(' ', array_map(fn (int $i) => "p{$i}: products(limit: 1) { id }", range(1, 12)));

@@ -266,7 +266,7 @@ return [
         'disable_introspection' => env('APP_ENV') === 'production',
         // Most root fields (aliased writes) one mutation operation may carry;
         // each HTTP request counts once against the API rate limiter.
-        'mutation_max_root_fields' => 10,
+        'mutation_max_root_fields' => (int) env('GRAPHQL_MUTATION_MAX_ROOT_FIELDS', 10),
     ],
 
     /*
