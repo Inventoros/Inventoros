@@ -1,0 +1,50 @@
+[
+  {
+    "name": "create",
+    "variant": "desktop",
+    "pageHeight": 2115,
+    "stockY": 568,
+    "submitY": 1982,
+    "overflow": 0
+  },
+  {
+    "name": "edit",
+    "variant": "desktop",
+    "pageHeight": 2117,
+    "stockY": 558,
+    "submitY": 1984,
+    "overflow": 0
+  },
+  {
+    "name": "create",
+    "variant": "mobile",
+    "pageHeight": 2966,
+    "stockY": 1323,
+    "submitY": 2821,
+    "overflow": 0
+  },
+  {
+    "name": "edit",
+    "variant": "mobile",
+    "pageHeight": 2960,
+    "stockY": 1289,
+    "submitY": 2815,
+    "overflow": 0
+  },
+  {
+    "name": "create",
+    "variant": "dark",
+    "pageHeight": 2115,
+    "stockY": 568,
+    "submitY": 1982,
+    "overflow": 0
+  },
+  {
+    "name": "edit",
+    "variant": "dark",
+    "pageHeight": 2117,
+    "stockY": 558,
+    "submitY": 1984,
+    "overflow": 0
+  }
+]
