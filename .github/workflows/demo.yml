@@ -152,6 +152,10 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          # The latest main, not the triggering commit: main may have moved
+          # while the GIFs were recorded.
+          ref: main
 
       - name: Download recorded GIFs
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
@@ -160,7 +164,28 @@ jobs:
           path: .github/demo
 
       - name: Commit updated GIFs
-        uses: stefanzweifel/git-auto-commit-action@b863ae1933cb653a53c021fe36dbb774e1fb9403 # v5.2.0
-        with:
-          commit_message: 'chore(demo): update README demo GIFs [skip ci]'
-          file_pattern: '.github/demo/*.gif'
+        # Main often moves while this job runs (other merges land), so a plain
+        # push is rejected as non-fast-forward. Commit only when the files
+        # changed, then rebase onto the latest main and retry.
+        env:
+          COMMIT_MESSAGE: 'chore(demo): update README demo GIFs [skip ci]'
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- '.github/demo/*.gif'
+          if git diff --cached --quiet; then
+            echo 'No changes to commit.'
+            exit 0
+          fi
+          git commit -m "$COMMIT_MESSAGE"
+          for attempt in 1 2 3 4 5; do
+            if git push origin HEAD:main; then
+              exit 0
+            fi
+            echo "Push rejected (attempt $attempt); rebasing onto the latest main."
+            git fetch origin main
+            git rebase origin/main
+            sleep $((attempt * 5))
+          done
+          echo 'Could not push after 5 attempts.' >&2
+          exit 1
