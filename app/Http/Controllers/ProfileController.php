@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ProfileUpdateRequest;
+use App\Models\User;
+use App\Services\Organizations\OrganizationMembershipService;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -69,6 +71,14 @@ class ProfileController extends Controller
 
         $user = $request->user();
 
+        // Like deleting a user from the Users screen, never leave an
+        // organization (home or joined) without an administrator.
+        if ($this->isLastAdministratorAnywhere($user)) {
+            return Redirect::back()->withErrors([
+                'password' => __('Cannot delete the last administrator.'),
+            ]);
+        }
+
         Auth::logout();
 
         $user->delete();
@@ -77,5 +87,31 @@ class ProfileController extends Controller
         $request->session()->regenerateToken();
 
         return Redirect::to('/');
+    }
+
+    /**
+     * Whether $user is the only administrator of their home organization or
+     * of any other organization they belong to.
+     */
+    private function isLastAdministratorAnywhere(User $user): bool
+    {
+        $memberships = app(OrganizationMembershipService::class);
+
+        $adminOf = array_keys(array_filter(
+            $memberships->allMemberships($user),
+            fn ($role): bool => $role === 'admin',
+        ));
+
+        if ($user->homeRole() === 'admin' && $user->homeOrganizationId() !== null) {
+            $adminOf[] = $user->homeOrganizationId();
+        }
+
+        foreach (array_unique($adminOf) as $organizationId) {
+            if ($memberships->isLastAdministrator($organizationId, $user)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

@@ -19,7 +19,7 @@ use InvalidArgumentException;
  */
 final class PluginWebhookEventRegistry
 {
-    private const NAME_PATTERN = '/^([a-z0-9][a-z0-9-]{0,63})\.[a-z0-9_]+(\.[a-z0-9_]+)*$/';
+    private const NAME_PATTERN = '/^([a-z0-9][a-z0-9-]{0,63})\.[a-z0-9_]+(\.[a-z0-9_]+)*\z/';
 
     /** @var array<string, array{description: string, group: string, plugin: string}> */
     private array $events = [];

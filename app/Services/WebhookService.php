@@ -132,6 +132,50 @@ final class WebhookService
     }
 
     /**
+     * HMAC-SHA256 of "{timestamp}.{payload}", sent as X-Webhook-Signature-V2
+     * next to X-Webhook-Timestamp so a receiver can refuse replays.
+     *
+     * @param  string  $payload  The exact request body
+     * @param  string  $secret  The webhook secret
+     * @param  int  $timestamp  Unix seconds, as sent in X-Webhook-Timestamp
+     */
+    public static function signWithTimestamp(string $payload, string $secret, int $timestamp): string
+    {
+        return hash_hmac('sha256', $timestamp.'.'.$payload, $secret);
+    }
+
+    /**
+     * Verify a timestamped signature and that its timestamp is within
+     * $tolerance seconds of now.
+     *
+     * @param  string  $payload  The exact request body
+     * @param  string  $secret  The webhook secret
+     * @param  string  $signature  The X-Webhook-Signature-V2 header
+     * @param  string  $timestamp  The X-Webhook-Timestamp header
+     * @param  int  $tolerance  Allowed clock difference in seconds
+     * @param  int|null  $now  Current unix time (defaults to now)
+     */
+    public static function verifyTimestampedSignature(
+        string $payload,
+        string $secret,
+        string $signature,
+        string $timestamp,
+        int $tolerance = 300,
+        ?int $now = null,
+    ): bool {
+        if (preg_match('/^\d{1,12}\z/', $timestamp) !== 1) {
+            return false;
+        }
+
+        $now ??= now()->getTimestamp();
+        if (abs($now - (int) $timestamp) > $tolerance) {
+            return false;
+        }
+
+        return hash_equals(self::signWithTimestamp($payload, $secret, (int) $timestamp), $signature);
+    }
+
+    /**
      * Send a plugin's own event (register_webhook_event()) to the
      * organization's subscribed webhooks, after the surrounding transaction
      * commits, through the same signed, retried, SSRF-checked delivery as

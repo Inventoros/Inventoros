@@ -45,6 +45,7 @@ final class WebhookDeliveryJob implements ShouldQueue
      */
     private const RESERVED_HEADERS = [
         'x-webhook-signature', 'x-webhook-event', 'x-webhook-delivery',
+        'x-webhook-timestamp', 'x-webhook-signature-v2',
         'host', 'content-type', 'content-length', 'transfer-encoding',
         'connection', 'expect', 'te', 'upgrade', 'proxy-authorization',
     ];
@@ -251,6 +252,10 @@ final class WebhookDeliveryJob implements ShouldQueue
         $request = $this->request($webhook, json_encode($this->delivery->payload, JSON_UNESCAPED_SLASHES));
         $payloadJson = $request['body'];
         $signature = WebhookService::sign($payloadJson, $webhook->secret);
+        // Signed per attempt, so every retry carries a fresh timestamp that a
+        // receiver can hold to a replay window.
+        $timestamp = now()->getTimestamp();
+        $timestampedSignature = WebhookService::signWithTimestamp($payloadJson, $webhook->secret, $timestamp);
 
         $this->delivery->increment('attempts');
         $startedAt = hrtime(true);
@@ -266,6 +271,8 @@ final class WebhookDeliveryJob implements ShouldQueue
                 ->withHeaders($request['headers'])
                 ->withHeaders([
                     'X-Webhook-Signature' => $signature,
+                    'X-Webhook-Timestamp' => (string) $timestamp,
+                    'X-Webhook-Signature-V2' => $timestampedSignature,
                     'X-Webhook-Event' => $this->delivery->event,
                     'X-Webhook-Delivery' => (string) $this->delivery->id,
                 ])

@@ -935,7 +935,7 @@ final class PluginService
     private function isSafeSlug(string $slug): bool
     {
         return $slug !== ''
-            && preg_match('/^[A-Za-z0-9][A-Za-z0-9._-]*$/', $slug) === 1
+            && preg_match('/^[A-Za-z0-9][A-Za-z0-9._-]*\z/', $slug) === 1
             && ! str_contains($slug, '..');
     }
 

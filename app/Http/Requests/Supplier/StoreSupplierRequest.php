@@ -33,7 +33,7 @@ final class StoreSupplierRequest extends FormRequest
             'state' => ['nullable', 'string', 'max:255'],
             'zip_code' => ['nullable', 'string', 'max:255'],
             'country' => ['nullable', 'string', 'max:255'],
-            'website' => ['nullable', 'url', 'max:255'],
+            'website' => ['nullable', 'url:http,https', 'max:255'],
             'payment_terms' => ['nullable', 'string', 'max:255'],
             'currency' => ['nullable', 'string', 'max:3'],
             'notes' => ['nullable', 'string'],

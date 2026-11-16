@@ -183,7 +183,7 @@ class UpdateController extends Controller
         }
 
         $validated = $request->validate([
-            'backup_file' => ['required', 'string', 'regex:/^[A-Za-z0-9._-]+\.zip$/'],
+            'backup_file' => ['required', 'string', 'regex:/^[A-Za-z0-9._-]+\.zip\z/'],
         ]);
 
         $knownBackups = array_column($this->updateService->listBackups(), 'filename');
@@ -227,7 +227,7 @@ class UpdateController extends Controller
         }
 
         $validated = $request->validate([
-            'backup_file' => ['required', 'string', 'regex:/^[A-Za-z0-9._-]+\.zip$/'],
+            'backup_file' => ['required', 'string', 'regex:/^[A-Za-z0-9._-]+\.zip\z/'],
         ]);
 
         $knownBackups = array_column($this->updateService->listBackups(), 'filename');
@@ -250,8 +250,10 @@ class UpdateController extends Controller
 
         if (unlink($backupPath)) {
             // Also delete associated database backup if exists
-            $dbBackupPath = str_replace('backup_', 'database_', $backupPath);
-            $dbBackupPath = str_replace('.zip', '.sql', $dbBackupPath);
+            // Rename the file name only: the directory may contain "backup_"
+            // or ".zip" too.
+            $dbBackupName = str_replace('backup_', 'database_', substr(basename($backupPath), 0, -strlen('.zip'))).'.sql';
+            $dbBackupPath = dirname($backupPath).DIRECTORY_SEPARATOR.$dbBackupName;
             if (file_exists($dbBackupPath)) {
                 unlink($dbBackupPath);
             }

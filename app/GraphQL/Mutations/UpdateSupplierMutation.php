@@ -97,7 +97,7 @@ class UpdateSupplierMutation extends Mutation
             'website' => [
                 'type' => Type::string(),
                 'description' => 'Website URL',
-                'rules' => ['nullable', 'url', 'max:255'],
+                'rules' => ['nullable', 'url:http,https', 'max:255'],
             ],
             'payment_terms' => [
                 'type' => Type::string(),

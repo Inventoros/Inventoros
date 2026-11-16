@@ -35,6 +35,10 @@ const formatCurrency = (value) => {
     return formatMoney(value, props.supplier.currency);
 };
 
+// Only http(s) websites become links; anything else saved before validation
+// was tightened is shown as plain text.
+const isWebUrl = (url) => typeof url === 'string' && /^https?:\/\//i.test(url);
+
 const thClass = 'px-4 py-2.5 text-start text-xs font-medium text-text-secondary';
 </script>
 
@@ -99,9 +103,10 @@ const thClass = 'px-4 py-2.5 text-start text-xs font-medium text-text-secondary'
                             <div>
                                 <dt class="text-xs text-text-tertiary">{{ t('suppliers.show.website') }}</dt>
                                 <dd class="mt-1 text-sm text-text-primary">
-                                    <a v-if="supplier.website" :href="supplier.website" target="_blank" class="text-brand hover:underline">
+                                    <a v-if="isWebUrl(supplier.website)" :href="supplier.website" target="_blank" rel="noopener noreferrer" class="text-brand hover:underline">
                                         {{ supplier.website }}
                                     </a>
+                                    <span v-else-if="supplier.website">{{ supplier.website }}</span>
                                     <span v-else>-</span>
                                 </dd>
                             </div>
