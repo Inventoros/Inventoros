@@ -10,6 +10,7 @@ use App\Models\Inventory\StockAdjustment;
 use App\Models\Inventory\VariantLocationStock;
 use App\Models\Role;
 use App\Models\User;
+use App\Services\ProductService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Testing\TestResponse;
@@ -108,10 +109,15 @@ final class VariantOpeningStockPermissionTest extends TestCase
 
     public function test_edit_products_alone_cannot_give_a_new_variant_opening_stock(): void
     {
-        $this->storeVariant($this->editor, 5)->assertForbidden();
-        $this->bulkVariants($this->editor, 5)->assertForbidden();
-        $this->syncVariants($this->editor, 5)->assertForbidden();
-        $this->webSyncVariants($this->editor, 5)->assertForbidden();
+        // A field error on the variant's stock, never a 403 page: the web
+        // edit form keeps the user's input.
+        $message = 'Opening stock on a new variant needs the manage_stock permission';
+        $this->storeVariant($this->editor, 5)->assertUnprocessable()->assertJsonValidationErrors(['stock' => $message]);
+        $this->bulkVariants($this->editor, 5)->assertUnprocessable()->assertJsonValidationErrors(['variants.0.stock' => $message]);
+        $this->syncVariants($this->editor, 5)->assertUnprocessable()->assertJsonValidationErrors(['variants.0.stock' => $message]);
+        $this->from(route('products.edit', $this->productA))->webSyncVariants($this->editor, 5)
+            ->assertRedirect(route('products.edit', $this->productA))
+            ->assertSessionHasErrors(['variants.0.stock' => ProductService::VARIANT_OPENING_STOCK_PERMISSION_MESSAGE]);
 
         $this->assertDatabaseCount('product_variants', 0);
         $this->assertNoVariantStock();
@@ -133,7 +139,7 @@ final class VariantOpeningStockPermissionTest extends TestCase
 
         $this->withToken($token)->postJson("/api/v1/products/{$this->productA->id}/variants", [
             'sku' => 'ALPHA-RED', 'title' => 'Red', 'option_values' => ['Color' => 'Red'], 'price' => 10, 'stock' => 5,
-        ])->assertForbidden();
+        ])->assertUnprocessable()->assertJsonValidationErrors('stock');
 
         $this->assertNoVariantStock();
     }
@@ -154,7 +160,7 @@ final class VariantOpeningStockPermissionTest extends TestCase
     {
         $this->enableApprovals();
 
-        $this->storeVariant($this->clerk, 5)->assertUnprocessable()->assertJsonValidationErrors('stock');
+        $this->storeVariant($this->clerk, 5)->assertUnprocessable()->assertJsonValidationErrors(['stock' => 'needs approval']);
         $this->bulkVariants($this->clerk, 5)->assertUnprocessable()->assertJsonValidationErrors('variants.0.stock');
         $this->syncVariants($this->clerk, 5)->assertUnprocessable()->assertJsonValidationErrors('variants.0.stock');
         $this->storeVariant($this->admin, 5)->assertUnprocessable();

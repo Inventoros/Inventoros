@@ -24,6 +24,12 @@ const props = defineProps({
         type: Boolean,
         default: false
     },
+    // A new variant's opening stock needs manage_stock on an existing
+    // product; without it, new variants start at 0.
+    lockNewStock: {
+        type: Boolean,
+        default: false
+    },
     currencySymbol: {
         type: String,
         default: '$'
@@ -414,8 +420,8 @@ const getEffectivePurchasePrice = (variant) => {
                                     min="0"
                                     class="w-20 text-sm rounded-md bg-gray-50 dark:bg-surface-canvas border-gray-200 dark:border-border-subtle text-gray-900 dark:text-gray-100"
                                     :disabled="disabled"
-                                    :readonly="lockExistingStock && !!variant.id"
-                                    :title="lockExistingStock && variant.id ? t('products.edit.variantStockReadOnlyHint') : undefined"
+                                    :readonly="(lockExistingStock && !!variant.id) || (lockNewStock && !variant.id)"
+                                    :title="lockExistingStock && variant.id ? t('products.edit.variantStockReadOnlyHint') : (lockNewStock && !variant.id ? t('products.edit.stockReadOnlyHint') : undefined)"
                                 />
                             </td>
                             <td class="px-4 py-3">

@@ -14,7 +14,6 @@ use App\Models\Inventory\Supplier;
 use App\Models\Inventory\SupplierPriceHistory;
 use App\Models\User;
 use App\Observers\ProductObserver;
-use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -49,7 +48,7 @@ final class ProductService
      * Why a new variant on an existing product may not carry opening stock
      * for this user.
      */
-    public const VARIANT_OPENING_STOCK_PERMISSION_MESSAGE = 'Opening stock on a new variant of an existing product needs the manage_stock permission. Create the variant with 0 stock and ask someone who manages stock to adjust it.';
+    public const VARIANT_OPENING_STOCK_PERMISSION_MESSAGE = 'Opening stock on a new variant needs the manage_stock permission. Create the variant with 0 stock and ask someone who manages stock to adjust it.';
 
     public const VARIANT_OPENING_STOCK_APPROVAL_MESSAGE = 'Opening stock on a new variant needs approval under this organization\'s stock adjustment rules. Create the variant with 0 stock, then submit a stock adjustment for approval.';
 
@@ -259,10 +258,10 @@ final class ProductService
      * approval. $field names the input the refusal is reported against. The
      * acting user is $actor, else the signed-in user; a system caller with
      * neither is not narrowed. Call inside the transaction that creates the
-     * variant, before recording its opening stock.
+     * variant, before recording its opening stock. Both refusals are field
+     * errors on $field, so a form keeps the user's input.
      *
-     * @throws AuthorizationException without manage_stock
-     * @throws ValidationException when the stock would need approval
+     * @throws ValidationException without manage_stock, or when the stock would need approval
      */
     public function authorizeNewVariantStock(Product $product, ProductVariant $variant, string $field, ?User $actor = null): void
     {
@@ -274,7 +273,7 @@ final class ProductService
 
         $ability = Permission::MANAGE_STOCK->value;
         if (! $user->hasPermission($ability) || ! CheckApiPermission::tokenAllows($user->currentAccessToken())($ability)) {
-            throw new AuthorizationException(self::VARIANT_OPENING_STOCK_PERMISSION_MESSAGE);
+            throw ValidationException::withMessages([$field => self::VARIANT_OPENING_STOCK_PERMISSION_MESSAGE]);
         }
 
         if (app(ApprovalService::class)->stockAdjustmentNeedsApproval($product, $variant, $quantity)) {
