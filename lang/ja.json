@@ -146,5 +146,7 @@
     "Payment recorded.": "支払いを記録しました。",
     "Cannot delete a supplier with open purchase orders.": "未完了の発注がある仕入先は削除できません。",
     "Stock adjustments created for discrepancies: :count.": "差異に対して作成した在庫調整の件数：:count。",
-    "No discrepancies found.": "差異はありませんでした。"
+    "No discrepancies found.": "差異はありませんでした。",
+    "If that email belongs to an account, we have emailed a password reset link.": "そのメールアドレスのアカウントが存在する場合、パスワード再設定用のリンクを送信しました。",
+    "This code was already used; wait for the next one.": "このコードはすでに使用されています。次のコードをお待ちください。"
 }

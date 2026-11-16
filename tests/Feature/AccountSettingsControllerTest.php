@@ -70,6 +70,7 @@ class AccountSettingsControllerTest extends TestCase
             ->patch(route('settings.account.update.profile'), [
                 'name' => 'Updated Name',
                 'email' => 'updated@example.com',
+                'current_password' => 'password',
             ]);
 
         $response->assertRedirect();

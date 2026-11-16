@@ -10,7 +10,7 @@ This project and everyone participating in it is governed by our [Code of Conduc
 
 ### Reporting Bugs
 
-Before creating bug reports, please check the existing issues to avoid duplicates. When you create a bug report, include as many details as possible:
+Before creating bug reports, please check the existing issues to avoid duplicates. [New issues](https://github.com/Inventoros/Inventoros/issues/new/choose) offer forms for bug reports, feature requests and [accessibility barriers](ACCESSIBILITY.md) that ask for these details. When you create a bug report, include as many details as possible:
 
 - **Use a clear and descriptive title**
 - **Describe the exact steps to reproduce the problem**

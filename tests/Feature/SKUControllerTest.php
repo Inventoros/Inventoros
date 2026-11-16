@@ -88,6 +88,45 @@ class SKUControllerTest extends TestCase
         $response->assertStatus(200);
     }
 
+    public function test_generate_uses_a_category_of_the_users_organization(): void
+    {
+        $category = ProductCategory::create([
+            'organization_id' => $this->organization->id,
+            'name' => 'Electronics',
+        ]);
+
+        $this->actingAs($this->admin)
+            ->postJson(route('sku.generate'), [
+                'pattern' => '{category}-001',
+                'category_id' => $category->id,
+            ])
+            ->assertOk()
+            ->assertJsonPath('sku', 'ELE-001');
+    }
+
+    public function test_generate_rejects_another_organizations_category(): void
+    {
+        $other = Organization::create([
+            'name' => 'Other Organization',
+            'email' => 'other@organization.com',
+            'currency' => 'USD',
+            'timezone' => 'UTC',
+        ]);
+        $foreign = ProductCategory::create([
+            'organization_id' => $other->id,
+            'name' => 'Zeppelins',
+        ]);
+
+        $response = $this->actingAs($this->admin)
+            ->postJson(route('sku.generate'), [
+                'pattern' => '{category}-001',
+                'category_id' => $foreign->id,
+            ]);
+
+        $response->assertUnprocessable()->assertJsonValidationErrors('category_id');
+        $this->assertStringNotContainsString('ZEP', $response->getContent());
+    }
+
     public function test_admin_can_check_sku_uniqueness(): void
     {
         $response = $this->actingAs($this->admin)
