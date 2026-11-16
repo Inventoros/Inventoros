@@ -133,6 +133,10 @@ class BackupService
         // back to the old data, unless the operator explicitly opted out.
         $database = $this->backupDatabase("{$this->backupPath}/database_{$timestamp}");
 
+        if ($database !== null) {
+            $this->restrictToOwner($database['path']);
+        }
+
         if ($database === null) {
             if (! config('update.allow_missing_database_backup')) {
                 throw new DatabaseBackupFailedException(
@@ -205,7 +209,22 @@ class BackupService
             throw new Exception('Could not write the backup archive');
         }
 
+        $this->restrictToOwner($backupFile);
+
         return $backupFile;
+    }
+
+    /**
+     * Make a backup file readable and writable by its owner only: archives
+     * hold .env (APP_KEY, database and mail credentials) and storage/.
+     * chmod() only toggles the read-only flag on Windows, where this is
+     * effectively a no-op.
+     */
+    protected function restrictToOwner(string $path): void
+    {
+        if (! @chmod($path, 0600)) {
+            Log::warning('Could not restrict backup file permissions', ['file' => basename($path)]);
+        }
     }
 
     /**
