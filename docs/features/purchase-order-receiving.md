@@ -23,6 +23,16 @@ be selected.
 Invalid destinations or unavailable products/variants roll back the whole submitted
 delivery. No earlier line is silently left booked when a later line fails.
 
+## Foreign-currency orders
+
+A purchase order in a supplier's currency is received at the exchange rate
+locked on the order when it was sent. Each line's unit cost is converted to the
+organization's currency and logged in the supplier price history with the
+supplier's own price and the rate beside it. A foreign-currency order with no
+rate recorded logs the supplier's price in its own currency, labelled as such;
+a user with `override_purchase_order_exchange_rate` can record a rate on it
+before receiving. See the Exchange rates documentation.
+
 ## Integrations
 
 Web, REST, GraphQL and MCP use the same receiving service. Each receipt item
