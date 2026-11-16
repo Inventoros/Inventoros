@@ -270,7 +270,7 @@ final class WorkOrderService
             $outputVariant = $locked->product_variant_id !== null ? $variants->get($locked->product_variant_id) : null;
             $this->assertOutputSupported($locked, $output, $outputVariant);
             // The output is booked into the product's primary location.
-            $this->authorizeStockAt($output, $actor);
+            $this->authorizeStockAt($output, $actor, 'complete');
 
             $allocations = $this->allocationsByItem($locked, $input['allocations'] ?? null);
 
@@ -340,7 +340,7 @@ final class WorkOrderService
 
                     foreach ($consumed as $item) {
                         // Consumed units return to the product's primary location.
-                        $this->authorizeStockAt($products->get($item->product_id), $actor);
+                        $this->authorizeStockAt($products->get($item->product_id), $actor, 'cancel');
                         $this->reverseLine($locked, $item, $products->get($item->product_id), $item->product_variant_id !== null ? $variants->get($item->product_variant_id) : null);
                     }
                 }
@@ -820,14 +820,15 @@ final class WorkOrderService
 
     /**
      * A restricted actor may only act on a work order in one of their
-     * warehouses; one bound to no warehouse is for unrestricted users.
+     * warehouses. One bound to no warehouse is open to them: its stock
+     * movements are still drawn from and booked into their own locations.
      *
      * @throws AuthorizationException
      */
     private function authorizeWorkOrder(WorkOrder $workOrder, ?User $actor): void
     {
-        if ($actor !== null) {
-            app(WarehouseAccessService::class)->authorizeWarehouse($actor, $this->intOrNull($workOrder->warehouse_id));
+        if ($actor !== null && $workOrder->warehouse_id !== null) {
+            app(WarehouseAccessService::class)->authorizeWarehouse($actor, (int) $workOrder->warehouse_id);
         }
     }
 
@@ -838,10 +839,11 @@ final class WorkOrderService
      *
      * @throws AuthorizationException
      */
-    private function authorizeStockAt(?Product $product, ?User $actor): void
+    private function authorizeStockAt(?Product $product, ?User $actor, string $action): void
     {
-        if ($actor !== null && $product !== null) {
-            app(WarehouseAccessService::class)->authorizeLocation($actor, $this->intOrNull($product->location_id));
+        if ($actor !== null && $product !== null
+            && ! app(WarehouseAccessService::class)->canAccessLocation($actor, $this->intOrNull($product->location_id))) {
+            throw new AuthorizationException("This product's stock location is in a warehouse you can't access; ask an administrator to {$action} it or move the product.");
         }
     }
 
@@ -854,14 +856,21 @@ final class WorkOrderService
      */
     private function authorizeTrackedStock(Product $product, ?User $actor): void
     {
+        if ($actor === null || $this->trackingType($product) === TrackingType::NONE) {
+            return;
+        }
+
         $access = app(WarehouseAccessService::class);
-        if ($actor === null || $this->trackingType($product) === TrackingType::NONE || ! $access->isRestricted($actor)) {
+        $ids = $access->accessibleWarehouseIds($actor);
+        if ($ids === null) {
             return;
         }
 
         $access->authorizeLocation($actor, $this->intOrNull($product->location_id));
+        // The bins arrive with their locations loaded; compare in memory.
         foreach ($this->bins->breakdown($product) as $bin) {
-            if (! $access->canAccessLocation($actor, (int) $bin->location_id)) {
+            $warehouseId = $bin->location?->warehouse_id;
+            if ($warehouseId === null || ! in_array((int) $warehouseId, $ids, true)) {
                 throw new AuthorizationException('Tracked stock spans warehouses you cannot access; an unrestricted user must complete this work order.');
             }
         }

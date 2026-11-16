@@ -36,8 +36,9 @@ class WorkOrderController extends Controller
 
         $query = WorkOrder::with(['product:id,name,sku,thumbnail', 'creator:id,name'])
             ->forOrganization($organizationId)
-            // A restricted user sees only their warehouses' work orders.
-            ->tap(fn ($query) => app(WarehouseAccessService::class)->scopeWarehouses($query, $request->user(), 'warehouse_id'))
+            // A restricted user sees their warehouses' work orders (and
+            // those bound to no warehouse).
+            ->accessibleTo($request->user())
             ->when($request->input('search'), function ($query, $search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('work_order_number', 'like', "%{$search}%")
@@ -156,6 +157,8 @@ class WorkOrderController extends Controller
             app(WorkOrderService::class)->start($workOrder, $request->user());
         } catch (BusinessRuleException $e) {
             return $this->refusal($e);
+        } catch (AuthorizationException $e) {
+            return $this->warehouseRefusal($e);
         }
 
         $workOrder->refresh()->load(['product:id,name,sku,thumbnail', 'creator:id,name']);
@@ -205,6 +208,8 @@ class WorkOrderController extends Controller
             $quantityProduced = app(WorkOrderService::class)->complete($workOrder, $validated, $request->user());
         } catch (BusinessRuleException $e) {
             return $this->refusal($e);
+        } catch (AuthorizationException $e) {
+            return $this->warehouseRefusal($e);
         }
 
         $workOrder->refresh()->load(['product:id,name,sku,thumbnail', 'creator:id,name', 'items.allocations', 'outputs']);
@@ -247,6 +252,8 @@ class WorkOrderController extends Controller
             app(WorkOrderService::class)->cancel($workOrder, $request->user());
         } catch (BusinessRuleException $e) {
             return $this->refusal($e);
+        } catch (AuthorizationException $e) {
+            return $this->warehouseRefusal($e);
         }
 
         $workOrder->refresh()->load(['product:id,name,sku,thumbnail', 'creator:id,name']);
@@ -284,13 +291,28 @@ class WorkOrderController extends Controller
     }
 
     /**
-     * A restricted user may only reach work orders in their own warehouses.
+     * A restricted user may only reach work orders in their own warehouses
+     * (or bound to no warehouse).
      *
      * @throws AuthorizationException
      */
     private function authorizeWarehouse(Request $request, WorkOrder $workOrder): void
     {
-        app(WarehouseAccessService::class)->authorizeWarehouse($request->user(), $workOrder->warehouse_id === null ? null : (int) $workOrder->warehouse_id);
+        if ($workOrder->warehouse_id !== null) {
+            app(WarehouseAccessService::class)->authorizeWarehouse($request->user(), (int) $workOrder->warehouse_id);
+        }
+    }
+
+    /**
+     * The 403 for a movement the user's warehouse assignments do not allow
+     * (stock in another warehouse's bins or location).
+     */
+    private function warehouseRefusal(AuthorizationException $e): JsonResponse
+    {
+        return response()->json([
+            'message' => $e->getMessage(),
+            'error' => 'warehouse_access_denied',
+        ], 403);
     }
 
     /**

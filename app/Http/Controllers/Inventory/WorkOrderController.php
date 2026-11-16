@@ -17,6 +17,7 @@ use App\Models\Inventory\WorkOrder;
 use App\Models\Inventory\WorkOrderItem;
 use App\Services\WarehouseAccessService;
 use App\Services\WorkOrderService;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
@@ -50,8 +51,9 @@ class WorkOrderController extends Controller
 
         $query = WorkOrder::with(['product:id,name,sku,thumbnail', 'creator:id,name'])
             ->forOrganization($organizationId)
-            // A restricted user sees only their warehouses' work orders.
-            ->tap(fn ($query) => app(WarehouseAccessService::class)->scopeWarehouses($query, $request->user(), 'warehouse_id'))
+            // A restricted user sees their warehouses' work orders (and
+            // those bound to no warehouse).
+            ->accessibleTo($request->user())
             ->when($activeWarehouseId, function ($query, $warehouseId) {
                 $query->where('warehouse_id', $warehouseId);
             })
@@ -226,7 +228,7 @@ class WorkOrderController extends Controller
 
         try {
             app(WorkOrderService::class)->start($workOrder, $request->user());
-        } catch (BusinessRuleException $e) {
+        } catch (BusinessRuleException|AuthorizationException $e) {
             return redirect()->route('work-orders.show', $workOrder)->with('error', $e->getMessage());
         }
 
@@ -258,7 +260,7 @@ class WorkOrderController extends Controller
 
         try {
             $quantityProduced = app(WorkOrderService::class)->complete($workOrder, $validated, $request->user());
-        } catch (BusinessRuleException $e) {
+        } catch (BusinessRuleException|AuthorizationException $e) {
             return redirect()->route('work-orders.show', $workOrder)
                 ->with('error', $e->getMessage());
         }
@@ -287,7 +289,7 @@ class WorkOrderController extends Controller
 
         try {
             app(WorkOrderService::class)->cancel($workOrder, $request->user());
-        } catch (BusinessRuleException $e) {
+        } catch (BusinessRuleException|AuthorizationException $e) {
             return redirect()->route('work-orders.show', $workOrder)
                 ->with('error', $e->getMessage());
         }
@@ -324,8 +326,8 @@ class WorkOrderController extends Controller
     }
 
     /**
-     * Authorize that the work order belongs to the user's organization and
-     * to one of the warehouses they may access.
+     * Authorize that the work order belongs to the user's organization and,
+     * when it is bound to a warehouse, to one they may access.
      */
     private function authorizeWorkOrder(Request $request, WorkOrder $workOrder): void
     {
@@ -333,7 +335,9 @@ class WorkOrderController extends Controller
             abort(403, 'Unauthorized action.');
         }
 
-        app(WarehouseAccessService::class)->authorizeWarehouse($request->user(), $workOrder->warehouse_id === null ? null : (int) $workOrder->warehouse_id);
+        if ($workOrder->warehouse_id !== null) {
+            app(WarehouseAccessService::class)->authorizeWarehouse($request->user(), (int) $workOrder->warehouse_id);
+        }
     }
 
     private function trackingValue(Product $product): string

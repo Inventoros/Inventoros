@@ -9,6 +9,7 @@ use App\Mcp\Tools\DeleteWorkOrderTool;
 use App\Mcp\Tools\ListWorkOrdersTool;
 use App\Mcp\Tools\StartWorkOrderTool;
 use App\Models\Inventory\Product;
+use App\Models\Inventory\ProductBatch;
 use App\Models\Inventory\ProductComponent;
 use App\Models\Inventory\ProductLocation;
 use App\Models\Inventory\ProductLocationStock;
@@ -147,11 +148,13 @@ final class WorkOrderWarehouseAccessTest extends TestCase
         $theirs = $this->workOrder($this->warehouseB);
         $floating = $this->workOrder(null);
 
+        // Work orders bound to no warehouse stay visible: their stock
+        // movements are scoped to the actor's own bins.
         $this->actingAs($this->restricted)->get(route('work-orders.index'))
             ->assertOk()
             ->assertInertia(fn ($page) => $page
-                ->has('workOrders.data', 1)
-                ->where('workOrders.data.0.id', $mine->id));
+                ->has('workOrders.data', 2)
+                ->where('workOrders.data', fn ($rows) => collect($rows)->pluck('id')->sort()->values()->all() === collect([$mine->id, $floating->id])->sort()->values()->all()));
 
         $this->actingAs($this->restricted)->get(route('work-orders.create'))
             ->assertOk()
@@ -196,12 +199,58 @@ final class WorkOrderWarehouseAccessTest extends TestCase
         $this->workOrder(null);
 
         Sanctum::actingAs($this->restricted, ['*']);
-        $this->getJson('/api/v1/work-orders')->assertOk()
-            ->assertJsonCount(1, 'data')
-            ->assertJsonPath('data.0.id', $mine->id);
+        $ids = collect($this->getJson('/api/v1/work-orders')->assertOk()->assertJsonCount(2, 'data')->json('data'))->pluck('id');
+        $this->assertContains($mine->id, $ids);
+        $this->assertNotContains(WorkOrder::where('warehouse_id', $this->warehouseB->id)->value('id'), $ids);
 
         Sanctum::actingAs($this->unassigned, ['*']);
         $this->getJson('/api/v1/work-orders')->assertOk()->assertJsonCount(3, 'data');
+    }
+
+    public function test_restricted_user_drives_a_warehouseless_work_order_from_their_own_bins_only(): void
+    {
+        $this->warehouseB->update(['priority' => 100]);
+        $floating = $this->workOrder(null, quantity: 5);
+        $this->actingAs($this->restricted);
+
+        $this->get(route('work-orders.show', $floating))->assertOk();
+        $this->post(route('work-orders.start', $floating))->assertRedirect(route('work-orders.show', $floating));
+        $this->post(route('work-orders.complete', $floating))->assertRedirect(route('work-orders.show', $floating))->assertSessionHas('success');
+
+        $this->assertSame('completed', $floating->fresh()->status);
+        $this->assertSame(55, $this->bin($this->productA, $this->locationA));
+        $this->assertSame(40, $this->bin($this->productA, $this->locationB));
+
+        // MCP lists it too.
+        InventorosServer::actingAs($this->restricted)->tool(ListWorkOrdersTool::class, [])
+            ->assertOk()->assertSee($floating->work_order_number);
+    }
+
+    public function test_web_refusal_during_completion_is_a_flash_error_not_a_403_page(): void
+    {
+        $workOrder = $this->workOrder($this->warehouseA, quantity: 61, status: 'in_progress');
+
+        $this->actingAs($this->restricted)->post(route('work-orders.complete', $workOrder))
+            ->assertRedirect(route('work-orders.show', $workOrder))
+            ->assertSessionHas('error', 'Your accessible warehouses do not contain enough available stock for this movement.');
+
+        $this->assertSame('in_progress', $workOrder->fresh()->status);
+        $this->assertComponentStockUntouched();
+    }
+
+    public function test_api_refusal_during_completion_is_a_json_error(): void
+    {
+        $assemblyB = $this->makeAssembly('Bravo Assembly', 'ASM-B', $this->locationB, $this->productA);
+        $workOrder = $this->workOrder($this->warehouseA, quantity: 2, status: 'in_progress', assembly: $assemblyB);
+        Sanctum::actingAs($this->restricted, ['*']);
+
+        $this->postJson("/api/v1/work-orders/{$workOrder->id}/complete")
+            ->assertForbidden()
+            ->assertJsonPath('error', 'warehouse_access_denied')
+            ->assertJsonPath('message', "This product's stock location is in a warehouse you can't access; ask an administrator to complete it or move the product.");
+
+        $this->assertSame('in_progress', $workOrder->fresh()->status);
+        $this->assertComponentStockUntouched();
     }
 
     public function test_api_restricted_user_completes_in_assigned_warehouse_from_assigned_bins_only(): void
@@ -264,6 +313,27 @@ final class WorkOrderWarehouseAccessTest extends TestCase
         $this->assertSame(26, $variant->fresh()->stock);
         $this->assertSame(6, $variantBin($this->locationA));
         $this->assertSame(20, $variantBin($this->locationB));
+    }
+
+    public function test_tracked_component_spanning_another_warehouse_is_refused(): void
+    {
+        // productA has bins in A and B; a batch carries no location of its own.
+        $this->productA->update(['tracking_type' => 'batch']);
+        ProductBatch::withoutGlobalScopes()->create([
+            'organization_id' => $this->organization->id, 'product_id' => $this->productA->id,
+            'batch_number' => 'LOT-1', 'quantity' => 100, 'expiry_date' => null,
+        ]);
+        $workOrder = $this->workOrder($this->warehouseA, quantity: 2, status: 'in_progress');
+        $this->actingAs($this->restricted);
+
+        $this->assertRefused(fn () => app(WorkOrderService::class)->complete($workOrder, [], $this->restricted));
+        $this->assertComponentStockUntouched();
+
+        // Once all of its stock sits in the actor's warehouse, it is consumable.
+        ProductLocationStock::where('product_id', $this->productA->id)->where('location_id', $this->locationB->id)->delete();
+        ProductLocationStock::where('product_id', $this->productA->id)->where('location_id', $this->locationA->id)->update(['quantity' => 100]);
+        app(WorkOrderService::class)->complete($workOrder, [], $this->restricted);
+        $this->assertSame(98, $this->productA->fresh()->stock);
     }
 
     public function test_output_cannot_be_booked_into_an_unassigned_warehouse(): void
