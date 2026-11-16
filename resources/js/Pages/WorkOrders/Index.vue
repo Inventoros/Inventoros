@@ -5,6 +5,7 @@ import TableFilters from '@/Components/ui/TableFilters.vue';
 import TableViewport from '@/Components/ui/TableViewport.vue';
 import PageHeader from '@/Components/ui/PageHeader.vue';
 import Button from '@/Components/ui/Button.vue';
+import EmptyState from '@/Components/ui/EmptyState.vue';
 import Badge from '@/Components/ui/Badge.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { ref } from 'vue';
@@ -127,7 +128,7 @@ const thClass =
         </TableFilters>
 
         <!-- Work orders table -->
-        <TableViewport class="mt-4 w-full overflow-x-auto rounded-lg border border-border-subtle bg-surface-raised">
+        <TableViewport :empty="!workOrders.data?.length" class="mt-4 w-full overflow-x-auto rounded-lg border border-border-subtle bg-surface-raised">
             <table class="w-full text-sm">
                 <thead>
                     <tr class="border-b border-border-subtle">
@@ -143,19 +144,7 @@ const thClass =
                 </thead>
                 <tbody>
                     <!-- Empty State -->
-                    <tr v-if="!workOrders.data || workOrders.data.length === 0">
-                        <td colspan="8" class="px-4 py-12 text-center">
-                            <div class="flex flex-col items-center gap-3">
-                                <Settings :size="22" class="text-text-tertiary" />
-                                <p class="text-sm font-medium text-text-primary">{{ t('workOrders.noWorkOrders') }}</p>
-                                <p class="text-sm text-text-tertiary">{{ t('workOrders.noWorkOrdersHint') }}</p>
-                                <Button variant="default" size="sm" as="Link" :href="route('work-orders.create')">
-                                    <Plus :size="14" />
-                                    {{ t('workOrders.createWorkOrder') }}
-                                </Button>
-                            </div>
-                        </td>
-                    </tr>
+
                     <tr v-for="wo in workOrders.data" :key="wo.id" class="border-b border-border-subtle transition-colors last:border-b-0 hover:bg-surface-overlay">
                         <td class="px-4 py-3">
                             <Link :href="route('work-orders.show', wo.id)" class="font-medium text-text-primary hover:text-brand">
@@ -215,6 +204,22 @@ const thClass =
                         </template>
                     </nav>
                 </div>
+            </template>
+            <template #empty>
+                <EmptyState
+                    :icon="Settings"
+                    :title="t('workOrders.noWorkOrders')"
+                    :description="t('workOrders.noWorkOrdersHint')"
+                    :filtered="Boolean(filters?.search || filters?.status)"
+                    @clear="clearFilters"
+                >
+                    <template #actions>
+                        <Button variant="default" size="md" as="Link" :href="route('work-orders.create')">
+                            <Plus :size="14" />
+                            {{ t('workOrders.createWorkOrder') }}
+                        </Button>
+                    </template>
+                </EmptyState>
             </template>
         </TableViewport>
 

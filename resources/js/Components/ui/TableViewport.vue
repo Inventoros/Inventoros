@@ -5,15 +5,20 @@ import { Maximize2, X } from '@lucide/vue';
 import { lockPageScroll } from '@/lib/scrollLock';
 import { containTabFocus } from '@/lib/focus';
 import LegalFooter from '@/Components/LegalFooter.vue';
+import EmptyState from './EmptyState.vue';
 
 defineOptions({ inheritAttrs: false });
-const props = defineProps({ label: { type: String, default: null } });
+const props = defineProps({
+    label: { type: String, default: null },
+    empty: { type: Boolean, default: false },
+});
 const { t } = useI18n();
 const id = `table-view-${useId().replace(/[^a-zA-Z0-9_-]/g, '')}`;
 const dialog = ref(null);
 const expandButton = ref(null);
 const closeButton = ref(null);
 const viewport = ref(null);
+const emptyContent = ref(null);
 const expanded = ref(false);
 const caption = ref('');
 let releaseScroll;
@@ -26,6 +31,7 @@ const restoreBody = () => {
 };
 
 const open = async () => {
+    if (props.empty) return;
     const existingDialogs = [...document.querySelectorAll('dialog[open], [role="dialog"], .fixed.inset-0.z-50')]
         .filter(element => element.getClientRects().length);
     caption.value =
@@ -82,7 +88,7 @@ const restore = async () => {
         viewport.value.scrollTop = scrollBefore.top;
         viewport.value.scrollLeft = scrollBefore.left;
     }
-    if (!openedActionDialog) expandButton.value?.focus({ preventScroll: true });
+    if (!openedActionDialog) (expandButton.value || emptyContent.value)?.focus({ preventScroll: true });
 };
 onBeforeUnmount(() => {
     modalObserver?.disconnect();
@@ -122,7 +128,7 @@ onBeforeUnmount(() => {
                 </button>
             </header>
             <button
-                v-else
+                v-else-if="!empty"
                 ref="expandButton"
                 type="button"
                 class="table-expand-button table-view-button ds-focus-ring"
@@ -134,7 +140,13 @@ onBeforeUnmount(() => {
             >
                 <Maximize2 :size="14" aria-hidden="true" />
             </button>
+            <!-- Empty content belongs to the visible panel, not a wide table's
+                 colspan cell. Its message and recovery action must fit phones. -->
+            <div v-if="empty" ref="emptyContent" class="table-empty-content" tabindex="-1">
+                <slot name="empty"><EmptyState :title="t('components.dataTable.noData')" /></slot>
+            </div>
             <div
+                v-else
                 ref="viewport"
                 class="table-viewport ds-scroll ds-focus-ring"
                 role="region"

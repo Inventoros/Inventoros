@@ -5,6 +5,7 @@ import TableViewport from '@/Components/ui/TableViewport.vue';
 import PluginSlot from '@/Components/PluginSlot.vue';
 import PageHeader from '@/Components/ui/PageHeader.vue';
 import Button from '@/Components/ui/Button.vue';
+import EmptyState from '@/Components/ui/EmptyState.vue';
 import Badge from '@/Components/ui/Badge.vue';
 import SupplierRating from '@/Components/SupplierRating.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
@@ -98,7 +99,7 @@ const thClass =
         <PluginSlot slot="before-table" :components="pluginComponents?.beforeTable" />
 
         <!-- Suppliers table -->
-        <TableViewport class="mt-4 w-full overflow-x-auto rounded-lg border border-border-subtle bg-surface-raised">
+        <TableViewport :empty="!suppliers.data?.length" class="mt-4 w-full overflow-x-auto rounded-lg border border-border-subtle bg-surface-raised">
             <table class="w-full text-sm">
                 <thead>
                     <tr class="border-b border-border-subtle">
@@ -113,19 +114,6 @@ const thClass =
                     </tr>
                 </thead>
                 <tbody>
-                    <tr v-if="suppliers.data.length === 0">
-                        <td colspan="8" class="px-4 py-12 text-center">
-                            <div class="flex flex-col items-center gap-3">
-                                <Truck :size="22" class="text-text-tertiary" />
-                                <p class="text-sm font-medium text-text-primary">{{ t('suppliers.noSuppliersFound') }}</p>
-                                <p class="text-sm text-text-tertiary">{{ t('suppliers.getStarted') }}</p>
-                                <Button v-if="canVisit('suppliers.create')" variant="default" size="sm" as="Link" :href="route('suppliers.create')">
-                                    <Plus :size="14" />
-                                    {{ t('suppliers.addSupplier') }}
-                                </Button>
-                            </div>
-                        </td>
-                    </tr>
                     <tr v-for="supplier in suppliers.data" :key="supplier.id" class="border-b border-border-subtle transition-colors last:border-b-0 hover:bg-surface-overlay">
                         <td class="px-4 py-3 text-text-primary">
                             <div class="font-medium text-text-primary">{{ supplier.name }}</div>
@@ -180,6 +168,22 @@ const thClass =
                         </template>
                     </nav>
                 </div>
+            </template>
+            <template #empty>
+                <EmptyState
+                    :icon="Truck"
+                    :title="t('suppliers.noSuppliersFound')"
+                    :description="canVisit('suppliers.create') ? t('suppliers.getStarted') : null"
+                    :filtered="Boolean(filters?.search)"
+                    @clear="clearFilters"
+                >
+                    <template #actions>
+                        <Button v-if="canVisit('suppliers.create')" variant="default" size="md" as="Link" :href="route('suppliers.create')">
+                            <Plus :size="14" />
+                            {{ t('suppliers.addSupplier') }}
+                        </Button>
+                    </template>
+                </EmptyState>
             </template>
         </TableViewport>
 

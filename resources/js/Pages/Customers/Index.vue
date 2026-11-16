@@ -5,6 +5,7 @@ import TableFilters from '@/Components/ui/TableFilters.vue';
 import TableViewport from '@/Components/ui/TableViewport.vue';
 import PageHeader from '@/Components/ui/PageHeader.vue';
 import Button from '@/Components/ui/Button.vue';
+import EmptyState from '@/Components/ui/EmptyState.vue';
 import Badge from '@/Components/ui/Badge.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { ref } from 'vue';
@@ -96,7 +97,7 @@ const thClass =
         </TableFilters>
 
         <!-- Customers table -->
-        <TableViewport class="mt-4 w-full overflow-x-auto rounded-lg border border-border-subtle bg-surface-raised">
+        <TableViewport :empty="!customers.data?.length" class="mt-4 w-full overflow-x-auto rounded-lg border border-border-subtle bg-surface-raised">
             <table class="w-full text-sm">
                 <thead>
                     <tr class="border-b border-border-subtle">
@@ -110,19 +111,6 @@ const thClass =
                     </tr>
                 </thead>
                 <tbody>
-                    <tr v-if="customers.data.length === 0">
-                        <td colspan="7" class="px-4 py-12 text-center">
-                            <div class="flex flex-col items-center gap-3">
-                                <Users :size="22" class="text-text-tertiary" />
-                                <p class="text-sm font-medium text-text-primary">{{ t('customers.noCustomersFound') }}</p>
-                                <p class="text-sm text-text-tertiary">{{ t('customers.getStarted') }}</p>
-                                <Button v-if="canVisit('customers.create')" variant="default" size="sm" as="Link" :href="route('customers.create')">
-                                    <Plus :size="14" />
-                                    {{ t('customers.addCustomer') }}
-                                </Button>
-                            </div>
-                        </td>
-                    </tr>
                     <tr v-for="customer in customers.data" :key="customer.id" class="border-b border-border-subtle transition-colors last:border-b-0 hover:bg-surface-overlay">
                         <td class="px-4 py-3 text-text-primary">
                             <div class="font-medium text-text-primary">{{ customer.name }}</div>
@@ -174,6 +162,22 @@ const thClass =
                         </template>
                     </nav>
                 </div>
+            </template>
+            <template #empty>
+                <EmptyState
+                    :icon="Users"
+                    :title="t('customers.noCustomersFound')"
+                    :description="canVisit('customers.create') ? t('customers.getStarted') : null"
+                    :filtered="Boolean(filters?.search)"
+                    @clear="clearFilters"
+                >
+                    <template #actions>
+                        <Button v-if="canVisit('customers.create')" variant="default" size="md" as="Link" :href="route('customers.create')">
+                            <Plus :size="14" />
+                            {{ t('customers.addCustomer') }}
+                        </Button>
+                    </template>
+                </EmptyState>
             </template>
         </TableViewport>
 

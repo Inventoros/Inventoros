@@ -2818,6 +2818,9 @@
       "listLabel": "组织",
       "heading": "切换组织"
     },
+    "emptyState": {
+      "filteredHint": "???????????????"
+    },
     "dataTable": {
       "noData": "暂无数据。"
     },
@@ -3978,7 +3981,8 @@
       "from": "调出",
       "to": "调入",
       "items": "商品",
-      "empty": "未找到库存调拨。创建第一个调拨，在库位之间转移库存。",
+      "empty": "??????",
+      "emptyHint": "???????????????",
       "itemCount": "{count} 件商品 | {count} 件商品",
       "showingTransfers": "显示第 {from} 至 {to} 条，共 {total} 条调拨"
     },

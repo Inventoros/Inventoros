@@ -8,6 +8,7 @@ import TableViewport from '@/Components/ui/TableViewport.vue';
 import PluginSlot from '@/Components/PluginSlot.vue';
 import PageHeader from '@/Components/ui/PageHeader.vue';
 import Button from '@/Components/ui/Button.vue';
+import EmptyState from '@/Components/ui/EmptyState.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { defineAsyncComponent, ref, onMounted, onUnmounted, watch, computed } from 'vue';
 import {
@@ -146,7 +147,7 @@ const clearFilters = () => {
     search.value = '';
     category.value = '';
     location.value = '';
-    searchProducts();
+    router.get(route('products.index'), { per_page: perPage.value }, { preserveState: true, preserveScroll: true });
 };
 
 const deleteProduct = (product) => {
@@ -296,7 +297,7 @@ const thClass =
         </div>
 
         <!-- Products table -->
-        <TableViewport class="mt-4 w-full overflow-x-auto rounded-lg border border-border-subtle bg-surface-raised">
+        <TableViewport :empty="!products.data?.length" class="mt-4 w-full overflow-x-auto rounded-lg border border-border-subtle bg-surface-raised">
             <table class="w-full text-sm">
                 <thead>
                     <tr class="border-b border-border-subtle">
@@ -313,15 +314,6 @@ const thClass =
                     </tr>
                 </thead>
                 <tbody>
-                    <tr v-if="products.data.length === 0">
-                        <td colspan="8" class="px-4 py-12 text-center">
-                            <div class="flex flex-col items-center gap-3">
-                                <Boxes :size="22" class="text-text-tertiary" />
-                                <p class="text-sm text-text-tertiary">{{ t('products.noProductsFound') }}</p>
-                                <Button v-if="canVisit('products.create')" variant="default" size="sm" as="Link" :href="route('products.create')"><Plus :size="14" />{{ t('products.addFirstProduct') }}</Button>
-                            </div>
-                        </td>
-                    </tr>
                     <tr v-for="product in products.data" :key="product.id" class="border-b border-border-subtle transition-colors last:border-b-0 hover:bg-surface-overlay">
                         <td class="px-4 py-3">
                             <input type="checkbox" :aria-label="product.display_name ?? product.name" :checked="isSelected(product.id)" @change="toggleSelect(product.id)" class="rounded border-border-strong bg-surface-canvas text-brand focus:ring-brand" />
@@ -383,6 +375,21 @@ const thClass =
                         </template>
                     </nav>
                 </div>
+            </template>
+            <template #empty>
+                <EmptyState
+                    :icon="Boxes"
+                    :title="t('products.noProductsFound')"
+                    :filtered="Boolean(filters?.search || filters?.category || filters?.location || [true, 1, '1', 'true'].includes(filters?.low_stock))"
+                    @clear="clearFilters"
+                >
+                    <template #actions>
+                        <Button v-if="canVisit('products.create')" variant="default" size="md" as="Link" :href="route('products.create')">
+                            <Plus :size="14" />
+                            {{ t('products.addFirstProduct') }}
+                        </Button>
+                    </template>
+                </EmptyState>
             </template>
         </TableViewport>
 

@@ -116,6 +116,13 @@
     overscroll-behavior: contain;
     scrollbar-gutter: stable;
 }
+.table-empty-content {
+    flex: 1 1 auto;
+    min-width: 0;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+}
 .app-table-page .table-panel,
 .table-panel-expanded .table-viewport {
     flex: 1 1 0;

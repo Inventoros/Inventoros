@@ -5,9 +5,10 @@ import TableFilters from '@/Components/ui/TableFilters.vue';
 import TableViewport from '@/Components/ui/TableViewport.vue';
 import PageHeader from '@/Components/ui/PageHeader.vue';
 import Button from '@/Components/ui/Button.vue';
+import EmptyState from '@/Components/ui/EmptyState.vue';
 import Badge from '@/Components/ui/Badge.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
-import { ref, watch } from 'vue';
+import { ref, watch, onBeforeUnmount } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { Search, Eye, RotateCcw } from '@lucide/vue';
 import { formatMoney, formatNumber } from '@/lib/money';
@@ -49,6 +50,13 @@ watch(search, () => {
 });
 
 watch([statusFilter, typeFilter], applyFilters);
+
+onBeforeUnmount(() => clearTimeout(searchTimeout));
+
+const clearFilters = () => {
+    clearTimeout(searchTimeout);
+    router.get(route('returns.index'), {}, { replace: true });
+};
 
 const statusVariant = (status) =>
     ({ pending: 'warning', approved: 'info', received: 'brand', completed: 'success', rejected: 'danger' }[status] || 'neutral');
@@ -128,7 +136,7 @@ const selectClass =
         </TableFilters>
 
         <!-- Returns table -->
-        <TableViewport class="mt-4 w-full overflow-x-auto rounded-lg border border-border-subtle bg-surface-raised">
+        <TableViewport :empty="!returns.data?.length" class="mt-4 w-full overflow-x-auto rounded-lg border border-border-subtle bg-surface-raised">
             <table class="w-full text-sm">
                 <thead>
                     <tr class="border-b border-border-subtle">
@@ -143,14 +151,6 @@ const selectClass =
                     </tr>
                 </thead>
                 <tbody>
-                    <tr v-if="!returns.data || returns.data.length === 0">
-                        <td colspan="8" class="px-4 py-12 text-center">
-                            <div class="flex flex-col items-center gap-3">
-                                <RotateCcw :size="22" class="text-text-tertiary" />
-                                <p class="text-sm text-text-tertiary">{{ t('returns.index.empty') }}</p>
-                            </div>
-                        </td>
-                    </tr>
                     <tr v-for="returnOrder in returns.data" :key="returnOrder.id" class="border-b border-border-subtle transition-colors last:border-b-0 hover:bg-surface-overlay">
                         <td class="px-4 py-3">
                             <span class="font-medium text-text-primary">{{ returnOrder.return_number }}</span>
@@ -209,6 +209,14 @@ const selectClass =
                     </nav>
                 </div>
             </template>
+            <template #empty>
+                <EmptyState
+                    :icon="RotateCcw"
+                    :title="t('returns.index.empty')"
+                    :filtered="Boolean(filters?.search || filters?.status || filters?.type)"
+                    @clear="clearFilters"
+                ></EmptyState>
+                </template>
         </TableViewport>
 
         <!-- Pagination -->

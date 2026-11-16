@@ -2818,6 +2818,9 @@
       "listLabel": "Organizações",
       "heading": "Trocar de organização"
     },
+    "emptyState": {
+      "filteredHint": "Tente outra busca ou limpe os filtros."
+    },
     "dataTable": {
       "noData": "Sem dados."
     },
@@ -3978,7 +3981,8 @@
       "from": "De",
       "to": "Para",
       "items": "Itens",
-      "empty": "Nenhuma transferência de estoque encontrada. Crie sua primeira transferência para movimentar estoque entre localizações.",
+      "empty": "Ainda n?o h? transfer?ncias de estoque",
+      "emptyHint": "Crie uma transfer?ncia para mover o estoque entre locais.",
       "itemCount": "{count} item | {count} itens",
       "showingTransfers": "Exibindo {from} até {to} de {total} transferências"
     },

@@ -5,6 +5,7 @@ import TableFilters from '@/Components/ui/TableFilters.vue';
 import PluginSlot from '@/Components/PluginSlot.vue';
 import PageHeader from '@/Components/ui/PageHeader.vue';
 import Button from '@/Components/ui/Button.vue';
+import EmptyState from '@/Components/ui/EmptyState.vue';
 import Badge from '@/Components/ui/Badge.vue';
 import DataTable from '@/Components/ui/DataTable.vue';
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
@@ -216,14 +217,19 @@ const selectClass =
                     </div>
                 </template>
                 <template #empty>
-                    <div class="flex flex-col items-center gap-3 py-10">
-                        <ShoppingCart :size="22" class="text-text-tertiary" />
-                        <p class="text-sm text-text-tertiary">{{ t('orders.noOrdersFound') }}</p>
-                        <Button v-if="canVisit('orders.create')" variant="default" size="sm" as="Link" :href="route('orders.create')">
-                            <Plus :size="14" />
-                            {{ t('orders.createFirstOrder') }}
-                        </Button>
-                    </div>
+                    <EmptyState
+                        :icon="ShoppingCart"
+                        :title="t('orders.noOrdersFound')"
+                        :filtered="Boolean(filters?.search || filters?.status || filters?.source || filters?.payment_status)"
+                        @clear="clearFilters"
+                    >
+                        <template #actions>
+                            <Button v-if="canVisit('orders.create')" variant="default" size="md" as="Link" :href="route('orders.create')">
+                                <Plus :size="14" />
+                                {{ t('orders.createFirstOrder') }}
+                            </Button>
+                        </template>
+                    </EmptyState>
                 </template>
 
                 <template #footer>
