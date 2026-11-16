@@ -2865,6 +2865,10 @@
       "sourceError": "无法加载来源库存",
       "refine": "显示 {shown} 项，共 {total} 项。请缩小搜索范围。",
       "results": "{count} 个产品"
+    },
+    "formFeedback": {
+      "title": "请检查这些字段",
+      "hint": "已保留您的输入。请修正以下问题后重试。"
     }
   },
   "warehouses": {

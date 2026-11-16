@@ -2736,6 +2736,10 @@
       "sourceError": "Source stock could not be loaded",
       "refine": "Showing {shown} of {total}. Refine your search.",
       "results": "{count} products"
+    },
+    "formFeedback": {
+      "title": "Check these fields",
+      "hint": "Your entries are kept. Fix the issues below and try again."
     }
   },
   "warehouses": {

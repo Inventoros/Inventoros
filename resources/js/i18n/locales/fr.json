@@ -2865,6 +2865,10 @@
       "sourceError": "Impossible de charger le stock source",
       "refine": "{shown} sur {total}. Affinez la recherche.",
       "results": "{count} produits"
+    },
+    "formFeedback": {
+      "title": "Vérifiez ces champs",
+      "hint": "Vos saisies sont conservées. Corrigez les problèmes ci-dessous et réessayez."
     }
   },
   "warehouses": {

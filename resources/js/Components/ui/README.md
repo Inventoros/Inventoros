@@ -2,9 +2,23 @@
 
 Reuse interaction behavior and layout boundaries when pages have the same job. Pages retain their own permissions, routes, field state, and business rules.
 
+## Form actions and validation recovery
+
+`FormActions` provides the shared sticky save/cancel boundary. Pass `label`, `cancelHref`, `processing`, and any page-owned `disabled` condition. It submits the surrounding form, preserves native validation, exposes pending state, reserves safe-area space, and keeps keyboard targets clear of the sticky bar. Set `sticky=false` where the containing layout already owns a fixed action boundary. Optional `#hint` content explains a material save condition. `ProductFormActions` remains a compatibility wrapper.
+
+Use `useFormFeedback(form)` with `FormErrorSummary` to retain entered values and focus validation feedback after a failed save:
+
+```vue
+<FormErrorSummary ref="errorSummary" :errors="form.errors" :targets="{ name: 'name' }" />
+<input id="name" v-model="form.name" v-bind="fieldErrorAttrs('name')" />
+<p v-if="form.errors.name" :id="errorId('name')">{{ form.errors.name }}</p>
+```
+
+Call `focusErrors` from the Inertia request's `onError`. `targets` maps server error paths to actual focusable field ids, including indexed line fields. Unmapped business errors stay readable without an invented destination. The summary links focus the relevant control; `fieldErrorAttrs` associates the inline message and invalid state. Pass existing help ids as the helper's second argument to keep their descriptions. Pages retain all validation and submission logic.
+
 ## Product selection
 
-`ProductPicker` takes `v-model` (a product id), `products`, and an optional `id` for an external label. It searches product and variant names, SKUs and barcodes locally, prioritizes exact identifiers, and renders at most 40 matches with a refinement prompt. Arrow keys move through results; Enter selects; Escape restores the current selection; Tab closes the list. Editing clears the selected id, so unmatched text cannot silently submit the previous product. Required pickers also use native constraint validation.
+`ProductPicker` takes `v-model` (a product id), `products`, and an optional `id` for an external label. It searches product and variant names, SKUs and barcodes locally, prioritizes exact identifiers, and renders at most 40 matches with a refinement prompt. Arrow keys move through results; Enter selects; Escape dismisses search; Tab closes the list. Editing clears the selected id, so unmatched text cannot silently submit the previous product. Required pickers also use native constraint validation.
 
 The component emits `change` after updating the model. Callers retain variant selection, prices, supplier defaults, quantities, and scanning. `required`, `disabled`, `invalid`, and `describedby` connect the field to its form. Each instance owns unique list and option ids.
 

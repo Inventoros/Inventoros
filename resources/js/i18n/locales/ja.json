@@ -2865,6 +2865,10 @@
       "sourceError": "出荷元の在庫を読み込めませんでした",
       "refine": "{total}件中{shown}件を表示。検索を絞り込んでください。",
       "results": "{count}件の製品"
+    },
+    "formFeedback": {
+      "title": "次の項目を確認してください",
+      "hint": "入力内容は保持されています。以下の問題を修正して、もう一度お試しください。"
     }
   },
   "warehouses": {

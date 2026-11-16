@@ -5,6 +5,9 @@ import AppLayout from '@/Layouts/AppLayout.vue';
 import PageHeader from '@/Components/ui/PageHeader.vue';
 import Card from '@/Components/ui/Card.vue';
 import Button from '@/Components/ui/Button.vue';
+import FormActions from '@/Components/ui/FormActions.vue';
+import FormErrorSummary from '@/Components/ui/FormErrorSummary.vue';
+import { useFormFeedback } from '@/composables/useFormFeedback';
 import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
 import { ref, computed, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
@@ -28,6 +31,17 @@ const form = useForm({
     product_ids: [],
     require_variance_approval: false,
 });
+const { errorSummary, errorId, fieldErrorAttrs, focusErrors } = useFormFeedback(form);
+const errorTargets = computed(() => ({
+    name: fieldIdPrefix + '-1',
+    description: fieldIdPrefix + '-2',
+    audit_type: fieldIdPrefix + '-3',
+    warehouse_id: 'audit-warehouse',
+    warehouse_location_id: fieldIdPrefix + '-4',
+    notes: fieldIdPrefix + '-5',
+    product_ids: 'audit-product-search',
+}));
+
 
 const page = usePage();
 const scopedLocations = computed(() => (props.locations || []).filter(location => !form.warehouse_id || location.warehouse_id === Number(form.warehouse_id)));
@@ -62,8 +76,10 @@ const toggleProduct = (productId) => {
 };
 
 const submit = () => {
+    if (form.processing) return;
     form.post(route('stock-audits.store'), {
         preserveScroll: true,
+        onError: focusErrors,
     });
 };
 
@@ -99,6 +115,7 @@ const fieldCheckbox = 'rounded border-border-subtle bg-surface-canvas text-brand
         </PageHeader>
 
         <form @submit.prevent="submit" class="mt-6 mx-auto max-w-4xl space-y-4">
+            <FormErrorSummary ref="errorSummary" :errors="form.errors" :targets="errorTargets" />
             <!-- Audit Details -->
             <Card :padded="false">
                 <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">{{ t('stockAudits.auditDetails') }}</h3></div>
@@ -115,8 +132,8 @@ const fieldCheckbox = 'rounded border-border-subtle bg-surface-canvas text-brand
                             maxlength="255"
                             :class="fieldInput"
                             :placeholder="t('stockAudits.fields.namePlaceholder')"
-                        />
-                        <p v-if="form.errors.name" :class="fieldError">
+                            v-bind="fieldErrorAttrs('name')" />
+                        <p v-if="form.errors.name" :class="fieldError" :id="errorId('name')">
                             {{ form.errors.name }}
                         </p>
                     </div>
@@ -132,8 +149,8 @@ const fieldCheckbox = 'rounded border-border-subtle bg-surface-canvas text-brand
                             maxlength="1000"
                             :class="fieldArea"
                             :placeholder="t('stockAudits.fields.descriptionPlaceholder')"
-                        ></textarea>
-                        <p v-if="form.errors.description" :class="fieldError">
+                            v-bind="fieldErrorAttrs('description')"></textarea>
+                        <p v-if="form.errors.description" :class="fieldError" :id="errorId('description')">
                             {{ form.errors.description }}
                         </p>
                     </div>
@@ -148,7 +165,7 @@ const fieldCheckbox = 'rounded border-border-subtle bg-surface-canvas text-brand
                                 v-model="form.audit_type"
                                 required
                                 :class="fieldInput"
-                            >
+                                v-bind="fieldErrorAttrs('audit_type')">
                                 <option v-for="(label, value) in auditTypes" :key="value" :value="value">{{ t(`stockAudits.types.${value}`) }}</option>
                             </select>
                             <p :class="fieldHint">
@@ -156,18 +173,18 @@ const fieldCheckbox = 'rounded border-border-subtle bg-surface-canvas text-brand
                                 <span v-else-if="form.audit_type === 'cycle'">{{ t('stockAudits.fields.typeHints.cycle') }}</span>
                                 <span v-else-if="form.audit_type === 'spot'">{{ t('stockAudits.fields.typeHints.spot') }}</span>
                             </p>
-                            <p v-if="form.errors.audit_type" :class="fieldError">
+                            <p v-if="form.errors.audit_type" :class="fieldError" :id="errorId('audit_type')">
                                 {{ form.errors.audit_type }}
                             </p>
                         </div>
 
                         <div>
                             <label for="audit-warehouse" :class="fieldLabel">{{ t('locations.warehouse') }}</label>
-                            <select id="audit-warehouse" v-model="form.warehouse_id" :class="fieldInput">
+                            <select id="audit-warehouse" v-model="form.warehouse_id" :class="fieldInput" v-bind="fieldErrorAttrs('warehouse_id')">
                                 <option value="">{{ t('warehouses.allWarehouses') }}</option>
                                 <option v-for="warehouse in page.props.warehouses || []" :key="warehouse.id" :value="warehouse.id">{{ warehouse.name }}</option>
                             </select>
-                            <p v-if="form.errors.warehouse_id" :class="fieldError">{{ form.errors.warehouse_id }}</p>
+                            <p v-if="form.errors.warehouse_id" :class="fieldError" :id="errorId('warehouse_id')">{{ form.errors.warehouse_id }}</p>
                         </div>
                         <!-- Location -->
                         <div>
@@ -177,7 +194,7 @@ const fieldCheckbox = 'rounded border-border-subtle bg-surface-canvas text-brand
                             <select :id="fieldIdPrefix + '-4'"
                                 v-model="form.warehouse_location_id"
                                 :class="fieldInput"
-                            >
+                                v-bind="fieldErrorAttrs('warehouse_location_id')">
                                 <option value="">{{ t('products.allLocations') }}</option>
                                 <option v-for="location in scopedLocations" :key="location.id" :value="location.id">
                                     {{ location.name }}
@@ -187,7 +204,7 @@ const fieldCheckbox = 'rounded border-border-subtle bg-surface-canvas text-brand
                             <p :class="fieldHint">
                                 {{ t('stockAudits.fields.locationHint') }}
                             </p>
-                            <p v-if="form.errors.warehouse_location_id" :class="fieldError">
+                            <p v-if="form.errors.warehouse_location_id" :class="fieldError" :id="errorId('warehouse_location_id')">
                                 {{ form.errors.warehouse_location_id }}
                             </p>
                         </div>
@@ -204,13 +221,13 @@ const fieldCheckbox = 'rounded border-border-subtle bg-surface-canvas text-brand
                             maxlength="2000"
                             :class="fieldArea"
                             :placeholder="t('stockAudits.create.notesPlaceholder')"
-                        ></textarea>
-                        <p v-if="form.errors.notes" :class="fieldError">
+                            v-bind="fieldErrorAttrs('notes')"></textarea>
+                        <p v-if="form.errors.notes" :class="fieldError" :id="errorId('notes')">
                             {{ form.errors.notes }}
                         </p>
                     </div>
                     <label class="flex items-start gap-3 text-sm text-text-secondary">
-                        <input v-model="form.require_variance_approval" type="checkbox" class="mt-1 rounded border-border-subtle text-brand ds-focus-ring" />
+                        <input v-model="form.require_variance_approval" type="checkbox" class="mt-1 rounded border-border-subtle text-brand ds-focus-ring" v-bind="fieldErrorAttrs('require_variance_approval')" />
                         <span>{{ t('auditReview.required') }}<span class="mt-1 block text-xs text-text-tertiary">{{ t('auditReview.hint') }}</span></span>
                     </label>
                 </div>
@@ -227,7 +244,7 @@ const fieldCheckbox = 'rounded border-border-subtle bg-surface-canvas text-brand
                 <div class="p-5">
                     <!-- Product Search -->
                     <div class="mb-4">
-                        <input :aria-label="t('common.search')"
+                        <input id="audit-product-search" :aria-label="t('common.search')"
                             v-model="productSearch"
                             type="text"
                             :placeholder="t('stockAudits.create.searchProducts')"
@@ -293,13 +310,7 @@ const fieldCheckbox = 'rounded border-border-subtle bg-surface-canvas text-brand
                 </div>
             </Card>
 
-            <!-- Actions -->
-            <div class="flex justify-end gap-3">
-                <Button variant="secondary" as="Link" :href="route('stock-audits.index')">{{ t('common.cancel') }}</Button>
-                <Button type="submit" variant="default" :loading="form.processing" :disabled="form.processing || !form.name">
-                    {{ form.processing ? t('common.creating') : t('stockAudits.create.submit') }}
-                </Button>
-            </div>
+            <FormActions :label="t('stockAudits.create.submit')" :cancel-href="route('stock-audits.index')" :processing="form.processing" :disabled="!form.name" />
         </form>
     </AppLayout>
 </template>

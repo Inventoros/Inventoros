@@ -2865,6 +2865,10 @@
       "sourceError": "Quellbestand konnte nicht geladen werden",
       "refine": "{shown} von {total}. Suche eingrenzen.",
       "results": "{count} Produkte"
+    },
+    "formFeedback": {
+      "title": "Prüfen Sie diese Felder",
+      "hint": "Ihre Eingaben bleiben erhalten. Beheben Sie die folgenden Probleme und versuchen Sie es erneut."
     }
   },
   "warehouses": {

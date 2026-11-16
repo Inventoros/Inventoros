@@ -2865,6 +2865,10 @@
       "sourceError": "Nie udało się wczytać zapasów źródłowych",
       "refine": "Wyświetlono {shown} z {total}. Zawęź wyszukiwanie.",
       "results": "Produkty: {count}"
+    },
+    "formFeedback": {
+      "title": "Sprawdź te pola",
+      "hint": "Wprowadzone dane zostały zachowane. Popraw poniższe problemy i spróbuj ponownie."
     }
   },
   "warehouses": {
