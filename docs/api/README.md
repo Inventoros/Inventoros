@@ -100,6 +100,12 @@ and be accessible to the receiver. Planned receipts remain within their planned
 warehouse. Invalid selections roll back the whole delivery and return a nested
 validation error; unauthorized warehouse access returns `403`.
 
+Purchase-order create, update and receive accept at most 500 `items` per
+request, like orders, transfers and returns. A purchase order created in the
+web app with more than 500 lines cannot have all its lines replaced or received
+in one API call: receive it in batches of up to 500 lines, or edit it in the
+web app.
+
 See the [receiving guide](../features/purchase-order-receiving.md) for an example.
 
 ## Rate limiting

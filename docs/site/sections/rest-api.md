@@ -90,7 +90,7 @@ Two query params apply to every paginated list endpoint:
 
 Most lists also accept `search`, `sort_by`, and `sort_dir` (`asc` or `desc`, default `desc`).
 
-A few lists differ. `GET /warehouses` and `GET /work-orders` return Laravel's plain paginator, with `current_page`, `per_page`, `total` and the page links at the top level next to `data`. `GET /shipments` and `GET /orders/{id}/shipments` return `data` with a short `meta` (`current_page`, `per_page`, `total`, `last_page`) and no `links`. Small nested lists (product options, variants and components, order payments, approvals, permission sets, saved reports) are not paginated.
+A few lists differ. `GET /warehouses` and `GET /work-orders` return Laravel's plain paginator, with `current_page`, `per_page`, `total` and the page links at the top level next to `data`. `GET /shipments` and `GET /orders/{id}/shipments` return `data` with a short `meta` (`current_page`, `per_page`, `total`, `last_page`) and no `links`. Small nested lists (product options, variants and components, order payments, approvals, permission sets) are not paginated. `GET /reports` (saved reports) is paginated like the other lists, with `data`, `links` and `meta`.
 
 ## Error envelope
 
@@ -122,7 +122,7 @@ All paths are relative to `/api/v1`. See the OpenAPI spec for full schemas:
 - Stock Audits: list, show, create, `start`, `items/{item}/count`, `complete` (books recount adjustments)
 - Delayed audit counts: send the item's `count_revision` as `expected_revision` to the count endpoint. A changed count returns HTTP `409` with `error: "stale_count"`; fetch and review the latest evidence before retrying. Omitting the token retains the existing unconditional write behavior.
 - Suppliers: CRUD
-- Purchase Orders: CRUD plus `send`, `receive`, `cancel` and `submit-for-approval`
+- Purchase Orders: CRUD plus `send`, `receive`, `cancel` and `submit-for-approval`. Create, update and receive accept at most 500 `items` per request. A purchase order created in the web app with more than 500 lines cannot have all its lines replaced or received in one API call; receive it in batches of up to 500 lines, or edit it in the web app.
 - Approvals: `GET /approvals` (what the caller may decide), `GET /approvals/mine` (the caller's own requests), and `POST /approvals/{type}/{id}/approve` or `/reject` for a `purchase_order`, `stock_adjustment`, `stock_transfer` or `sales_order` (needs the matching `approve_*` permission; rejecting needs notes)
 - Work Orders: list, show, create, then `start`, `complete`, `cancel`, and delete while draft or cancelled. Variants, serial and batch allocation, tracked output and kits are described in the Work Orders section
 - Webhooks: CRUD, `regenerate-secret` and `deliveries`. The signing secret is returned only on create and regenerate
