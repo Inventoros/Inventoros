@@ -310,7 +310,7 @@
                 </tr>
                 @endif
                 {{-- An order from before payment tracking says nothing about payment. --}}
-                @if($order->isPaymentTracked())
+                @if(($showPaymentPosition ?? true) && $order->isPaymentTracked())
                 <tr class="balance-row">
                     <td>Balance due</td>
                     <td>{{ $order->currency ?? 'USD' }} {{ number_format((float) $balanceDue, 2) }}</td>

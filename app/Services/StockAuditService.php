@@ -14,6 +14,7 @@ use App\Models\Inventory\StockAuditCount;
 use App\Models\Inventory\StockAuditItem;
 use App\Models\User;
 use App\Models\Warehouse;
+use App\Support\ApprovalSettings;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -76,7 +77,9 @@ final class StockAuditService
                 'warehouse_location_id' => $data['warehouse_location_id'] ?? null,
                 'notes' => $data['notes'] ?? null,
                 'created_by' => $actor->id,
-                'require_variance_approval' => (bool) ($data['require_variance_approval'] ?? false),
+                // The organization's stock-adjustment approval workflow
+                // overrides an opt-out: a recount is a stock adjustment.
+                'require_variance_approval' => (bool) ($data['require_variance_approval'] ?? false) || self::organizationRequiresReview($organizationId),
             ]);
 
             // Get products to include in the audit
@@ -138,6 +141,7 @@ final class StockAuditService
             $locked->update([
                 'status' => 'in_progress',
                 'started_at' => now(),
+                'require_variance_approval' => $locked->require_variance_approval || self::organizationRequiresReview((int) $locked->organization_id),
             ]);
             $stockAudit->setRawAttributes($locked->getAttributes(), true);
             // Lines loaded before the snapshot are stale; load them again on use.
@@ -230,6 +234,15 @@ final class StockAuditService
 
         if ($stockAudit->status !== 'in_progress') {
             throw new InvalidStateException('Only in-progress audits can be completed.', 'invalid_status');
+        }
+
+        // An audit started before the organization turned stock-adjustment
+        // approvals on still has its variances reviewed. This is committed on
+        // its own so the review gate below can refuse and the lines become
+        // reviewable.
+        if (self::organizationRequiresReview((int) $stockAudit->organization_id)) {
+            StockAudit::whereKey($stockAudit->getKey())->where('status', 'in_progress')
+                ->where('require_variance_approval', false)->update(['require_variance_approval' => true]);
         }
 
         $adjustmentsCreated = 0;
@@ -334,6 +347,15 @@ final class StockAuditService
         });
 
         return $adjustmentsCreated;
+    }
+
+    /**
+     * Whether the organization holds stock adjustments for approval, which
+     * makes variance review mandatory on its stock audits.
+     */
+    public static function organizationRequiresReview(int $organizationId): bool
+    {
+        return ApprovalSettings::forOrganization($organizationId)->stockAdjustmentsEnabled;
     }
 
     private function assertWarehouseScope(StockAudit $audit): void

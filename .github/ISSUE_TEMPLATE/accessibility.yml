@@ -1,0 +1,65 @@
+name: Accessibility barrier
+description: Something in Inventoros is hard or impossible to use with a keyboard, screen reader, zoom, or other assistive technology.
+labels: ["bug"]
+title: "[Accessibility]: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for telling us about an accessibility barrier. See [ACCESSIBILITY.md](https://github.com/Inventoros/Inventoros/blob/main/ACCESSIBILITY.md) for what we support and how we handle reports. You do not need to know WCAG or technical terms to report a problem.
+  - type: textarea
+    id: barrier
+    attributes:
+      label: What is the barrier?
+      description: What were you trying to do, and what stopped you?
+    validations:
+      required: true
+  - type: input
+    id: page
+    attributes:
+      label: Page or feature
+      description: The page address (remove your server's host name if you prefer) or the name of the screen.
+      placeholder: /orders/create
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open ...
+        2. Press Tab until ...
+        3. ...
+    validations:
+      required: false
+  - type: textarea
+    id: assistive
+    attributes:
+      label: Assistive technology and settings
+      description: For example a screen reader and its version, voice control, screen magnification, high contrast or forced colours, browser zoom level, or keyboard-only use.
+    validations:
+      required: false
+  - type: input
+    id: browser
+    attributes:
+      label: Browser and operating system
+      placeholder: Firefox 140 on Windows 11
+    validations:
+      required: false
+  - type: input
+    id: version
+    attributes:
+      label: Inventoros version
+      placeholder: "2.5.0"
+    validations:
+      required: false
+  - type: dropdown
+    id: language
+    attributes:
+      label: Interface language
+      options:
+        - English
+        - Arabic (right-to-left)
+        - Another language
+    validations:
+      required: false

@@ -44,6 +44,8 @@ const page = usePage();
 const { hasPermission, canVisit } = usePermissions();
 
 const canExport = computed(() => hasPermission('export_data'));
+const canExportProducts = computed(() => canExport.value && hasPermission('view_products'));
+const canExportOrders = computed(() => canExport.value && hasPermission('view_orders'));
 const canExportUsers = computed(() => canExport.value && hasPermission('view_users'));
 const canImport = computed(() => hasPermission('import_data'));
 // Product import creates and updates products, so it also needs a product permission.
@@ -55,7 +57,7 @@ const canImportUsers = computed(() => canImport.value && hasPermission('create_u
 
 const tabs = computed(() => [
     { key: 'products', label: t('importExport.tabs.products'), visible: true },
-    { key: 'orders', label: t('importExport.tabs.orders'), visible: canExport.value || canImportOrders.value },
+    { key: 'orders', label: t('importExport.tabs.orders'), visible: canExportOrders.value || canImportOrders.value },
     { key: 'users', label: t('importExport.tabs.users'), visible: canExportUsers.value || canImportUsers.value },
 ].filter((tab) => tab.visible));
 
@@ -235,7 +237,7 @@ const code = 'rounded bg-surface-overlay px-1 py-0.5 font-mono text-xs text-text
             <div v-show="activeTab === 'products'">
                 <div class="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-2">
                     <!-- Export Section -->
-                    <Card v-if="canExport">
+                    <Card v-if="canExportProducts">
                         <div class="mb-4 flex items-center gap-3">
                             <span class="flex h-10 w-10 items-center justify-center rounded-lg bg-brand-soft text-brand">
                                 <Download :size="18" />
@@ -447,7 +449,7 @@ const code = 'rounded bg-surface-overlay px-1 py-0.5 font-mono text-xs text-text
             <!-- ============================= ORDERS ============================= -->
             <div v-show="activeTab === 'orders'">
                 <div class="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-2">
-                    <Card v-if="canExport">
+                    <Card v-if="canExportOrders">
                         <div class="mb-4 flex items-center gap-3">
                             <span class="flex h-10 w-10 items-center justify-center rounded-lg bg-brand-soft text-brand">
                                 <Download :size="18" />

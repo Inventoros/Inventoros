@@ -74,10 +74,12 @@ export const ROUTE_PERMISSIONS = {
         "create_users"
     ],
     "import-export.export-orders": [
-        "export_data"
+        "export_data",
+        "view_orders"
     ],
     "import-export.export-products": [
-        "export_data"
+        "export_data",
+        "view_products"
     ],
     "import-export.export-users": [
         "export_data",
@@ -99,7 +101,7 @@ export const ROUTE_PERMISSIONS = {
         "create_orders"
     ],
     "orders.customer-lookup": [
-        "view_orders"
+        "create_orders|edit_orders|view_customers"
     ],
     "orders.edit": [
         "edit_orders"
