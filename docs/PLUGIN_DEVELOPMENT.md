@@ -706,6 +706,8 @@ Core, not your tool, decides who may use it. `$permission` is a permission name 
 
 Tools are registered while the plugin is active. On Inventoros versions without this, check `function_exists('register_mcp_tool')`.
 
+Core runs `laravel/mcp` 1.x. Every MCP request is handled on its own: there is no MCP session, so `Request::sessionId()` and the `SessionInitialized` event do not exist. If a tool needs to connect several calls, take an identifier as an argument. `Tool`, `Request`, `Response` and the tool attributes are unchanged from 0.x, so a tool written for earlier Inventoros releases keeps working.
+
 ## Outbound webhook events
 
 Users subscribe webhooks to events in Settings > Webhooks. A plugin can add its own events and send them through core's delivery, which signs every payload (`X-Webhook-Signature`, plus `X-Webhook-Timestamp` and `X-Webhook-Signature-V2`), retries failures with back-off, refuses private and loopback targets, and logs each delivery:

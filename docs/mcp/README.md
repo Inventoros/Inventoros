@@ -12,9 +12,11 @@ The server is built on the official [`laravel/mcp`](https://github.com/laravel/m
 POST {APP_URL}/mcp
 ```
 
-Transport: streamable HTTP (per the 2025-11-25 MCP spec). The same URL handles `initialize`, `tools/list`, `tools/call`, `resources/list`, `resources/read`, `prompts/list`, `prompts/get`, `ping`, and `completion/complete`.
+Transport: streamable HTTP. The server speaks MCP protocol revision 2026-07-28, where a client starts with `server/discover` and every request carries its protocol version in `params._meta` plus the matching `MCP-Protocol-Version`, `Mcp-Method` and (for `tools/call`, `prompts/get` and `resources/read`) `Mcp-Name` headers. Clients that still open with `initialize` keep working: they get 2025-11-25, 2025-06-18 or 2025-03-26, whichever they ask for. Each request is handled on its own; there is no `MCP-Session-Id`. The same URL handles `server/discover`, `initialize`, `tools/list`, `tools/call`, `resources/list`, `resources/read`, `prompts/list`, `prompts/get`, `ping`, and `completion/complete`.
 
 `GET` and `DELETE` against `/mcp` return `405 Method Not Allowed` by design — only `POST` is supported.
+
+A request that carries a browser `Origin` header is accepted only from `APP_URL` or `localhost`; any other origin gets `403`. Desktop and command-line clients (Claude Code, Cursor, `mcp-remote`) send no `Origin` and are unaffected.
 
 ## Authentication
 

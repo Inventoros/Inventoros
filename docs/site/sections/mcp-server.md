@@ -5,7 +5,7 @@ Learn more about MCP: https://modelcontextprotocol.io/
 ## Endpoint at a glance
 
 - URL: `POST {your-host}/mcp`
-- Transport: streamable HTTP (per the 2025-11-25 MCP spec; clients on protocol versions 2025-06-18 and 2025-03-26 are also accepted)
+- Transport: streamable HTTP, MCP protocol revision 2026-07-28 (`server/discover`, no sessions); clients that open with `initialize` on 2025-11-25, 2025-06-18 or 2025-03-26 are also accepted
 - Auth: Sanctum bearer token (same as REST)
 - Rate limit: 60 requests per minute per user (shared with REST)
 
