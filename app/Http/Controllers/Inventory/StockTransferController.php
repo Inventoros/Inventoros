@@ -15,6 +15,7 @@ use App\Services\ApprovalService;
 use App\Services\StockBalanceService;
 use App\Services\StockTransferService;
 use App\Services\WarehouseAccessService;
+use App\Support\Search;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -57,7 +58,7 @@ class StockTransferController extends Controller
                 });
             })
             ->when($request->input('search'), function ($query, $search) {
-                $query->where('transfer_number', 'like', "%{$search}%");
+                Search::apply($query, ['transfer_number'], $search);
             })
             ->when($request->input('status'), function ($query, $status) {
                 $query->where('status', $status);

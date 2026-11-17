@@ -14,6 +14,7 @@ use App\Models\Role;
 use App\Models\User;
 use App\Services\Plugins\PluginPermissionRegistry;
 use App\Services\SecurityEventLogger;
+use App\Support\Search;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -45,7 +46,7 @@ class RoleController extends Controller
                     ->orWhereNull('organization_id'); // Include system roles
             })
             ->when($request->input('search'), function ($query, $search) {
-                $query->where('name', 'like', "%{$search}%");
+                Search::apply($query, ['name'], $search);
             })
             ->orderByRaw('is_system DESC, name ASC') // System roles first, then alphabetical
             ->paginate(20)

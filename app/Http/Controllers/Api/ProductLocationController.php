@@ -11,6 +11,7 @@ use App\Http\Requests\Api\ProductLocation\UpdateProductLocationRequest;
 use App\Http\Resources\ProductLocationResource;
 use App\Models\Inventory\ProductLocation;
 use App\Services\WarehouseAccessService;
+use App\Support\Search;
 use Dedoc\Scramble\Attributes\QueryParameter;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -40,8 +41,7 @@ class ProductLocationController extends Controller
             ->tap(fn ($q) => app(WarehouseAccessService::class)->scopeLocations($q, $request->user()))
             ->when($request->input('search'), function ($query, $search) {
                 $query->where(function ($q) use ($search) {
-                    $q->where('name', 'like', "%{$search}%")
-                        ->orWhere('code', 'like', "%{$search}%");
+                    Search::apply($q, ['name', 'code'], $search);
                 });
             })
             ->when($request->input('is_active') !== null, function ($query) use ($request) {

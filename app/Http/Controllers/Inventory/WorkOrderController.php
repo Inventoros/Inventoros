@@ -17,6 +17,7 @@ use App\Models\Inventory\WorkOrder;
 use App\Models\Inventory\WorkOrderItem;
 use App\Services\WarehouseAccessService;
 use App\Services\WorkOrderService;
+use App\Support\Search;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -59,10 +60,9 @@ class WorkOrderController extends Controller
             })
             ->when($request->input('search'), function ($query, $search) {
                 $query->where(function ($q) use ($search) {
-                    $q->where('work_order_number', 'like', "%{$search}%")
+                    Search::apply($q, ['work_order_number'], $search)
                         ->orWhereHas('product', function ($q2) use ($search) {
-                            $q2->where('name', 'like', "%{$search}%")
-                                ->orWhere('sku', 'like', "%{$search}%");
+                            Search::apply($q2, ['name', 'sku'], $search);
                         });
                 });
             })

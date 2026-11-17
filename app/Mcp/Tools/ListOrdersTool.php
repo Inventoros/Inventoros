@@ -7,6 +7,7 @@ namespace App\Mcp\Tools;
 use App\Mcp\Concerns\AuthenticatesMcpRequest;
 use App\Models\Order\Order;
 use App\Support\PageSize;
+use App\Support\Search;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
@@ -49,13 +50,7 @@ class ListOrdersTool extends Tool
             ->when($request->get('warehouse_id'), fn ($q, $id) => $q->where('warehouse_id', $id))
             ->when($request->get('search'), function ($q, $search) {
                 $q->where(function ($q) use ($search) {
-                    $q->where('order_number', 'like', "%{$search}%")
-                        ->orWhere('customer_name', 'like', "%{$search}%")
-                        ->orWhere('customer_email', 'like', "%{$search}%")
-                        ->orWhere('external_id', 'like', "%{$search}%")
-                        ->orWhere('external_reference', 'like', "%{$search}%")
-                        ->orWhere('metadata->channel_order_number', 'like', "%{$search}%")
-                        ->orWhere('metadata->shopify->name', 'like', "%{$search}%");
+                    Search::apply($q, ['order_number', 'customer_name', 'customer_email', 'external_id', 'external_reference', 'metadata->channel_order_number', 'metadata->shopify->name'], $search);
                 });
             })
             ->when($request->get('status'), fn ($q, $status) => $q->byStatus($status))

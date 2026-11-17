@@ -14,6 +14,7 @@ use App\Rules\OrganizationMember;
 use App\Services\Organizations\ActiveOrganization;
 use App\Services\WarehouseAccessService;
 use App\Services\WarehouseDeletionService;
+use App\Support\Search;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
@@ -41,9 +42,7 @@ class WarehouseController extends Controller
             ->tap(fn ($q) => $this->warehouseAccess->scopeWarehouses($q, $request->user()))
             ->when($request->input('search'), function ($query, $search) {
                 $query->where(function ($q) use ($search) {
-                    $q->where('name', 'like', "%{$search}%")
-                        ->orWhere('code', 'like', "%{$search}%")
-                        ->orWhere('city', 'like', "%{$search}%");
+                    Search::apply($q, ['name', 'code', 'city'], $search);
                 });
             })
             ->orderByDesc('is_default')

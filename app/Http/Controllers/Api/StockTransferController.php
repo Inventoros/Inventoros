@@ -13,6 +13,7 @@ use App\Http\Resources\StockTransferResource;
 use App\Models\Inventory\StockTransfer;
 use App\Services\StockTransferService;
 use App\Services\WarehouseAccessService;
+use App\Support\Search;
 use Dedoc\Scramble\Attributes\QueryParameter;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -51,7 +52,7 @@ class StockTransferController extends Controller
                         ->orWhereHas('toLocation', fn ($l) => $l->where('warehouse_id', $warehouseId));
                 });
             })
-            ->when($request->input('search'), fn ($query, $search) => $query->where('transfer_number', 'like', "%{$search}%"))
+            ->when($request->input('search'), fn ($query, $search) => Search::apply($query, ['transfer_number'], $search))
             ->when($request->input('status'), fn ($query, $status) => $query->byStatus($status))
             ->latest()
             ->latest('id')

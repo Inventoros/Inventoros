@@ -16,6 +16,7 @@ use App\Support\ApprovalSettings;
 use App\Support\ExchangeMath;
 use App\Support\LineTax;
 use App\Support\Money;
+use App\Support\Search;
 use App\Support\SequenceNumber;
 use App\Support\SequenceNumberRetry;
 use App\Traits\LogsActivity;
@@ -583,9 +584,9 @@ class PurchaseOrder extends Model
     public function scopeSearch($query, $search)
     {
         return $query->where(function ($q) use ($search) {
-            $q->where('po_number', 'like', "%{$search}%")
+            Search::apply($q, ['po_number'], $search)
                 ->orWhereHas('supplier', function ($q) use ($search) {
-                    $q->where('name', 'like', "%{$search}%");
+                    Search::apply($q, ['name'], $search);
                 });
         });
     }

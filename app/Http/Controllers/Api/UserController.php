@@ -11,6 +11,7 @@ use App\Http\Requests\Api\User\UpdateUserRequest;
 use App\Http\Resources\UserResource;
 use App\Models\User;
 use App\Services\UserManagementService;
+use App\Support\Search;
 use Dedoc\Scramble\Attributes\QueryParameter;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -41,8 +42,7 @@ class UserController extends Controller
             ->forOrganization($request->user()->organization_id)
             ->when($request->input('search'), function ($query, $search) {
                 $query->where(function ($q) use ($search) {
-                    $q->where('name', 'like', "%{$search}%")
-                        ->orWhere('email', 'like', "%{$search}%");
+                    Search::apply($q, ['name', 'email'], $search);
                 });
             })
             ->when($request->input('role'), fn ($query, $role) => $query->where('role', $role))

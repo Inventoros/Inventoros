@@ -11,6 +11,7 @@ use App\Models\Inventory\Product;
 use App\Models\Inventory\StockReservation;
 use App\Services\StockReservationService;
 use App\Services\WarehouseAccessService;
+use App\Support\Search;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -51,7 +52,7 @@ class StockReservationController extends Controller
             ->tap(fn (Builder $query) => $this->filterStatus($query, $status))
             ->when($validated['owner'] ?? null, fn (Builder $q, string $owner) => $q->where('owner_type', $owner))
             ->when($validated['product_id'] ?? null, fn (Builder $q, int $productId) => $q->where('product_id', $productId))
-            ->when($validated['search'] ?? null, fn (Builder $q, string $search) => $q->where('owner_reference', 'like', "%{$search}%"))
+            ->when($validated['search'] ?? null, fn (Builder $q, string $search) => Search::apply($q, ['owner_reference'], $search))
             ->orderByRaw('expires_at is null')
             ->orderBy('expires_at')
             ->orderByDesc('id')

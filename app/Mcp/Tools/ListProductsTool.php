@@ -8,6 +8,7 @@ use App\Mcp\Concerns\AuthenticatesMcpRequest;
 use App\Models\Inventory\Product;
 use App\Services\StockReservationService;
 use App\Support\PageSize;
+use App\Support\Search;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
@@ -52,9 +53,7 @@ class ListProductsTool extends Tool
             })
             ->when($request->get('search'), function ($q, $search) {
                 $q->where(function ($q) use ($search) {
-                    $q->where('name', 'like', "%{$search}%")
-                        ->orWhere('sku', 'like', "%{$search}%")
-                        ->orWhere('barcode', 'like', "%{$search}%");
+                    Search::apply($q, ['name', 'sku', 'barcode'], $search);
                 });
             })
             ->when($request->get('category_id'), fn ($q, $id) => $q->where('category_id', $id))

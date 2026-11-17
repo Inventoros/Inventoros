@@ -10,6 +10,7 @@ import Badge from '@/Components/ui/Badge.vue';
 import { Head, Link, useForm, router } from '@inertiajs/vue3';
 import { useI18n } from 'vue-i18n';
 import { usePermissions } from '@/composables/usePermissions';
+import { textMatches } from '@/lib/searchText';
 import { ref, computed } from 'vue';
 import { ArrowLeft } from '@lucide/vue';
 
@@ -64,11 +65,7 @@ const userSearch = ref('');
 const filteredUsers = computed(() => {
     if (!props.users) return [];
     if (!userSearch.value) return props.users;
-    const query = userSearch.value.toLowerCase();
-    return props.users.filter(user =>
-        user.name.toLowerCase().includes(query) ||
-        user.email.toLowerCase().includes(query)
-    );
+    return props.users.filter(user => textMatches([user.name, user.email], userSearch.value));
 });
 
 const toggleUser = (userId) => {

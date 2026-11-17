@@ -7,6 +7,7 @@ namespace App\GraphQL\Queries;
 use App\GraphQL\Concerns\RequiresPermissions;
 use App\GraphQL\Support\ListResourceLimits;
 use App\Models\User;
+use App\Support\Search;
 use GraphQL\Type\Definition\Type;
 use Rebing\GraphQL\Support\Facades\GraphQL;
 use Rebing\GraphQL\Support\Query;
@@ -44,7 +45,7 @@ class UsersQuery extends Query
         return User::with(ListResourceLimits::eager('roles'))
             ->forOrganization($this->organizationId())
             ->when($args['search'] ?? null, function ($query, $search) {
-                $query->where(fn ($q) => $q->where('name', 'like', "%{$search}%")->orWhere('email', 'like', "%{$search}%"));
+                $query->where(fn ($q) => Search::apply($q, ['name', 'email'], $search));
             })
             ->when($args['role'] ?? null, fn ($query, $role) => $query->where('role', $role))
             ->orderBy('name')

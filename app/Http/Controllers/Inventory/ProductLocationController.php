@@ -11,6 +11,7 @@ use App\Models\Inventory\ProductLocation;
 use App\Models\Inventory\ProductLocationStock;
 use App\Models\Warehouse;
 use App\Services\WarehouseAccessService;
+use App\Support\Search;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -46,8 +47,7 @@ class ProductLocationController extends Controller
             })
             ->when($request->input('search'), function ($query, $search) {
                 $query->where(function ($q) use ($search) {
-                    $q->where('name', 'like', "%{$search}%")
-                        ->orWhere('code', 'like', "%{$search}%");
+                    Search::apply($q, ['name', 'code'], $search);
                 });
             })
             ->latest()

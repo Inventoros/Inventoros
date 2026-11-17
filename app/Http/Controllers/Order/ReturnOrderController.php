@@ -13,6 +13,7 @@ use App\Models\Order\Order;
 use App\Models\Order\ReturnOrder;
 use App\Services\ReturnOrderService;
 use App\Support\PaymentVisibility;
+use App\Support\Search;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -39,10 +40,9 @@ class ReturnOrderController extends Controller
             ->tap(fn ($q) => app(ReturnOrderService::class)->scopeForUser($q, $request->user()))
             ->when($request->input('search'), function ($query, $search) {
                 $query->where(function ($q) use ($search) {
-                    $q->where('return_number', 'like', "%{$search}%")
+                    Search::apply($q, ['return_number'], $search)
                         ->orWhereHas('order', function ($oq) use ($search) {
-                            $oq->where('order_number', 'like', "%{$search}%")
-                                ->orWhere('customer_name', 'like', "%{$search}%");
+                            Search::apply($oq, ['order_number', 'customer_name'], $search);
                         });
                 });
             })

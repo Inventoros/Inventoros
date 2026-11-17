@@ -13,6 +13,7 @@ use App\Models\Inventory\Supplier;
 use App\Models\Inventory\VariantReplenishmentPolicy;
 use App\Services\VariantReplenishmentService;
 use App\Services\WarehouseAccessService;
+use App\Support\Search;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -28,9 +29,9 @@ final class VariantReplenishmentController extends Controller
             $query->whereIn('warehouse_id', $ids);
         }
         if (filled($data['search'] ?? null)) {
-            $needle = '%'.mb_strtolower($data['search']).'%';
-            $query->whereHas('variant', fn ($q) => $q->where(fn ($q) => $q->whereRaw('LOWER(sku) LIKE ?', [$needle])
-                ->orWhereRaw('LOWER(title) LIKE ?', [$needle])->orWhereHas('product', fn ($p) => $p->whereRaw('LOWER(name) LIKE ?', [$needle]))));
+            $needle = (string) $data['search'];
+            $query->whereHas('variant', fn ($q) => $q->where(fn ($q) => Search::apply($q, ['sku', 'title'], $needle)
+                ->orWhereHas('product', fn ($p) => Search::apply($p, ['name'], $needle))));
         }
         $page = $query->orderBy('id')->paginate(20)->withQueryString();
         $forecasts = $replenishment->forecasts($page->getCollection());
@@ -61,20 +62,19 @@ final class VariantReplenishmentController extends Controller
         $data = $request->validate(['variant_search' => ['nullable', 'string', 'max:100'], 'supplier_search' => ['nullable', 'string', 'max:100'],
             'location_search' => ['nullable', 'string', 'max:100'], 'warehouse_id' => ['nullable', 'integer']]);
         $org = (int) $request->user()->organization_id;
-        $variantNeedle = '%'.mb_strtolower($data['variant_search'] ?? '').'%';
+        $variantNeedle = (string) ($data['variant_search'] ?? '');
         $variants = ProductVariant::where('organization_id', $org)->where('is_active', true)
             ->whereHas('product', fn ($q) => $q->where('organization_id', $org)->active()->where('has_variants', true)->where('type', '<>', 'kit'))
-            ->where(fn ($q) => $q->whereRaw('LOWER(sku) LIKE ?', [$variantNeedle])->orWhereRaw('LOWER(title) LIKE ?', [$variantNeedle])
-                ->orWhereHas('product', fn ($p) => $p->whereRaw('LOWER(name) LIKE ?', [$variantNeedle])))
+            ->where(fn ($q) => Search::apply($q, ['sku', 'title'], $variantNeedle)
+                ->orWhereHas('product', fn ($p) => Search::apply($p, ['name'], $variantNeedle)))
             ->with('product:id,name')->orderBy('id')->limit(20)->get()->map(fn ($v) => ['id' => $v->id, 'sku' => $v->sku, 'label' => $v->product->name.' / '.$v->title.' / '.$v->sku]);
         $suppliers = Supplier::where('organization_id', $org)->where('is_active', true)
-            ->whereRaw('LOWER(name) LIKE ?', ['%'.mb_strtolower($data['supplier_search'] ?? '').'%'])->orderBy('name')->limit(20)->get(['id', 'name', 'currency']);
+            ->tap(fn ($q) => Search::apply($q, ['name'], (string) ($data['supplier_search'] ?? '')))->orderBy('name')->limit(20)->get(['id', 'name', 'currency']);
         $locations = [];
         if (! empty($data['warehouse_id'])) {
             $access->authorizeWarehouse($request->user(), (int) $data['warehouse_id']);
             $locations = ProductLocation::where('organization_id', $org)->where('warehouse_id', $data['warehouse_id'])->active()
-                ->where(fn ($q) => $q->whereRaw('LOWER(name) LIKE ?', ['%'.mb_strtolower($data['location_search'] ?? '').'%'])
-                    ->orWhereRaw('LOWER(code) LIKE ?', ['%'.mb_strtolower($data['location_search'] ?? '').'%']))
+                ->tap(fn ($q) => Search::apply($q, ['name', 'code'], (string) ($data['location_search'] ?? '')))
                 ->orderBy('name')->limit(25)->get(['id', 'name', 'code']);
         }
 

@@ -10,6 +10,7 @@ use App\Http\Requests\Api\ProductCategory\StoreProductCategoryRequest;
 use App\Http\Requests\Api\ProductCategory\UpdateProductCategoryRequest;
 use App\Http\Resources\ProductCategoryResource;
 use App\Models\Inventory\ProductCategory;
+use App\Support\Search;
 use Dedoc\Scramble\Attributes\QueryParameter;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -38,7 +39,7 @@ class ProductCategoryController extends Controller
         $query = ProductCategory::withCount('products')
             ->forOrganization($organizationId)
             ->when($request->input('search'), function ($query, $search) {
-                $query->where('name', 'like', "%{$search}%");
+                Search::apply($query, ['name'], $search);
             })
             ->when($request->input('is_active') !== null, function ($query) use ($request) {
                 $query->where('is_active', filter_var($request->input('is_active'), FILTER_VALIDATE_BOOLEAN));

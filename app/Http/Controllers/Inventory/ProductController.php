@@ -23,6 +23,7 @@ use App\Services\WarehouseAccessService;
 use App\Services\WarehouseStockLevelService;
 use App\Support\PluginQueryGuard;
 use App\Support\ProductSearch;
+use App\Support\Search;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
@@ -65,13 +66,10 @@ class ProductController extends Controller
             })
             ->when($request->input('search'), function ($query, $search) {
                 $query->where(function ($q) use ($search) {
-                    $q->where('name', 'like', "%{$search}%")
-                        ->orWhere('sku', 'like', "%{$search}%")
-                        ->orWhere('barcode', 'like', "%{$search}%")
+                    Search::apply($q, ['name', 'sku', 'barcode'], $search)
                         // A variant's SKU or barcode finds its product too.
                         ->orWhereHas('variants', function ($variants) use ($search) {
-                            $variants->where('sku', 'like', "%{$search}%")
-                                ->orWhere('barcode', 'like', "%{$search}%");
+                            Search::apply($variants, ['sku', 'barcode'], $search);
                         });
 
                     // Hook: Let plugins add search conditions to the OR group
