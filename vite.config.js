@@ -7,7 +7,7 @@ import { resolve } from 'path';
 
 // Dynamically discover plugin entry points
 function getPluginEntryPoints() {
-    const pluginsDir = resolve(__dirname, 'plugins');
+    const pluginsDir = resolve(import.meta.dirname, 'plugins');
     const entryPoints = [];
 
     if (existsSync(pluginsDir)) {
@@ -49,8 +49,8 @@ export default defineConfig({
     },
     resolve: {
         alias: {
-            '@': resolve(__dirname, 'resources/js'),
-            '@plugins': resolve(__dirname, 'plugins'),
+            '@': resolve(import.meta.dirname, 'resources/js'),
+            '@plugins': resolve(import.meta.dirname, 'plugins'),
         },
     },
 });
