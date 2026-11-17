@@ -20,6 +20,7 @@ Full release notes, with the pull request behind each change, are on [GitHub Rel
 - Supplier price history entries from received purchase orders record the currency of the cost (and, for converted costs, the supplier's price and the rate). Entries for foreign-currency orders without a recorded rate are labelled with the order's currency instead of being shown as the product's currency.
 - With purchase order approvals on and a threshold set, a purchase order in another currency with no exchange rate recorded needs approval, since its total cannot be compared with the threshold.
 - The MCP server runs on `laravel/mcp` 1.2 and speaks MCP protocol revision 2026-07-28 (`server/discover`, protocol metadata and `Mcp-Method`/`Mcp-Name` headers on every request, no sessions). Clients that open with `initialize` on 2025-11-25, 2025-06-18 or 2025-03-26 keep working. Requests with a browser `Origin` other than `APP_URL` or localhost are refused, and malformed requests get JSON-RPC errors instead of HTTP 500.
+- Search ignores apostrophes and quotes, straight or curly, in both the search and the stored text (#430): "Players Handbook", "Player's Handbook" and "Player’s Handbook" all find each other, and "its" finds "it's". Every other character, including `%`, `_`, `\`, hyphens, slashes and dots, is matched literally. On PostgreSQL a migration adds trigram indexes on the quote-free form of the searched product, order, customer, supplier and purchase order columns, so searches stay index-backed.
 
 ### Security
 

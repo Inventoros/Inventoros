@@ -181,7 +181,7 @@ class SearchSpecialCharactersTest extends TestCase
     public function test_the_order_customer_picker_and_list_pages_match_quotes(): void
     {
         Customer::create(['organization_id' => $this->org->id, 'name' => 'O’Brien Games', 'is_active' => true]);
-        Customer::create(['organization_id' => $this->org->id, 'name' => 'OBrien Other', 'is_active' => true]);
+        Customer::create(['organization_id' => $this->org->id, 'name' => 'O Brien Other', 'is_active' => true]);
         $supplier = Supplier::create(['organization_id' => $this->org->id, 'name' => 'Wizard’s Supply', 'code' => 'WIZ', 'is_active' => true]);
         PurchaseOrder::create(['organization_id' => $this->org->id, 'supplier_id' => $supplier->id, 'po_number' => 'PO-430',
             'status' => 'draft', 'order_date' => now()->toDateString(), 'currency' => 'USD', 'subtotal' => 0, 'total' => 0, 'created_by' => $this->admin->id]);

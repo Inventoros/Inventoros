@@ -52,13 +52,18 @@ class SearchHelperTest extends TestCase
     public static function cases(): array
     {
         return [
-            'ascii apostrophe' => [["Player's Handbook", 'Players Handbook'], "Player's Handbook", ["Player's Handbook"]],
-            'typographic apostrophe stored' => [['Player’s Handbook', 'Players Handbook'], "Player's Handbook", ['Player’s Handbook']],
+            'ascii apostrophe' => [["Player's Handbook", 'Players Handbook', 'Player Handbook'], "Player's Handbook", ["Player's Handbook", 'Players Handbook']],
+            'typographic apostrophe stored' => [['Player’s Handbook', 'Player Handbook'], "Player's Handbook", ['Player’s Handbook']],
+            'no apostrophe typed' => [["Player's Handbook", 'Player’s Handbook', 'Player Handbook'], 'Players Handbook', ["Player's Handbook", 'Player’s Handbook']],
+            'its finds it\'s' => [["It's Here", 'It’s Here', 'It Here'], 'its here', ["It's Here", 'It’s Here']],
+            'only quotes typed matches everything' => [['Alpha', "Beta's"], "''", ['Alpha', "Beta's"]],
             'typographic apostrophe typed' => [["Player's Handbook"], 'Player’s Handbook', ["Player's Handbook"]],
             'both forms stored' => [["Player's Handbook", 'Player’s Handbook', 'Playerxs Handbook'], "player's handbook", ["Player's Handbook", 'Player’s Handbook']],
             'modifier letter apostrophe' => [["Player\u{02BC}s Handbook"], "Player's", ["Player\u{02BC}s Handbook"]],
             'mixed quotes in one name' => [['It’s the "Best"'], 'it\'s the “best”', ['It’s the "Best"']],
-            'curly double quotes stored' => [['The “Deluxe” Box', 'The Deluxe Box'], 'The "Deluxe" Box', ['The “Deluxe” Box']],
+            'curly double quotes stored' => [['The “Deluxe” Box', 'The Deluxe Box', 'The Box'], 'The "Deluxe" Box', ['The Deluxe Box', 'The “Deluxe” Box']],
+            'hyphens are not ignored' => [['AB-100', 'AB100', 'A-B100'], 'AB-100', ['AB-100']],
+            'slashes and dots are not ignored' => [['A-1/2', 'A12', 'v1.2'], 'A-1/2', ['A-1/2']],
             'ampersand' => [['Dungeons & Dragons', 'Dungeons and Dragons'], 'Dungeons & Dragons', ['Dungeons & Dragons']],
             'less-than sign' => [['Cable <5m>', 'Cable 5m'], 'Cable <5m', ['Cable <5m>']],
             'backslash' => [['Path C:\\Games', 'Path C:Games'], 'C:\\Games', ['Path C:\\Games']],
@@ -90,7 +95,7 @@ class SearchHelperTest extends TestCase
     {
         Product::create(['organization_id' => $this->org->id, 'sku' => "O'NEIL-1", 'name' => 'Lamp', 'price' => 1, 'stock' => 0]);
         Product::create(['organization_id' => $this->org->id, 'sku' => 'X-2', 'name' => 'O’Neil Chair', 'price' => 1, 'stock' => 0]);
-        Product::create(['organization_id' => $this->org->id, 'sku' => 'X-3', 'name' => 'Oneil Table', 'price' => 1, 'stock' => 0]);
+        Product::create(['organization_id' => $this->org->id, 'sku' => 'X-3', 'name' => 'O Neil Table', 'price' => 1, 'stock' => 0]);
 
         $found = Search::apply(Product::query()->where('organization_id', $this->org->id), ['name', 'sku'], "o'neil")
             ->orderBy('sku')->pluck('sku')->all();
@@ -134,18 +139,36 @@ class SearchHelperTest extends TestCase
         $connection = new PostgresConnection(fn () => null, 'inventoros', '', ['driver' => 'pgsql', 'name' => 'pgsql']);
 
         $plain = Search::apply($connection->table('products'), ['name'], '50%_off');
-        $this->assertSame('select * from "products" where ("name"::text ilike ? escape \'!\')', $plain->toSql());
+        $this->assertSame('select * from "products" where (translate("name"::text, '.self::quotesLiteral().', \'\') ilike ? escape \'!\')', $plain->toSql());
         $this->assertSame(['%50!%!_off%'], $plain->getBindings());
 
         $quoted = Search::apply($connection->table('products'), ['name'], 'Player’s');
-        $this->assertStringContainsString('"name"::text ilike ? escape \'!\' and replace(', $quoted->toSql());
-        $this->assertSame('%Player_s%', $quoted->getBindings()[0]);
-        $this->assertSame("%Player's%", last($quoted->getBindings()));
+        $this->assertSame(['%Players%'], $quoted->getBindings());
+        $this->assertStringContainsString('translate("name"::text, ', $quoted->toSql());
     }
 
-    public function test_fold_maps_typographic_quotes_to_ascii(): void
+    public function test_postgres_searches_the_unquoted_expression_the_indexes_cover(): void
     {
-        $this->assertSame('Player\'s "Deluxe" \'Box\'', Search::fold('Player’s “Deluxe” ‘Box’'));
-        $this->assertSame('Crème Brûlée', Search::fold('Crème Brûlée'));
+        $connection = new PostgresConnection(fn () => null, 'inventoros', '', ['driver' => 'pgsql', 'name' => 'pgsql']);
+
+        $migration = require database_path('migrations/2026_11_17_000003_add_unquoted_trigram_search_indexes.php');
+        $this->assertSame(Search::IGNORED, $migration::QUOTES, 'The index migration must use the same quote list as the search.');
+
+        $this->assertSame(
+            'select * from "products" where (translate("name"::text, '.self::quotesLiteral().', \'\') ilike ? escape \'!\')',
+            Search::apply($connection->table('products'), ['name'], 'Handbook')->toSql(),
+        );
+    }
+
+    private static function quotesLiteral(): string
+    {
+        return "'".str_replace("'", "''", Search::IGNORED)."'";
+    }
+
+    public function test_strip_quotes_removes_ascii_and_typographic_quotes_only(): void
+    {
+        $this->assertSame('Players Deluxe Box', Search::stripQuotes('Player’s “Deluxe” ‘Box’'));
+        $this->assertSame('Its the Best', Search::stripQuotes('It\'s the "Best"'));
+        $this->assertSame('Crème Brûlée AB-100 A-1/2 v1.2 100%_', Search::stripQuotes('Crème Brûlée AB-100 A-1/2 v1.2 100%_'));
     }
 }
