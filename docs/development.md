@@ -6,7 +6,7 @@
 |-------|-----------|
 | Backend | Laravel 13 (PHP 8.4) |
 | Frontend | Inertia.js v3 + Vue 3 + Tailwind CSS |
-| Build | Vite 7 |
+| Build | Vite 8 |
 | Database | SQLite (dev) / MySQL 8+ / PostgreSQL 13+ |
 | API | REST + GraphQL (Sanctum auth) |
 | Testing | PHPUnit + Playwright |
@@ -16,7 +16,7 @@
 
 - PHP 8.4.1 or newer (8.4 and 8.5)
 - Composer 2.x
-- Node.js 20.19+ or 22.12+ and npm (Vite 7)
+- Node.js 20.19+ or 22.12+ and npm (Vite 8)
 - Safari 16.4+, Chrome/Edge 111+, or Firefox 128+ for the web interface ([Tailwind CSS 4 browser requirements](https://tailwindcss.com/docs/compatibility))
 - MySQL 8.0+ or PostgreSQL 13+ (SQLite for development)
 - Redis (optional, recommended for production queues)

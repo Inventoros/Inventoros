@@ -77,7 +77,7 @@ For UI changes, include before-and-after screenshots in the PR using attachments
 
 - PHP 8.4.1 or newer (8.4 and 8.5)
 - Composer
-- Node.js 20.19+ or 22.12+ and npm (Vite 7)
+- Node.js 20.19+ or 22.12+ and npm (Vite 8)
 - MySQL 8.0+ or PostgreSQL 13+
 - Git
 

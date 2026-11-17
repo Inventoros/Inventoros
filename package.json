@@ -24,10 +24,10 @@
         "@tailwindcss/vite": "^4.3.3",
         "@vitejs/plugin-vue": "^6.0.5",
         "concurrently": "^9.0.1",
-        "laravel-vite-plugin": "^2.0.0",
+        "laravel-vite-plugin": "^3.2.1",
         "tailwindcss": "^4.3.3",
         "tailwindcss-animate": "^1.0.7",
-        "vite": "^7.3.6"
+        "vite": "^8.3.8"
     },
     "overrides": {
         "concurrently": {

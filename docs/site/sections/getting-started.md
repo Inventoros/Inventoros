@@ -47,7 +47,7 @@ The requirements below apply to cPanel and manual VPS installs. The Docker-based
 - PHP 8.4.1 or newer (8.4 and 8.5)
 - MySQL 8.0+ or PostgreSQL 13+
 - Composer 2.0+
-- Node.js 22.12+ and npm (Vite 7 and vue-i18n 11 need it; only needed when building from source; the cPanel release ships pre-compiled assets)
+- Node.js 22.12+ and npm (Vite 8 and vue-i18n 11 need it; only needed when building from source; the cPanel release ships pre-compiled assets)
 
 ### Required PHP extensions
 
