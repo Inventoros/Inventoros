@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "68abe997e88dc2999f9cfafa1b75e234",
+    "content-hash": "ae0a74076296ff56df58639e8aba5eb3",
     "packages": [
         {
             "name": "aws/aws-crt-php",
@@ -1368,16 +1368,16 @@
         },
         {
             "name": "guzzlehttp/guzzle",
-            "version": "8.5.1",
+            "version": "8.5.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/guzzle/guzzle.git",
-                "reference": "5509cc8494c9016a08801cd328e0559bf356852e"
+                "reference": "8e893188e1ac92b457eca35ddf2b574024b66280"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/guzzle/guzzle/zipball/5509cc8494c9016a08801cd328e0559bf356852e",
-                "reference": "5509cc8494c9016a08801cd328e0559bf356852e",
+                "url": "https://api.github.com/repos/guzzle/guzzle/zipball/8e893188e1ac92b457eca35ddf2b574024b66280",
+                "reference": "8e893188e1ac92b457eca35ddf2b574024b66280",
                 "shasum": ""
             },
             "require": {
@@ -1475,7 +1475,7 @@
             ],
             "support": {
                 "issues": "https://github.com/guzzle/guzzle/issues",
-                "source": "https://github.com/guzzle/guzzle/tree/8.5.1"
+                "source": "https://github.com/guzzle/guzzle/tree/8.5.2"
             },
             "funding": [
                 {
@@ -1491,7 +1491,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-11-17T03:22:13+00:00"
+            "time": "2026-11-17T16:24:00+00:00"
         },
         {
             "name": "guzzlehttp/promises",
@@ -5478,16 +5478,16 @@
         },
         {
             "name": "rebing/graphql-laravel",
-            "version": "9.17.0",
+            "version": "10.2.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/rebing/graphql-laravel.git",
-                "reference": "eaa90deba068f4ac05dfc585091b90cbfc775869"
+                "reference": "561f50821ebe0792158900b6e65c68e8bf081161"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/rebing/graphql-laravel/zipball/eaa90deba068f4ac05dfc585091b90cbfc775869",
-                "reference": "eaa90deba068f4ac05dfc585091b90cbfc775869",
+                "url": "https://api.github.com/repos/rebing/graphql-laravel/zipball/561f50821ebe0792158900b6e65c68e8bf081161",
+                "reference": "561f50821ebe0792158900b6e65c68e8bf081161",
                 "shasum": ""
             },
             "require": {
@@ -5497,24 +5497,24 @@
                 "laragraph/utils": "^2.0.1",
                 "php": "^8.2",
                 "thecodingmachine/safe": "^3.0",
-                "webonyx/graphql-php": "^15.22.1"
+                "webonyx/graphql-php": "^15.31.0"
             },
             "require-dev": {
+                "brianium/paratest": "~7.8.5|^7.12|^8.0",
                 "eliashaeussler/deep-closure-comparator": "^1.2",
                 "ext-pdo_sqlite": "*",
                 "fakerphp/faker": "^1.24",
-                "friendsofphp/php-cs-fixer": "^3",
-                "larastan/larastan": "^3",
                 "laravel/framework": "^12.0|^13.0",
-                "mfn/php-cs-fixer-config": "^2",
                 "mockery/mockery": "^1.6.10",
+                "open-telemetry/sdk": "^1.13",
+                "open-telemetry/sem-conv": "^1.38",
                 "orchestra/testbench": "^10.0|^11.0",
-                "phpstan/phpstan": "^2",
-                "phpunit/phpunit": "^11.5.3|^12.0.1",
-                "thecodingmachine/phpstan-safe-rule": "^1"
+                "phpunit/phpunit": "^11.5.3|^12.0.1|^13.0"
             },
             "suggest": {
-                "mll-lab/laravel-graphiql": "Easily integrate GraphiQL into your Laravel projects. "
+                "mll-lab/laravel-graphiql": "Easily integrate GraphiQL into your Laravel projects.",
+                "open-telemetry/api": "Required for the OpenTelemetryTracingDriver (^1.0).",
+                "rebing/graphql-laravel-select-fields": "Optimizes Eloquent queries by analysing requested GraphQL fields to build minimal SELECT and eager-load only needed relations."
             },
             "type": "library",
             "extra": {
@@ -5527,7 +5527,7 @@
                     ]
                 },
                 "branch-alias": {
-                    "dev-master": "9.x-dev"
+                    "dev-master": "10.x-dev"
                 }
             },
             "autoload": {
@@ -5577,7 +5577,7 @@
             ],
             "support": {
                 "issues": "https://github.com/rebing/graphql-laravel/issues",
-                "source": "https://github.com/rebing/graphql-laravel/tree/9.17.0"
+                "source": "https://github.com/rebing/graphql-laravel/tree/10.2.0"
             },
             "funding": [
                 {
@@ -5585,7 +5585,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2026-03-18T09:00:41+00:00"
+            "time": "2026-11-09T21:10:15+00:00"
         },
         {
             "name": "sabberworm/php-css-parser",

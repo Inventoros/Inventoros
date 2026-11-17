@@ -8,7 +8,6 @@ use App\Exceptions\ApprovalException;
 use App\GraphQL\Concerns\RequiresPermissions;
 use App\Http\Middleware\CheckApiPermission;
 use App\Services\ApprovalService;
-use Closure;
 use GraphQL\Error\Error;
 use GraphQL\Type\Definition\ResolveInfo;
 use GraphQL\Type\Definition\Type;
@@ -65,7 +64,7 @@ class DecideApprovalMutation extends Mutation
         ];
     }
 
-    public function resolve($root, array $args, $context, ResolveInfo $resolveInfo, Closure $getSelectFields)
+    public function resolve($root, array $args, $context, ResolveInfo $resolveInfo)
     {
         $user = $this->actor();
         $approvals = app(ApprovalService::class);

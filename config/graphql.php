@@ -346,6 +346,9 @@ return [
         // AutomaticPersistedQueriesMiddleware listed even if APQ is disabled, as the
         // temporary parsed request data is also used by the GraphQLUploadMiddleware
         \Rebing\GraphQL\Support\ExecutionMiddleware\AutomaticPersistedQueriesMiddleware::class,
+        // GET is enabled for the default schema, so reject mutations sent over
+        // GET (they would leak arguments into URLs and logs). Must follow APQ.
+        \Rebing\GraphQL\Support\ExecutionMiddleware\ReadOnlyOperationMiddleware::class,
         \App\GraphQL\Middleware\EnforceListResourceLimits::class,
         \App\GraphQL\Middleware\EnforceMutationRootFieldLimit::class,
         \Rebing\GraphQL\Support\ExecutionMiddleware\AddAuthUserContextValueMiddleware::class,

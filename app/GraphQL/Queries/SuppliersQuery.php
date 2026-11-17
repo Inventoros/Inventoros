@@ -7,7 +7,6 @@ namespace App\GraphQL\Queries;
 use App\GraphQL\Concerns\RequiresPermissions;
 use App\Models\Inventory\Supplier;
 use App\Support\ListSortColumns;
-use Closure;
 use GraphQL\Type\Definition\ResolveInfo;
 use GraphQL\Type\Definition\Type;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -66,7 +65,7 @@ class SuppliersQuery extends Query
         ];
     }
 
-    public function resolve($root, array $args, $context, ResolveInfo $resolveInfo, Closure $getSelectFields)
+    public function resolve($root, array $args, $context, ResolveInfo $resolveInfo)
     {
         // Read authorization: mirror the REST route's permission gate.
         // GraphQL previously enforced none, so any authenticated user could

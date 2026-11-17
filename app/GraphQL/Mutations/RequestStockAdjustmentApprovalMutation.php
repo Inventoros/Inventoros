@@ -11,7 +11,6 @@ use App\Models\Inventory\ProductLocation;
 use App\Models\Inventory\ProductVariant;
 use App\Services\ApprovalService;
 use App\Services\WarehouseAccessService;
-use Closure;
 use GraphQL\Error\Error;
 use GraphQL\Type\Definition\ResolveInfo;
 use GraphQL\Type\Definition\Type;
@@ -62,7 +61,7 @@ class RequestStockAdjustmentApprovalMutation extends Mutation
         ];
     }
 
-    public function resolve($root, array $args, $context, ResolveInfo $resolveInfo, Closure $getSelectFields)
+    public function resolve($root, array $args, $context, ResolveInfo $resolveInfo)
     {
         // Role and token ability are both enforced by RequiresPermissions.
         $user = $this->actor();

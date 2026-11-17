@@ -27,7 +27,7 @@ final class EnforcePermissions extends Middleware
      */
     public function __construct(private readonly array $permissions) {}
 
-    public function handle($root, array $args, $context, ResolveInfo $info, Closure $next)
+    public function handle(mixed $root, array $args, mixed $context, ResolveInfo $info, Closure $next): mixed
     {
         $user = auth()->user();
 

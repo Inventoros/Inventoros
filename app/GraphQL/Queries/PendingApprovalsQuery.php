@@ -6,7 +6,6 @@ namespace App\GraphQL\Queries;
 
 use App\GraphQL\Support\ListResourceLimits;
 use App\Services\ApprovalService;
-use Closure;
 use GraphQL\Type\Definition\ResolveInfo;
 use GraphQL\Type\Definition\Type;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -25,7 +24,7 @@ class PendingApprovalsQuery extends Query
         return Type::nonNull(Type::listOf(Type::nonNull(GraphQL::type('ApprovalItem'))));
     }
 
-    public function resolve($root, array $args, $context, ResolveInfo $resolveInfo, Closure $getSelectFields)
+    public function resolve($root, array $args, $context, ResolveInfo $resolveInfo)
     {
         $user = auth()->user() ?? throw new AuthorizationException('Unauthorized');
 
