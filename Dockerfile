@@ -26,11 +26,13 @@ FROM dunglas/frankenphp:1-php${PHP_VERSION} AS base
 # The mysql/postgresql clients let the in-app backup use mysqldump/pg_dump;
 # the PostgreSQL client comes from the PGDG repo so it can dump any current
 # server version (Debian's own client refuses to dump newer servers).
+# www.postgresql.org sometimes drops the TLS connection mid-download (curl
+# 56, unexpected EOF), so the key download retries instead of failing.
 RUN set -eux; \
     apt-get update; \
     apt-get install -y --no-install-recommends ca-certificates curl gnupg unzip; \
     install -d /usr/share/postgresql-common/pgdg; \
-    curl -fsSL -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc; \
+    curl -fsSL --retry 5 --retry-all-errors --retry-delay 3 --connect-timeout 20 -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc; \
     . /etc/os-release; \
     echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt ${VERSION_CODENAME}-pgdg main" > /etc/apt/sources.list.d/pgdg.list; \
     apt-get update; \
