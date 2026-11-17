@@ -6,7 +6,6 @@ namespace App\GraphQL\Mutations;
 
 use App\GraphQL\Concerns\RequiresPermissions;
 use App\Models\Inventory\Supplier;
-use Closure;
 use GraphQL\Type\Definition\ResolveInfo;
 use GraphQL\Type\Definition\Type;
 use Rebing\GraphQL\Support\Facades\GraphQL;
@@ -121,7 +120,7 @@ class CreateSupplierMutation extends Mutation
         ];
     }
 
-    public function resolve($root, array $args, $context, ResolveInfo $resolveInfo, Closure $getSelectFields)
+    public function resolve($root, array $args, $context, ResolveInfo $resolveInfo)
     {
         $user = auth()->user();
         if (!$user->hasPermission('create_suppliers')) {

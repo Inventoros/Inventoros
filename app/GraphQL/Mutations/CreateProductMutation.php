@@ -10,7 +10,6 @@ use App\Http\Requests\Concerns\ValidatesProductSuppliers;
 use App\Models\Inventory\ProductCategory;
 use App\Models\Inventory\ProductLocation;
 use App\Services\ProductService;
-use Closure;
 use GraphQL\Error\Error;
 use GraphQL\Type\Definition\ResolveInfo;
 use GraphQL\Type\Definition\Type;
@@ -150,7 +149,7 @@ class CreateProductMutation extends Mutation
         return $this->productSupplierRules((int) auth()->user()?->organization_id);
     }
 
-    public function resolve($root, array $args, $context, ResolveInfo $resolveInfo, Closure $getSelectFields)
+    public function resolve($root, array $args, $context, ResolveInfo $resolveInfo)
     {
         $user = auth()->user();
         if (! $user->hasPermission('create_products')) {

@@ -327,7 +327,7 @@ if (! $fresh || ! hash_equals($expected, $signature)) {
 
 ## GraphQL
 
-The same data is available via GraphQL at `POST /graphql` (`GET` is accepted too), powered by `rebing/graphql-laravel`. Authentication is the same Sanctum bearer token. Use any GraphQL client (Apollo, urql, graphql-request, and so on).
+The same data is available via GraphQL at `POST /graphql` (`GET` is accepted too, for queries only; a mutation sent over `GET` is refused), powered by `rebing/graphql-laravel`. Authentication is the same Sanctum bearer token. Use any GraphQL client (Apollo, urql, graphql-request, and so on).
 
 Queries: `products`, `product`, `orders`, `order`, `suppliers`, `supplier`, `purchaseOrders`, `purchaseOrder`, `stockAdjustments`, `locations`, `categories`, `customers`, `customer`, `returnOrders`, `returnOrder`, `stockTransfers`, `stockTransfer`, `users`, `user`, `productVariants`, `shipments` and `pendingApprovals`.
 

@@ -7,7 +7,6 @@ namespace App\GraphQL\Mutations;
 use App\Exceptions\BusinessRuleException;
 use App\GraphQL\Concerns\RequiresPermissions;
 use App\Models\Order\Order;
-use Closure;
 use GraphQL\Error\Error;
 use GraphQL\Type\Definition\ResolveInfo;
 use GraphQL\Type\Definition\Type;
@@ -83,7 +82,7 @@ class UpdateOrderMutation extends Mutation
         ];
     }
 
-    public function resolve($root, array $args, $context, ResolveInfo $resolveInfo, Closure $getSelectFields)
+    public function resolve($root, array $args, $context, ResolveInfo $resolveInfo)
     {
         $user = auth()->user();
         if (!$user) {

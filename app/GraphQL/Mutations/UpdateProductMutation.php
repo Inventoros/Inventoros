@@ -11,7 +11,6 @@ use App\Models\Inventory\Product;
 use App\Models\Inventory\ProductCategory;
 use App\Models\Inventory\ProductLocation;
 use App\Services\ProductService;
-use Closure;
 use GraphQL\Error\Error;
 use GraphQL\Type\Definition\ResolveInfo;
 use GraphQL\Type\Definition\Type;
@@ -165,7 +164,7 @@ class UpdateProductMutation extends Mutation
         return ['stock.prohibited' => ProductService::STOCK_EDIT_MESSAGE];
     }
 
-    public function resolve($root, array $args, $context, ResolveInfo $resolveInfo, Closure $getSelectFields)
+    public function resolve($root, array $args, $context, ResolveInfo $resolveInfo)
     {
         $user = auth()->user();
         if (! $user->hasPermission('edit_products')) {

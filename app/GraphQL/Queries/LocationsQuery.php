@@ -8,7 +8,6 @@ use App\GraphQL\Concerns\RequiresPermissions;
 use App\Models\Inventory\ProductLocation;
 use App\Services\WarehouseAccessService;
 use App\Support\Search;
-use Closure;
 use GraphQL\Type\Definition\ResolveInfo;
 use GraphQL\Type\Definition\Type;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -56,7 +55,7 @@ class LocationsQuery extends Query
         ];
     }
 
-    public function resolve($root, array $args, $context, ResolveInfo $resolveInfo, Closure $getSelectFields)
+    public function resolve($root, array $args, $context, ResolveInfo $resolveInfo)
     {
         // Read authorization: mirror the REST route's permission gate.
         // GraphQL previously enforced none, so any authenticated user could

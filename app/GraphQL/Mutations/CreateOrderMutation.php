@@ -8,7 +8,6 @@ use App\Exceptions\InsufficientStockException;
 use App\Exceptions\InvalidOrderItemException;
 use App\GraphQL\Concerns\RequiresPermissions;
 use App\Services\OrderService;
-use Closure;
 use GraphQL\Error\Error;
 use GraphQL\Type\Definition\ResolveInfo;
 use GraphQL\Type\Definition\Type;
@@ -115,7 +114,7 @@ class CreateOrderMutation extends Mutation
         ];
     }
 
-    public function resolve($root, array $args, $context, ResolveInfo $resolveInfo, Closure $getSelectFields)
+    public function resolve($root, array $args, $context, ResolveInfo $resolveInfo)
     {
         $user = auth()->user();
 

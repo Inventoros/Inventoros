@@ -6,7 +6,6 @@ namespace App\GraphQL\Mutations;
 
 use App\GraphQL\Concerns\RequiresPermissions;
 use App\Models\Inventory\Product;
-use Closure;
 use GraphQL\Error\Error;
 use GraphQL\Type\Definition\ResolveInfo;
 use GraphQL\Type\Definition\Type;
@@ -46,7 +45,7 @@ class DeleteProductMutation extends Mutation
         ];
     }
 
-    public function resolve($root, array $args, $context, ResolveInfo $resolveInfo, Closure $getSelectFields)
+    public function resolve($root, array $args, $context, ResolveInfo $resolveInfo)
     {
         $user = auth()->user();
         if (!$user->hasPermission('delete_products')) {

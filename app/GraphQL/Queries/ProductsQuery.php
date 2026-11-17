@@ -9,7 +9,6 @@ use App\Models\Inventory\Product;
 use App\Services\StockReservationService;
 use App\Support\ListSortColumns;
 use App\Support\Search;
-use Closure;
 use GraphQL\Type\Definition\ResolveInfo;
 use GraphQL\Type\Definition\Type;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -80,7 +79,7 @@ class ProductsQuery extends Query
         ];
     }
 
-    public function resolve($root, array $args, $context, ResolveInfo $resolveInfo, Closure $getSelectFields)
+    public function resolve($root, array $args, $context, ResolveInfo $resolveInfo)
     {
         // Read authorization: mirror the REST route's permission gate.
         // GraphQL previously enforced none, so any authenticated user could

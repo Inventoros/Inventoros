@@ -12,7 +12,6 @@ use App\Models\Inventory\ProductLocation;
 use App\Models\Inventory\StockAdjustment;
 use App\Services\ApprovalService;
 use App\Services\WarehouseAccessService;
-use Closure;
 use GraphQL\Error\Error;
 use GraphQL\Type\Definition\ResolveInfo;
 use GraphQL\Type\Definition\Type;
@@ -78,7 +77,7 @@ class CreateStockAdjustmentMutation extends Mutation
         ];
     }
 
-    public function resolve($root, array $args, $context, ResolveInfo $resolveInfo, Closure $getSelectFields)
+    public function resolve($root, array $args, $context, ResolveInfo $resolveInfo)
     {
         $user = auth()->user();
         if (!$user->hasPermission('manage_stock')) {
