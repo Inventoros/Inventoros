@@ -6,6 +6,17 @@
 *.md diff=markdown
 *.php diff=php
 
+# Left out of release source archives, and so of
+# `composer create-project inventoros/inventoros`: test suites, browser test
+# fixtures and screenshot tooling. None of it is read by the application.
 /.github export-ignore
 CHANGELOG.md export-ignore
 .styleci.yml export-ignore
+/tests export-ignore
+/e2e export-ignore
+/screenshots export-ignore
+/playwright.config.ts export-ignore
+/playwright.audit.config.ts export-ignore
+/phpunit.xml export-ignore
+/phpunit.mysql.xml export-ignore
+/phpunit.pgsql.xml export-ignore

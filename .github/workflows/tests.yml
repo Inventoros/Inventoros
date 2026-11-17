@@ -87,6 +87,67 @@ jobs:
           php artisan key:generate
           php artisan route:list --path=mcp | grep -q 'mcp'
 
+  # `composer create-project inventoros/inventoros` installs from the GitHub
+  # source archive of a tag, which leaves out everything marked export-ignore
+  # in .gitattributes. Build that archive from this commit, install it the
+  # same way Packagist would, and check the result boots to the web installer.
+  composer-create-project:
+    if: github.event_name != 'schedule'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
+        with:
+          php-version: '8.4'
+          extensions: mbstring, xml, ctype, iconv, intl, pdo_sqlite, sqlite3, dom, filter, gd, json, libxml, openssl, pcre, phar, tokenizer, zip, bcmath, sodium
+          coverage: none
+
+      - name: Setup Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '22'
+
+      - name: Build the source archive
+        run: git archive --format=zip -o "$RUNNER_TEMP/inventoros.zip" HEAD
+
+      - name: composer create-project
+        working-directory: ${{ runner.temp }}
+        run: |
+          version="$(cat "$GITHUB_WORKSPACE/VERSION")"
+          repository="$(printf '{"type":"package","package":{"name":"inventoros/inventoros","version":"%s","type":"project","dist":{"type":"zip","url":"%s"}}}' "$version" "$RUNNER_TEMP/inventoros.zip")"
+          composer create-project inventoros/inventoros app "$version" --repository="$repository" --no-dev --no-interaction | tee create-project.log
+          grep -q 'Open /install in your browser' create-project.log
+
+      - name: Check the installed project
+        working-directory: ${{ runner.temp }}/app
+        run: |
+          grep -q '^APP_KEY=base64:' .env
+          test ! -e tests && test ! -e e2e && test ! -e phpunit.xml
+          test ! -e database/database.sqlite
+          php artisan route:list --path=install | grep -q 'install'
+
+      - name: Build the frontend
+        working-directory: ${{ runner.temp }}/app
+        run: npm ci && npm run build
+
+      - name: The site opens on the web installer
+        working-directory: ${{ runner.temp }}/app
+        run: |
+          php artisan serve --host=127.0.0.1 --port=8000 > serve.log 2>&1 &
+          for i in $(seq 1 30); do
+            curl -sf http://127.0.0.1:8000/up -o /dev/null && break
+            sleep 1
+          done
+          test "$(curl -s -o /dev/null -w '%{redirect_url}' http://127.0.0.1:8000/)" = 'http://127.0.0.1:8000/install'
+          curl -sf http://127.0.0.1:8000/install | grep -q 'data-page='
+          test -s storage/app/private/setup-token
+
   # Known-vulnerable runtime and build dependencies must not drift back in. The
   # job fails on advisories of any severity, including development tools used
   # to build the release. Runs weekly too: a new advisory can land without
