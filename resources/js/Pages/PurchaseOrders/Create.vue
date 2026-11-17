@@ -21,7 +21,9 @@ import { ArrowLeft, Plus, Trash2, ScanLine } from '@lucide/vue';
 
 const BarcodeScannerModal = defineAsyncComponent(() => import('@/Components/BarcodeScannerModal.vue'));
 import { useI18n } from 'vue-i18n';
-import { defaultSupplierSku, defaultUnitCost } from '@/lib/purchaseOrderLine';
+import { defaultSupplierSku, defaultTaxRate, defaultUnitCost } from '@/lib/purchaseOrderLine';
+import { formatTaxRate } from '@/lib/lineTax';
+import { usePurchaseOrderTotals } from '@/composables/usePurchaseOrderTotals';
 import { todayIsoDate } from '@/lib/dates';
 import { formatMoney } from '@/lib/money';
 
@@ -59,7 +61,7 @@ const errorTargets = computed(() => ({
     shipping: 'shipping',
     tax: 'tax',
     items: 'product',
-    ...Object.fromEntries(form.items.flatMap((_, index) => [[`items.${index}.quantity`, fieldIdPrefix + '-repeat-1-' + index], [`items.${index}.unit_cost`, fieldIdPrefix + '-repeat-2-' + index]])),
+    ...Object.fromEntries(form.items.flatMap((_, index) => [[`items.${index}.quantity`, fieldIdPrefix + '-repeat-1-' + index], [`items.${index}.unit_cost`, fieldIdPrefix + '-repeat-2-' + index], [`items.${index}.tax_rate`, fieldIdPrefix + '-repeat-3-' + index]])),
 }));
 
 
@@ -84,13 +86,11 @@ watch(() => form.supplier_id, (newVal) => {
     }
 });
 
-const subtotal = computed(() => {
-    return form.items.reduce((sum, item) => sum + (item.quantity * item.unit_cost), 0);
-});
+// Net, tax per line and per rate, and gross, as the server will save them.
+const totals = usePurchaseOrderTotals(form);
 
-const total = computed(() => {
-    return subtotal.value + (parseFloat(form.tax) || 0) + (parseFloat(form.shipping) || 0);
-});
+// An amount in the organization's currency at the rate the PO will take.
+const converted = (value) => formatMoney(Number(value) * Number(effectiveRate.value), organizationCurrency.value);
 
 const chosenProduct = computed(() => props.products.find(p => p.id == selectedProductId.value) ?? null);
 
@@ -129,6 +129,9 @@ const addItem = () => {
             quantity: quantity.value,
             unit_cost: unitCost.value || defaultUnitCost(product, variant, form.supplier_id),
             supplier_sku: supplierSku.value,
+            // Starts at the product's rate (variants share it); editable,
+            // blank for none.
+            tax_rate: defaultTaxRate(product),
         });
     }
 
@@ -195,7 +198,11 @@ const onProductFound = (product, variant = null) => {
 
 const submit = () => {
     if (form.processing) return;
-    form.post(route('purchase-orders.store'), { preserveScroll: true, onError: focusErrors });
+    // Once a line has a tax rate the PO's tax is the sum of the line taxes,
+    // and the server refuses a PO-level tax on top of it.
+    form
+        .transform((data) => (totals.value.lineRates ? { ...data, tax: 0 } : data))
+        .post(route('purchase-orders.store'), { preserveScroll: true, onError: focusErrors });
 };
 
 const formatCurrency = (value) => {
@@ -282,7 +289,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                         :currency="form.currency"
                         :order-date="form.order_date"
                         :organization-currency="organizationCurrency"
-                        :total="total"
+                        :total="totals.total"
                         :can-override="!!exchangeRates?.canOverride"
                         :current="null"
                         @rate="(rate) => (effectiveRate = rate)"
@@ -350,8 +357,8 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                 <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">{{ t('purchaseOrders.create.orderItems', { count: form.items.length }) }}</h3></div>
                 <div class="p-5">
                     <div class="space-y-3">
-                        <div v-for="(item, index) in form.items" :key="index" class="flex items-center gap-4 rounded-lg border border-border-subtle bg-surface-canvas p-4">
-                            <div class="min-w-0 flex-1">
+                        <div v-for="(item, index) in form.items" :key="index" class="flex flex-wrap items-center gap-4 rounded-lg border border-border-subtle bg-surface-canvas p-4">
+                            <div class="min-w-0 flex-1 basis-full sm:basis-0">
                                 <p class="font-medium text-text-primary">{{ item.product_name }}</p>
                                 <p v-if="item.variant_title" class="text-xs text-text-secondary">{{ t('orders.create.variant') }}: {{ item.variant_title }}</p>
                                 <p class="text-xs text-text-tertiary">
@@ -359,6 +366,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                     <span v-if="item.supplier_sku"> &middot; {{ t('purchaseOrders.create.supplierSku') }}: {{ item.supplier_sku }}</span>
                                 </p>
                                 <p v-if="form.errors[`items.${index}.product_variant_id`]" :class="fieldError" :id="errorId(`items.${index}.product_variant_id`)">{{ form.errors[`items.${index}.product_variant_id`] }}</p>
+                                <p v-if="form.errors[`items.${index}.tax_rate`]" :class="fieldError" :id="errorId(`items.${index}.tax_rate`)">{{ form.errors[`items.${index}.tax_rate`] }}</p>
                             </div>
                             <div class="w-20">
                                 <label :for="fieldIdPrefix + '-repeat-1-' + index" class="mb-1 block text-[11px] text-text-tertiary">{{ t('common.quantity') }}</label>
@@ -370,34 +378,58 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                 <input :id="fieldIdPrefix + '-repeat-2-' + index" :value="item.unit_cost" @input="updateItemCost(index, $event.target.value)" type="number" step="0.01" min="0" :class="fieldInput" v-bind="fieldErrorAttrs(`items.${index}.unit_cost`)" />
                                 <p v-if="form.errors[`items.${index}.unit_cost`]" :id="errorId(`items.${index}.unit_cost`)" :class="fieldError">{{ form.errors[`items.${index}.unit_cost`] }}</p>
                             </div>
+                            <div class="w-20">
+                                <label :for="fieldIdPrefix + '-repeat-3-' + index" class="mb-1 block text-[11px] text-text-tertiary">{{ t('tax.lineRate') }}</label>
+                                <input :id="fieldIdPrefix + '-repeat-3-' + index" v-model="item.tax_rate" type="number" step="0.001" min="0" max="100" :class="fieldInput" v-bind="fieldErrorAttrs(`items.${index}.tax_rate`)" />
+                            </div>
+                            <div class="w-24 text-end">
+                                <p class="mb-1 text-[11px] text-text-tertiary">{{ t('tax.net') }}</p>
+                                <p class="tabular-nums text-text-primary">{{ formatCurrency(totals.lineNets[index]) }}</p>
+                            </div>
+                            <div class="w-20 text-end">
+                                <p class="mb-1 text-[11px] text-text-tertiary">{{ t('tax.lineTax') }}</p>
+                                <p class="tabular-nums text-text-secondary">{{ formatCurrency(totals.lineTaxes[index]) }}</p>
+                            </div>
                             <div class="w-28 text-end">
-                                <label class="mb-1 block text-[11px] text-text-tertiary">{{ t('common.subtotal') }}</label>
-                                <p class="font-semibold tabular-nums text-text-primary">{{ formatCurrency(item.quantity * item.unit_cost) }}</p>
-                                <p v-if="effectiveRate" class="text-[11px] tabular-nums text-text-tertiary">{{ formatMoney(item.quantity * item.unit_cost * Number(effectiveRate), organizationCurrency) }}</p>
+                                <p class="mb-1 text-[11px] text-text-tertiary">{{ t('tax.gross') }}</p>
+                                <p class="font-semibold tabular-nums text-text-primary">{{ formatCurrency(totals.lineGross[index]) }}</p>
+                                <p v-if="effectiveRate" class="text-[11px] tabular-nums text-text-tertiary">{{ converted(totals.lineGross[index]) }}</p>
                             </div>
                             <button :aria-label="t('common.delete')" type="button" @click="removeItem(index)" class="mt-4 rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-surface-sunken hover:text-status-danger"><Trash2 :size="16" /></button>
                         </div>
                     </div>
+                    <p class="mt-3 text-xs text-text-tertiary">{{ t('purchaseOrders.create.netCostHint') }}</p>
 
                     <!-- Totals -->
                     <div class="mt-5 flex justify-end border-t border-border-subtle pt-5">
                         <div class="w-72 space-y-3">
                             <div class="flex justify-between text-sm">
                                 <span class="text-text-secondary">{{ t('common.subtotal') }}</span>
-                                <span class="font-medium tabular-nums text-text-primary">{{ formatCurrency(subtotal) }}</span>
+                                <span class="font-medium tabular-nums text-text-primary">{{ formatCurrency(totals.subtotal) }}</span>
                             </div>
-                            <TaxInput v-model="form.tax" :base="subtotal" :error="form.errors.tax" />
+                            <template v-if="totals.lineRates">
+                                <div v-for="entry in totals.taxByRate" :key="entry.rate" class="flex justify-between gap-3 text-sm">
+                                    <span class="text-text-secondary">{{ t('tax.byRate', { rate: formatTaxRate(entry.rate), amount: formatCurrency(entry.taxable) }) }}</span>
+                                    <span class="text-end font-medium tabular-nums text-text-primary">
+                                        {{ formatCurrency(entry.tax) }}
+                                        <span v-if="effectiveRate" class="block text-[11px] font-normal text-text-tertiary">{{ converted(entry.tax) }}</span>
+                                    </span>
+                                </div>
+                                <p class="text-xs text-text-tertiary">{{ t('tax.fromLineRatesPo') }}</p>
+                                <p v-if="form.errors.tax" :class="fieldError" :id="errorId('tax')">{{ form.errors.tax }}</p>
+                            </template>
+                            <TaxInput v-else v-model="form.tax" :base="totals.subtotal" :error="form.errors.tax" />
                             <div class="flex items-center justify-between text-sm">
                                 <label for="shipping" class="text-text-secondary">{{ t('common.shipping') }}</label>
                                 <input id="shipping" v-model.number="form.shipping" type="number" step="0.01" min="0" class="h-9 w-28 rounded-md border border-border-subtle bg-surface-canvas px-3 text-end text-sm text-text-primary placeholder:text-text-tertiary ds-focus-ring" v-bind="fieldErrorAttrs('shipping')" />
                             </div>
                             <div class="flex items-center justify-between border-t border-border-subtle pt-3">
                                 <span class="text-sm font-semibold text-text-primary">{{ t('common.total') }}</span>
-                                <span class="text-xl font-bold text-brand">{{ formatCurrency(total) }}</span>
+                                <span class="text-xl font-bold text-brand">{{ formatCurrency(totals.total) }}</span>
                             </div>
                             <div v-if="effectiveRate" class="flex items-center justify-between text-sm">
                                 <span class="text-text-secondary">{{ t('exchangeRates.po.totalIn', { currency: organizationCurrency }) }}</span>
-                                <span class="font-semibold tabular-nums text-text-primary">{{ formatMoney(total * Number(effectiveRate), organizationCurrency) }}</span>
+                                <span class="font-semibold tabular-nums text-text-primary">{{ converted(totals.total) }}</span>
                             </div>
                         </div>
                     </div>

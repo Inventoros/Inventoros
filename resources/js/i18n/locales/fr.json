@@ -848,6 +848,7 @@
       "addItems": "Ajouter des articles",
       "selectProduct": "Sélectionner un produit",
       "unitCost": "Coût unitaire",
+      "netCostHint": "Les coûts unitaires sont hors taxes. Les nouvelles lignes reprennent le taux de taxe du produit.",
       "supplierSku": "SKU fournisseur",
       "orderItems": "Articles de la commande ({count})",
       "createPo": "Créer le bon de commande",
@@ -4064,6 +4065,7 @@
     "gross": "TTC",
     "enteredAmount": "Montant saisi",
     "fromLineRates": "La taxe provient des taux des lignes. Effacez les taux des lignes pour saisir un seul montant de taxe pour la commande.",
+    "fromLineRatesPo": "La taxe provient des taux des lignes. Effacez les taux des lignes pour saisir un seul montant de taxe pour le bon de commande.",
     "byRate": "Taxe {rate} sur {amount}",
     "otherTax": "Autre taxe",
     "afterOrderDiscount": "La taxe de chaque ligne est calculée après répartition de la remise de commande entre les lignes."

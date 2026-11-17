@@ -848,6 +848,7 @@
       "addItems": "Aggiungi articoli",
       "selectProduct": "Seleziona un prodotto",
       "unitCost": "Costo unitario",
+      "netCostHint": "I costi unitari sono netti (al netto delle imposte). Le nuove righe partono dall'aliquota del prodotto.",
       "supplierSku": "SKU fornitore",
       "orderItems": "Articoli dell'ordine ({count})",
       "createPo": "Crea ordine di acquisto",
@@ -4064,6 +4065,7 @@
     "gross": "Lordo",
     "enteredAmount": "Importo inserito",
     "fromLineRates": "L'imposta deriva dalle aliquote delle righe. Cancella le aliquote delle righe per inserire un unico importo di imposta per l'ordine.",
+    "fromLineRatesPo": "L'imposta deriva dalle aliquote delle righe. Cancella le aliquote delle righe per inserire un unico importo di imposta per l'ordine di acquisto.",
     "byRate": "Imposta {rate} su {amount}",
     "otherTax": "Altra imposta",
     "afterOrderDiscount": "L'imposta di riga viene calcolata dopo aver ripartito lo sconto dell'ordine tra le righe."

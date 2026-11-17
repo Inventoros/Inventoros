@@ -848,6 +848,7 @@
       "addItems": "Adicionar Itens",
       "selectProduct": "Selecione um produto",
       "unitCost": "Custo Unitário",
+      "netCostHint": "Os custos unitários são líquidos (antes de impostos). Novas linhas começam com a alíquota do produto.",
       "supplierSku": "SKU do Fornecedor",
       "orderItems": "Itens do Pedido ({count})",
       "createPo": "Criar Ordem de Compra",
@@ -4064,6 +4065,7 @@
     "gross": "Bruto",
     "enteredAmount": "Valor informado",
     "fromLineRates": "O imposto vem das alíquotas das linhas. Limpe as alíquotas das linhas para informar um único valor de imposto para o pedido.",
+    "fromLineRatesPo": "O imposto vem das alíquotas das linhas. Limpe as alíquotas das linhas para informar um único valor de imposto para a ordem de compra.",
     "byRate": "Imposto {rate} sobre {amount}",
     "otherTax": "Outros impostos",
     "afterOrderDiscount": "O imposto da linha é calculado depois que o desconto do pedido é dividido entre as linhas."

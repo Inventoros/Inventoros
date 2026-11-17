@@ -848,6 +848,7 @@
       "addItems": "Artikel hinzufügen",
       "selectProduct": "Produkt auswählen",
       "unitCost": "Stückkosten",
+      "netCostHint": "Stückkosten sind netto (vor Steuern). Neue Positionen beginnen mit dem Steuersatz des Produkts.",
       "supplierSku": "Lieferanten-SKU",
       "orderItems": "Bestellpositionen ({count})",
       "createPo": "Einkaufsbestellung erstellen",
@@ -4064,6 +4065,7 @@
     "gross": "Brutto",
     "enteredAmount": "Eingegebener Betrag",
     "fromLineRates": "Die Steuer ergibt sich aus den Steuersätzen der Positionen. Entfernen Sie die Sätze der Positionen, um einen Steuerbetrag für den ganzen Auftrag einzugeben.",
+    "fromLineRatesPo": "Die Steuer ergibt sich aus den Steuersätzen der Positionen. Entfernen Sie die Sätze der Positionen, um einen Steuerbetrag für die ganze Einkaufsbestellung einzugeben.",
     "byRate": "Steuer {rate} auf {amount}",
     "otherTax": "Sonstige Steuer",
     "afterOrderDiscount": "Die Positionssteuer wird berechnet, nachdem der Auftragsrabatt auf die Positionen verteilt wurde."

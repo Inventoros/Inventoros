@@ -13,6 +13,7 @@ import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { displayCalendarDate, displayDate } from '@/lib/dates';
 import { formatMoney } from '@/lib/money';
+import { formatTaxRate } from '@/lib/lineTax';
 import { ArrowLeft, Pencil, Download, Eye, Send, PackageCheck, Ban, Trash2, CircleCheck } from '@lucide/vue';
 import { usePermissions } from '@/composables/usePermissions';
 
@@ -26,7 +27,19 @@ const props = defineProps({
     approval: { type: Object, default: () => ({}) },
     exchangeRate: { type: Object, default: null },
     canRecordExchangeRate: { type: Boolean, default: false },
+    // Tax per line rate, then any tax entered as an amount (rate null), each
+    // with converted_taxable / converted_tax in the organization currency.
+    taxBreakdown: { type: Array, default: () => [] },
 });
+
+// Lines that carry their own tax (by rate or as an amount) show net, tax and
+// gross; the totals then list the tax per rate.
+const showLineTax = computed(() => (props.purchaseOrder.items ?? []).some((item) => item.tax_rate !== null || Number(item.tax) !== 0));
+const hasLineTaxRates = computed(() => (props.purchaseOrder.items ?? []).some((item) => item.tax_rate !== null));
+const taxLabel = (entry) => (entry.rate !== null
+    ? t('tax.byRate', { rate: formatTaxRate(entry.rate), amount: formatCurrency(entry.taxable) })
+    : t('tax.otherTax'));
+const footSpan = computed(() => (showLineTax.value ? 7 : 5));
 
 // Amounts in the organization's currency, at the PO's own (snapshot) rate.
 const foreignCurrency = computed(() => !!props.exchangeRate?.is_foreign_currency);
@@ -323,9 +336,20 @@ const thClass = 'px-4 py-2.5 text-start text-xs font-medium tracking-tight text-
                                         <dd class="tabular-nums text-text-secondary">{{ formatCurrency(item.unit_cost) }}</dd>
                                         <dd v-if="foreignCurrency && rate" class="text-xs tabular-nums text-text-tertiary">{{ convertLine(item.unit_cost) }}</dd>
                                     </div>
+                                    <template v-if="showLineTax">
+                                        <div>
+                                            <dt class="text-xs text-text-tertiary">{{ t('tax.net') }}</dt>
+                                            <dd class="tabular-nums text-text-secondary">{{ formatCurrency(item.subtotal) }}</dd>
+                                        </div>
+                                        <div>
+                                            <dt class="text-xs text-text-tertiary">{{ t('tax.lineTax') }}<template v-if="item.tax_rate !== null"> ({{ formatTaxRate(item.tax_rate) }})</template></dt>
+                                            <dd class="tabular-nums text-text-secondary">{{ formatCurrency(item.tax) }}</dd>
+                                        </div>
+                                    </template>
                                     <div>
-                                        <dt class="text-xs text-text-tertiary">{{ t('common.total') }}</dt>
+                                        <dt class="text-xs text-text-tertiary">{{ showLineTax ? t('tax.gross') : t('common.total') }}</dt>
                                         <dd class="font-medium tabular-nums text-text-primary">{{ formatCurrency(item.total) }}</dd>
+                                        <dd v-if="foreignCurrency && rate" class="text-xs tabular-nums text-text-tertiary">{{ convertLine(item.total) }}</dd>
                                     </div>
                                 </dl>
                             </li>
@@ -335,7 +359,13 @@ const thClass = 'px-4 py-2.5 text-start text-xs font-medium tracking-tight text-
                                 <dt class="text-text-secondary">{{ t('common.subtotal') }}</dt>
                                 <dd class="font-medium tabular-nums text-text-primary">{{ formatCurrency(purchaseOrder.subtotal) }}</dd>
                             </div>
-                            <div v-if="purchaseOrder.tax > 0" class="flex justify-between">
+                            <template v-if="hasLineTaxRates">
+                                <div v-for="entry in taxBreakdown" :key="entry.rate ?? 'other'" class="flex justify-between gap-3">
+                                    <dt class="text-text-secondary">{{ taxLabel(entry) }}</dt>
+                                    <dd class="tabular-nums text-text-primary">{{ formatCurrency(entry.tax) }}</dd>
+                                </div>
+                            </template>
+                            <div v-else-if="purchaseOrder.tax > 0" class="flex justify-between">
                                 <dt class="text-text-secondary">{{ t('common.tax') }}</dt>
                                 <dd class="tabular-nums text-text-primary">{{ formatCurrency(purchaseOrder.tax) }}</dd>
                             </div>
@@ -358,7 +388,9 @@ const thClass = 'px-4 py-2.5 text-start text-xs font-medium tracking-tight text-
                                         <th :class="thClass">{{ t('purchaseOrders.show.ordered') }}</th>
                                         <th :class="thClass">{{ t('purchaseOrders.show.received') }}</th>
                                         <th :class="thClass">{{ t('purchaseOrders.create.unitCost') }}</th>
-                                        <th :class="thClass">{{ t('common.total') }}</th>
+                                        <th v-if="showLineTax" :class="thClass">{{ t('tax.net') }}</th>
+                                        <th v-if="showLineTax" :class="thClass">{{ t('tax.lineTax') }}</th>
+                                        <th :class="thClass">{{ showLineTax ? t('tax.gross') : t('common.total') }}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -396,6 +428,13 @@ const thClass = 'px-4 py-2.5 text-start text-xs font-medium tracking-tight text-
                                             {{ formatCurrency(item.unit_cost) }}
                                             <span v-if="foreignCurrency && rate" class="block text-xs">{{ convertLine(item.unit_cost) }}</span>
                                         </td>
+                                        <td v-if="showLineTax" class="px-4 py-3 text-sm tabular-nums text-text-secondary">
+                                            {{ formatCurrency(item.subtotal) }}
+                                        </td>
+                                        <td v-if="showLineTax" class="px-4 py-3 text-sm tabular-nums text-text-secondary">
+                                            {{ formatCurrency(item.tax) }}
+                                            <span v-if="item.tax_rate !== null" class="block text-xs text-text-tertiary">{{ formatTaxRate(item.tax_rate) }}</span>
+                                        </td>
                                         <td class="px-4 py-3 text-sm font-medium tabular-nums text-text-primary">
                                             {{ formatCurrency(item.total) }}
                                             <span v-if="foreignCurrency && rate" class="block text-xs font-normal text-text-tertiary">{{ convertLine(item.total) }}</span>
@@ -404,19 +443,25 @@ const thClass = 'px-4 py-2.5 text-start text-xs font-medium tracking-tight text-
                                 </tbody>
                                 <tfoot>
                                     <tr class="border-t border-border-subtle">
-                                        <td colspan="5" class="px-4 py-3 text-end text-sm font-medium text-text-secondary">{{ t('common.subtotal') }}:</td>
+                                        <td :colspan="footSpan" class="px-4 py-3 text-end text-sm font-medium text-text-secondary">{{ t('common.subtotal') }}:</td>
                                         <td class="px-4 py-3 text-sm font-medium tabular-nums text-text-primary">{{ formatCurrency(purchaseOrder.subtotal) }}</td>
                                     </tr>
-                                    <tr v-if="purchaseOrder.tax > 0">
-                                        <td colspan="5" class="px-4 py-3 text-end text-sm font-medium text-text-secondary">{{ t('common.tax') }}:</td>
+                                    <template v-if="hasLineTaxRates">
+                                        <tr v-for="entry in taxBreakdown" :key="entry.rate ?? 'other'">
+                                            <td :colspan="footSpan" class="px-4 py-3 text-end text-sm font-medium text-text-secondary">{{ taxLabel(entry) }}:</td>
+                                            <td class="px-4 py-3 text-sm tabular-nums text-text-primary">{{ formatCurrency(entry.tax) }}</td>
+                                        </tr>
+                                    </template>
+                                    <tr v-else-if="purchaseOrder.tax > 0">
+                                        <td :colspan="footSpan" class="px-4 py-3 text-end text-sm font-medium text-text-secondary">{{ t('common.tax') }}:</td>
                                         <td class="px-4 py-3 text-sm tabular-nums text-text-primary">{{ formatCurrency(purchaseOrder.tax) }}</td>
                                     </tr>
                                     <tr v-if="purchaseOrder.shipping > 0">
-                                        <td colspan="5" class="px-4 py-3 text-end text-sm font-medium text-text-secondary">{{ t('common.shipping') }}:</td>
+                                        <td :colspan="footSpan" class="px-4 py-3 text-end text-sm font-medium text-text-secondary">{{ t('common.shipping') }}:</td>
                                         <td class="px-4 py-3 text-sm tabular-nums text-text-primary">{{ formatCurrency(purchaseOrder.shipping) }}</td>
                                     </tr>
                                     <tr class="border-t border-border-subtle">
-                                        <td colspan="5" class="px-4 py-3 text-end text-sm font-bold text-text-primary">{{ t('common.total') }}:</td>
+                                        <td :colspan="footSpan" class="px-4 py-3 text-end text-sm font-bold text-text-primary">{{ t('common.total') }}:</td>
                                         <td class="px-4 py-3 text-sm font-bold tabular-nums text-brand">{{ formatCurrency(purchaseOrder.total) }}</td>
                                     </tr>
                                 </tfoot>
@@ -451,7 +496,13 @@ const thClass = 'px-4 py-2.5 text-start text-xs font-medium tracking-tight text-
                                 <dt class="text-text-secondary">{{ t('common.subtotal') }}</dt>
                                 <dd class="font-medium tabular-nums text-text-primary">{{ formatCurrency(purchaseOrder.subtotal) }}</dd>
                             </div>
-                            <div v-if="purchaseOrder.tax > 0" class="flex justify-between text-sm">
+                            <template v-if="hasLineTaxRates">
+                                <div v-for="entry in taxBreakdown" :key="entry.rate ?? 'other'" class="flex justify-between gap-3 text-sm">
+                                    <dt class="text-text-secondary">{{ taxLabel(entry) }}</dt>
+                                    <dd class="font-medium tabular-nums text-text-primary">{{ formatCurrency(entry.tax) }}</dd>
+                                </div>
+                            </template>
+                            <div v-else-if="purchaseOrder.tax > 0" class="flex justify-between text-sm">
                                 <dt class="text-text-secondary">{{ t('common.tax') }}</dt>
                                 <dd class="font-medium tabular-nums text-text-primary">{{ formatCurrency(purchaseOrder.tax) }}</dd>
                             </div>
@@ -495,7 +546,13 @@ const thClass = 'px-4 py-2.5 text-start text-xs font-medium tracking-tight text-
                                     <dt class="text-text-secondary">{{ t('common.subtotal') }}</dt>
                                     <dd class="tabular-nums text-text-primary">{{ formatConverted(exchangeRate.converted.subtotal) }}</dd>
                                 </div>
-                                <div v-if="Number(exchangeRate.converted.tax) > 0" class="flex justify-between">
+                                <template v-if="hasLineTaxRates">
+                                    <div v-for="entry in taxBreakdown" :key="entry.rate ?? 'other'" class="flex justify-between gap-3">
+                                        <dt class="text-text-secondary">{{ entry.rate !== null ? t('tax.byRate', { rate: formatTaxRate(entry.rate), amount: formatConverted(entry.converted_taxable) }) : t('tax.otherTax') }}</dt>
+                                        <dd class="tabular-nums text-text-primary">{{ formatConverted(entry.converted_tax) }}</dd>
+                                    </div>
+                                </template>
+                                <div v-else-if="Number(exchangeRate.converted.tax) > 0" class="flex justify-between">
                                     <dt class="text-text-secondary">{{ t('common.tax') }}</dt>
                                     <dd class="tabular-nums text-text-primary">{{ formatConverted(exchangeRate.converted.tax) }}</dd>
                                 </div>

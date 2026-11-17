@@ -38,6 +38,14 @@ export function defaultUnitCost(product, variant = null, supplierId = null) {
 }
 
 /**
+ * Tax rate to prefill: the product's own rate (variants share it), or ''
+ * (no rate) when the product has none. 0 is a real rate.
+ */
+export function defaultTaxRate(product) {
+    return toNumber(product?.tax_rate) ?? '';
+}
+
+/**
  * The supplier's own SKU for this product, or '' when there is no link.
  */
 export function defaultSupplierSku(product, supplierId = null) {

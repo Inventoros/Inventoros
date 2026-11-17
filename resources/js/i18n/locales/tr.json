@@ -848,6 +848,7 @@
       "addItems": "Kalem Ekle",
       "selectProduct": "Bir ürün seçin",
       "unitCost": "Birim Maliyet",
+      "netCostHint": "Birim maliyetler nettir (vergi hariç). Yeni satırlar ürünün vergi oranıyla başlar.",
       "supplierSku": "Tedarikçi SKU",
       "orderItems": "Sipariş Kalemleri ({count})",
       "createPo": "Satın Alma Siparişi Oluştur",
@@ -4064,6 +4065,7 @@
     "gross": "Brüt",
     "enteredAmount": "Girilen tutar",
     "fromLineRates": "Vergi, satırların vergi oranlarından gelir. Sipariş için tek bir vergi tutarı girmek üzere satırlardaki oranları temizleyin.",
+    "fromLineRatesPo": "Vergi, satırların vergi oranlarından gelir. Satın alma siparişi için tek bir vergi tutarı girmek üzere satırlardaki oranları temizleyin.",
     "byRate": "{amount} üzerinden {rate} vergi",
     "otherTax": "Diğer vergi",
     "afterOrderDiscount": "Satır vergisi, sipariş indirimi satırlara dağıtıldıktan sonra hesaplanır."

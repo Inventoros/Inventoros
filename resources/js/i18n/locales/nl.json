@@ -848,6 +848,7 @@
       "addItems": "Artikelen toevoegen",
       "selectProduct": "Selecteer een product",
       "unitCost": "Kostprijs per eenheid",
+      "netCostHint": "Kostprijzen per eenheid zijn netto (exclusief belasting). Nieuwe regels beginnen met het belastingtarief van het product.",
       "supplierSku": "Leverancier SKU",
       "orderItems": "Bestelartikelen ({count})",
       "createPo": "Inkooporder aanmaken",
@@ -4064,6 +4065,7 @@
     "gross": "Bruto",
     "enteredAmount": "Ingevoerd bedrag",
     "fromLineRates": "De belasting komt uit de tarieven van de regels. Wis de tarieven van de regels om één belastingbedrag voor de order in te voeren.",
+    "fromLineRatesPo": "De belasting komt uit de tarieven van de regels. Wis de tarieven van de regels om één belastingbedrag voor de inkooporder in te voeren.",
     "byRate": "Belasting {rate} over {amount}",
     "otherTax": "Overige belasting",
     "afterOrderDiscount": "De belasting per regel wordt berekend nadat de orderkorting over de regels is verdeeld."
