@@ -94,9 +94,10 @@ class Supplier extends Model
 
     protected static function booted(): void
     {
-        // Match the organization default on every creation surface (web, API,
-        // and imports), while preserving an explicitly selected currency.
-        static::creating(function (Supplier $record): void {
+        // A supplier without a currency bills in its organization's currency,
+        // on every surface (web, API, GraphQL, MCP, imports) and on updates
+        // that clear it, while an explicitly selected currency is kept.
+        static::saving(function (Supplier $record): void {
             $record->currency = filled($record->currency)
                 ? strtoupper(trim((string) $record->currency))
                 : Organization::currencyFor($record->organization_id === null ? null : (int) $record->organization_id);
