@@ -39,3 +39,36 @@ test('the supplier SKU comes from the link for the chosen supplier only', () => 
     assert.equal(defaultSupplierSku({ id: 2 }, 7), '');
     assert.equal(supplierLink(product, null), null);
 });
+
+// #429: a HUF product bought from a EUR supplier.
+const hufProduct = {
+    id: 2,
+    currency: 'HUF',
+    price: '9000.00',
+    purchase_price: '3000.00',
+    supplier_costs: [
+        { supplier_id: 7, cost_price: '12.50', cost_currency: 'EUR', supplier_sku: 'EU-1' },
+        { supplier_id: 8, cost_price: '2900.00', cost_currency: 'HUF', supplier_sku: 'HU-1' },
+    ],
+};
+
+test('the linked cost is used on a PO in the link currency', () => {
+    assert.equal(defaultUnitCost(hufProduct, null, 7, 'EUR'), 12.5);
+    assert.equal(defaultUnitCost(hufProduct, null, 7, 'eur'), 12.5);
+    assert.equal(defaultUnitCost(hufProduct, null, 8, 'HUF'), 2900);
+});
+
+test('a cost in another currency than the PO is never copied over', () => {
+    // EUR link on a HUF PO: falls back to the HUF purchase price.
+    assert.equal(defaultUnitCost(hufProduct, null, 7, 'HUF'), 3000);
+    // HUF link and HUF prices on a EUR PO: nothing in EUR, start at zero.
+    assert.equal(defaultUnitCost(hufProduct, null, 8, 'EUR'), 0);
+    assert.equal(defaultUnitCost(hufProduct, { purchase_price: '3100.00' }, 3, 'EUR'), 0);
+    assert.equal(defaultUnitCost(hufProduct, { purchase_price: '3100.00' }, 3, 'HUF'), 3100);
+});
+
+test('without a PO currency, or currencies in the payload, amounts are used as before', () => {
+    assert.equal(defaultUnitCost(hufProduct, null, 7), 12.5);
+    assert.equal(defaultUnitCost(product, null, 7, 'EUR'), 8.4);
+    assert.equal(defaultUnitCost(product, null, 3, 'EUR'), 10);
+});

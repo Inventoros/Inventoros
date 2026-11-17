@@ -127,7 +127,7 @@ const addItem = () => {
             product_name: product.name,
             sku: variant?.sku || product.sku,
             quantity: quantity.value,
-            unit_cost: unitCost.value || defaultUnitCost(product, variant, form.supplier_id),
+            unit_cost: unitCost.value || defaultUnitCost(product, variant, form.supplier_id, form.currency),
             supplier_sku: supplierSku.value,
             // Starts at the product's rate (variants share it); editable,
             // blank for none.
@@ -164,7 +164,7 @@ const prefillLine = () => {
     const product = chosenProduct.value;
     if (!product) return;
     const variant = product.variants?.find(v => v.id === selectedVariantId.value) ?? null;
-    unitCost.value = defaultUnitCost(product, variant, form.supplier_id);
+    unitCost.value = defaultUnitCost(product, variant, form.supplier_id, form.currency);
     supplierSku.value = defaultSupplierSku(product, form.supplier_id);
 };
 
