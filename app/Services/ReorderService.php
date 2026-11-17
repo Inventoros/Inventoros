@@ -10,6 +10,7 @@ use App\Models\Inventory\Product;
 use App\Models\Inventory\Supplier;
 use App\Models\Purchasing\PurchaseOrder;
 use App\Models\Purchasing\PurchaseOrderItem;
+use App\Services\ExchangeRates\PurchaseOrderExchangeRates;
 use App\Support\Money;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -183,7 +184,7 @@ final class ReorderService
             ? strtoupper(trim((string) $supplier->currency))
             : Organization::currencyFor($organizationId);
 
-        return PurchaseOrder::createWithNumber($organizationId, function (string $poNumber) use ($organizationId, $supplierId, $products, $userId, $notes, $activityAction, $activityDescription, $currency) {
+        $purchaseOrder = PurchaseOrder::createWithNumber($organizationId, function (string $poNumber) use ($organizationId, $supplierId, $products, $userId, $notes, $activityAction, $activityDescription, $currency) {
             $po = PurchaseOrder::create([
                 'organization_id' => $organizationId,
                 'supplier_id' => $supplierId,
@@ -244,6 +245,10 @@ final class ReorderService
 
             return $po;
         });
+
+        // A supplier billing in another currency: the draft takes the rate
+        // for today, outside the transaction (it may ask the provider).
+        return app(PurchaseOrderExchangeRates::class)->applyToDraft($purchaseOrder);
     }
 
     /**

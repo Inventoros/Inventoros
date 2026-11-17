@@ -50,6 +50,11 @@ Schedule::command('reservations:release-expired')->everyFiveMinutes()->withoutOv
 // webhook). Rate-limited per organization inside the command.
 Schedule::command('shipping:track')->everyThirtyMinutes()->withoutOverlapping();
 
+// Exchange rates for purchase orders in a supplier's currency. Hourly, so
+// each organization's chosen frequency (and back-off after a failure) is
+// honoured to within the hour; identical requests are made once per run.
+Schedule::command('exchange-rates:sync')->hourly()->withoutOverlapping();
+
 // Retention pruning — see PruneActivityLogsCommand and
 // PruneWebhookDeliveriesCommand for the rationale (PII, table-size
 // runaway). Run nightly at off-peak times. Defaults are conservative:

@@ -12,6 +12,7 @@ use App\Models\Purchasing\PurchaseOrder;
 use App\Models\Purchasing\PurchaseOrderItem;
 use App\Models\Scopes\OrganizationScope;
 use App\Models\User;
+use App\Services\ExchangeRates\PurchaseOrderExchangeRates;
 use App\Support\Money;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\DB;
@@ -27,12 +28,20 @@ use Illuminate\Validation\ValidationException;
  */
 final class PurchaseOrderService
 {
-    public function __construct(private readonly WarehouseAccessService $warehouseAccess) {}
+    public function __construct(
+        private readonly WarehouseAccessService $warehouseAccess,
+        private readonly PurchaseOrderExchangeRates $exchangeRates,
+    ) {}
 
     /**
      * Create a draft purchase order with its line items.
      *
-     * @param  array{supplier_id: int, order_date: string, expected_date?: string|null, currency: string, shipping?: numeric|null, tax?: numeric|null, notes?: string|null, items: array<int, array{product_id: int, product_variant_id?: int|null, quantity: int, unit_cost: numeric, supplier_sku?: string|null}>}  $data
+     * In a currency other than the organization's, the PO takes the
+     * exchange rate for its order date (see PurchaseOrderExchangeRates);
+     * `exchange_rate_mode` / `exchange_rate` let a permitted user enter or
+     * confirm one. No available rate never stops the draft being saved.
+     *
+     * @param  array{supplier_id: int, order_date: string, expected_date?: string|null, currency: string, shipping?: numeric|null, tax?: numeric|null, notes?: string|null, exchange_rate_mode?: string|null, exchange_rate?: numeric|null, items: array<int, array{product_id: int, product_variant_id?: int|null, quantity: int, unit_cost: numeric, supplier_sku?: string|null}>}  $data
      */
     public function create(int $organizationId, User $creator, array $data): PurchaseOrder
     {
@@ -41,11 +50,14 @@ final class PurchaseOrderService
 
         [$subtotal, $orderItems] = $this->buildNewItems($organizationId, $data['items']);
 
+        // Before the transaction: finding the rate may ask the provider.
+        $snapshot = $this->exchangeRates->snapshotFor($organizationId, (string) $data['currency'], $data['order_date'], $data, null, $creator) ?? [];
+
         // Generate the PO number and insert the order + items atomically with a
         // retry, so a concurrent create in the same tenant/day can't collide on
         // po_number and 500.
-        return PurchaseOrder::createWithNumber($organizationId, function (string $poNumber) use ($organizationId, $data, $creator, $subtotal, $orderItems) {
-            $po = PurchaseOrder::create([
+        return PurchaseOrder::createWithNumber($organizationId, function (string $poNumber) use ($organizationId, $data, $creator, $subtotal, $orderItems, $snapshot) {
+            $po = new PurchaseOrder([
                 'organization_id' => $organizationId,
                 'supplier_id' => $data['supplier_id'],
                 'created_by' => $creator->id,
@@ -60,6 +72,7 @@ final class PurchaseOrderService
                 'currency' => $data['currency'],
                 'notes' => $data['notes'] ?? null,
             ]);
+            $po->forceFill($snapshot)->save();
 
             $po->items()->createMany($orderItems);
 
@@ -73,17 +86,32 @@ final class PurchaseOrderService
      * with a known `id` are updated, others created, missing ones deleted)
      * and the subtotal recomputed. The total is recomputed on every edit.
      *
+     * The exchange rate follows the currency and order date (see
+     * PurchaseOrderExchangeRates); `exchange_rate_mode` / `exchange_rate`
+     * let $actor (when permitted) enter, confirm or refresh it.
+     *
      * @param  array<string, mixed>  $data
      *
      * @throws InvalidStateException when the PO is no longer editable
      */
-    public function update(PurchaseOrder $purchaseOrder, int $organizationId, array $data): PurchaseOrder
+    public function update(PurchaseOrder $purchaseOrder, int $organizationId, array $data, ?User $actor = null): PurchaseOrder
     {
         if (! $purchaseOrder->canBeEdited()) {
             throw new InvalidStateException('This purchase order cannot be edited', 'cannot_edit');
         }
 
-        DB::transaction(function () use (&$purchaseOrder, $organizationId, &$data) {
+        // Before the transaction: finding the rate may ask the provider.
+        $snapshot = $this->exchangeRates->snapshotFor(
+            $organizationId,
+            (string) ($data['currency'] ?? $purchaseOrder->currency),
+            $data['order_date'] ?? null,
+            $data,
+            $purchaseOrder,
+            $actor ?? (auth()->user() instanceof User ? auth()->user() : null),
+        );
+        unset($data['exchange_rate'], $data['exchange_rate_mode']);
+
+        DB::transaction(function () use (&$purchaseOrder, $organizationId, &$data, $snapshot) {
             // Decide on the row as it is now, under a lock that send and the
             // approval decision also take. A copy loaded before a concurrent
             // send or submission must not edit what was sent or submitted.
@@ -158,7 +186,11 @@ final class PurchaseOrderService
                 $data['shipping'] ?? $purchaseOrder->shipping,
             );
 
-            $purchaseOrder->update($data);
+            $purchaseOrder->fill($data);
+            if ($snapshot !== null) {
+                $purchaseOrder->forceFill($snapshot);
+            }
+            $purchaseOrder->save();
         });
 
         return $purchaseOrder->fresh();

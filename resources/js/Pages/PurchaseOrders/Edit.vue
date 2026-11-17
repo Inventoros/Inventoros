@@ -8,6 +8,7 @@ import Card from '@/Components/ui/Card.vue';
 import Button from '@/Components/ui/Button.vue';
 import TaxInput from '@/Components/TaxInput.vue';
 import PluginSlot from '@/Components/PluginSlot.vue';
+import PurchaseOrderExchangeRate from '@/Components/PurchaseOrderExchangeRate.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import { ref, computed, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
@@ -23,6 +24,8 @@ const props = defineProps({
     purchaseOrder: Object,
     suppliers: Array,
     products: Array,
+    exchangeRate: { type: Object, default: null },
+    exchangeRates: { type: Object, default: () => ({}) },
     pluginComponents: Object,
 });
 
@@ -45,7 +48,14 @@ const form = useForm({
         unit_cost: item.unit_cost,
         supplier_sku: item.supplier_sku || '',
     })) || [],
+    // Only sent when a permitted user enters (manual), accepts (confirm) or
+    // refreshes (auto) the rate; otherwise the saved rate is kept.
+    exchange_rate_mode: null,
+    exchange_rate: null,
 });
+
+// The rate the PO will be saved at (for the organization-currency amounts).
+const effectiveRate = ref(null);
 
 const selectedProductId = ref('');
 const selectedVariantId = ref(null);
@@ -247,6 +257,17 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                         <textarea id="notes" v-model="form.notes" rows="3" :class="fieldArea"></textarea>
                         <p v-if="form.errors.notes" :class="fieldError">{{ form.errors.notes }}</p>
                     </div>
+
+                    <PurchaseOrderExchangeRate
+                        :form="form"
+                        :currency="form.currency"
+                        :order-date="form.order_date"
+                        :organization-currency="organizationCurrency"
+                        :total="total"
+                        :can-override="!!exchangeRates?.canOverride"
+                        :current="exchangeRate ? { ...exchangeRate, order_date: purchaseOrder.order_date } : null"
+                        @rate="(rate) => (effectiveRate = rate)"
+                    />
                 </div>
             </Card>
 
@@ -366,6 +387,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                     <span class="text-sm font-semibold tabular-nums text-text-primary">
                                         {{ formatCurrency(item.quantity * item.unit_cost) }}
                                     </span>
+                                    <span v-if="effectiveRate" class="ms-auto text-[11px] tabular-nums text-text-tertiary">{{ formatMoney(item.quantity * item.unit_cost * Number(effectiveRate), organizationCurrency) }}</span>
                                 </div>
                             </div>
 
@@ -397,6 +419,10 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                             <div class="flex items-center justify-between border-t border-border-subtle pt-3">
                                 <span class="text-sm font-semibold text-text-primary">{{ t('common.total') }}</span>
                                 <span class="text-xl font-bold text-brand">{{ formatCurrency(total) }}</span>
+                            </div>
+                            <div v-if="effectiveRate" class="flex items-center justify-between text-sm">
+                                <span class="text-text-secondary">{{ t('exchangeRates.po.totalIn', { currency: organizationCurrency }) }}</span>
+                                <span class="font-semibold tabular-nums text-text-primary">{{ formatMoney(total * Number(effectiveRate), organizationCurrency) }}</span>
                             </div>
                         </div>
                     </div>

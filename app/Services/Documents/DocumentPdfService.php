@@ -6,6 +6,7 @@ namespace App\Services\Documents;
 
 use App\Models\Order\Order;
 use App\Models\Purchasing\PurchaseOrder;
+use App\Services\ExchangeRates\ExchangeRateProviderRegistry;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Barryvdh\DomPDF\PDF as DomPdf;
 
@@ -28,7 +29,23 @@ class DocumentPdfService
             'organization' => $purchaseOrder->organization,
             'supplier' => $purchaseOrder->supplier,
             'generatedDate' => now()->format('F j, Y'),
+            'exchangeRateSource' => self::exchangeRateSource($purchaseOrder),
         ]);
+    }
+
+    /**
+     * Where the PO's exchange rate came from, for the PDF.
+     */
+    public static function exchangeRateSource(PurchaseOrder $purchaseOrder): string
+    {
+        $provider = app(ExchangeRateProviderRegistry::class)->nameFor($purchaseOrder->exchange_rate_provider);
+
+        return match ($purchaseOrder->exchange_rate_source) {
+            PurchaseOrder::RATE_SOURCE_MANUAL => 'Entered manually',
+            PurchaseOrder::RATE_SOURCE_CONFIRMED => ($provider ?? 'Provider').' rate, confirmed manually',
+            PurchaseOrder::RATE_SOURCE_FALLBACK => ($provider ?? 'Provider').' (fallback provider)',
+            default => $provider ?? '',
+        };
     }
 
     public function purchaseOrderFilename(PurchaseOrder $purchaseOrder): string

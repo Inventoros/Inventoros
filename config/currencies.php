@@ -6,7 +6,9 @@ return [
     | Supported Currencies
     |--------------------------------------------------------------------------
     |
-    | List of supported currencies with their symbols and names.
+    | List of supported currencies with their symbols and names. 'decimals'
+    | is the ISO 4217 minor unit count where it is not 2; converted amounts
+    | (purchase orders in a foreign currency) are rounded to it.
     |
     */
     'supported' => [
@@ -15,7 +17,7 @@ return [
         'GBP' => ['symbol' => '£', 'name' => 'British Pound'],
         'CAD' => ['symbol' => 'C$', 'name' => 'Canadian Dollar'],
         'AUD' => ['symbol' => 'A$', 'name' => 'Australian Dollar'],
-        'JPY' => ['symbol' => '¥', 'name' => 'Japanese Yen'],
+        'JPY' => ['symbol' => '¥', 'name' => 'Japanese Yen', 'decimals' => 0],
         'CNY' => ['symbol' => '¥', 'name' => 'Chinese Yuan'],
         'INR' => ['symbol' => '₹', 'name' => 'Indian Rupee'],
         'MXN' => ['symbol' => '$', 'name' => 'Mexican Peso'],
@@ -28,7 +30,7 @@ return [
         'NZD' => ['symbol' => 'NZ$', 'name' => 'New Zealand Dollar'],
         'SGD' => ['symbol' => 'S$', 'name' => 'Singapore Dollar'],
         'HKD' => ['symbol' => 'HK$', 'name' => 'Hong Kong Dollar'],
-        'KRW' => ['symbol' => '₩', 'name' => 'South Korean Won'],
+        'KRW' => ['symbol' => '₩', 'name' => 'South Korean Won', 'decimals' => 0],
         'PLN' => ['symbol' => 'zł', 'name' => 'Polish Zloty'],
         'THB' => ['symbol' => '฿', 'name' => 'Thai Baht'],
         'IDR' => ['symbol' => 'Rp', 'name' => 'Indonesian Rupiah'],

@@ -22,6 +22,10 @@ use Illuminate\Support\Carbon;
  * @property int $supplier_id
  * @property int|null $purchase_order_id
  * @property string $cost_price
+ * @property string|null $currency The currency cost_price is in (null on older rows)
+ * @property string|null $source_cost_price The supplier's own price, when cost_price was converted
+ * @property string|null $source_currency
+ * @property string|null $exchange_rate The purchase order rate used for the conversion
  * @property string $source
  * @property int|null $user_id
  * @property Carbon $recorded_at
@@ -51,6 +55,10 @@ class SupplierPriceHistory extends Model
         'supplier_id',
         'purchase_order_id',
         'cost_price',
+        'currency',
+        'source_cost_price',
+        'source_currency',
+        'exchange_rate',
         'source',
         'user_id',
         'recorded_at',
@@ -63,12 +71,20 @@ class SupplierPriceHistory extends Model
     {
         return [
             'cost_price' => 'decimal:2',
+            'source_cost_price' => 'decimal:2',
+            'exchange_rate' => 'decimal:10',
             'recorded_at' => 'datetime',
         ];
     }
 
     /**
      * Record what a supplier charged for a product, now, by the current user.
+     *
+     * $currency attributes (currency, source_cost_price, source_currency,
+     * exchange_rate) say what currency the cost is in and, for a converted
+     * cost, what the supplier charged and at which rate.
+     *
+     * @param  array{currency?: string|null, source_cost_price?: string|null, source_currency?: string|null, exchange_rate?: string|null}  $currency
      */
     public static function record(
         Product $product,
@@ -77,8 +93,9 @@ class SupplierPriceHistory extends Model
         string $source,
         ?int $purchaseOrderId = null,
         ?ProductVariant $variant = null,
+        array $currency = [],
     ): self {
-        return self::create([
+        return self::create(array_intersect_key($currency, array_flip(['currency', 'source_cost_price', 'source_currency', 'exchange_rate'])) + [
             'organization_id' => $product->organization_id,
             'product_id' => $product->id,
             'product_variant_id' => $variant?->id,

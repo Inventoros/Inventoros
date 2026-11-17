@@ -16,6 +16,7 @@ use App\Models\Purchasing\PurchaseOrder;
 use App\Models\Purchasing\PurchaseOrderItem;
 use App\Models\User;
 use App\Models\Warehouse;
+use App\Services\ExchangeRates\PurchaseOrderExchangeRates;
 use App\Support\Money;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -138,7 +139,7 @@ final class VariantReplenishmentService
         try {
             // The document-number retry wraps the entire operation, so a
             // collision restarts both the snapshot and the policy check.
-            return PurchaseOrder::createWithNumber((int) $actor->organization_id, function (string $number) use ($policy, $actor, $automatic): PurchaseOrder {
+            $purchaseOrder = PurchaseOrder::createWithNumber((int) $actor->organization_id, function (string $number) use ($policy, $actor, $automatic): PurchaseOrder {
                 $locked = VariantReplenishmentPolicy::where('organization_id', $actor->organization_id)->whereKey($policy->id)->lockForUpdate()->firstOrFail();
                 if ($automatic && (! $locked->auto_reorder || (int) $locked->managed_by !== (int) $actor->id)) {
                     throw new InvalidStateException('The automatic policy was disabled or its responsible user changed.', 'replenishment_disabled');
@@ -184,6 +185,10 @@ final class VariantReplenishmentService
 
                 return $po;
             }, transactionAttempts: 3);
+
+            // A supplier billing in another currency: the draft takes the
+            // rate for today, outside the transaction.
+            return app(PurchaseOrderExchangeRates::class)->applyToDraft($purchaseOrder);
         } catch (InvalidStateException $error) {
             if ($error->errorCode === 'replenishment_not_due') {
                 return null;

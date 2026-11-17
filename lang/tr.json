@@ -153,5 +153,18 @@
     "Stock adjustments created for discrepancies: :count.": "Farklar için oluşturulan stok düzeltmeleri: :count.",
     "No discrepancies found.": "Fark bulunamadı.",
     "If that email belongs to an account, we have emailed a password reset link.": "Bu e-posta bir hesaba aitse, parola sıfırlama bağlantısı gönderdik.",
-    "This code was already used; wait for the next one.": "Bu kod zaten kullanıldı; bir sonrakini bekleyin."
+    "This code was already used; wait for the next one.": "Bu kod zaten kullanıldı; bir sonrakini bekleyin.",
+    "You do not have permission to set a purchase order exchange rate.": "Bir satın alma siparişinin kurunu belirleme izniniz yok.",
+    "There is no exchange rate to confirm. Enter one instead.": "Onaylanacak bir kur yok. Bunun yerine bir kur girin.",
+    "This purchase order already has an exchange rate, or does not need one.": "Bu satın alma siparişinin zaten bir kuru var veya kura ihtiyacı yok.",
+    "Enter an exchange rate greater than zero.": "Sıfırdan büyük bir kur girin.",
+    "Exchange rate recorded.": "Kur kaydedildi.",
+    "The fallback provider must differ from the main provider.": "Yedek kaynak ana kaynaktan farklı olmalıdır.",
+    "Enter :field for this provider.": "Bu kaynak için :field girin.",
+    "Exchange rate settings saved.": "Döviz kuru ayarları kaydedildi.",
+    "Exchange rates refreshed.": "Döviz kurları yenilendi.",
+    "Some exchange rates could not be refreshed. See the synchronization status for details.": "Bazı döviz kurları yenilenemedi. Ayrıntılar için eşitleme durumuna bakın.",
+    "Exchange rates could not be refreshed. See the synchronization status for details.": "Döviz kurları yenilenemedi. Ayrıntılar için eşitleme durumuna bakın.",
+    "Manual exchange rate saved.": "Elle girilen kur kaydedildi.",
+    "Manual exchange rate deleted.": "Elle girilen kur silindi."
 }

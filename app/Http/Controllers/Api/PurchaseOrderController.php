@@ -123,7 +123,7 @@ class PurchaseOrderController extends Controller
         }
 
         try {
-            $updated = $purchaseOrders->update($purchaseOrder, $request->user()->organization_id, $request->validated());
+            $updated = $purchaseOrders->update($purchaseOrder, $request->user()->organization_id, $request->validated(), $request->user());
         } catch (InvalidStateException $e) {
             return response()->json([
                 'message' => $e->getMessage(),

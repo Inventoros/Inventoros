@@ -1004,6 +1004,7 @@ paths:
     post:
       tags: [Purchase Orders]
       summary: Create a purchase order
+      description: "Purchase orders in a currency other than the organization's carry an exchange rate snapshot: `exchange_rate`, `exchange_rate_from`, `exchange_rate_to`, `exchange_rate_provider`, `exchange_rate_effective_date`, `exchange_rate_retrieved_at`, `exchange_rate_source` (provider, fallback, confirmed or manual), `exchange_rate_set_by`, `exchange_rate_locked_at` (set when the PO leaves draft through `send` or `mark-sent`; the rate never changes after), `converted_subtotal`, `converted_tax`, `converted_shipping`, `converted_total`, plus `organization_currency` and `organization_currency_total` on every PO. A foreign-currency PO with no rate available is still created, with a null `exchange_rate`."
       requestBody:
         required: true
         content: { application/json: { schema: { $ref: '#/components/schemas/PurchaseOrderInput' } } }
@@ -2770,6 +2771,14 @@ components:
         shipping: { type: number, minimum: 0 }
         tax: { type: number, minimum: 0 }
         notes: { type: string }
+        exchange_rate_mode:
+          type: string
+          enum: [auto, manual, confirm]
+          description: "Only for a currency other than the organization's. Leave it out to apply the organization's provider rate for the order date (an update keeps the current rate unless the currency or order date changes). `auto` asks for the provider rate again; `manual` uses `exchange_rate`; `confirm` accepts the newest stored provider rate even when it is stale. `manual` and `confirm` need `override_purchase_order_exchange_rate` in the role and the token."
+        exchange_rate:
+          type: string
+          description: "1 PO currency = this many organization currency, up to 10 decimals. Sending it implies `exchange_rate_mode: manual`."
+          example: "364.35"
         items:
           type: array
           minItems: 1

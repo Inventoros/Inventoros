@@ -57,6 +57,9 @@ class GetPurchaseOrderTool extends Tool
             'shipping' => $po->shipping,
             'total' => $po->total,
             'currency' => $po->currency,
+            // Rate snapshot and totals in the organization currency; status
+            // not_recorded means a foreign-currency PO with no rate.
+            'exchange_rate' => $po->exchangeRateSummary(),
             'notes' => UntrustedText::wrap($po->notes),
             'items' => $po->items->map(fn ($i) => [
                 'id' => $i->id,

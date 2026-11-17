@@ -88,15 +88,17 @@ final class ApprovalSettings
 
     /**
      * A purchase order needs approval when the workflow is on and its total
-     * is at or above the threshold (or there is no threshold).
+     * (in the organization's currency) is at or above the threshold, or
+     * there is no threshold. A null total (a foreign-currency order with no
+     * exchange rate recorded) cannot be compared, so it needs approval.
      */
-    public function purchaseOrderNeedsApproval(float $total): bool
+    public function purchaseOrderNeedsApproval(?float $total): bool
     {
         if (! $this->purchaseOrdersEnabled) {
             return false;
         }
 
-        return $this->purchaseOrdersThreshold === null || $total >= $this->purchaseOrdersThreshold;
+        return $this->purchaseOrdersThreshold === null || $total === null || $total >= $this->purchaseOrdersThreshold;
     }
 
     /**

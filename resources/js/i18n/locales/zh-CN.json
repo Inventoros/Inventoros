@@ -2262,6 +2262,10 @@
           "label": "审批采购订单",
           "description": "可以批准或拒绝发送前需要审批的采购订单"
         },
+        "override_purchase_order_exchange_rate": {
+          "label": "覆盖采购订单汇率",
+          "description": "可以手动输入采购订单的汇率或接受过时的汇率"
+        },
         "view_orders": {
           "label": "查看订单",
           "description": "可以查看订单"
@@ -2301,6 +2305,10 @@
         "manage_organization": {
           "label": "管理组织",
           "description": "可以管理组织详情"
+        },
+        "manage_exchange_rates": {
+          "label": "管理汇率",
+          "description": "可以选择汇率来源、同步汇率并录入手动汇率"
         },
         "view_plugins": {
           "label": "查看插件",
@@ -4139,5 +4147,122 @@
     "searchSupplier": "搜索供应商",
     "loadOptions": "搜索选项",
     "optionsError": "无法加载选项，请重试。"
+  },
+  "exchangeRates": {
+    "rate": "汇率",
+    "provider": "汇率来源",
+    "effectiveDate": "生效日期",
+    "retrievedAt": "获取时间",
+    "noRateYet": "暂无汇率",
+    "fallback": "备用",
+    "stale": "已过时",
+    "staleDays": "已过 {count} 天",
+    "enteredBy": "录入人:{name}",
+    "source": {
+      "manual": "手动录入",
+      "confirmed": "手动确认"
+    },
+    "errors": {
+      "provider_unavailable": "汇率来源 {provider} 不可用。",
+      "fetch_failed": "无法连接 {provider}。",
+      "unsupported": "{provider} 不提供此币种的汇率。",
+      "no_rate": "此币种尚未保存汇率。"
+    },
+    "po": {
+      "title": "汇率",
+      "help": "金额以 {from} 计,将按此汇率换算为 {to}。",
+      "loading": "正在查询汇率...",
+      "keptRate": "此草稿上设置的汇率会一直保留,直到您更改。",
+      "rateSource": "{provider},{date} 的汇率",
+      "fallbackNotice": "默认来源不可用,因此此汇率来自备用来源 {provider}。",
+      "staleNotice": "此汇率已过 {count} 天,超过了 {days} 天的上限。只有您接受后才会使用。",
+      "savedWithout": "采购订单仍可在没有汇率的情况下保存。",
+      "lookupFailed": "无法查询汇率。",
+      "noRate": "没有可用的汇率。",
+      "manualLabel": "汇率:1 {from} 兑 {to}",
+      "convertedTotal": "{currency} 合计:",
+      "totalIn": "{currency} 合计",
+      "useStale": "使用此汇率",
+      "enterManually": "手动输入汇率",
+      "useProviderRate": "使用来源汇率"
+    },
+    "show": {
+      "enteredBy": "由 {name} 手动录入",
+      "confirmedBy": "{provider} 汇率,由 {name} 确认",
+      "fromFallback": "{provider}(备用来源)",
+      "locked": "已锁定",
+      "draftRate": "草稿",
+      "providerGone": "此来源已不可用。已记录的汇率会保留。",
+      "lockedHelp": "订单发送时已锁定({date})。之后的汇率更新不会改变它。",
+      "draftHelp": "订单为草稿时汇率可能变化,发送时锁定。",
+      "notRecorded": "此订单未记录从 {from} 到 {to} 的汇率。收货成本以 {from} 记录。",
+      "recordHelp": "汇率一经记录即锁定。",
+      "record": "记录汇率"
+    },
+    "receive": {
+      "convertedAt": "收货成本按 1 {from} = {rate} {to} 入账。",
+      "noRate": "未记录汇率:收货成本以 {currency} 记录。"
+    },
+    "settings": {
+      "title": "汇率",
+      "description": "以供应商币种开具的采购订单所用汇率,换算为 {currency}。",
+      "hubDescription": "其他币种采购订单的汇率来源、同步和手动汇率",
+      "providerMissing": "所选来源\"{provider}\"不可用,因此采购订单无法获得新汇率。其插件可能未启用。请选择其他来源。",
+      "fallbackMissing": "备用来源\"{provider}\"不可用。请选择其他来源或不设备用来源。",
+      "provider": "汇率来源",
+      "providerHelp": "汇率的来源。Inventoros 不会自行切换到其他来源。",
+      "defaultProvider": "默认来源",
+      "fromPlugin": "插件:{plugin}",
+      "capability": {
+        "automatic": "自动获取",
+        "manual": "手动录入",
+        "historical": "历史汇率",
+        "shareable": "公开数据"
+      },
+      "fallbackProvider": "备用来源",
+      "noFallback": "无",
+      "fallbackHelp": "仅在默认来源失败时使用,并始终标注为备用。",
+      "providerSettings": "{provider} 设置",
+      "secretSaved": "已保存。留空则保持不变。",
+      "staleAfter": "汇率超过多少天视为过时",
+      "staleAfterHelp": "更早的汇率会标为过时,只有在有人接受后才会用于采购订单。",
+      "sync": "币种与同步",
+      "syncHelp": "为活跃供应商使用的每种币种以及您在此添加的币种保存汇率。",
+      "refreshNow": "立即刷新",
+      "syncEnabled": "自动同步汇率",
+      "frequency": "频率",
+      "frequencies": {
+        "hourly": "每小时",
+        "every_six_hours": "每 6 小时",
+        "daily": "每天",
+        "weekly": "每周"
+      },
+      "currencies": "币种",
+      "currenciesHelp": "需要保存对 {currency} 汇率的外币。",
+      "fromSuppliers": "供应商",
+      "providerCurrenciesUnknown": "暂时无法加载该来源的币种列表。",
+      "unsupportedDimmed": "灰显的币种不受所选来源支持。",
+      "lastStatus": "上次同步",
+      "syncStatus": {
+        "success": "成功",
+        "partial": "部分成功",
+        "failed": "失败",
+        "never": "尚未运行"
+      },
+      "lastSuccess": "上次成功",
+      "lastAttempt": "上次尝试",
+      "nextAttempt": "下次尝试",
+      "lastError": "上次错误",
+      "save": "保存设置",
+      "currentRates": "当前汇率",
+      "currentRatesHelp": "每种币种最新保存的汇率,以 {currency} 计。超过 {days} 天的汇率会标为过时。",
+      "noTrackedCurrencies": "暂无外币。请添加使用其他币种的供应商,或在上方选择币种。",
+      "manualRates": "手动汇率",
+      "manualRatesHelp": "当手动汇率为默认来源或备用来源时使用。采购订单保留下单时的汇率。",
+      "rateIn": "1 {currency} 兑 {organizationCurrency}",
+      "addRate": "添加汇率",
+      "noManualRates": "尚未录入手动汇率。",
+      "confirmDeleteRate": "删除 {date} 的 {currency} 汇率?使用过它的采购订单会保留各自的汇率。"
+    }
   }
 }

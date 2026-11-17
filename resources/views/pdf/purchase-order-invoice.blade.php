@@ -171,6 +171,15 @@
         .total-row td:last-child {
             color: #065f46;
         }
+        .exchange-row td {
+            padding-top: 12px;
+        }
+        .exchange-detail td {
+            padding-top: 0;
+            font-size: 10px;
+            color: #9ca3af !important;
+            text-align: right;
+        }
         /* Footer */
         .footer {
             border-top: 1px solid #e5e7eb;
@@ -321,6 +330,29 @@
                     <td>Total</td>
                     <td>{{ $purchaseOrder->currency ?? 'USD' }} {{ number_format((float) $purchaseOrder->total, 2) }}</td>
                 </tr>
+                @if($purchaseOrder->isForeignCurrency())
+                    @php($orgCurrency = $purchaseOrder->organizationCurrency())
+                    @php($orgDecimals = \App\Support\ExchangeMath::decimals($orgCurrency))
+                    @if($purchaseOrder->hasExchangeRate())
+                    <tr class="exchange-row">
+                        <td>Exchange rate</td>
+                        <td>1 {{ $purchaseOrder->currency }} = {{ \App\Support\ExchangeMath::rate((string) $purchaseOrder->exchange_rate) }} {{ $orgCurrency }}</td>
+                    </tr>
+                    <tr class="exchange-detail">
+                        <td colspan="2">
+                            {{ $exchangeRateSource }}@if($purchaseOrder->exchange_rate_effective_date), {{ $purchaseOrder->exchange_rate_effective_date->format('F j, Y') }}@endif
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Total in {{ $orgCurrency }}</td>
+                        <td>{{ $orgCurrency }} {{ number_format((float) $purchaseOrder->converted_total, $orgDecimals) }}</td>
+                    </tr>
+                    @else
+                    <tr class="exchange-detail">
+                        <td colspan="2">No exchange rate to {{ $orgCurrency }} recorded</td>
+                    </tr>
+                    @endif
+                @endif
             </table>
         </div>
 

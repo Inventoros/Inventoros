@@ -82,6 +82,9 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(\App\Services\Plugins\PluginPermissionRegistry::class);
         $this->app->singleton(\App\Services\Plugins\PluginMcpToolRegistry::class);
         $this->app->singleton(\App\Services\Plugins\PluginWebhookEventRegistry::class);
+        // Core exchange rate providers plus those registered by active
+        // plugins (register_exchange_rate_provider()).
+        $this->app->singleton(\App\Services\ExchangeRates\ExchangeRateProviderRegistry::class);
         $this->app->singleton(\App\Services\Hooks\DomainHooks::class);
         // Scoped: its per-request document cache must not outlive a queued job.
         $this->app->scoped(\App\Services\Marketplace\PluginLicenceService::class);

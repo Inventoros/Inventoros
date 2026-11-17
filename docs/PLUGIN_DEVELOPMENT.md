@@ -18,16 +18,17 @@ Everything in this guide is backed by code and tests: the hook tables are checke
 10. [Plugin UI](#plugin-ui)
 11. [MCP tools](#mcp-tools)
 12. [Outbound webhook events](#outbound-webhook-events)
-13. [Organizations and memberships](#organizations-and-memberships)
-14. [Stock reservations](#stock-reservations)
-15. [Core PHP API](#core-php-api)
-16. [Building and packaging a plugin](#building-and-packaging-a-plugin)
-17. [Publishing to the marketplace](#publishing-to-the-marketplace)
-18. [Licences for paid plugins](#licences-for-paid-plugins)
-19. [Examples](#examples)
-20. [Best practices](#best-practices)
-21. [Security notes](#security-notes)
-22. [Debugging](#debugging)
+13. [Exchange rate providers](#exchange-rate-providers)
+14. [Organizations and memberships](#organizations-and-memberships)
+15. [Stock reservations](#stock-reservations)
+16. [Core PHP API](#core-php-api)
+17. [Building and packaging a plugin](#building-and-packaging-a-plugin)
+18. [Publishing to the marketplace](#publishing-to-the-marketplace)
+19. [Licences for paid plugins](#licences-for-paid-plugins)
+20. [Examples](#examples)
+21. [Best practices](#best-practices)
+22. [Security notes](#security-notes)
+23. [Debugging](#debugging)
 
 ## Plugin structure
 
@@ -765,6 +766,152 @@ add_action('webhook_delivery_attempted', function ($delivery, $webhook, array $r
 - A filter or listener that throws is logged and ignored: the delivery goes ahead as if it were not there.
 
 On Inventoros versions without these hooks, check `array_key_exists('webhook_delivery_request', \App\Services\HookRegistry::getFilters())`.
+
+## Exchange rate providers
+
+Purchase orders in a supplier's currency are converted at an exchange rate from the organization's selected provider (Settings > Exchange rates). Core ships `frankfurter` (ECB reference rates) and `manual` (rates an administrator enters). A plugin adds another source from its main file:
+
+```php
+register_exchange_rate_provider(string $slug, App\Services\ExchangeRates\ExchangeRateProvider|string $provider): void
+```
+
+The provider implements `App\Services\ExchangeRates\ExchangeRateProvider`:
+
+| Method | Returns |
+|---|---|
+| `id()` | Stable id, stored on every rate and purchase order. It must be your plugin slug or start with `{slug}.`; `frankfurter` and `manual` are reserved. |
+| `name()`, `description()` | Shown on the settings page and on purchase orders. |
+| `capabilities()` | `new ProviderCapabilities(automatic: bool, historical: bool, shareable: bool)` |
+| `configFields()` | `ProviderConfigField` list: `key`, `label`, `type` (`text`, `url` or `secret`), `required`, `help`. |
+| `supportedCurrencies(array $config)` | ISO 4217 codes; core caches the list for a day. |
+| `fetch(string $base, array $symbols, ?CarbonImmutable $date, array $config)` | `FetchedRates`: 1 `$base` in each symbol, and the date the rates are for. |
+
+Capabilities decide how core treats your provider:
+
+- `automatic`: core may call `fetch()`, on demand when a purchase order needs a rate and on the sync schedule. False for a provider whose rates are only entered by hand.
+- `historical`: `fetch()` accepts a past `$date` (a purchase order dated in the past asks for that date). Without it, only today's rates are requested.
+- `shareable`: the data is public and the same for every customer. Core then stores one copy for the whole installation and makes one request for every organization that needs the same pair. **If your data is licensed per customer (each organization uses its own API key), declare `shareable: false`**: rates are then fetched with each organization's own settings, stored per organization and never shown to another one.
+
+`$config` is the organization's settings for your provider, keyed by your field keys. Secret fields are encrypted at rest with the app key, never sent to the browser, and kept when an administrator leaves the field blank.
+
+Report failures with `ExchangeRateException`, never by returning made-up rates:
+
+| Factory | When | Core then |
+|---|---|---|
+| `ExchangeRateException::unavailable($message)` | Timeouts, connection errors, HTTP 5xx | Retries later with back-off, uses stored rates meanwhile |
+| `ExchangeRateException::rateLimited($message, $retryAfterSeconds)` | HTTP 429 | Stops asking for the run and waits at least `$retryAfterSeconds` |
+| `ExchangeRateException::unsupported($message)` | The pair, base or date cannot be quoted | Reports the currency as unsupported, no early retry |
+| `ExchangeRateException::invalidResponse($message)` | The response is malformed | Records the error, no early retry |
+| `ExchangeRateException::misconfigured($message)` | A missing or rejected API key | Records the error for the administrator |
+
+Leave a symbol you cannot quote out of the result rather than throwing for the whole request. `FetchedRates` validates what you return (three-letter codes, positive decimal rates with at most ten integer digits, a real date not in the future) and turns anything else into an `invalidResponse`. Pass rates as decimal strings when your source has them as text; floats are accepted and normalized to ten decimals.
+
+Core, not the provider, decides when to ask, stores every rate with its effective date (history is kept), applies the organization's staleness limit, and never replaces your rate with another provider's unless the administrator configured that provider as the fallback, in which case it is labelled as such. Purchase orders snapshot the rate and lock it when they are sent.
+
+### Example
+
+```php
+<?php
+// plugins/acme-fx/Plugin.php
+
+use App\Services\ExchangeRates\ExchangeRateException;
+use App\Services\ExchangeRates\ExchangeRateProvider;
+use App\Services\ExchangeRates\FetchedRates;
+use App\Services\ExchangeRates\ProviderCapabilities;
+use App\Services\ExchangeRates\ProviderConfigField;
+use Carbon\CarbonImmutable;
+use Illuminate\Http\Client\ConnectionException;
+use Illuminate\Support\Facades\Http;
+
+final class AcmeFxProvider implements ExchangeRateProvider
+{
+    public function id(): string
+    {
+        return 'acme-fx';
+    }
+
+    public function name(): string
+    {
+        return 'Acme FX';
+    }
+
+    public function description(): string
+    {
+        return 'Intraday rates from Acme FX. Needs an Acme FX API key.';
+    }
+
+    public function capabilities(): ProviderCapabilities
+    {
+        // Licensed per customer: never shared between organizations.
+        return new ProviderCapabilities(automatic: true, historical: true, shareable: false);
+    }
+
+    public function configFields(): array
+    {
+        return [
+            new ProviderConfigField('api_key', 'API key', 'secret', required: true, help: 'From your Acme FX dashboard.'),
+        ];
+    }
+
+    public function supportedCurrencies(array $config): array
+    {
+        return $this->get('currencies', [], $config)['codes'] ?? [];
+    }
+
+    public function fetch(string $base, array $symbols, ?CarbonImmutable $date, array $config): FetchedRates
+    {
+        $body = $this->get('rates', [
+            'from' => $base,
+            'to' => implode(',', $symbols),
+            'date' => $date?->toDateString(),
+        ], $config);
+
+        // FetchedRates rejects a malformed answer; unknown symbols are simply absent.
+        return new FetchedRates($base, (string) ($body['date'] ?? ''), (array) ($body['rates'] ?? []));
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function get(string $path, array $query, array $config): array
+    {
+        if (blank($config['api_key'] ?? null)) {
+            throw ExchangeRateException::misconfigured('Enter your Acme FX API key in Settings > Exchange rates.');
+        }
+
+        try {
+            $response = Http::acceptJson()
+                ->withToken($config['api_key'])
+                ->timeout(8)
+                ->connectTimeout(4)
+                ->get('https://api.acme-fx.example/v2/'.$path, array_filter($query));
+        } catch (ConnectionException $e) {
+            throw ExchangeRateException::unavailable('Acme FX could not be reached.', $e);
+        }
+
+        return match (true) {
+            $response->successful() => (array) $response->json(),
+            $response->status() === 429 => throw ExchangeRateException::rateLimited('Acme FX rate limit reached.', (int) $response->header('Retry-After') ?: null),
+            $response->status() === 401 => throw ExchangeRateException::misconfigured('Acme FX rejected the API key.'),
+            in_array($response->status(), [400, 404, 422], true) => throw ExchangeRateException::unsupported('Acme FX cannot quote this request.'),
+            default => throw ExchangeRateException::unavailable("Acme FX answered with HTTP {$response->status()}."),
+        };
+    }
+}
+
+register_exchange_rate_provider('acme-fx', new AcmeFxProvider);
+```
+
+Test it with `Http::fake()`; never call a live service from tests.
+
+### Lifecycle
+
+Providers are registered while the plugin is active, like its other extensions. When the plugin is deactivated or removed its provider is gone from the next request on:
+
+- Organizations that selected it keep the id. The settings page says the provider is not available, new purchase orders are saved without a rate (never with another provider's rate), and the scheduled sync records the problem. Core does not switch them to another provider.
+- Purchase orders that already used it keep their rate snapshot and show the provider's id as no longer available. Stored rates stay in the database.
+
+Reactivating the plugin restores everything. On Inventoros versions without this, check `function_exists('register_exchange_rate_provider')`.
 
 ## Organizations and memberships
 

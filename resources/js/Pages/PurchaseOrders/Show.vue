@@ -8,7 +8,7 @@ import Button from '@/Components/ui/Button.vue';
 import Badge from '@/Components/ui/Badge.vue';
 import SendDocumentModal from '@/Components/SendDocumentModal.vue';
 import ApprovalPanel from '@/Components/ApprovalPanel.vue';
-import { Head, Link, router } from '@inertiajs/vue3';
+import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { displayCalendarDate, displayDate } from '@/lib/dates';
@@ -24,7 +24,36 @@ const props = defineProps({
     purchaseOrder: Object,
     pluginComponents: Object,
     approval: { type: Object, default: () => ({}) },
+    exchangeRate: { type: Object, default: null },
+    canRecordExchangeRate: { type: Boolean, default: false },
 });
+
+// Amounts in the organization's currency, at the PO's own (snapshot) rate.
+const foreignCurrency = computed(() => !!props.exchangeRate?.is_foreign_currency);
+const rate = computed(() => props.exchangeRate?.rate ?? null);
+const formatConverted = (value) => formatMoney(value, props.exchangeRate?.organization_currency);
+const convertLine = (value) => (rate.value ? formatConverted(Number(value) * Number(rate.value)) : null);
+
+const rateSourceText = computed(() => {
+    const summary = props.exchangeRate;
+    if (!summary?.rate) return '';
+    const provider = summary.provider_name || summary.provider || '';
+    switch (summary.source) {
+        case 'manual':
+            return summary.set_by_name ? t('exchangeRates.show.enteredBy', { name: summary.set_by_name }) : t('exchangeRates.source.manual');
+        case 'confirmed':
+            return t('exchangeRates.show.confirmedBy', { provider, name: summary.set_by_name || '-' });
+        case 'fallback':
+            return t('exchangeRates.show.fromFallback', { provider });
+        default:
+            return provider;
+    }
+});
+
+const recordForm = useForm({ exchange_rate: '' });
+const recordRate = () => {
+    recordForm.post(route('purchase-orders.exchange-rate.record', props.purchaseOrder.id), { preserveScroll: true });
+};
 
 // A draft the organization's approval rules cover cannot be sent until it
 // is approved, and is frozen while an approver is looking at it.
@@ -292,6 +321,7 @@ const thClass = 'px-4 py-2.5 text-start text-xs font-medium tracking-tight text-
                                     <div>
                                         <dt class="text-xs text-text-tertiary">{{ t('purchaseOrders.create.unitCost') }}</dt>
                                         <dd class="tabular-nums text-text-secondary">{{ formatCurrency(item.unit_cost) }}</dd>
+                                        <dd v-if="foreignCurrency && rate" class="text-xs tabular-nums text-text-tertiary">{{ convertLine(item.unit_cost) }}</dd>
                                     </div>
                                     <div>
                                         <dt class="text-xs text-text-tertiary">{{ t('common.total') }}</dt>
@@ -364,9 +394,11 @@ const thClass = 'px-4 py-2.5 text-start text-xs font-medium tracking-tight text-
                                         </td>
                                         <td class="px-4 py-3 text-sm tabular-nums text-text-tertiary">
                                             {{ formatCurrency(item.unit_cost) }}
+                                            <span v-if="foreignCurrency && rate" class="block text-xs">{{ convertLine(item.unit_cost) }}</span>
                                         </td>
                                         <td class="px-4 py-3 text-sm font-medium tabular-nums text-text-primary">
                                             {{ formatCurrency(item.total) }}
+                                            <span v-if="foreignCurrency && rate" class="block text-xs font-normal text-text-tertiary">{{ convertLine(item.total) }}</span>
                                         </td>
                                     </tr>
                                 </tbody>
@@ -433,7 +465,62 @@ const thClass = 'px-4 py-2.5 text-start text-xs font-medium tracking-tight text-
                                     <dd class="text-xl font-bold tabular-nums text-brand">{{ formatCurrency(purchaseOrder.total) }}</dd>
 
                             </div>
+                            <div v-if="foreignCurrency && exchangeRate.converted.total !== null" class="flex justify-between text-sm">
+                                <dt class="text-text-secondary">{{ t('exchangeRates.po.totalIn', { currency: exchangeRate.organization_currency }) }}</dt>
+                                <dd class="font-semibold tabular-nums text-text-primary">{{ formatConverted(exchangeRate.converted.total) }}</dd>
+                            </div>
                         </dl>
+                    </div>
+                </Card>
+
+                <!-- Exchange rate -->
+                <Card v-if="foreignCurrency" :padded="false" data-testid="po-exchange-rate-summary">
+                    <div class="flex items-center justify-between gap-2 px-5 pt-5">
+                        <h3 class="text-sm font-semibold text-text-primary">{{ t('exchangeRates.po.title') }}</h3>
+                        <Badge v-if="exchangeRate.locked" variant="neutral" size="sm">{{ t('exchangeRates.show.locked') }}</Badge>
+                        <Badge v-else-if="exchangeRate.rate" variant="info" size="sm">{{ t('exchangeRates.show.draftRate') }}</Badge>
+                    </div>
+                    <div class="p-5 text-sm">
+                        <template v-if="exchangeRate.rate">
+                            <p class="tabular-nums font-medium text-text-primary">1 {{ exchangeRate.from }} = {{ exchangeRate.rate }} {{ exchangeRate.to }}</p>
+                            <p class="mt-1 text-xs text-text-secondary">
+                                {{ rateSourceText }}<template v-if="exchangeRate.effective_date"> &middot; {{ formatDay(exchangeRate.effective_date) }}</template>
+                            </p>
+                            <p v-if="!exchangeRate.provider_available" class="mt-1 text-xs text-text-tertiary">{{ t('exchangeRates.show.providerGone') }}</p>
+                            <p class="mt-1 text-xs text-text-tertiary">
+                                {{ exchangeRate.locked ? t('exchangeRates.show.lockedHelp', { date: formatDate(exchangeRate.locked_at) }) : t('exchangeRates.show.draftHelp') }}
+                            </p>
+                            <dl class="mt-4 space-y-2 border-t border-border-subtle pt-3">
+                                <div class="flex justify-between">
+                                    <dt class="text-text-secondary">{{ t('common.subtotal') }}</dt>
+                                    <dd class="tabular-nums text-text-primary">{{ formatConverted(exchangeRate.converted.subtotal) }}</dd>
+                                </div>
+                                <div v-if="Number(exchangeRate.converted.tax) > 0" class="flex justify-between">
+                                    <dt class="text-text-secondary">{{ t('common.tax') }}</dt>
+                                    <dd class="tabular-nums text-text-primary">{{ formatConverted(exchangeRate.converted.tax) }}</dd>
+                                </div>
+                                <div v-if="Number(exchangeRate.converted.shipping) > 0" class="flex justify-between">
+                                    <dt class="text-text-secondary">{{ t('common.shipping') }}</dt>
+                                    <dd class="tabular-nums text-text-primary">{{ formatConverted(exchangeRate.converted.shipping) }}</dd>
+                                </div>
+                                <div class="flex justify-between">
+                                    <dt class="font-semibold text-text-primary">{{ t('common.total') }}</dt>
+                                    <dd class="font-semibold tabular-nums text-text-primary">{{ formatConverted(exchangeRate.converted.total) }}</dd>
+                                </div>
+                            </dl>
+                        </template>
+                        <template v-else>
+                            <p class="text-status-warning">{{ t('exchangeRates.show.notRecorded', { from: purchaseOrder.currency, to: exchangeRate.organization_currency }) }}</p>
+                            <form v-if="canRecordExchangeRate" class="mt-3 space-y-2" @submit.prevent="recordRate">
+                                <label for="record_exchange_rate" class="block text-xs text-text-secondary">{{ t('exchangeRates.po.manualLabel', { from: purchaseOrder.currency, to: exchangeRate.organization_currency }) }}</label>
+                                <input id="record_exchange_rate" v-model="recordForm.exchange_rate" type="number" step="any" min="0" inputmode="decimal" class="h-9 w-full rounded-md border border-border-subtle bg-surface-canvas px-3 text-sm text-text-primary ds-focus-ring" />
+                                <p v-if="recordForm.errors.exchange_rate" class="text-xs text-status-danger">{{ recordForm.errors.exchange_rate }}</p>
+                                <p class="text-xs text-text-tertiary">{{ t('exchangeRates.show.recordHelp') }}</p>
+                                <Button type="submit" variant="secondary" size="sm" :loading="recordForm.processing" :disabled="recordForm.processing || !recordForm.exchange_rate">
+                                    {{ t('exchangeRates.show.record') }}
+                                </Button>
+                            </form>
+                        </template>
                     </div>
                 </Card>
 

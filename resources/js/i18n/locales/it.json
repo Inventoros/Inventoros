@@ -2262,6 +2262,10 @@
           "label": "Approva ordini di acquisto",
           "description": "Può approvare o rifiutare gli ordini di acquisto che richiedono approvazione prima dell'invio"
         },
+        "override_purchase_order_exchange_rate": {
+          "label": "Sostituire i cambi degli ordini di acquisto",
+          "description": "Può inserire a mano il cambio di un ordine di acquisto o accettarne uno non aggiornato"
+        },
         "view_orders": {
           "label": "Visualizza ordini",
           "description": "Può visualizzare gli ordini"
@@ -2301,6 +2305,10 @@
         "manage_organization": {
           "label": "Gestisci organizzazione",
           "description": "Può gestire i dettagli dell'organizzazione"
+        },
+        "manage_exchange_rates": {
+          "label": "Gestire i tassi di cambio",
+          "description": "Può scegliere il fornitore dei cambi, sincronizzare i cambi e inserire cambi manuali"
         },
         "view_plugins": {
           "label": "Visualizza plugin",
@@ -4139,5 +4147,122 @@
     "searchSupplier": "Cerca fornitori",
     "loadOptions": "Cerca opzioni",
     "optionsError": "Impossibile caricare le opzioni. Riprova."
+  },
+  "exchangeRates": {
+    "rate": "Cambio",
+    "provider": "Fornitore dei cambi",
+    "effectiveDate": "Data di validità",
+    "retrievedAt": "Recuperato",
+    "noRateYet": "Nessun cambio ancora",
+    "fallback": "Riserva",
+    "stale": "Non aggiornato",
+    "staleDays": "{count} giorni",
+    "enteredBy": "Inserito da {name}",
+    "source": {
+      "manual": "Inserito manualmente",
+      "confirmed": "Confermato manualmente"
+    },
+    "errors": {
+      "provider_unavailable": "Il fornitore dei cambi {provider} non è disponibile.",
+      "fetch_failed": "Impossibile contattare {provider}.",
+      "unsupported": "{provider} non quota questa valuta.",
+      "no_rate": "Per questa valuta non è ancora memorizzato alcun cambio."
+    },
+    "po": {
+      "title": "Tasso di cambio",
+      "help": "Gli importi sono in {from}. Vengono convertiti in {to} a questo cambio.",
+      "loading": "Ricerca del tasso di cambio...",
+      "keptRate": "Il cambio impostato su questa bozza resta finché non lo modifichi.",
+      "rateSource": "{provider}, cambio del {date}",
+      "fallbackNotice": "Il fornitore predefinito non è disponibile, quindi questo cambio proviene dal fornitore di riserva, {provider}.",
+      "staleNotice": "Questo cambio ha {count} giorni, oltre il limite di {days} giorni. Viene usato solo se lo accetti.",
+      "savedWithout": "L'ordine di acquisto può comunque essere salvato senza cambio.",
+      "lookupFailed": "Impossibile ottenere il tasso di cambio.",
+      "noRate": "Nessun tasso di cambio disponibile.",
+      "manualLabel": "Cambio: 1 {from} in {to}",
+      "convertedTotal": "Totale in {currency}:",
+      "totalIn": "Totale in {currency}",
+      "useStale": "Usa questo cambio",
+      "enterManually": "Inserisci il cambio manualmente",
+      "useProviderRate": "Usa il cambio del fornitore"
+    },
+    "show": {
+      "enteredBy": "Inserito manualmente da {name}",
+      "confirmedBy": "Cambio di {provider}, confermato da {name}",
+      "fromFallback": "{provider} (fornitore di riserva)",
+      "locked": "Bloccato",
+      "draftRate": "Bozza",
+      "providerGone": "Questo fornitore non è più disponibile. Il cambio registrato viene mantenuto.",
+      "lockedHelp": "Bloccato all'invio dell'ordine ({date}). Gli aggiornamenti successivi dei cambi non lo modificano.",
+      "draftHelp": "Il cambio può variare finché l'ordine è una bozza. Si blocca all'invio.",
+      "notRecorded": "Per questo ordine non è stato registrato alcun cambio da {from} a {to}. I costi ricevuti sono registrati in {from}.",
+      "recordHelp": "Il cambio si blocca appena viene registrato.",
+      "record": "Registra cambio"
+    },
+    "receive": {
+      "convertedAt": "I costi ricevuti sono contabilizzati a 1 {from} = {rate} {to}.",
+      "noRate": "Nessun cambio registrato: i costi ricevuti sono registrati in {currency}."
+    },
+    "settings": {
+      "title": "Tassi di cambio",
+      "description": "Cambi per gli ordini di acquisto nella valuta di un fornitore, convertiti in {currency}.",
+      "hubDescription": "Fornitore, sincronizzazione e cambi manuali per gli ordini di acquisto in altre valute",
+      "providerMissing": "Il fornitore selezionato \"{provider}\" non è disponibile, quindi gli ordini di acquisto non ricevono nuovi cambi. Il suo plugin potrebbe essere inattivo. Scegli un altro fornitore.",
+      "fallbackMissing": "Il fornitore di riserva \"{provider}\" non è disponibile. Scegline un altro o nessuno.",
+      "provider": "Fornitore dei cambi",
+      "providerHelp": "Da dove provengono i cambi. Inventoros non passa mai da solo a un altro fornitore.",
+      "defaultProvider": "Fornitore predefinito",
+      "fromPlugin": "Plugin: {plugin}",
+      "capability": {
+        "automatic": "Recuperati automaticamente",
+        "manual": "Inseriti a mano",
+        "historical": "Cambi storici",
+        "shareable": "Dati pubblici"
+      },
+      "fallbackProvider": "Fornitore di riserva",
+      "noFallback": "Nessuno",
+      "fallbackHelp": "Usato solo se il fornitore predefinito non risponde, e sempre indicato come riserva.",
+      "providerSettings": "Impostazioni di {provider}",
+      "secretSaved": "Salvato. Lascia vuoto per mantenerlo.",
+      "staleAfter": "Considera i cambi non aggiornati dopo (giorni)",
+      "staleAfterHelp": "Un cambio più vecchio viene mostrato come non aggiornato e usato su un ordine solo se qualcuno lo accetta.",
+      "sync": "Valute e sincronizzazione",
+      "syncHelp": "I cambi sono tenuti per ogni valuta usata dai fornitori attivi, più quelle aggiunte qui.",
+      "refreshNow": "Aggiorna ora",
+      "syncEnabled": "Sincronizza i cambi automaticamente",
+      "frequency": "Frequenza",
+      "frequencies": {
+        "hourly": "Ogni ora",
+        "every_six_hours": "Ogni 6 ore",
+        "daily": "Giornaliera",
+        "weekly": "Settimanale"
+      },
+      "currencies": "Valute",
+      "currenciesHelp": "Valute estere per cui tenere i cambi rispetto a {currency}.",
+      "fromSuppliers": "fornitori",
+      "providerCurrenciesUnknown": "Al momento non è stato possibile caricare l'elenco delle valute del fornitore.",
+      "unsupportedDimmed": "Le valute attenuate non sono offerte dal fornitore selezionato.",
+      "lastStatus": "Ultima sincronizzazione",
+      "syncStatus": {
+        "success": "Riuscita",
+        "partial": "Parzialmente riuscita",
+        "failed": "Non riuscita",
+        "never": "Non ancora eseguita"
+      },
+      "lastSuccess": "Ultimo successo",
+      "lastAttempt": "Ultimo tentativo",
+      "nextAttempt": "Prossimo tentativo",
+      "lastError": "Ultimo errore",
+      "save": "Salva impostazioni",
+      "currentRates": "Cambi attuali",
+      "currentRatesHelp": "Il cambio memorizzato più recente per ogni valuta, in {currency}. I cambi più vecchi di {days} giorni sono indicati come non aggiornati.",
+      "noTrackedCurrencies": "Nessuna valuta estera per ora. Aggiungi un fornitore che usa un'altra valuta o scegli le valute qui sopra.",
+      "manualRates": "Cambi manuali",
+      "manualRatesHelp": "Usati quando Cambi manuali è il fornitore predefinito o di riserva. Gli ordini di acquisto mantengono il cambio con cui sono stati emessi.",
+      "rateIn": "1 {currency} in {organizationCurrency}",
+      "addRate": "Aggiungi cambio",
+      "noManualRates": "Nessun cambio manuale inserito.",
+      "confirmDeleteRate": "Eliminare il cambio {currency} del {date}? Gli ordini di acquisto che lo hanno usato mantengono il loro cambio."
+    }
   }
 }

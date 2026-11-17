@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Http\Middleware\CheckApiPermission;
+use App\Models\Auth\Organization;
 use App\Models\Inventory\Product;
 use App\Models\User;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -113,6 +114,9 @@ class ReportDataService
                     'supplier_name' => ['label' => 'Supplier', 'type' => 'string'],
                     'status' => ['label' => 'Status', 'type' => 'string'],
                     'total' => ['label' => 'Total', 'type' => 'currency'],
+                    'currency' => ['label' => 'Currency', 'type' => 'string'],
+                    'exchange_rate' => ['label' => 'Exchange Rate', 'type' => 'number'],
+                    'converted_total' => ['label' => 'Total (Organization Currency)', 'type' => 'currency'],
                     'order_date' => ['label' => 'Order Date', 'type' => 'date'],
                     'created_at' => ['label' => 'Created', 'type' => 'date'],
                 ],
@@ -557,12 +561,22 @@ class ReportDataService
             ->where('purchase_orders.organization_id', $organizationId)
             ->whereNull('purchase_orders.deleted_at');
 
+        // converted_total: the total in the organization's currency. A PO in
+        // that currency has no snapshot, so its own total is used; a foreign
+        // one without a recorded rate stays empty rather than mixing
+        // currencies.
+        $organizationCurrency = Organization::currencyFor($organizationId);
+        $organizationCurrency = preg_match('/^[A-Z]{3}\z/', $organizationCurrency) === 1 ? $organizationCurrency : 'USD';
+        $convertedTotal = DB::raw('CASE WHEN purchase_orders.exchange_rate IS NOT NULL THEN purchase_orders.converted_total WHEN UPPER(purchase_orders.currency) = \''.$organizationCurrency.'\' THEN purchase_orders.total ELSE NULL END');
+
         $columnMap = [
             'po_number' => 'purchase_orders.po_number',
             'supplier_name' => 'suppliers.name as supplier_name',
             'status' => 'purchase_orders.status',
             'total' => 'purchase_orders.total',
-            'order_date' => 'purchase_orders.order_date',
+            'currency' => 'purchase_orders.currency',
+            'exchange_rate' => 'purchase_orders.exchange_rate',
+            'converted_total' => DB::raw($convertedTotal->getValue(DB::connection()->getQueryGrammar()).' as converted_total'),            'order_date' => 'purchase_orders.order_date',
             'created_at' => 'purchase_orders.created_at',
         ];
 
@@ -571,6 +585,9 @@ class ReportDataService
             'supplier_name' => 'suppliers.name',
             'status' => 'purchase_orders.status',
             'total' => 'purchase_orders.total',
+            'currency' => 'purchase_orders.currency',
+            'exchange_rate' => 'purchase_orders.exchange_rate',
+            'converted_total' => $convertedTotal,
             'order_date' => 'purchase_orders.order_date',
             'created_at' => 'purchase_orders.created_at',
         ];
@@ -579,6 +596,12 @@ class ReportDataService
         $query->select($selectColumns);
 
         $this->applyFilters($query, $filters, $filterMap);
+        // applyFilters leaves expressions to HAVING; this one is per row.
+        foreach ($filters ?? [] as $filter) {
+            if (($filter['field'] ?? null) === 'converted_total' && in_array($filter['operator'] ?? null, self::VALID_OPERATORS, true)) {
+                $this->applyFilterCondition($query, $convertedTotal, $filter['operator'], $filter['value'] ?? null, 'where');
+            }
+        }
         $this->applySorting($query, $sort, $filterMap);
 
         return $query->limit($this->maxRows())->get();

@@ -161,8 +161,8 @@ Call `who_am_i` first to confirm the token works.
 |---|---|---|
 | `list_suppliers` | `view_suppliers` | Supplier list with search and active filter. |
 | `list_purchase_orders` | `view_purchase_orders` | Paginated POs with status / supplier filters. |
-| `get_purchase_order` | `view_purchase_orders` | Single PO with supplier and line items. |
-| `create_purchase_order` | `create_purchase_orders` | Create a draft PO. Does not affect stock. **Destructive**. |
+| `get_purchase_order` | `view_purchase_orders` | Single PO with supplier, line items and exchange rate snapshot. |
+| `create_purchase_order` | `create_purchase_orders` | Create a draft PO. Does not affect stock. Optional `exchange_rate` needs `override_purchase_order_exchange_rate`. **Destructive**. |
 | `send_purchase_order` | `edit_purchase_orders` | Transition draft to sent. Emails only the supplier's address on file or users of the organization (to or CC); other recipients need the web UI. A supplier without an email address cannot be sent through MCP. **Destructive** and idempotent. |
 | `mark_purchase_order_sent` | `edit_purchase_orders` | Mark a draft PO as sent without emailing anyone, for orders placed with the supplier another way. Same approval gate as `send_purchase_order`; drafts with at least one item only. **Destructive**. |
 | `receive_purchase_order` | `receive_purchase_orders` | Receive items, optionally choosing a `receiving_location_id` per line for this receipt only; writes stock; transitions to partial/received. **Destructive**. |

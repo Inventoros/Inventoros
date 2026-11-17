@@ -13,15 +13,19 @@ use App\Http\Requests\PurchaseOrder\ProcessReceivingRequest;
 use App\Http\Requests\PurchaseOrder\StorePurchaseOrderRequest;
 use App\Http\Requests\PurchaseOrder\UpdatePurchaseOrderRequest;
 use App\Http\Requests\SendDocumentEmailRequest;
+use App\Models\ExchangeRates\ExchangeRateSetting;
 use App\Models\Inventory\Product;
 use App\Models\Inventory\ProductLocation;
 use App\Models\Inventory\ProductVariant;
 use App\Models\Inventory\Supplier;
 use App\Models\Purchasing\PurchaseOrder;
 use App\Services\ApprovalService;
+use App\Services\ExchangeRates\ExchangeRateService;
+use App\Services\ExchangeRates\PurchaseOrderExchangeRates;
 use App\Services\PurchaseOrderEmailService;
 use App\Services\PurchaseOrderService;
 use App\Services\WarehouseAccessService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -103,6 +107,7 @@ class PurchaseOrderController extends Controller
         return Inertia::render('PurchaseOrders/Create', [
             'suppliers' => $suppliers,
             'products' => $products,
+            'exchangeRates' => $this->exchangeRateFormProps($request),
             'pluginComponents' => [
                 'header' => get_page_components('purchase-orders.create', 'header'),
                 'footer' => get_page_components('purchase-orders.create', 'footer'),
@@ -137,10 +142,14 @@ class PurchaseOrderController extends Controller
             abort(403, 'Unauthorized action.');
         }
 
-        $purchaseOrder->load(['supplier', 'creator', 'items.product', 'items.variant', 'items.receivingLocation.warehouse', 'approver', 'approvalRequester']);
+        $purchaseOrder->load(['supplier', 'creator', 'items.product', 'items.variant', 'items.receivingLocation.warehouse', 'approver', 'approvalRequester', 'exchangeRateSetter:id,name']);
 
         return Inertia::render('PurchaseOrders/Show', [
             'purchaseOrder' => $purchaseOrder,
+            'exchangeRate' => $purchaseOrder->exchangeRateSummary(),
+            'canRecordExchangeRate' => $purchaseOrder->canRecordExchangeRate()
+                && $request->user()->hasPermission('edit_purchase_orders')
+                && app(PurchaseOrderExchangeRates::class)->canOverride($request->user()),
             'approval' => [
                 'needs_approval' => $purchaseOrder->status === PurchaseOrder::STATUS_DRAFT && $purchaseOrder->needsApproval(),
                 'can_submit' => $purchaseOrder->canBeSubmittedForApproval() && $request->user()->hasPermission('edit_purchase_orders'),
@@ -181,7 +190,7 @@ class PurchaseOrderController extends Controller
             ->where('is_active', true)
             ->get(['id', 'name', 'currency', 'payment_terms']);
 
-        $purchaseOrder->load(['items.variant', 'items.receivingLocation.warehouse']);
+        $purchaseOrder->load(['items.variant', 'items.receivingLocation.warehouse', 'exchangeRateSetter:id,name']);
 
         $products = $this->formProducts(
             $organizationId,
@@ -192,6 +201,8 @@ class PurchaseOrderController extends Controller
             'purchaseOrder' => $purchaseOrder,
             'suppliers' => $suppliers,
             'products' => $products,
+            'exchangeRate' => $purchaseOrder->exchangeRateSummary(),
+            'exchangeRates' => $this->exchangeRateFormProps($request),
             'pluginComponents' => [
                 'header' => get_page_components('purchase-orders.edit', 'header'),
                 'footer' => get_page_components('purchase-orders.edit', 'footer'),
@@ -227,7 +238,9 @@ class PurchaseOrderController extends Controller
                 'currency' => $validated['currency'],
                 'notes' => $validated['notes'] ?? null,
                 'items' => $validated['items'],
-            ]);
+                'exchange_rate_mode' => $validated['exchange_rate_mode'] ?? null,
+                'exchange_rate' => $validated['exchange_rate'] ?? null,
+            ], $request->user());
         } catch (InvalidStateException) {
             return redirect()->route('purchase-orders.show', $purchaseOrder)
                 ->with('error', __('This purchase order cannot be edited.'));
@@ -291,6 +304,7 @@ class PurchaseOrderController extends Controller
 
         return Inertia::render('PurchaseOrders/Receive', [
             'purchaseOrder' => $purchaseOrder,
+            'exchangeRate' => $purchaseOrder->exchangeRateSummary(),
             'receivingLocations' => $locations->with('warehouse:id,name')->orderBy('warehouse_id')->orderBy('name')
                 ->get(['id', 'name', 'code', 'warehouse_id'])
                 ->map(fn (ProductLocation $location) => [
@@ -419,6 +433,43 @@ class PurchaseOrderController extends Controller
     }
 
     /**
+     * The exchange rate a purchase order in $currency would take on $date,
+     * for the create and edit forms (JSON). Reads stored rates and asks the
+     * provider only when nothing recent is stored.
+     */
+    public function exchangeRateQuote(Request $request, ExchangeRateService $rates): JsonResponse
+    {
+        $validated = $request->validate([
+            'currency' => ['required', 'string', 'size:3', 'alpha'],
+            'date' => ['nullable', 'date_format:Y-m-d'],
+        ]);
+
+        $quote = $rates->quote((int) $request->user()->organization_id, $validated['currency'], $validated['date'] ?? null);
+
+        return response()->json(['data' => $quote->toArray()]);
+    }
+
+    /**
+     * Record an exchange rate on a purchase order that left draft without
+     * one. It locks at once.
+     */
+    public function recordExchangeRate(Request $request, PurchaseOrder $purchaseOrder, PurchaseOrderExchangeRates $exchangeRates): RedirectResponse
+    {
+        if ($purchaseOrder->organization_id !== $request->user()->organization_id) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        $validated = $request->validate([
+            'exchange_rate' => ['required', 'numeric', 'gt:0', 'max:9999999999', 'decimal:0,10'],
+        ]);
+
+        $exchangeRates->record($purchaseOrder, $request->user(), (string) $validated['exchange_rate']);
+
+        return redirect()->route('purchase-orders.show', $purchaseOrder)
+            ->with('success', __('Exchange rate recorded.'));
+    }
+
+    /**
      * Cancel a purchase order.
      *
      * @param  Request  $request  The incoming HTTP request
@@ -446,6 +497,25 @@ class PurchaseOrderController extends Controller
 
         return redirect()->route('purchase-orders.show', $purchaseOrder)
             ->with('success', __('Purchase order cancelled.'));
+    }
+
+    /**
+     * What the PO form needs to show and override exchange rates.
+     *
+     * @return array<string, mixed>
+     */
+    private function exchangeRateFormProps(Request $request): array
+    {
+        $settings = ExchangeRateSetting::forOrganization((int) $request->user()->organization_id);
+        $providers = app(ExchangeRateService::class)->providers();
+
+        return [
+            'canOverride' => app(PurchaseOrderExchangeRates::class)->canOverride($request->user()),
+            'provider' => $settings->provider,
+            'providerName' => $providers->nameFor($settings->provider),
+            'providerAvailable' => $providers->has($settings->provider),
+            'staleAfterDays' => (int) $settings->stale_after_days,
+        ];
     }
 
     /**

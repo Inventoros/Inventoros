@@ -153,5 +153,18 @@
     "Stock adjustments created for discrepancies: :count.": "Ajustes de inventario creados por discrepancias: :count.",
     "No discrepancies found.": "No se encontraron discrepancias.",
     "If that email belongs to an account, we have emailed a password reset link.": "Si ese correo electrónico pertenece a una cuenta, hemos enviado un enlace para restablecer la contraseña.",
-    "This code was already used; wait for the next one.": "Este código ya se ha usado; espera al siguiente."
+    "This code was already used; wait for the next one.": "Este código ya se ha usado; espera al siguiente.",
+    "You do not have permission to set a purchase order exchange rate.": "No tiene permiso para fijar el tipo de cambio de una orden de compra.",
+    "There is no exchange rate to confirm. Enter one instead.": "No hay ningún tipo de cambio que confirmar. Introduzca uno.",
+    "This purchase order already has an exchange rate, or does not need one.": "Esta orden de compra ya tiene un tipo de cambio o no lo necesita.",
+    "Enter an exchange rate greater than zero.": "Introduzca un tipo de cambio mayor que cero.",
+    "Exchange rate recorded.": "Tipo de cambio registrado.",
+    "The fallback provider must differ from the main provider.": "El proveedor de respaldo debe ser distinto del proveedor principal.",
+    "Enter :field for this provider.": "Introduzca :field para este proveedor.",
+    "Exchange rate settings saved.": "Ajustes de tipos de cambio guardados.",
+    "Exchange rates refreshed.": "Tipos de cambio actualizados.",
+    "Some exchange rates could not be refreshed. See the synchronization status for details.": "Algunos tipos de cambio no se pudieron actualizar. Consulte el estado de la sincronización para más detalles.",
+    "Exchange rates could not be refreshed. See the synchronization status for details.": "No se pudieron actualizar los tipos de cambio. Consulte el estado de la sincronización para más detalles.",
+    "Manual exchange rate saved.": "Tipo de cambio manual guardado.",
+    "Manual exchange rate deleted.": "Tipo de cambio manual eliminado."
 }

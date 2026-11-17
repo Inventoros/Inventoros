@@ -153,5 +153,18 @@
     "Stock adjustments created for discrepancies: :count.": "Rettifiche di magazzino create per le discrepanze: :count.",
     "No discrepancies found.": "Nessuna discrepanza rilevata.",
     "If that email belongs to an account, we have emailed a password reset link.": "Se questa email appartiene a un account, abbiamo inviato un link per reimpostare la password.",
-    "This code was already used; wait for the next one.": "Questo codice è già stato usato; attendi il prossimo."
+    "This code was already used; wait for the next one.": "Questo codice è già stato usato; attendi il prossimo.",
+    "You do not have permission to set a purchase order exchange rate.": "Non hai il permesso di impostare il cambio di un ordine di acquisto.",
+    "There is no exchange rate to confirm. Enter one instead.": "Non c'è alcun cambio da confermare. Inseriscine uno.",
+    "This purchase order already has an exchange rate, or does not need one.": "Questo ordine di acquisto ha già un cambio o non ne ha bisogno.",
+    "Enter an exchange rate greater than zero.": "Inserisci un cambio maggiore di zero.",
+    "Exchange rate recorded.": "Cambio registrato.",
+    "The fallback provider must differ from the main provider.": "Il fornitore di riserva deve essere diverso da quello principale.",
+    "Enter :field for this provider.": "Inserisci :field per questo fornitore.",
+    "Exchange rate settings saved.": "Impostazioni dei tassi di cambio salvate.",
+    "Exchange rates refreshed.": "Tassi di cambio aggiornati.",
+    "Some exchange rates could not be refreshed. See the synchronization status for details.": "Alcuni tassi di cambio non sono stati aggiornati. Vedi lo stato della sincronizzazione per i dettagli.",
+    "Exchange rates could not be refreshed. See the synchronization status for details.": "Non è stato possibile aggiornare i tassi di cambio. Vedi lo stato della sincronizzazione per i dettagli.",
+    "Manual exchange rate saved.": "Cambio manuale salvato.",
+    "Manual exchange rate deleted.": "Cambio manuale eliminato."
 }

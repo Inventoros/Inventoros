@@ -153,6 +153,10 @@ Components can be placed on the dashboard, the product, order, purchase order, s
 
 `register_webhook_event('my-plugin.report_sent', 'When a report is sent')` adds an event to the webhook event picker (the name is the plugin slug, a dot, then the event), and `dispatch_webhook_event('my-plugin.report_sent', $data, $organizationId)` sends it, after the transaction commits, through the same signed and retried delivery as core events.
 
+## Exchange rate providers
+
+`register_exchange_rate_provider('my-plugin', new MyRatesProvider)` adds a source of exchange rates that administrators can pick (or use as the fallback) in Settings > Exchange rates. The provider implements `App\Services\ExchangeRates\ExchangeRateProvider`: an id that is the slug or starts with `{slug}.`, a name, its settings (API keys are encrypted and never sent back to the browser), the currencies it supports, and `fetch()`, which returns a `FetchedRates` or throws an `ExchangeRateException`. A provider whose data is licensed per customer declares itself not shareable, so its rates stay with the organization that fetched them. Core decides when to ask, stores and validates the rates, applies staleness rules and never substitutes another provider. When the plugin is deactivated its provider disappears; organizations that used it see that it is unavailable and keep their purchase orders' locked rates. The developer guide has a full example.
+
 ## Installing and managing plugins
 
 ### Who can manage plugins

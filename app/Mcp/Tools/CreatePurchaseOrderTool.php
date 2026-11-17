@@ -9,6 +9,7 @@ use App\Mcp\Support\UntrustedText;
 use App\Models\Inventory\Product;
 use App\Models\Purchasing\PurchaseOrder;
 use App\Models\Purchasing\PurchaseOrderItem;
+use App\Services\ExchangeRates\PurchaseOrderExchangeRates;
 use App\Support\Money;
 use App\Support\VariantLineValidator;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
@@ -38,6 +39,7 @@ class CreatePurchaseOrderTool extends Tool
             'shipping' => $schema->number()->description('Shipping cost (default 0).'),
             'tax' => $schema->number()->description('Tax total (default 0).'),
             'notes' => $schema->string()->description('Internal notes.'),
+            'exchange_rate' => $schema->string()->description('Only for a currency other than the organization\'s, and only when the user gives one: the rate as a decimal string (1 PO currency = this many organization currency). Needs override_purchase_order_exchange_rate. Leave it out to use the organization\'s exchange rate provider.'),
             'items' => $schema->array()->required()->description('Line items: [{product_id, product_variant_id?, quantity, unit_cost, supplier_sku?}]. product_variant_id is optional; when given it must be a variant of that product, and receiving the line credits the variant\'s stock.'),
         ];
     }
@@ -65,6 +67,7 @@ class CreatePurchaseOrderTool extends Tool
             'items.*.quantity' => ['required', 'integer', 'min:1'],
             'items.*.unit_cost' => ['required', 'numeric', 'decimal:0,2', 'min:0'],
             'items.*.supplier_sku' => ['nullable', 'string', 'max:255'],
+            ...PurchaseOrderExchangeRates::rules(),
         ]);
 
         // The variant is optional here (as on the REST API), but a variant
@@ -76,7 +79,11 @@ class CreatePurchaseOrderTool extends Tool
                 ->all());
         }
 
-        $po = PurchaseOrder::createWithNumber($orgId, function (string $poNumber) use ($validated, $orgId) {
+        // Before the transaction: finding the rate may ask the provider.
+        $snapshot = app(PurchaseOrderExchangeRates::class)
+            ->snapshotFor($orgId, (string) $validated['currency'], $validated['order_date'], $validated, null, $this->user()) ?? [];
+
+        $po = PurchaseOrder::createWithNumber($orgId, function (string $poNumber) use ($validated, $orgId, $snapshot) {
             $subtotal = '0';
             $rows = [];
             foreach ($validated['items'] as $item) {
@@ -99,7 +106,7 @@ class CreatePurchaseOrderTool extends Tool
                 ];
             }
 
-            $po = PurchaseOrder::create([
+            $po = new PurchaseOrder([
                 'organization_id' => $orgId,
                 'supplier_id' => $validated['supplier_id'],
                 'created_by' => $this->user()->id,
@@ -114,6 +121,7 @@ class CreatePurchaseOrderTool extends Tool
                 'currency' => $validated['currency'],
                 'notes' => $validated['notes'] ?? null,
             ]);
+            $po->forceFill($snapshot)->save();
 
             $po->items()->createMany($rows);
 
@@ -129,6 +137,7 @@ class CreatePurchaseOrderTool extends Tool
                 'supplier' => $po->supplier?->only(['id', 'name']),
                 'total' => $po->total,
                 'currency' => $po->currency,
+                'exchange_rate' => $po->exchangeRateSummary(),
                 'item_count' => $po->items->count(),
             ],
         ]);

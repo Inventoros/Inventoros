@@ -2262,6 +2262,10 @@
           "label": "Einkaufsbestellungen genehmigen",
           "description": "Kann genehmigungspflichtige Einkaufsbestellungen vor dem Versand genehmigen oder ablehnen"
         },
+        "override_purchase_order_exchange_rate": {
+          "label": "Wechselkurse von Bestellungen überschreiben",
+          "description": "Kann den Wechselkurs einer Bestellung von Hand eingeben oder einen veralteten Kurs übernehmen"
+        },
         "view_orders": {
           "label": "Bestellungen anzeigen",
           "description": "Kann Bestellungen anzeigen"
@@ -2301,6 +2305,10 @@
         "manage_organization": {
           "label": "Organisation verwalten",
           "description": "Kann Organisationsdetails verwalten"
+        },
+        "manage_exchange_rates": {
+          "label": "Wechselkurse verwalten",
+          "description": "Kann den Wechselkursanbieter wählen, Kurse synchronisieren und manuelle Kurse eingeben"
         },
         "view_plugins": {
           "label": "Plugins anzeigen",
@@ -4139,5 +4147,122 @@
     "searchSupplier": "Lieferanten suchen",
     "loadOptions": "Optionen suchen",
     "optionsError": "Optionen konnten nicht geladen werden. Erneut versuchen."
+  },
+  "exchangeRates": {
+    "rate": "Kurs",
+    "provider": "Anbieter",
+    "effectiveDate": "Gültig am",
+    "retrievedAt": "Abgerufen",
+    "noRateYet": "Noch kein Kurs",
+    "fallback": "Ersatz",
+    "stale": "Veraltet",
+    "staleDays": "{count} Tage alt",
+    "enteredBy": "Eingegeben von {name}",
+    "source": {
+      "manual": "Manuell eingegeben",
+      "confirmed": "Manuell bestätigt"
+    },
+    "errors": {
+      "provider_unavailable": "Der Wechselkursanbieter {provider} ist nicht verfügbar.",
+      "fetch_failed": "{provider} ist nicht erreichbar.",
+      "unsupported": "{provider} liefert keinen Kurs für diese Währung.",
+      "no_rate": "Für diese Währung ist noch kein Wechselkurs gespeichert."
+    },
+    "po": {
+      "title": "Wechselkurs",
+      "help": "Beträge sind in {from}. Sie werden zu diesem Kurs in {to} umgerechnet.",
+      "loading": "Wechselkurs wird ermittelt...",
+      "keptRate": "Der für diesen Entwurf festgelegte Kurs bleibt, bis Sie ihn ändern.",
+      "rateSource": "{provider}, Kurs vom {date}",
+      "fallbackNotice": "Der Standardanbieter ist nicht verfügbar, daher stammt dieser Kurs vom Ersatzanbieter {provider}.",
+      "staleNotice": "Dieser Kurs ist {count} Tage alt und damit älter als die Grenze von {days} Tagen. Er wird nur verwendet, wenn Sie ihn übernehmen.",
+      "savedWithout": "Die Bestellung kann trotzdem ohne Kurs gespeichert werden.",
+      "lookupFailed": "Der Wechselkurs konnte nicht ermittelt werden.",
+      "noRate": "Kein Wechselkurs verfügbar.",
+      "manualLabel": "Kurs: 1 {from} in {to}",
+      "convertedTotal": "Summe in {currency}:",
+      "totalIn": "Summe in {currency}",
+      "useStale": "Diesen Kurs verwenden",
+      "enterManually": "Kurs manuell eingeben",
+      "useProviderRate": "Kurs des Anbieters verwenden"
+    },
+    "show": {
+      "enteredBy": "Manuell eingegeben von {name}",
+      "confirmedBy": "Kurs von {provider}, bestätigt von {name}",
+      "fromFallback": "{provider} (Ersatzanbieter)",
+      "locked": "Festgeschrieben",
+      "draftRate": "Entwurf",
+      "providerGone": "Dieser Anbieter ist nicht mehr verfügbar. Der erfasste Kurs bleibt erhalten.",
+      "lockedHelp": "Beim Versand der Bestellung festgeschrieben ({date}). Spätere Kursänderungen wirken sich nicht aus.",
+      "draftHelp": "Der Kurs kann sich ändern, solange die Bestellung ein Entwurf ist. Beim Versand wird er festgeschrieben.",
+      "notRecorded": "Für diese Bestellung wurde kein Wechselkurs von {from} nach {to} erfasst. Eingegangene Kosten werden in {from} erfasst.",
+      "recordHelp": "Der Kurs wird sofort nach dem Erfassen festgeschrieben.",
+      "record": "Kurs erfassen"
+    },
+    "receive": {
+      "convertedAt": "Eingegangene Kosten werden zu 1 {from} = {rate} {to} gebucht.",
+      "noRate": "Kein Wechselkurs erfasst: Eingegangene Kosten werden in {currency} erfasst."
+    },
+    "settings": {
+      "title": "Wechselkurse",
+      "description": "Kurse für Bestellungen in der Währung eines Lieferanten, umgerechnet in {currency}.",
+      "hubDescription": "Anbieter, Synchronisierung und manuelle Kurse für Bestellungen in anderen Währungen",
+      "providerMissing": "Der gewählte Anbieter \"{provider}\" ist nicht verfügbar, daher erhalten Bestellungen keine neuen Kurse. Sein Plugin ist möglicherweise inaktiv. Wählen Sie einen anderen Anbieter.",
+      "fallbackMissing": "Der Ersatzanbieter \"{provider}\" ist nicht verfügbar. Wählen Sie einen anderen oder keinen.",
+      "provider": "Anbieter",
+      "providerHelp": "Woher die Kurse stammen. Inventoros wechselt nie selbstständig zu einem anderen Anbieter.",
+      "defaultProvider": "Standardanbieter",
+      "fromPlugin": "Plugin: {plugin}",
+      "capability": {
+        "automatic": "Automatisch abgerufen",
+        "manual": "Von Hand eingegeben",
+        "historical": "Historische Kurse",
+        "shareable": "Öffentliche Daten"
+      },
+      "fallbackProvider": "Ersatzanbieter",
+      "noFallback": "Keiner",
+      "fallbackHelp": "Wird nur verwendet, wenn der Standardanbieter ausfällt, und immer als Ersatz gekennzeichnet.",
+      "providerSettings": "Einstellungen für {provider}",
+      "secretSaved": "Gespeichert. Leer lassen, um ihn zu behalten.",
+      "staleAfter": "Kurse gelten als veraltet nach (Tagen)",
+      "staleAfterHelp": "Ein älterer Kurs wird als veraltet angezeigt und nur dann für eine Bestellung verwendet, wenn ihn jemand übernimmt.",
+      "sync": "Währungen und Synchronisierung",
+      "syncHelp": "Kurse werden für jede Währung Ihrer aktiven Lieferanten geführt, dazu für alle, die Sie hier hinzufügen.",
+      "refreshNow": "Jetzt aktualisieren",
+      "syncEnabled": "Kurse automatisch synchronisieren",
+      "frequency": "Häufigkeit",
+      "frequencies": {
+        "hourly": "Stündlich",
+        "every_six_hours": "Alle 6 Stunden",
+        "daily": "Täglich",
+        "weekly": "Wöchentlich"
+      },
+      "currencies": "Währungen",
+      "currenciesHelp": "Fremdwährungen, für die Kurse gegenüber {currency} geführt werden.",
+      "fromSuppliers": "Lieferanten",
+      "providerCurrenciesUnknown": "Die Währungsliste des Anbieters konnte gerade nicht geladen werden.",
+      "unsupportedDimmed": "Abgeblendete Währungen werden vom gewählten Anbieter nicht angeboten.",
+      "lastStatus": "Letzte Synchronisierung",
+      "syncStatus": {
+        "success": "Erfolgreich",
+        "partial": "Teilweise erfolgreich",
+        "failed": "Fehlgeschlagen",
+        "never": "Noch nicht ausgeführt"
+      },
+      "lastSuccess": "Letzter Erfolg",
+      "lastAttempt": "Letzter Versuch",
+      "nextAttempt": "Nächster Versuch",
+      "lastError": "Letzter Fehler",
+      "save": "Einstellungen speichern",
+      "currentRates": "Aktuelle Kurse",
+      "currentRatesHelp": "Der neueste gespeicherte Kurs je Währung, in {currency}. Kurse, die älter als {days} Tage sind, werden als veraltet markiert.",
+      "noTrackedCurrencies": "Noch keine Fremdwährungen. Fügen Sie einen Lieferanten mit einer anderen Währung hinzu oder wählen Sie oben Währungen aus.",
+      "manualRates": "Manuelle Kurse",
+      "manualRatesHelp": "Werden verwendet, wenn Manuelle Kurse der Standard- oder Ersatzanbieter ist. Bestellungen behalten den Kurs, zu dem sie aufgegeben wurden.",
+      "rateIn": "1 {currency} in {organizationCurrency}",
+      "addRate": "Kurs hinzufügen",
+      "noManualRates": "Keine manuellen Kurse eingegeben.",
+      "confirmDeleteRate": "Den Kurs für {currency} vom {date} löschen? Bestellungen, die ihn verwendet haben, behalten ihren Kurs."
+    }
   }
 }

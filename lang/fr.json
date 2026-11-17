@@ -153,5 +153,18 @@
     "Stock adjustments created for discrepancies: :count.": "Ajustements de stock créés pour les écarts : :count.",
     "No discrepancies found.": "Aucun écart trouvé.",
     "If that email belongs to an account, we have emailed a password reset link.": "Si cette adresse e-mail correspond à un compte, nous avons envoyé un lien de réinitialisation du mot de passe.",
-    "This code was already used; wait for the next one.": "Ce code a déjà été utilisé ; attendez le suivant."
+    "This code was already used; wait for the next one.": "Ce code a déjà été utilisé ; attendez le suivant.",
+    "You do not have permission to set a purchase order exchange rate.": "Vous n'avez pas l'autorisation de définir le taux de change d'un bon de commande.",
+    "There is no exchange rate to confirm. Enter one instead.": "Il n'y a aucun taux de change à confirmer. Saisissez-en un.",
+    "This purchase order already has an exchange rate, or does not need one.": "Ce bon de commande a déjà un taux de change ou n'en a pas besoin.",
+    "Enter an exchange rate greater than zero.": "Saisissez un taux de change supérieur à zéro.",
+    "Exchange rate recorded.": "Taux de change enregistré.",
+    "The fallback provider must differ from the main provider.": "Le fournisseur de secours doit être différent du fournisseur principal.",
+    "Enter :field for this provider.": "Saisissez :field pour ce fournisseur.",
+    "Exchange rate settings saved.": "Paramètres des taux de change enregistrés.",
+    "Exchange rates refreshed.": "Taux de change actualisés.",
+    "Some exchange rates could not be refreshed. See the synchronization status for details.": "Certains taux de change n'ont pas pu être actualisés. Consultez l'état de la synchronisation pour plus de détails.",
+    "Exchange rates could not be refreshed. See the synchronization status for details.": "Les taux de change n'ont pas pu être actualisés. Consultez l'état de la synchronisation pour plus de détails.",
+    "Manual exchange rate saved.": "Taux de change manuel enregistré.",
+    "Manual exchange rate deleted.": "Taux de change manuel supprimé."
 }

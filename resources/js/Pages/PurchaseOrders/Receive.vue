@@ -20,6 +20,7 @@ const props = defineProps({
     purchaseOrder: Object,
     pluginComponents: Object,
     receivingLocations: { type: Array, default: () => [] },
+    exchangeRate: { type: Object, default: null },
 });
 
 const showScanner = ref(false);
@@ -180,6 +181,12 @@ const thClassCenter = 'px-4 py-2.5 text-center text-xs font-medium tracking-tigh
                     </h3>
                     <p class="mt-1 text-sm text-text-secondary">
                         {{ t('purchaseOrders.receive.orderTotal', { total: formatCurrency(purchaseOrder.total) }) }}
+                    </p>
+                    <p v-if="exchangeRate?.is_foreign_currency && exchangeRate.rate" class="mt-1 text-xs text-text-tertiary">
+                        {{ t('exchangeRates.receive.convertedAt', { from: exchangeRate.from, rate: exchangeRate.rate, to: exchangeRate.to }) }}
+                    </p>
+                    <p v-else-if="exchangeRate?.is_foreign_currency" class="mt-1 text-xs text-status-warning">
+                        {{ t('exchangeRates.receive.noRate', { currency: purchaseOrder.currency }) }}
                     </p>
                 </div>
                 <Badge :variant="statusVariant(purchaseOrder.status)" size="md" dot>
