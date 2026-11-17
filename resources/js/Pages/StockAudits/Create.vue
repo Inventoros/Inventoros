@@ -8,6 +8,7 @@ import Button from '@/Components/ui/Button.vue';
 import FormActions from '@/Components/ui/FormActions.vue';
 import FormErrorSummary from '@/Components/ui/FormErrorSummary.vue';
 import { useFormFeedback } from '@/composables/useFormFeedback';
+import { textMatches } from '@/lib/searchText';
 import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
 import { ref, computed, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
@@ -52,10 +53,7 @@ const selectAllProducts = ref(false);
 
 const filteredProducts = computed(() => {
     if (!productSearch.value) return props.products;
-    const search = productSearch.value.toLowerCase();
-    return props.products.filter(
-        p => p.name.toLowerCase().includes(search) || p.sku.toLowerCase().includes(search)
-    );
+    return props.products.filter(p => textMatches([p.name, p.sku], productSearch.value));
 });
 
 const toggleSelectAll = () => {

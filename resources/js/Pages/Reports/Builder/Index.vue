@@ -8,6 +8,7 @@ import { Head, Link, router } from '@inertiajs/vue3';
 import { ref, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { displayDate } from '@/lib/dates';
+import { textMatches } from '@/lib/searchText';
 import { Plus, Search, Eye, Pencil, Trash2, Download, FileSpreadsheet } from '@lucide/vue';
 
 const { t } = useI18n();
@@ -21,12 +22,7 @@ const search = ref('');
 
 const filteredReports = computed(() => {
     if (!search.value) return props.reports;
-    const q = search.value.toLowerCase();
-    return props.reports.filter(r =>
-        r.name.toLowerCase().includes(q) ||
-        r.data_source.toLowerCase().includes(q) ||
-        (r.creator?.name || '').toLowerCase().includes(q)
-    );
+    return props.reports.filter(r => textMatches([r.name, r.data_source, r.creator?.name], search.value));
 });
 
 const dataSourceLabel = (key) => {

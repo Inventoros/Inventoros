@@ -2,6 +2,7 @@
 import { computed, nextTick, ref, useId, watch, watchEffect } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { Search, X } from '@lucide/vue';
+import { normalizeSearchText as normalize } from '@/lib/searchText';
 
 defineOptions({ inheritAttrs: false });
 const props = defineProps({
@@ -30,7 +31,6 @@ const active = ref(-1);
 const selected = computed(() => props.products.find(product => String(product.id) === String(props.modelValue)));
 const displayName = product => product ? `${product.name}${product.sku ? ' · ' + product.sku : ''}` : '';
 const variantsOf = product => product.variants || product.active_variants || [];
-const normalize = value => String(value || '').normalize('NFKC').toLocaleLowerCase().trim();
 // Build the searchable text once per catalog change. Rendering is capped;
 // search still considers every product and its variant identifiers.
 const catalog = computed(() => props.products.map(product => ({
