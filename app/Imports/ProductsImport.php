@@ -532,8 +532,10 @@ final class ProductsImport extends ProductSpreadsheetValueBinder implements Skip
 
     /**
      * Link the row's primary supplier (supplier_code, else supplier_name) with
-     * its supplier_sku and supplier_cost. An unknown supplier or a bad cost is
-     * a row warning, never a failed row: the product itself is already saved.
+     * its supplier_sku and supplier_cost (in supplier_cost_currency; blank
+     * keeps the link's currency, the supplier's for a new link). An unknown
+     * supplier, a bad cost or a bad currency is a row warning, never a failed
+     * row: the product itself is already saved.
      *
      * @param  Collection<string, mixed>|array<string, mixed>  $row
      */
@@ -544,6 +546,7 @@ final class ProductsImport extends ProductSpreadsheetValueBinder implements Skip
         $name = $text($row['supplier_name'] ?? '');
         $sku = $text($row['supplier_sku'] ?? '');
         $cost = trim((string) ($row['supplier_cost'] ?? ''));
+        $costCurrency = strtoupper(trim((string) ($row['supplier_cost_currency'] ?? '')));
 
         if ($code === '' && $name === '') {
             if ($sku !== '' || $cost !== '') {
@@ -581,9 +584,15 @@ final class ProductsImport extends ProductSpreadsheetValueBinder implements Skip
             }
         }
 
+        if ($costCurrency !== '' && preg_match('/^[A-Z]{3}$/', $costCurrency) !== 1) {
+            $this->warn($rowNumber, "Invalid supplier_cost_currency '{$costCurrency}' ignored.");
+            $costCurrency = '';
+        }
+
         app(ProductService::class)->setPrimarySupplier($product, $supplier->id, [
             'supplier_sku' => $sku !== '' ? mb_substr((string) (ProductSpreadsheetText::isEncoded($row) ? $sku : SpreadsheetSafety::sanitiseImport($sku)), 0, 255) : null,
             'cost_price' => $costPrice,
+            'cost_currency' => $costCurrency !== '' ? $costCurrency : null,
         ]);
     }
 

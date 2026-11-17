@@ -6,8 +6,10 @@ namespace App\Services;
 
 use App\Enums\Permission;
 use App\Http\Middleware\CheckApiPermission;
+use App\Models\Auth\Organization;
 use App\Models\Inventory\Product;
 use App\Models\Inventory\ProductOption;
+use App\Models\Inventory\ProductSupplier;
 use App\Models\Inventory\ProductVariant;
 use App\Models\Inventory\StockAdjustment;
 use App\Models\Inventory\Supplier;
@@ -347,13 +349,19 @@ final class ProductService
     /**
      * Replace a product's supplier links with the given rows.
      *
-     * Each row: supplier_id, supplier_sku?, cost_price?, lead_time_days?,
-     * minimum_order_quantity?, is_primary?. Exactly one resulting link is
-     * primary: the first row flagged is_primary, or the first row when none
-     * is. Every supplier must belong to the product's organization (callers
-     * validate this too; this is the backstop for surfaces that don't). A cost
-     * that is new or differs from the stored one is written to the supplier
-     * price history.
+     * Each row: supplier_id, supplier_sku?, cost_price?, cost_currency?,
+     * lead_time_days?, minimum_order_quantity?, is_primary?. Exactly one
+     * resulting link is primary: the first row flagged is_primary, or the
+     * first row when none is. Every supplier must belong to the product's
+     * organization (callers validate this too; this is the backstop for
+     * surfaces that don't). A cost that is new or differs from the stored one
+     * (in amount or currency) is written to the supplier price history.
+     *
+     * The cost is in cost_currency when the row gives one; otherwise an
+     * existing link keeps the currency it has and a new link takes the
+     * supplier's currency (else the organization's). So a supplier that
+     * changes its currency later does not re-denominate costs already
+     * entered for it.
      *
      * @param  array<int, array<string, mixed>>  $rows
      *
@@ -364,12 +372,12 @@ final class ProductService
         $rows = array_values(array_filter($rows, fn ($row) => is_array($row) && ! empty($row['supplier_id'])));
         $ids = array_map(fn ($row) => (int) $row['supplier_id'], $rows);
 
-        $ownIds = Supplier::withoutGlobalScopes()
+        $ownCurrencies = Supplier::withoutGlobalScopes()
             ->where('organization_id', $product->organization_id)
             ->whereNull('deleted_at')
             ->whereIn('id', $ids)
-            ->pluck('id')
-            ->all();
+            ->pluck('currency', 'id');
+        $ownIds = $ownCurrencies->keys()->map(fn ($id) => (int) $id)->all();
 
         if (count(array_diff($ids, $ownIds)) > 0) {
             throw new InvalidArgumentException('One or more suppliers do not belong to this organization.');
@@ -385,7 +393,9 @@ final class ProductService
 
         $existing = DB::table('product_supplier')
             ->where('product_id', $product->id)
-            ->pluck('cost_price', 'supplier_id');
+            ->get(['supplier_id', 'cost_price', 'cost_currency'])
+            ->keyBy('supplier_id');
+        $organizationCurrency = null;
 
         $blankToNull = fn ($value) => ($value === null || $value === '') ? null : $value;
 
@@ -397,17 +407,28 @@ final class ProductService
             $leadTime = $blankToNull($row['lead_time_days'] ?? null);
             $moq = $blankToNull($row['minimum_order_quantity'] ?? null);
 
+            $previous = $existing->get($supplierId);
+            $currency = ProductSupplier::normalizeCurrency($row['cost_currency'] ?? null)
+                ?? ProductSupplier::normalizeCurrency($previous?->cost_currency)
+                ?? ProductSupplier::normalizeCurrency($ownCurrencies->get($supplierId))
+                ?? ($organizationCurrency ??= Organization::currencyFor((int) $product->organization_id));
+
             $sync[$supplierId] = [
                 'supplier_sku' => $blankToNull($row['supplier_sku'] ?? null),
                 'cost_price' => $cost,
+                'cost_currency' => $currency,
                 'lead_time_days' => $leadTime === null ? null : (int) $leadTime,
                 'minimum_order_quantity' => $moq === null ? null : (int) $moq,
                 'is_primary' => $index === $primaryIndex,
             ];
 
-            $previous = $existing->get($supplierId);
-            if ($cost !== null && ($previous === null || round((float) $previous, 2) !== $cost)) {
-                SupplierPriceHistory::record($product, $supplierId, $cost, SupplierPriceHistory::SOURCE_SUPPLIER_LINK);
+            $changed = $previous === null
+                || $previous->cost_price === null
+                || round((float) $previous->cost_price, 2) !== $cost
+                || ProductSupplier::normalizeCurrency($previous->cost_currency) !== $currency;
+
+            if ($cost !== null && $changed) {
+                SupplierPriceHistory::record($product, $supplierId, $cost, SupplierPriceHistory::SOURCE_SUPPLIER_LINK, currency: ['currency' => $currency]);
             }
         }
 
@@ -421,7 +442,7 @@ final class ProductService
      * Null/blank attributes leave the stored value unchanged. Used by the
      * product import, which only knows about the primary supplier.
      *
-     * @param  array{supplier_sku?: string|null, cost_price?: float|int|string|null, lead_time_days?: int|null}  $attributes
+     * @param  array{supplier_sku?: string|null, cost_price?: float|int|string|null, cost_currency?: string|null, lead_time_days?: int|null}  $attributes
      */
     public function setPrimarySupplier(Product $product, int $supplierId, array $attributes = []): void
     {
@@ -433,6 +454,7 @@ final class ProductService
                 'supplier_id' => (int) $link->supplier_id,
                 'supplier_sku' => $link->supplier_sku,
                 'cost_price' => $link->cost_price,
+                'cost_currency' => $link->cost_currency,
                 'lead_time_days' => $link->lead_time_days,
                 'minimum_order_quantity' => $link->minimum_order_quantity,
                 'is_primary' => false,
@@ -441,7 +463,7 @@ final class ProductService
             ->all();
 
         $row = $rows[$supplierId] ?? ['supplier_id' => $supplierId];
-        foreach (['supplier_sku', 'cost_price', 'lead_time_days'] as $key) {
+        foreach (['supplier_sku', 'cost_price', 'cost_currency', 'lead_time_days'] as $key) {
             if (isset($attributes[$key]) && $attributes[$key] !== '') {
                 $row[$key] = $attributes[$key];
             }

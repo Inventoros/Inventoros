@@ -20,7 +20,7 @@ final class ProductSpreadsheetText
     private const TEXT_COLUMNS = [
         'name', 'sku', 'barcode', 'description', 'category', 'location',
         'currency', 'status', 'notes', 'created_at', 'supplier_code',
-        'supplier_name', 'supplier_sku',
+        'supplier_name', 'supplier_sku', 'supplier_cost_currency',
     ];
 
     public static function encodeRow(array $values, array $headings): array

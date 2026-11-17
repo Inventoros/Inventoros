@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\GraphQL\Types;
 
 use App\GraphQL\Support\ListResourceLimits;
+use App\Models\Inventory\ProductSupplier;
 use App\Models\Inventory\Supplier;
 use GraphQL\Type\Definition\Type;
 use Rebing\GraphQL\Support\Facades\GraphQL;
@@ -103,6 +104,11 @@ class SupplierType extends GraphQLType
                 'type' => Type::float(),
                 'description' => 'What the supplier charges for the product (only when reached through a product)',
                 'resolve' => fn (Supplier $supplier) => $supplier->pivot?->cost_price !== null ? (float) $supplier->pivot->cost_price : null,
+            ],
+            'cost_currency' => [
+                'type' => Type::string(),
+                'description' => "Currency of cost_price (only when reached through a product). Set when the link was made, so it can differ from the supplier's current currency.",
+                'resolve' => fn (Supplier $supplier) => $supplier->pivot !== null ? ProductSupplier::costCurrencyOf($supplier) : null,
             ],
             'lead_time_days' => [
                 'type' => Type::int(),

@@ -121,7 +121,7 @@ class Supplier extends Model
     {
         return $this->belongsToMany(Product::class, 'product_supplier')
             ->using(ProductSupplier::class)
-            ->withPivot(['id', 'cost_price', 'supplier_sku', 'lead_time_days', 'minimum_order_quantity', 'is_primary'])
+            ->withPivot(['id', 'cost_price', 'cost_currency', 'supplier_sku', 'lead_time_days', 'minimum_order_quantity', 'is_primary'])
             ->withTimestamps();
     }
 
