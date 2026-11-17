@@ -37,6 +37,8 @@ Docker Compose, Coolify, cloud servers, cPanel and manual installs are covered i
 
 ### Quick Start
 
+To work on Inventoros, clone the repository. (To run it without git, `composer create-project inventoros/inventoros` downloads the same application without the test suites; see [Install with Composer](https://inventoros.com/docs/installation-vps#install-with-composer-instead-of-git).)
+
 ```bash
 git clone https://github.com/Inventoros/Inventoros.git
 cd Inventoros
