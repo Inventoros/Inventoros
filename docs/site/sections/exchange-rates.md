@@ -11,6 +11,8 @@ Your organization's currency is the one set in **Settings > Organization** (regi
 
 Purchase orders in your own currency need no rate and behave exactly as before.
 
+Tax is part of the converted totals. When purchase order lines have tax rates, the order form, the purchase order page and the PDF show each line's gross and the tax for each rate in your currency as well, and the converted tax and total include the line taxes. Unit costs are net (before tax), so receiving books the net cost.
+
 The rate is `1 <PO currency> = <rate> <organization currency>`, stored with up to 10 decimals. Converted amounts use exact decimal arithmetic and are rounded half up to the currency's minor unit (two decimals for most currencies, none for JPY and KRW).
 
 ## Providers
@@ -66,7 +68,7 @@ Over the REST and GraphQL APIs the same choices are `exchange_rate_mode` (`auto`
 
 ## Approvals
 
-When purchase order approvals are on, the threshold is compared with the total in your organization's currency. A purchase order in another currency with no rate recorded cannot be compared, so it needs approval. Changing the rate of an approved draft sends it back for approval, like changing its total.
+When purchase order approvals are on, the threshold is compared with the total in your organization's currency, including tax and shipping (whether the tax comes from line tax rates or is entered for the whole purchase order). A purchase order in another currency with no rate recorded cannot be compared, so it needs approval. Changing the rate of an approved draft sends it back for approval, like changing its total.
 
 ## Older purchase orders
 
@@ -77,7 +79,7 @@ Purchase orders created before exchange rates existed keep working:
 
 ## The purchase order document
 
-The PDF sent to the supplier is in the purchase order currency. For a foreign-currency order it also shows the rate, its source and date, and the total in your currency, or that no rate was recorded.
+The PDF sent to the supplier is in the purchase order currency. For a foreign-currency order it also shows the rate, its source and date, the tax per rate (when lines have rates) and the total in your currency, or that no rate was recorded.
 
 ## Synchronization schedule
 

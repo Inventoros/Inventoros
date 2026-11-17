@@ -12,6 +12,7 @@ Full release notes, with the pull request behind each change, are on [GitHub Rel
 - Settings > Exchange rates: choose the provider (Frankfurter, the ECB reference rates, by default; or manual rates), an optional fallback provider, the stale limit, the currencies to keep, automatic synchronization and its frequency, refresh now, sync status and errors, and manual rates. New permissions `manage_exchange_rates` and `override_purchase_order_exchange_rate`; existing Administrator roles and the Purchasing Agent permission set are granted them by a migration.
 - `exchange-rates:sync`, scheduled hourly: one request per provider and foreign currency for every organization that is due, with back-off on rate limits and outages.
 - Plugins can add exchange rate providers with `register_exchange_rate_provider()`.
+- Per-line tax on purchase orders (#416). The purchase order form has a tax rate per line, pre-filled from the product's tax rate, and shows each line's net, tax and gross, the tax per rate and the totals in the organization's currency. The server computes the line taxes with the same rules as sales orders; the PO-level tax amount stays for purchase orders without line rates. The purchase order page, PDF and supplier email show the tax per rate; REST, GraphQL and MCP accept and return `tax_rate` per line and `tax_breakdown` per order. Unit costs stay net, so receiving records net costs.
 
 ### Changed
 
