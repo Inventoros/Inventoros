@@ -1,13 +1,24 @@
 {
     "$schema": "https://getcomposer.org/schema.json",
-    "name": "laravel/laravel",
+    "name": "inventoros/inventoros",
     "type": "project",
-    "description": "The skeleton application for the Laravel framework.",
+    "description": "Open-source, self-hosted inventory management: stock, warehouses, orders, purchasing and suppliers.",
     "keywords": [
-        "laravel",
-        "framework"
+        "inventory",
+        "inventory-management",
+        "warehouse",
+        "purchase-orders",
+        "self-hosted",
+        "laravel"
     ],
+    "homepage": "https://inventoros.com",
     "license": "AGPL-3.0-only",
+    "support": {
+        "issues": "https://github.com/Inventoros/Inventoros/issues",
+        "source": "https://github.com/Inventoros/Inventoros",
+        "docs": "https://inventoros.com/docs",
+        "security": "https://github.com/Inventoros/Inventoros/security/policy"
+    },
     "require": {
         "php": "^8.4.1",
         "bacon/bacon-qr-code": "^3.0",
@@ -82,8 +93,7 @@
         ],
         "post-create-project-cmd": [
             "@php artisan key:generate --ansi",
-            "@php -r \"file_exists('database/database.sqlite') || touch('database/database.sqlite');\"",
-            "@php artisan migrate --graceful --ansi"
+            "@php scripts/post-create-project.php"
         ],
         "pre-package-uninstall": [
             "Illuminate\\Foundation\\ComposerScripts::prePackageUninstall"
