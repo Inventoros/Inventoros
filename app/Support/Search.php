@@ -10,16 +10,23 @@ use Illuminate\Database\Query\Builder as QueryBuilder;
 /**
  * Driver-aware "contains" search shared by every search box.
  *
- * - Case-insensitive on every database: ILIKE on PostgreSQL (which can use the
- *   pg_trgm GIN indexes on the searched columns), LIKE elsewhere.
- * - What the user typed is matched literally: `%`, `_` and the escape
+ * - Case-insensitive on every database: ILIKE on PostgreSQL, LIKE elsewhere.
+ * - Apostrophes and quotes are ignored, both in the term and in the stored
+ *   value: "Players Handbook", "Player's Handbook" and "Player’s Handbook"
+ *   all find each other, and "its" finds "it's" (issue #430). Curly quotes
+ *   come from store exports, word processors and phone keyboards, so a
+ *   literal comparison missed names that looked identical.
+ * - Every other character is matched literally: `%`, `_` and the escape
  *   character are escaped and an explicit ESCAPE clause is sent, because
- *   SQLite has no default LIKE escape and MySQL treats `\` as one.
- * - Typographic quotes count as their plain ASCII forms, both in the term and
- *   in the stored value, so "Player's Handbook" finds "Player’s Handbook"
- *   (curly apostrophes come from store exports, word processors and phone
- *   keyboards) and the other way round. resources/js/lib/searchText.js
- *   applies the same folding to the pickers that filter in the browser.
+ *   SQLite has no default LIKE escape and MySQL treats `\` as one. Hyphens,
+ *   slashes and dots matter in SKUs, barcodes and location codes, so they
+ *   are never ignored.
+ *
+ * On PostgreSQL the stored value is compared through translate() with the
+ * quote list inlined, which matches the trigram expression indexes added by
+ * the 2026_11_17_000003 migration, so searches stay index-backed.
+ * resources/js/lib/searchText.js applies the same rules to the pickers that
+ * filter in the browser.
  */
 final class Search
 {
@@ -30,8 +37,9 @@ final class Search
     public const ESCAPE = '!';
 
     /**
-     * Characters searched as the ASCII character they stand in for.
-     * Keep in step with LOOKALIKES in resources/js/lib/searchText.js.
+     * Typographic forms of the apostrophe and the double quote. They are
+     * ignored like the ASCII ones. Keep in step with LOOKALIKES in
+     * resources/js/lib/searchText.js.
      */
     public const LOOKALIKES = [
         "\u{2018}" => "'", // left single quotation mark
@@ -47,6 +55,13 @@ final class Search
         "\u{2033}" => '"', // double prime
         "\u{FF02}" => '"', // fullwidth quotation mark
     ];
+
+    /**
+     * Every character a search ignores: the ASCII apostrophe and double
+     * quote, then the LOOKALIKES in order. The PostgreSQL expression indexes
+     * are built from this exact string; changing it needs a new migration.
+     */
+    public const IGNORED = "'\"\u{2018}\u{2019}\u{201B}\u{02BC}\u{2032}\u{FF07}\u{201C}\u{201D}\u{201E}\u{201F}\u{2033}\u{FF02}";
 
     /**
      * Add an OR-group of "column contains term" conditions to the query.
@@ -99,44 +114,44 @@ final class Search
         // json selectors working and matches the trigram index expression.
         $value = $pgsql ? $wrapped.'::text' : $wrapped;
 
-        $folded = self::fold($term);
-        $lookalikes = self::lookalikesFor($folded);
+        $stripped = self::stripQuotes($term);
 
-        if ($lookalikes === []) {
-            $query->whereRaw("{$value} {$like}", [self::containsPattern($folded)], $boolean);
+        if ($stripped === '') {
+            // Only quotes were typed: like an empty search, everything matches.
+            $query->whereRaw('1 = 1', [], $boolean);
 
             return $query;
         }
 
-        // The term has a quote in it. Fold the stored value too, so either
-        // form matches. The first condition swaps each quote for the
-        // single-character wildcard: it never excludes a real match, and on
-        // PostgreSQL it lets the trigram index narrow the rows before the
-        // REPLACE() comparison (which no index covers) checks them exactly.
-        $replaced = $value;
-        $bindings = [];
-        foreach ($lookalikes as $from => $to) {
-            $replaced = "replace({$replaced}, ?, ?)";
-            array_push($bindings, $from, $to);
-        }
-
-        $loose = '%'.strtr(self::escape($folded), ["'" => '_', '"' => '_']).'%';
-
-        $query->whereRaw(
-            "({$value} {$like} and {$replaced} {$like})",
-            [$loose, ...$bindings, self::containsPattern($folded)],
-            $boolean,
-        );
+        $query->whereRaw(self::withoutQuotesSql($value, $pgsql).' '.$like, [self::containsPattern($stripped)], $boolean);
 
         return $query;
     }
 
     /**
-     * Map typographic quotes to the ASCII character they stand in for.
+     * The value with every ignored quote removed.
      */
-    public static function fold(string $value): string
+    public static function stripQuotes(string $value): string
     {
-        return strtr($value, self::LOOKALIKES);
+        return str_replace(mb_str_split(self::IGNORED), '', $value);
+    }
+
+    /**
+     * SQL for $expression with every ignored quote removed. The quote list is
+     * inlined (it is a constant, never user input) so the expression is
+     * identical to the PostgreSQL index expression.
+     */
+    public static function withoutQuotesSql(string $expression, bool $pgsql): string
+    {
+        if ($pgsql) {
+            return "translate({$expression}, ".self::literal(self::IGNORED).", '')";
+        }
+
+        foreach (mb_str_split(self::IGNORED) as $quote) {
+            $expression = "replace({$expression}, ".self::literal($quote).", '')";
+        }
+
+        return $expression;
     }
 
     /**
@@ -158,13 +173,11 @@ final class Search
     }
 
     /**
-     * The lookalikes whose ASCII form occurs in the (folded) term. Only those
-     * have to be folded in the stored value.
-     *
-     * @return array<string, string>
+     * A single-quoted SQL string literal. Only used for the constant quote
+     * list; neither it nor any user input contains a backslash.
      */
-    private static function lookalikesFor(string $folded): array
+    private static function literal(string $value): string
     {
-        return array_filter(self::LOOKALIKES, fn (string $ascii): bool => str_contains($folded, $ascii));
+        return "'".str_replace("'", "''", $value)."'";
     }
 }

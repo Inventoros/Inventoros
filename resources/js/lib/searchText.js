@@ -2,12 +2,13 @@
 // pickers on the order, purchase order and stock transfer forms, and the
 // other client-side list filters).
 //
-// It mirrors App\Support\Search on the server: case-insensitive, every
-// character matched literally, and typographic quotes treated as their ASCII
-// forms, so "Player's Handbook" finds "Player’s Handbook" and the other way
-// round (issue #430).
+// It mirrors App\Support\Search on the server: case-insensitive, apostrophes
+// and quotes ignored on both sides (so "Players Handbook", "Player's Handbook"
+// and "Player’s Handbook" all find each other, issue #430), and every other
+// character matched literally.
 
-// Keep in step with Search::LOOKALIKES in app/Support/Search.php.
+// Typographic forms of the apostrophe and the double quote, ignored like the
+// ASCII ones. Keep in step with Search::LOOKALIKES in app/Support/Search.php.
 export const LOOKALIKES = Object.freeze({
     '‘': "'", // left single quotation mark
     '’': "'", // right single quotation mark / typographic apostrophe
@@ -23,16 +24,19 @@ export const LOOKALIKES = Object.freeze({
     '＂': '"', // fullwidth quotation mark
 });
 
-const LOOKALIKE_PATTERN = new RegExp(`[${Object.keys(LOOKALIKES).join('')}]`, 'g');
+// Every character a search ignores, in the same order as Search::IGNORED.
+export const IGNORED = `'"${Object.keys(LOOKALIKES).join('')}`;
+
+const IGNORED_PATTERN = new RegExp(`[${IGNORED}]`, 'g');
 
 /**
- * Lowercased, trimmed text with compatibility forms and typographic quotes
- * folded, ready for substring comparison.
+ * Lowercased, trimmed text with compatibility forms folded and apostrophes
+ * and quotes removed, ready for substring comparison.
  */
 export function normalizeSearchText(value) {
     return String(value ?? '')
-        .replace(LOOKALIKE_PATTERN, (character) => LOOKALIKES[character])
         .normalize('NFKC')
+        .replace(IGNORED_PATTERN, '')
         .toLocaleLowerCase()
         .trim();
 }
