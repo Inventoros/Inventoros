@@ -299,6 +299,21 @@ sudo cp .env.example .env
 sudo php artisan key:generate
 ```
 
+## Install with Composer instead of git
+
+Inventoros is also on Packagist, so you can download it with Composer in place of the `git clone` in step 6 of any of the guides above:
+
+```bash
+cd /var/www
+sudo composer create-project inventoros/inventoros inventoros --no-dev
+cd inventoros
+sudo npm ci && sudo npm run build
+```
+
+Composer installs the PHP dependencies, copies `.env.example` to `.env` and generates `APP_KEY`, so carry on from step 7. To install a specific release, add its version after the folder name, for example `composer create-project inventoros/inventoros inventoros 2.5.0 --no-dev`. Leave out `--no-dev` only if you want to run the development tools.
+
+The download has no `.git` folder and leaves out the test suites, so update it from the admin panel like any other VPS install (see [Updates & Backups](updates)), not with `git pull`.
+
 ## Scheduler and queue worker
 
 Every install needs the Laravel scheduler and a queue worker. The scheduler runs low-stock checks, scheduled cycle counts, scheduled report emails, shipment tracking, log pruning and removal of expired export files. The worker sends webhook deliveries and queued emails (purchase orders, invoices, approvals, shipment notices). Without them these jobs pile up and never run.
