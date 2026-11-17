@@ -31,8 +31,10 @@ const deleteSupplier = () => {
     }
 };
 
-const formatCurrency = (value) => {
-    return formatMoney(value, props.supplier.currency);
+// A linked product's cost is in the link's currency (set when the link was
+// made), which can differ from the supplier's current currency.
+const formatCurrency = (value, currency = null) => {
+    return formatMoney(value, currency || props.supplier.currency);
 };
 
 // Only http(s) websites become links; anything else saved before validation
@@ -163,7 +165,7 @@ const thClass = 'px-4 py-2.5 text-start text-xs font-medium text-text-secondary'
                                         </td>
                                         <td class="px-4 py-3 text-sm text-text-tertiary">{{ product.sku }}</td>
                                         <td class="px-4 py-3 text-sm text-text-tertiary">{{ product.pivot?.supplier_sku || '-' }}</td>
-                                        <td class="px-4 py-3 text-end text-sm tabular-nums text-text-secondary">{{ product.pivot?.cost_price != null ? formatCurrency(product.pivot.cost_price) : '-' }}</td>
+                                        <td class="px-4 py-3 text-end text-sm tabular-nums text-text-secondary">{{ product.pivot?.cost_price != null ? formatCurrency(product.pivot.cost_price, product.pivot.cost_currency) : '-' }}</td>
                                     </tr>
                                 </tbody>
                             </table>

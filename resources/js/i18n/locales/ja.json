@@ -938,7 +938,19 @@
     "source": "ソース",
     "sourceLink": "仕入先の紐付け",
     "sourcePurchaseOrder": "発注 {number}",
-    "recordedBy": "記録者"
+    "recordedBy": "記録者",
+    "costCurrency": "原価の通貨",
+    "supplierCurrencyDiffers": "この仕入先は現在 {currency} で請求しています。",
+    "approximately": "≈ {amount}",
+    "rateOf": "{date} のレート",
+    "staleRateOf": "{date} の古いレート",
+    "fallbackRateOf": "{date} の代替レート",
+    "noRate": "{currency} のレートが保存されていません",
+    "rateTitle": "1 {from} = {rate} {to}",
+    "currencyNotRecorded": "通貨は記録されていません",
+    "supplierCharged": "仕入先の価格: {amount}",
+    "convertedNote": "≈ の付いた金額は、組織に保存された為替レートで {currency} に換算した参考値です。",
+    "convertedHistoryNote": "≈ の付いた金額は、各原価が記録された日に保存されたレートで {currency} に換算しています。"
   },
   "quickReorder": {
     "createPo": "発注を作成",

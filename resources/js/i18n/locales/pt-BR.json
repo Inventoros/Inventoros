@@ -938,7 +938,19 @@
     "source": "Origem",
     "sourceLink": "Vínculo do fornecedor",
     "sourcePurchaseOrder": "OC {number}",
-    "recordedBy": "Por"
+    "recordedBy": "Por",
+    "costCurrency": "Moeda do custo",
+    "supplierCurrencyDiffers": "O fornecedor agora fatura em {currency}.",
+    "approximately": "≈ {amount}",
+    "rateOf": "Taxa de {date}",
+    "staleRateOf": "Taxa desatualizada de {date}",
+    "fallbackRateOf": "Taxa alternativa de {date}",
+    "noRate": "Nenhuma taxa de {currency} armazenada",
+    "rateTitle": "1 {from} = {rate} {to}",
+    "currencyNotRecorded": "Moeda não registrada",
+    "supplierCharged": "Preço do fornecedor: {amount}",
+    "convertedNote": "Valores marcados com ≈ são convertidos para {currency} pelas taxas de câmbio armazenadas para sua organização, como referência.",
+    "convertedHistoryNote": "Valores marcados com ≈ são convertidos para {currency} pela taxa armazenada para o dia em que cada custo foi registrado."
   },
   "quickReorder": {
     "createPo": "Criar OC",

@@ -938,7 +938,19 @@
     "source": "Bron",
     "sourceLink": "Leverancierskoppeling",
     "sourcePurchaseOrder": "Inkooporder {number}",
-    "recordedBy": "Door"
+    "recordedBy": "Door",
+    "costCurrency": "Valuta van de kosten",
+    "supplierCurrencyDiffers": "De leverancier factureert nu in {currency}.",
+    "approximately": "≈ {amount}",
+    "rateOf": "Koers van {date}",
+    "staleRateOf": "Verouderde koers van {date}",
+    "fallbackRateOf": "Reservekoers van {date}",
+    "noRate": "Geen {currency}-koers opgeslagen",
+    "rateTitle": "1 {from} = {rate} {to}",
+    "currencyNotRecorded": "Valuta niet vastgelegd",
+    "supplierCharged": "Prijs van de leverancier: {amount}",
+    "convertedNote": "Bedragen met ≈ zijn ter informatie omgerekend naar {currency} tegen de wisselkoersen die voor uw organisatie zijn opgeslagen.",
+    "convertedHistoryNote": "Bedragen met ≈ zijn omgerekend naar {currency} tegen de koers die is opgeslagen voor de dag waarop de kosten zijn vastgelegd."
   },
   "quickReorder": {
     "createPo": "Inkooporder aanmaken",

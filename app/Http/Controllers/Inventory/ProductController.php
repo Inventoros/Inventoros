@@ -13,9 +13,11 @@ use App\Models\Auth\Organization;
 use App\Models\Inventory\Product;
 use App\Models\Inventory\ProductCategory;
 use App\Models\Inventory\ProductLocation;
+use App\Models\Inventory\ProductSupplier;
 use App\Models\Inventory\Supplier;
 use App\Models\Inventory\SupplierPriceHistory;
 use App\Models\Inventory\VariantLocationStock;
+use App\Services\ExchangeRates\OrganizationCurrencyConverter;
 use App\Services\ProductLocationStockService;
 use App\Services\ProductService;
 use App\Services\StockReservationService;
@@ -251,35 +253,39 @@ class ProductController extends Controller
             ->take(20)
             ->get();
 
+        // Supplier costs are shown in their own currency and, when that is
+        // not the organization's, also converted at the organization's stored
+        // rate (never a fetched or invented one): today's for the current
+        // links, the recorded date's for history rows.
+        $converter = app(OrganizationCurrencyConverter::class);
+        $organizationId = (int) $product->organization_id;
+
+        $supplierCosts = $product->suppliers
+            ->mapWithKeys(function (Supplier $supplier) use ($converter, $organizationId) {
+                $currency = ProductSupplier::costCurrencyOf($supplier);
+
+                return [$supplier->id => [
+                    'currency' => $currency,
+                    'converted' => $converter->toOrganizationCurrency($organizationId, $supplier->pivot?->cost_price, $currency),
+                ]];
+            })
+            ->all();
+
         // Recent supplier costs (link edits and PO receipts), newest first.
         $priceHistory = SupplierPriceHistory::where('product_id', $product->id)
             ->where('organization_id', $product->organization_id)
-            ->with(['supplier:id,name', 'variant:id,title', 'user:id,name', 'purchaseOrder:id,po_number'])
+            ->with(['supplier:id,name', 'variant:id,title', 'user:id,name', 'purchaseOrder:id,po_number,currency'])
             ->latest('recorded_at')
             ->latest('id')
             ->limit(25)
             ->get()
-            ->map(fn (SupplierPriceHistory $entry) => [
-                'id' => $entry->id,
-                'supplier_id' => $entry->supplier_id,
-                'supplier_name' => $entry->supplier?->name,
-                'product_variant_id' => $entry->product_variant_id,
-                'variant_title' => $entry->variant?->title,
-                'cost_price' => $entry->cost_price,
-                'currency' => $entry->currency,
-                'source_cost_price' => $entry->source_cost_price,
-                'source_currency' => $entry->source_currency,
-                'source' => $entry->source,
-                'purchase_order_id' => $entry->purchase_order_id,
-                'po_number' => $entry->purchaseOrder?->po_number,
-                'user_name' => $entry->user?->name,
-                'recorded_at' => $entry->recorded_at?->toIso8601String(),
-            ]);
+            ->map(fn (SupplierPriceHistory $entry) => $this->priceHistoryRow($entry, $converter, $organizationId));
 
         $data = [
             'product' => $product,
             'activities' => $activities,
             'priceHistory' => $priceHistory,
+            'supplierCosts' => (object) $supplierCosts,
             // Per-location on-hand breakdown (location name + quantity), richest
             // bin first. Empty for products that hold no binned stock.
             // Restricted to the bins in warehouses the viewer can access.
@@ -309,6 +315,52 @@ class ProductController extends Controller
         do_action('product_viewed', $product, auth()->user());
 
         return Inertia::render('Products/Show', $data);
+    }
+
+    /**
+     * One supplier price history row for the product page.
+     *
+     * The currency is the one recorded with the row. Rows logged before
+     * currencies were recorded have none: a purchase order receipt was logged
+     * at the order's unit cost, so it takes the order's currency; a supplier
+     * link edit could have been typed in any currency, so it stays unlabelled
+     * (currency_known false) instead of being read as the product's.
+     *
+     * @return array<string, mixed>
+     */
+    private function priceHistoryRow(SupplierPriceHistory $entry, OrganizationCurrencyConverter $converter, int $organizationId): array
+    {
+        $currency = ProductSupplier::normalizeCurrency($entry->currency);
+        $currencySource = $currency !== null ? 'recorded' : null;
+
+        if ($currency === null && $entry->source === SupplierPriceHistory::SOURCE_PURCHASE_ORDER && $entry->purchaseOrder !== null) {
+            $currency = ProductSupplier::normalizeCurrency($entry->purchaseOrder->currency);
+            $currencySource = $currency !== null ? 'purchase_order' : null;
+        }
+
+        return [
+            'id' => $entry->id,
+            'supplier_id' => $entry->supplier_id,
+            'supplier_name' => $entry->supplier?->name,
+            'product_variant_id' => $entry->product_variant_id,
+            'variant_title' => $entry->variant?->title,
+            'cost_price' => $entry->cost_price,
+            'currency' => $currency,
+            'currency_known' => $currency !== null,
+            'currency_source' => $currencySource,
+            'source_cost_price' => $entry->source_cost_price,
+            'source_currency' => $entry->source_currency,
+            'exchange_rate' => $entry->exchange_rate,
+            // A cost converted when it was received already is in the
+            // organization's currency; others are converted at the rate
+            // stored for the day they were recorded.
+            'converted' => $converter->toOrganizationCurrency($organizationId, $entry->cost_price, $currency, $entry->recorded_at),
+            'source' => $entry->source,
+            'purchase_order_id' => $entry->purchase_order_id,
+            'po_number' => $entry->purchaseOrder?->po_number,
+            'user_name' => $entry->user?->name,
+            'recorded_at' => $entry->recorded_at?->toIso8601String(),
+        ];
     }
 
     /**

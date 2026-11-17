@@ -23,8 +23,9 @@ import { useI18n } from 'vue-i18n';
 import { formatPercent } from '@/lib/reportFormat';
 import axios from 'axios';
 import ImageGallery from '@/Components/ImageGallery.vue';
+import ConvertedAmount from '@/Components/ConvertedAmount.vue';
 import { usePermissions } from '@/composables/usePermissions';
-import { formatMoney } from '@/lib/money';
+import { formatMoney, formatNumber } from '@/lib/money';
 import { formatTaxRate, grossFromNet } from '@/lib/lineTax';
 import { displayDate, displayDateTime } from '@/lib/dates';
 import { isAtOrBelowMinimum, onHandStock, stockStatus as stockStatusOf, stockValue } from '@/lib/productStock';
@@ -55,6 +56,9 @@ const props = defineProps({
     variantLocationBreakdown: { type: Array, default: () => [] },
     warehouseStockLevels: { type: Array, default: () => [] },
     priceHistory: { type: Array, default: () => [] },
+    // Per supplier id: the currency its cost is in and, when that is not the
+    // organization's, the cost converted at the stored rate (or why not).
+    supplierCosts: { type: Object, default: () => ({}) },
     // On hand / reserved / available (stock reservations), with a per-variant map.
     stockAvailability: { type: Object, default: null },
     pluginComponents: Object,
@@ -109,6 +113,15 @@ const productSuppliers = computed(() =>
 );
 
 const formatDate = (iso) => displayDate(iso);
+
+// A supplier's cost is in the link's currency, not the product's.
+const supplierCostCurrency = (supplier) =>
+    props.supplierCosts?.[supplier.id]?.currency || supplier.pivot?.cost_currency || supplier.currency || organizationCurrency.value;
+
+const hasConvertedCosts = computed(() =>
+    productSuppliers.value.some((supplier) => props.supplierCosts?.[supplier.id]?.converted)
+);
+const hasConvertedHistory = computed(() => props.priceHistory.some((entry) => entry.converted));
 
 const supplierThClass = 'px-4 py-2.5 text-start text-xs font-medium text-text-secondary';
 
@@ -555,14 +568,23 @@ const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface
                                                 </div>
                                             </td>
                                             <td class="px-4 py-3 font-mono text-xs text-text-secondary">{{ supplier.pivot?.supplier_sku || '-' }}</td>
-                                            <td class="px-4 py-3 text-end tabular-nums text-text-primary">{{ supplier.pivot?.cost_price != null ? formatCurrency(supplier.pivot.cost_price) : '-' }}</td>
+                                            <td class="px-4 py-3 text-end tabular-nums text-text-primary">
+                                                <template v-if="supplier.pivot?.cost_price != null">
+                                                    {{ formatMoney(supplier.pivot.cost_price, supplierCostCurrency(supplier)) }}
+                                                    <ConvertedAmount :conversion="supplierCosts?.[supplier.id]?.converted" :from="supplierCostCurrency(supplier)" />
+                                                </template>
+                                                <template v-else>-</template>
+                                            </td>
                                             <td class="px-4 py-3 text-end tabular-nums text-text-secondary">{{ supplier.pivot?.lead_time_days ?? '-' }}</td>
                                             <td class="px-4 py-3 text-end tabular-nums text-text-secondary">{{ supplier.pivot?.minimum_order_quantity ?? '-' }}</td>
                                         </tr>
                                     </tbody>
                                 </table>
                             </TableViewport>
-                            <div v-else class="flex flex-col items-center gap-2 py-6 text-center">
+                            <p v-if="productSuppliers.length > 0 && hasConvertedCosts" class="mt-2 text-xs text-text-tertiary">
+                                {{ t('productSuppliers.convertedNote', { currency: organizationCurrency }) }}
+                            </p>
+                            <div v-else-if="productSuppliers.length === 0" class="flex flex-col items-center gap-2 py-6 text-center">
                                 <Truck :size="20" class="text-text-tertiary" />
                                 <p class="text-sm text-text-tertiary">{{ t('productSuppliers.empty') }}</p>
                                 <Link v-if="(hasPermission('edit_products')) && canVisit('products.edit')" :href="route('products.edit', product.id)" class="text-sm font-medium text-brand hover:underline">
@@ -595,8 +617,17 @@ const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface
                                                 <span v-if="entry.variant_title" class="block text-xs text-text-tertiary">{{ entry.variant_title }}</span>
                                             </td>
                                             <td class="px-4 py-2.5 text-end tabular-nums text-text-primary">
-                                                {{ entry.currency ? formatMoney(entry.cost_price, entry.currency) : formatCurrency(entry.cost_price) }}
-                                                <span v-if="entry.source_currency && entry.source_cost_price != null" class="block text-xs text-text-tertiary">{{ formatMoney(entry.source_cost_price, entry.source_currency) }}</span>
+                                                <template v-if="entry.currency">{{ formatMoney(entry.cost_price, entry.currency) }}</template>
+                                                <template v-else>
+                                                    {{ formatNumber(entry.cost_price, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}
+                                                    <span class="block text-xs text-text-tertiary">{{ t('productSuppliers.currencyNotRecorded') }}</span>
+                                                </template>
+                                                <span
+                                                    v-if="entry.source_currency && entry.source_cost_price != null"
+                                                    class="block text-xs text-text-tertiary"
+                                                    :title="entry.exchange_rate ? t('productSuppliers.rateTitle', { from: entry.source_currency, rate: entry.exchange_rate, to: entry.currency }) : undefined"
+                                                >{{ t('productSuppliers.supplierCharged', { amount: formatMoney(entry.source_cost_price, entry.source_currency) }) }}</span>
+                                                <ConvertedAmount :conversion="entry.converted" :from="entry.currency" />
                                             </td>
                                             <td class="px-4 py-2.5 text-text-secondary">
                                                 <Link
@@ -614,6 +645,9 @@ const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface
                                     </tbody>
                                 </table>
                             </TableViewport>
+                            <p v-if="hasConvertedHistory" class="mt-2 text-xs text-text-tertiary">
+                                {{ t('productSuppliers.convertedHistoryNote', { currency: organizationCurrency }) }}
+                            </p>
                         </div>
                     </Card>
 

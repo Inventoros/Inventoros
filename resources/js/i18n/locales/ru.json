@@ -938,7 +938,19 @@
     "source": "Источник",
     "sourceLink": "Привязка поставщика",
     "sourcePurchaseOrder": "Заказ поставщику {number}",
-    "recordedBy": "Кем"
+    "recordedBy": "Кем",
+    "costCurrency": "Валюта стоимости",
+    "supplierCurrencyDiffers": "Поставщик теперь выставляет счета в {currency}.",
+    "approximately": "≈ {amount}",
+    "rateOf": "Курс на {date}",
+    "staleRateOf": "Устаревший курс на {date}",
+    "fallbackRateOf": "Резервный курс на {date}",
+    "noRate": "Курс {currency} не сохранён",
+    "rateTitle": "1 {from} = {rate} {to}",
+    "currencyNotRecorded": "Валюта не записана",
+    "supplierCharged": "Цена поставщика: {amount}",
+    "convertedNote": "Суммы со знаком ≈ пересчитаны в {currency} по курсам, сохранённым для вашей организации, для справки.",
+    "convertedHistoryNote": "Суммы со знаком ≈ пересчитаны в {currency} по курсу, сохранённому на день записи каждой стоимости."
   },
   "quickReorder": {
     "createPo": "Создать заказ поставщику",

@@ -938,7 +938,19 @@
     "source": "المصدر",
     "sourceLink": "رابط المورد",
     "sourcePurchaseOrder": "أمر الشراء {number}",
-    "recordedBy": "بواسطة"
+    "recordedBy": "بواسطة",
+    "costCurrency": "عملة التكلفة",
+    "supplierCurrencyDiffers": "يصدر المورد فواتيره الآن بعملة {currency}.",
+    "approximately": "≈ {amount}",
+    "rateOf": "سعر صرف {date}",
+    "staleRateOf": "سعر صرف قديم بتاريخ {date}",
+    "fallbackRateOf": "سعر صرف احتياطي بتاريخ {date}",
+    "noRate": "لا يوجد سعر صرف محفوظ لعملة {currency}",
+    "rateTitle": "1 {from} = {rate} {to}",
+    "currencyNotRecorded": "لم تُسجل العملة",
+    "supplierCharged": "سعر المورد: {amount}",
+    "convertedNote": "المبالغ المميزة بـ ≈ محولة إلى {currency} بأسعار الصرف المحفوظة لمؤسستك، للاسترشاد فقط.",
+    "convertedHistoryNote": "المبالغ المميزة بـ ≈ محولة إلى {currency} بسعر الصرف المحفوظ لليوم الذي سُجلت فيه كل تكلفة."
   },
   "quickReorder": {
     "createPo": "إنشاء أمر شراء",
