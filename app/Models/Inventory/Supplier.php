@@ -97,11 +97,16 @@ class Supplier extends Model
         // A supplier without a currency bills in its organization's currency,
         // on every surface (web, API, GraphQL, MCP, imports) and on updates
         // that clear it, while an explicitly selected currency is kept.
-        static::saving(function (Supplier $record): void {
+        // "creating" rather than "saving": the organization is filled in by
+        // a creating hook, and saving hooks run before it.
+        $defaultCurrency = function (Supplier $record): void {
             $record->currency = filled($record->currency)
                 ? strtoupper(trim((string) $record->currency))
                 : Organization::currencyFor($record->organization_id === null ? null : (int) $record->organization_id);
-        });
+        };
+
+        static::creating($defaultCurrency);
+        static::updating($defaultCurrency);
     }
 
     /**
