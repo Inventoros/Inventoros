@@ -1105,10 +1105,13 @@ final class OrderService
         [$totals, $lines] = $this->computeTotals($lines, $discountType, $discountValue, $orderTax, $shipping);
 
         // A rated line's tax follows its taxable amount, which an order
-        // discount change moves; amount lines keep their tax. Save only the
-        // lines whose figures actually changed.
+        // discount change moves. Lines without a rate are left exactly as
+        // stored (older rows included). Save only lines that changed.
         foreach ($lines as $id => $line) {
             $item = $items[$id];
+            if ($item->tax_rate === null) {
+                continue;
+            }
             $item->tax = $line['tax'];
             $item->total = $line['total'];
             if ($item->isDirty(['tax', 'total'])) {
