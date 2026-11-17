@@ -13,6 +13,7 @@ use App\Models\Purchasing\PurchaseOrderItem;
 use App\Models\Scopes\OrganizationScope;
 use App\Models\User;
 use App\Services\ExchangeRates\PurchaseOrderExchangeRates;
+use App\Support\LineTax;
 use App\Support\Money;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\DB;
@@ -41,7 +42,12 @@ final class PurchaseOrderService
      * `exchange_rate_mode` / `exchange_rate` let a permitted user enter or
      * confirm one. No available rate never stops the draft being saved.
      *
-     * @param  array{supplier_id: int, order_date: string, expected_date?: string|null, currency: string, shipping?: numeric|null, tax?: numeric|null, notes?: string|null, exchange_rate_mode?: string|null, exchange_rate?: numeric|null, items: array<int, array{product_id: int, product_variant_id?: int|null, quantity: int, unit_cost: numeric, supplier_sku?: string|null}>}  $data
+     * Lines may carry `tax_rate` (the server computes their tax, see
+     * applyLineTax()) or, without a rate, a `tax` amount kept as given.
+     *
+     * @param  array{supplier_id: int, order_date: string, expected_date?: string|null, currency: string, shipping?: numeric|null, tax?: numeric|null, notes?: string|null, exchange_rate_mode?: string|null, exchange_rate?: numeric|null, items: array<int, array{product_id: int, product_variant_id?: int|null, quantity: int, unit_cost: numeric, supplier_sku?: string|null, tax_rate?: numeric|null, tax?: numeric|null}>}  $data
+     *
+     * @throws ValidationException when a PO-level tax is sent alongside line tax rates
      */
     public function create(int $organizationId, User $creator, array $data): PurchaseOrder
     {
@@ -49,6 +55,7 @@ final class PurchaseOrderService
         Supplier::forOrganization($organizationId)->findOrFail($data['supplier_id']);
 
         [$subtotal, $orderItems] = $this->buildNewItems($organizationId, $data['items']);
+        [$tax, $orderItems] = $this->applyLineTax($orderItems, $data['tax'] ?? 0);
 
         // Before the transaction: finding the rate may ask the provider.
         $snapshot = $this->exchangeRates->snapshotFor($organizationId, (string) $data['currency'], $data['order_date'], $data, null, $creator) ?? [];
@@ -56,7 +63,7 @@ final class PurchaseOrderService
         // Generate the PO number and insert the order + items atomically with a
         // retry, so a concurrent create in the same tenant/day can't collide on
         // po_number and 500.
-        return PurchaseOrder::createWithNumber($organizationId, function (string $poNumber) use ($organizationId, $data, $creator, $subtotal, $orderItems, $snapshot) {
+        return PurchaseOrder::createWithNumber($organizationId, function (string $poNumber) use ($organizationId, $data, $creator, $subtotal, $tax, $orderItems, $snapshot) {
             $po = new PurchaseOrder([
                 'organization_id' => $organizationId,
                 'supplier_id' => $data['supplier_id'],
@@ -66,9 +73,9 @@ final class PurchaseOrderService
                 'order_date' => $data['order_date'],
                 'expected_date' => $data['expected_date'] ?? null,
                 'subtotal' => $subtotal,
-                'tax' => $data['tax'] ?? 0,
+                'tax' => $tax,
                 'shipping' => $data['shipping'] ?? 0,
-                'total' => Money::add($subtotal, $data['tax'] ?? 0, $data['shipping'] ?? 0),
+                'total' => Money::add($subtotal, $tax, $data['shipping'] ?? 0),
                 'currency' => $data['currency'],
                 'notes' => $data['notes'] ?? null,
             ]);
@@ -125,54 +132,80 @@ final class PurchaseOrderService
                 throw new InvalidStateException('This purchase order cannot be edited', 'cannot_edit');
             }
 
-            if (isset($data['items'])) {
-                $purchaseOrder->load('items');
-                $existingItems = $purchaseOrder->items->keyBy('id');
-                $itemIdsToKeep = [];
-                $subtotal = '0';
-                $newItems = [];
-
-                foreach ($data['items'] as $itemData) {
-                    $product = Product::forOrganization($organizationId)->findOrFail($itemData['product_id']);
-                    $variant = PurchaseOrderItem::resolveVariant($product, $itemData['product_variant_id'] ?? null);
-                    $itemSubtotal = Money::multiply($itemData['unit_cost'], $itemData['quantity']);
-                    $subtotal = Money::add($subtotal, $itemSubtotal);
-
-                    if (! empty($itemData['id']) && $existingItems->has($itemData['id'])) {
-                        $existingItems->get($itemData['id'])->update([
-                            'product_id' => $itemData['product_id'],
-                            'product_variant_id' => $variant?->id,
-                            'product_name' => $product->name,
-                            'sku' => $variant?->sku ?? $product->sku,
-                            'supplier_sku' => $itemData['supplier_sku'] ?? null,
-                            'quantity_ordered' => $itemData['quantity'],
-                            'unit_cost' => $itemData['unit_cost'],
-                            'subtotal' => $itemSubtotal,
-                            'total' => $itemSubtotal,
-                        ]);
-                        $itemIdsToKeep[] = $itemData['id'];
-                    } else {
-                        $newItems[] = $this->newItemRow($product, $variant, $itemData, $itemSubtotal);
-                    }
-                }
-
-                $existingItems->filter(fn ($item) => ! in_array($item->id, $itemIdsToKeep))->each->delete();
-
-                if (! empty($newItems)) {
-                    $purchaseOrder->items()->createMany($newItems);
-                }
-
-                $data['subtotal'] = $subtotal;
-            }
-
-            unset($data['items'], $data['total']);
-
             // A cleared charge means none, not NULL (the columns are NOT NULL).
             foreach (['tax', 'shipping'] as $charge) {
                 if (array_key_exists($charge, $data) && $data[$charge] === null) {
                     $data[$charge] = 0;
                 }
             }
+
+            $purchaseOrder->load('items');
+
+            if (isset($data['items'])) {
+                $existingItems = $purchaseOrder->items->keyBy('id');
+                // The PO-level tax as sent, else the one the PO already has
+                // (its tax less the line taxes, which are recomputed below).
+                $documentTax = array_key_exists('tax', $data) ? $data['tax'] : $purchaseOrder->documentLevelTax();
+                $subtotal = '0';
+                $rows = [];
+                $matched = [];
+
+                foreach ($data['items'] as $index => $itemData) {
+                    $product = Product::forOrganization($organizationId)->findOrFail($itemData['product_id']);
+                    $variant = PurchaseOrderItem::resolveVariant($product, $itemData['product_variant_id'] ?? null);
+                    $itemSubtotal = Money::multiply($itemData['unit_cost'], $itemData['quantity']);
+                    $subtotal = Money::add($subtotal, $itemSubtotal);
+                    $existing = ! empty($itemData['id']) ? $existingItems->get($itemData['id']) : null;
+
+                    // A line that sends neither tax_rate nor tax keeps the
+                    // rate (or amount) it has, so a client that only edits
+                    // quantities or costs does not drop the line's tax.
+                    if ($existing !== null && ! array_key_exists('tax_rate', $itemData) && ! array_key_exists('tax', $itemData)) {
+                        $itemData['tax_rate'] = $existing->tax_rate;
+                        $itemData['tax'] = $existing->tax;
+                    }
+
+                    $rows[$index] = $this->newItemRow($product, $variant, $itemData, $itemSubtotal);
+                    if ($existing !== null) {
+                        $matched[$index] = $existing;
+                    }
+                }
+
+                [$data['tax'], $rows] = $this->applyLineTax($rows, $documentTax);
+
+                $keep = collect($matched)->map(fn (PurchaseOrderItem $item) => $item->id)->all();
+                $existingItems->filter(fn ($item) => ! in_array($item->id, $keep, true))->each->delete();
+
+                $newItems = [];
+                foreach ($rows as $index => $row) {
+                    if (isset($matched[$index])) {
+                        // Received quantities stay as they are.
+                        unset($row['quantity_received']);
+                        $matched[$index]->update($row);
+                    } else {
+                        $newItems[] = $row;
+                    }
+                }
+
+                if ($newItems !== []) {
+                    $purchaseOrder->items()->createMany($newItems);
+                }
+
+                $data['subtotal'] = $subtotal;
+            } elseif (array_key_exists('tax', $data)) {
+                // A header-only edit of the PO-level tax: the lines and their
+                // tax stay as they are, and the PO's tax is the two together.
+                [$data['tax']] = $this->applyLineTax(
+                    $purchaseOrder->items->sortBy('id')->map(fn (PurchaseOrderItem $item) => [
+                        'subtotal' => $item->subtotal,
+                        'tax_rate' => $item->tax_rate,
+                        'tax' => $item->tax,
+                    ])->values()->all(),
+                    $data['tax'],
+                );
+            }
+
+            unset($data['items'], $data['total']);
 
             // Always recompute the total from the final subtotal/tax/shipping,
             // whichever of them this edit touched. The approval threshold is
@@ -317,8 +350,58 @@ final class PurchaseOrderService
             'quantity_received' => 0,
             'unit_cost' => $itemData['unit_cost'],
             'subtotal' => $itemSubtotal,
-            'tax' => 0,
+            // Final tax and total are set by applyLineTax().
+            'tax_rate' => LineTax::rate($itemData['tax_rate'] ?? null),
+            'tax' => Money::of($itemData['tax'] ?? 0),
             'total' => $itemSubtotal,
         ];
+    }
+
+    /**
+     * Each line's tax and total, and the PO's tax.
+     *
+     * The rules are the sales order ones (App\Support\LineTax), on lines
+     * whose net is quantity x unit cost (POs have no discounts):
+     *  - Lines with a rate are grouped by rate; each rate's tax is rounded
+     *    once on that rate's total and split back across its lines, so the
+     *    PO's tax at a rate is exactly rate x net at that rate. Any tax
+     *    amount sent with a rated line is ignored.
+     *  - A line without a rate keeps the tax amount it was given (0 unless
+     *    an API client sent one).
+     *  - The PO's tax is the line taxes plus the PO-level tax. The PO-level
+     *    tax is the fallback for POs without line rates, so it is refused
+     *    when any line has a rate and a rate is never taxed twice.
+     *  - Shipping is never taxed. Unit costs stay net (tax exclusive).
+     *
+     * @template TKey of array-key
+     *
+     * @param  array<TKey, array<string, mixed>>  $rows  lines with subtotal, tax_rate and tax, in line order
+     * @return array{0: string, 1: array<TKey, array<string, mixed>>} the PO's tax, and the lines with tax_rate, tax and total set
+     *
+     * @throws ValidationException when a PO-level tax is combined with line tax rates
+     */
+    private function applyLineTax(array $rows, mixed $documentTax): array
+    {
+        $documentTax = Money::of($documentTax);
+
+        if (! Money::isZero($documentTax) && LineTax::anyRated($rows)) {
+            throw ValidationException::withMessages([
+                'tax' => 'A purchase order tax cannot be combined with line tax rates. Remove the purchase order tax, or clear the rates on the lines.',
+            ]);
+        }
+
+        $taxed = LineTax::compute(array_map(fn (array $row) => [
+            'net' => $row['subtotal'],
+            'tax_rate' => $row['tax_rate'] ?? null,
+            'tax' => $row['tax'] ?? 0,
+        ], $rows));
+
+        foreach ($rows as $key => $row) {
+            $rows[$key]['tax_rate'] = $taxed[$key]['tax_rate'];
+            $rows[$key]['tax'] = $taxed[$key]['tax'];
+            $rows[$key]['total'] = Money::add($row['subtotal'], $taxed[$key]['tax']);
+        }
+
+        return [Money::add($documentTax, ...array_column($taxed, 'tax')), $rows];
     }
 }

@@ -66,13 +66,17 @@ class PurchaseOrderItemType extends GraphQLType
                 'type' => Type::float(),
                 'description' => 'Line subtotal',
             ],
+            'tax_rate' => [
+                'type' => Type::float(),
+                'description' => 'Tax rate in percent the line was taxed at (null when its tax is an amount as given)',
+            ],
             'tax' => [
                 'type' => Type::float(),
                 'description' => 'Line tax',
             ],
             'total' => [
                 'type' => Type::float(),
-                'description' => 'Line total',
+                'description' => 'Line total: subtotal plus tax',
             ],
             'notes' => [
                 'type' => Type::string(),

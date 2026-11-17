@@ -40,6 +40,10 @@ final class UpdatePurchaseOrderRequest extends FormRequest
             'items.*.quantity' => ['required_with:items', 'integer', 'min:1'],
             'items.*.unit_cost' => ['required_with:items', 'numeric', 'decimal:0,2', 'min:0'],
             'items.*.supplier_sku' => ['nullable', 'string', 'max:255'],
+            // A line's tax rate in percent: the server computes its tax and
+            // ignores a sent amount. Without a rate, tax is an amount kept as sent.
+            'items.*.tax_rate' => ['nullable', 'numeric', 'decimal:0,3', 'min:0', 'max:100'],
+            'items.*.tax' => ['nullable', 'numeric', 'decimal:0,2', 'min:0'],
             // Optional: enter a rate (manual), accept a stale one (confirm) or
             // take the provider's again (auto). Needs
             // override_purchase_order_exchange_rate for manual and confirm.

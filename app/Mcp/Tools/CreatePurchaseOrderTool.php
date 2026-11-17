@@ -6,11 +6,8 @@ namespace App\Mcp\Tools;
 
 use App\Mcp\Concerns\AuthenticatesMcpRequest;
 use App\Mcp\Support\UntrustedText;
-use App\Models\Inventory\Product;
-use App\Models\Purchasing\PurchaseOrder;
-use App\Models\Purchasing\PurchaseOrderItem;
 use App\Services\ExchangeRates\PurchaseOrderExchangeRates;
-use App\Support\Money;
+use App\Services\PurchaseOrderService;
 use App\Support\VariantLineValidator;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Illuminate\Validation\Rule;
@@ -37,10 +34,10 @@ class CreatePurchaseOrderTool extends Tool
             'expected_date' => $schema->string()->description('ISO date items are expected.'),
             'currency' => $schema->string()->required()->description('ISO 4217 currency code.'),
             'shipping' => $schema->number()->description('Shipping cost (default 0).'),
-            'tax' => $schema->number()->description('Tax total (default 0).'),
+            'tax' => $schema->number()->description('PO-level tax amount (default 0), for a PO whose lines have no tax_rate. Refused when any line has a tax_rate.'),
             'notes' => $schema->string()->description('Internal notes.'),
             'exchange_rate' => $schema->string()->description('Only for a currency other than the organization\'s, and only when the user gives one: the rate as a decimal string (1 PO currency = this many organization currency). Needs override_purchase_order_exchange_rate. Leave it out to use the organization\'s exchange rate provider.'),
-            'items' => $schema->array()->required()->description('Line items: [{product_id, product_variant_id?, quantity, unit_cost, supplier_sku?}]. product_variant_id is optional; when given it must be a variant of that product, and receiving the line credits the variant\'s stock.'),
+            'items' => $schema->array()->required()->description('Line items: [{product_id, product_variant_id?, quantity, unit_cost, supplier_sku?, tax_rate?, tax?}]. product_variant_id is optional; when given it must be a variant of that product, and receiving the line credits the variant\'s stock. unit_cost is net (before tax). tax_rate is a percent (0-100); the server computes the line tax from it and ignores tax for that line. Without tax_rate, tax is a line tax amount kept as sent. No rate is taken from the product unless you send it.'),
         ];
     }
 
@@ -67,6 +64,8 @@ class CreatePurchaseOrderTool extends Tool
             'items.*.quantity' => ['required', 'integer', 'min:1'],
             'items.*.unit_cost' => ['required', 'numeric', 'decimal:0,2', 'min:0'],
             'items.*.supplier_sku' => ['nullable', 'string', 'max:255'],
+            'items.*.tax_rate' => ['nullable', 'numeric', 'decimal:0,3', 'min:0', 'max:100'],
+            'items.*.tax' => ['nullable', 'numeric', 'decimal:0,2', 'min:0'],
             ...PurchaseOrderExchangeRates::rules(),
         ]);
 
@@ -79,54 +78,11 @@ class CreatePurchaseOrderTool extends Tool
                 ->all());
         }
 
-        // Before the transaction: finding the rate may ask the provider.
-        $snapshot = app(PurchaseOrderExchangeRates::class)
-            ->snapshotFor($orgId, (string) $validated['currency'], $validated['order_date'], $validated, null, $this->user()) ?? [];
-
-        $po = PurchaseOrder::createWithNumber($orgId, function (string $poNumber) use ($validated, $orgId, $snapshot) {
-            $subtotal = '0';
-            $rows = [];
-            foreach ($validated['items'] as $item) {
-                $product = Product::forOrganization($orgId)->find($item['product_id']);
-                $variant = PurchaseOrderItem::resolveVariant($product, $item['product_variant_id'] ?? null);
-                $itemSubtotal = Money::multiply($item['unit_cost'], $item['quantity']);
-                $subtotal = Money::add($subtotal, $itemSubtotal);
-                $rows[] = [
-                    'product_id' => $product->id,
-                    'product_variant_id' => $variant?->id,
-                    'product_name' => $product->name,
-                    'sku' => $variant?->sku ?? $product->sku,
-                    'supplier_sku' => $item['supplier_sku'] ?? null,
-                    'quantity_ordered' => $item['quantity'],
-                    'quantity_received' => 0,
-                    'unit_cost' => $item['unit_cost'],
-                    'subtotal' => $itemSubtotal,
-                    'tax' => 0,
-                    'total' => $itemSubtotal,
-                ];
-            }
-
-            $po = new PurchaseOrder([
-                'organization_id' => $orgId,
-                'supplier_id' => $validated['supplier_id'],
-                'created_by' => $this->user()->id,
-                'po_number' => $poNumber,
-                'status' => PurchaseOrder::STATUS_DRAFT,
-                'order_date' => $validated['order_date'],
-                'expected_date' => $validated['expected_date'] ?? null,
-                'subtotal' => $subtotal,
-                'tax' => $validated['tax'] ?? 0,
-                'shipping' => $validated['shipping'] ?? 0,
-                'total' => Money::add($subtotal, $validated['tax'] ?? 0, $validated['shipping'] ?? 0),
-                'currency' => $validated['currency'],
-                'notes' => $validated['notes'] ?? null,
-            ]);
-            $po->forceFill($snapshot)->save();
-
-            $po->items()->createMany($rows);
-
-            return $po->fresh(['supplier', 'items']);
-        });
+        // The same create as the web form, REST and GraphQL: line tax,
+        // totals, PO numbering and the exchange rate snapshot.
+        $po = app(PurchaseOrderService::class)
+            ->create($orgId, $this->user(), $validated)
+            ->load(['supplier', 'items']);
 
         return Response::json([
             'message' => 'Draft purchase order created.',
@@ -135,8 +91,11 @@ class CreatePurchaseOrderTool extends Tool
                 'po_number' => $po->po_number,
                 'status' => $po->status,
                 'supplier' => $po->supplier?->only(['id', 'name']),
+                'subtotal' => $po->subtotal,
+                'tax' => $po->tax,
                 'total' => $po->total,
                 'currency' => $po->currency,
+                'tax_breakdown' => $po->taxBreakdown(),
                 'exchange_rate' => $po->exchangeRateSummary(),
                 'item_count' => $po->items->count(),
             ],

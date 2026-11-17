@@ -34,8 +34,13 @@ class PurchaseOrderItemResource extends JsonResource
             'remaining_quantity' => $this->remaining_quantity,
             'is_fully_received' => $this->isFullyReceived(),
             'unit_cost' => $this->unit_cost,
+            // Quantity x unit cost, before tax. Unit costs are net.
             'subtotal' => $this->subtotal,
+            // Percent the line was taxed at; null when its tax is an amount
+            // as given.
+            'tax_rate' => $this->tax_rate,
             'tax' => $this->tax,
+            // Subtotal plus tax.
             'total' => $this->total,
             'notes' => $this->notes,
             'metadata' => $this->metadata,

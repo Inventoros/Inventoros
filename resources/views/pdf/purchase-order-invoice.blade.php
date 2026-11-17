@@ -102,7 +102,8 @@
         }
         .items-table th:last-child,
         .items-table th:nth-child(3),
-        .items-table th:nth-child(4) {
+        .items-table th:nth-child(4),
+        .items-table th:nth-child(5) {
             text-align: right;
         }
         .items-table td {
@@ -112,7 +113,8 @@
         }
         .items-table td:last-child,
         .items-table td:nth-child(3),
-        .items-table td:nth-child(4) {
+        .items-table td:nth-child(4),
+        .items-table td:nth-child(5) {
             text-align: right;
         }
         .items-table tr:nth-child(even) {
@@ -283,12 +285,23 @@
         <div class="items-section">
             <table class="items-table">
                 <thead>
+                    @if($showLineTax ?? false)
+                    <tr>
+                        <th style="width: 32%;">Item</th>
+                        <th style="width: 8%;">Qty Ordered</th>
+                        <th style="width: 15%;">Unit Cost</th>
+                        <th style="width: 15%;">Net</th>
+                        <th style="width: 15%;">Tax</th>
+                        <th style="width: 15%;">Gross</th>
+                    </tr>
+                    @else
                     <tr>
                         <th style="width: 40%;">Item</th>
                         <th style="width: 15%;">Qty Ordered</th>
                         <th style="width: 20%;">Unit Cost</th>
                         <th style="width: 25%;">Subtotal</th>
                     </tr>
+                    @endif
                 </thead>
                 <tbody>
                     @foreach($purchaseOrder->items as $item)
@@ -301,6 +314,13 @@
                         <td>{{ $item->quantity_ordered }}</td>
                         <td>{{ $purchaseOrder->currency ?? 'USD' }} {{ number_format((float) $item->unit_cost, 2) }}</td>
                         <td>{{ $purchaseOrder->currency ?? 'USD' }} {{ number_format((float) $item->subtotal, 2) }}</td>
+                        @if($showLineTax ?? false)
+                        <td>
+                            {{ $purchaseOrder->currency ?? 'USD' }} {{ number_format((float) $item->tax, 2) }}
+                            @if($item->tax_rate !== null)<div class="item-sku">{{ rtrim(rtrim((string) $item->tax_rate, '0'), '.') }}%</div>@endif
+                        </td>
+                        <td>{{ $purchaseOrder->currency ?? 'USD' }} {{ number_format((float) $item->total, 2) }}</td>
+                        @endif
                     </tr>
                     @endforeach
                 </tbody>
@@ -314,7 +334,14 @@
                     <td>Subtotal</td>
                     <td>{{ $purchaseOrder->currency ?? 'USD' }} {{ number_format((float) $purchaseOrder->subtotal, 2) }}</td>
                 </tr>
-                @if((float) $purchaseOrder->tax > 0)
+                @if($hasLineTaxRates ?? false)
+                @foreach($taxBreakdown as $entry)
+                <tr>
+                    <td>@if($entry['rate'] !== null)Tax {{ rtrim(rtrim((string) $entry['rate'], '0'), '.') }}% on {{ $purchaseOrder->currency ?? 'USD' }} {{ number_format((float) $entry['taxable'], 2) }}@else Other tax @endif</td>
+                    <td>{{ $purchaseOrder->currency ?? 'USD' }} {{ number_format((float) $entry['tax'], 2) }}</td>
+                </tr>
+                @endforeach
+                @elseif((float) $purchaseOrder->tax > 0)
                 <tr>
                     <td>Tax</td>
                     <td>{{ $purchaseOrder->currency ?? 'USD' }} {{ number_format((float) $purchaseOrder->tax, 2) }}</td>
@@ -343,6 +370,21 @@
                             {{ $exchangeRateSource }}@if($purchaseOrder->exchange_rate_effective_date), {{ $purchaseOrder->exchange_rate_effective_date->format('F j, Y') }}@endif
                         </td>
                     </tr>
+                    @if($hasLineTaxRates ?? false)
+                    @foreach($taxBreakdown as $entry)
+                    @if($entry['converted_tax'] !== null)
+                    <tr>
+                        <td>@if($entry['rate'] !== null)Tax {{ rtrim(rtrim((string) $entry['rate'], '0'), '.') }}% in {{ $orgCurrency }}@else Other tax in {{ $orgCurrency }}@endif</td>
+                        <td>{{ $orgCurrency }} {{ number_format((float) $entry['converted_tax'], $orgDecimals) }}</td>
+                    </tr>
+                    @endif
+                    @endforeach
+                    @elseif((float) $purchaseOrder->tax > 0 && $purchaseOrder->converted_tax !== null)
+                    <tr>
+                        <td>Tax in {{ $orgCurrency }}</td>
+                        <td>{{ $orgCurrency }} {{ number_format((float) $purchaseOrder->converted_tax, $orgDecimals) }}</td>
+                    </tr>
+                    @endif
                     <tr>
                         <td>Total in {{ $orgCurrency }}</td>
                         <td>{{ $orgCurrency }} {{ number_format((float) $purchaseOrder->converted_total, $orgDecimals) }}</td>
