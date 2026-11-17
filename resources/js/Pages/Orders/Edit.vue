@@ -5,6 +5,7 @@ import Card from '@/Components/ui/Card.vue';
 import Button from '@/Components/ui/Button.vue';
 import TaxInput from '@/Components/TaxInput.vue';
 import CustomerPicker from '@/Components/CustomerPicker.vue';
+import ProductPicker from '@/Components/ui/ProductPicker.vue';
 import DiscountInput from '@/Components/DiscountInput.vue';
 import { useOrderTotals, lineNetCents } from '@/composables/useOrderTotals';
 import { formatTaxRate, rateValue } from '@/lib/lineTax';
@@ -235,19 +236,17 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                         <!-- Product selection -->
                                         <div class="md:col-span-5">
                                             <label :for="`product-${index}`" :class="fieldLabel">{{ t('common.product') }}</label>
-                                            <select
+                                            <ProductPicker
                                                 :id="`product-${index}`"
                                                 v-model="item.product_id"
-                                                @change="onProductChange(index)"
-                                                :class="fieldInput"
+                                                :products="products"
+                                                :stock-label="t('components.productPicker.onHand')"
+                                                :invalid="Boolean(form.errors[`items.${index}.product_id`])"
                                                 required
+                                                @change="onProductChange(index)"
                                             >
-                                                <option value="">{{ t('orders.edit.selectProduct') }}</option>
-                                                <option v-for="product in products" :key="product.id" :value="product.id">
-                                                    <template v-if="product.has_variants">{{ product.name }} ({{ product.sku }})</template>
-                                                    <template v-else>{{ product.name }} ({{ product.sku }}) - {{ t('orders.create.stockCount', { count: product.stock }) }}</template>
-                                                </option>
-                                            </select>
+                                                <template #details="{ product }"><span v-if="!product.has_variants" class="block text-xs text-text-secondary">{{ formatMoney(product.price, product.currency) }}</span></template>
+                                            </ProductPicker>
                                             <p v-if="form.errors[`items.${index}.product_id`]" :class="fieldError">
                                                 {{ form.errors[`items.${index}.product_id`] }}
                                             </p>

@@ -54,6 +54,36 @@ for (const { path, id } of pages) {
     });
 }
 
+// The first record on a list page whose edit page opens (orders and purchase
+// orders redirect from edit once they can no longer be changed).
+async function firstEditPath(page: Page, list: string) {
+    await page.goto(list, { waitUntil: 'networkidle' });
+    const paths = await page.locator(`a[href*="${list}/"]`).evaluateAll(links => links.map(link => (link as HTMLAnchorElement).pathname));
+    for (const path of [...new Set(paths)].filter(path => new RegExp(`^${list}/\\d+$`).test(path))) {
+        await page.goto(`${path}/edit`, { waitUntil: 'networkidle' });
+        if (new URL(page.url()).pathname === `${path}/edit`) return `${path}/edit`;
+    }
+    throw new Error(`No editable record on ${list}`);
+}
+
+// Issue #443: the edit pages use the same searchable picker as the create pages.
+for (const { list, id } of [{ list: '/orders', id: '#product-0' }, { list: '/purchase-orders', id: '#product' }]) {
+    test(`${list} edit page searches products like the create page`, async ({ page }) => {
+        await render(page, await firstEditPath(page, list));
+        const picker = page.locator(id);
+        await picker.focus();
+        await expect(page.locator('.product-picker-popup').getByRole('option')).toHaveCount(40);
+        await picker.fill('shelf-002');
+        await expect(page.locator('.product-picker-popup').getByRole('option')).toHaveCount(1);
+        await picker.press('ArrowDown');
+        await picker.press('Enter');
+        await expect(picker).toHaveValue(/SHELF-002/);
+        await picker.focus();
+        await picker.fill('9876543210987');
+        await expect(page.locator('.product-picker-popup').getByRole('option')).toContainText('Blue / Large');
+    });
+}
+
 for (const width of [320, 375, 768, 1440]) {
     test(`product results remain readable and touchable at ${width}px`, async ({ page }) => {
         await page.setViewportSize({ width, height: 900 });
