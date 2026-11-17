@@ -4051,7 +4051,22 @@
   "tax": {
     "amount": "Steuerbetrag",
     "rate": "Satz",
-    "rateHint": "Optional: Geben Sie einen Steuersatz ein, um den Betrag aus der Zwischensumme nach Rabatten zu berechnen. Gespeichert wird nur der Betrag."
+    "rateHint": "Optional: Geben Sie einen Steuersatz ein, um den Betrag aus der Zwischensumme nach Rabatten zu berechnen. Gespeichert wird nur der Betrag.",
+    "productRate": "Steuersatz (%)",
+    "productRateHint": "Der Satz, zu dem dieses Produkt verkauft wird, zum Beispiel 19 für 19 % MwSt. Der Verkaufspreis bleibt netto (vor Steuern). Neue Auftragspositionen beginnen mit diesem Satz.",
+    "grossPrice": "Verkaufspreis inkl. Steuer",
+    "grossPriceHint": "Geben Sie einen Preis inklusive Steuer ein, um den Netto-Verkaufspreis zu berechnen.",
+    "grossNeedsRate": "Legen Sie einen Steuersatz fest, um einen Preis inklusive Steuer einzugeben.",
+    "grossWithRate": "{amount} inkl. {rate} Steuer",
+    "lineRate": "Steuer %",
+    "lineTax": "Steuer",
+    "net": "Netto",
+    "gross": "Brutto",
+    "enteredAmount": "Eingegebener Betrag",
+    "fromLineRates": "Die Steuer ergibt sich aus den Steuersätzen der Positionen. Entfernen Sie die Sätze der Positionen, um einen Steuerbetrag für den ganzen Auftrag einzugeben.",
+    "byRate": "Steuer {rate} auf {amount}",
+    "otherTax": "Sonstige Steuer",
+    "afterOrderDiscount": "Die Positionssteuer wird berechnet, nachdem der Auftragsrabatt auf die Positionen verteilt wurde."
   },
   "warehouseStock": {
     "onHand": "Bestand",

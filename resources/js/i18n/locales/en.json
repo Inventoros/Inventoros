@@ -4051,7 +4051,22 @@
   "tax": {
     "amount": "Tax amount",
     "rate": "Rate",
-    "rateHint": "Optional: enter a tax rate to calculate the amount from the subtotal after discounts. Only the amount is saved."
+    "rateHint": "Optional: enter a tax rate to calculate the amount from the subtotal after discounts. Only the amount is saved.",
+    "productRate": "Tax rate (%)",
+    "productRateHint": "The rate this product is sold at, for example 27 for 27% VAT. The selling price stays net (before tax). New order lines start at this rate.",
+    "grossPrice": "Selling price incl. tax",
+    "grossPriceHint": "Type a price including tax to work out the net selling price.",
+    "grossNeedsRate": "Set a tax rate to enter a price including tax.",
+    "grossWithRate": "{amount} incl. {rate} tax",
+    "lineRate": "Tax %",
+    "lineTax": "Tax",
+    "net": "Net",
+    "gross": "Gross",
+    "enteredAmount": "Entered amount",
+    "fromLineRates": "Tax comes from the line tax rates. Clear the rates on the lines to enter one tax amount for the order.",
+    "byRate": "Tax {rate} on {amount}",
+    "otherTax": "Other tax",
+    "afterOrderDiscount": "Line tax is worked out after the order discount is shared across the lines."
   },
   "warehouseStock": {
     "onHand": "On hand",

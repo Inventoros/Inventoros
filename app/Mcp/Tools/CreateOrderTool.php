@@ -35,7 +35,7 @@ class CreateOrderTool extends Tool
             'status' => $schema->string()->enum(['pending', 'processing', 'shipped', 'delivered', 'cancelled'])->description('Initial status, default pending.'),
             'order_date' => $schema->string()->description('ISO date, default today.'),
             'notes' => $schema->string()->description('Internal notes.'),
-            'items' => $schema->array()->required()->description('Line items: [{product_id, product_variant_id?, quantity, unit_price?, tax?, discount_type?, discount_value?}]. product_variant_id is required for variant-tracked products. discount_type is percent or fixed. Must be non-empty.'),
+            'items' => $schema->array()->required()->description('Line items: [{product_id, product_variant_id?, quantity, unit_price?, tax_rate?, tax?, discount_type?, discount_value?}]. product_variant_id is required for variant-tracked products. discount_type is percent or fixed. tax_rate is a percent (0-100); the server computes the line tax from it after discounts and ignores tax for that line. Without tax_rate, tax is a line tax amount kept as sent. Must be non-empty.'),
             'discount_type' => $schema->string()->enum(['percent', 'fixed'])->description('Order-level discount type (optional).'),
             'discount_value' => $schema->number()->description('Order-level discount: a percentage (0-100) or an amount, applied after line discounts and before tax.'),
         ];
@@ -65,6 +65,7 @@ class CreateOrderTool extends Tool
             'items.*.quantity' => ['required', 'integer', 'min:1'],
             'items.*.unit_price' => ['nullable', 'numeric', 'decimal:0,2', 'min:0'],
             'items.*.tax' => ['nullable', 'numeric', 'decimal:0,2', 'min:0'],
+            'items.*.tax_rate' => ['nullable', 'numeric', 'decimal:0,3', 'min:0', 'max:100'],
             'items.*.discount_type' => ['nullable', 'string', 'in:percent,fixed'],
             'items.*.discount_value' => ['nullable', 'numeric', 'decimal:0,2', 'min:0'],
             'discount_type' => ['nullable', 'string', 'in:percent,fixed'],

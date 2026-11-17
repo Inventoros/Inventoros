@@ -144,7 +144,7 @@ Call `who_am_i` first to confirm the token works.
 |---|---|---|
 | `list_orders` | `view_orders` | Paginated orders with filters for status, source, warehouse, date range. |
 | `get_order` | `view_orders` | Single order with line items. |
-| `create_order` | `create_orders` | Create an order; decrements stock per item; fails if any line is short. Accepts optional line and order discounts (applied before tax). **Destructive**. |
+| `create_order` | `create_orders` | Create an order; decrements stock per item; fails if any line is short. Accepts optional line and order discounts (applied before tax), and per-line `tax_rate` (the server computes the line tax) or `tax` amounts. **Destructive**. |
 | `email_order_invoice` | `edit_orders` | Email the order's invoice PDF to the customer, with optional CC and message. `to` and CC must be addresses on file for the order's customer or users of the organization; pass a customer contact as `to` to reach someone else at the customer. Other recipients need the web UI. Assigns the invoice number on first use. **Destructive**. |
 | `record_payment` | `record_payments` | Record a payment against an order. Partial payments are fine; a payment above the balance due needs `allow_overpayment`; cancelled orders are refused. **Destructive**. |
 

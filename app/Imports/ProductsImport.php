@@ -235,8 +235,10 @@ final class ProductsImport extends ProductSpreadsheetValueBinder implements Skip
 
                 // Spreadsheet rows do not pass through HTTP's empty-string
                 // normalization. Blank optional costs are null, not SQL strings.
-                if (is_string($row->get('purchase_price')) && trim($row->get('purchase_price')) === '') {
-                    $row->put('purchase_price', null);
+                foreach (['purchase_price', 'tax_rate'] as $optional) {
+                    if (is_string($row->get($optional)) && trim($row->get($optional)) === '') {
+                        $row->put($optional, null);
+                    }
                 }
 
                 $rules = [
@@ -244,6 +246,7 @@ final class ProductsImport extends ProductSpreadsheetValueBinder implements Skip
                     'sku' => 'required|string|max:255',
                     'price' => 'required|numeric|min:0',
                     'purchase_price' => 'nullable|numeric|min:0',
+                    'tax_rate' => 'nullable|numeric|decimal:0,3|min:0|max:100',
                     'stock' => 'required|integer|min:0',
                     'min_stock' => 'nullable|integer|min:0',
                 ];
@@ -487,6 +490,12 @@ final class ProductsImport extends ProductSpreadsheetValueBinder implements Skip
             'notes' => $sanitise($row['notes'] ?? null),
             'organization_id' => $this->organizationId,
         ];
+
+        // A file without a tax_rate column leaves the rate alone (files made
+        // before the column existed); a blank cell clears it.
+        if ($row->has('tax_rate')) {
+            $productData['tax_rate'] = $row['tax_rate'];
+        }
 
         if ($currencyColumns !== []) {
             $productData['price_in_currencies'] = $this->mergeCurrencyPrices(

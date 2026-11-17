@@ -4051,7 +4051,22 @@
   "tax": {
     "amount": "税額",
     "rate": "税率",
-    "rateHint": "任意: 税率を入力すると、割引後の小計から税額を計算します。保存されるのは税額のみです。"
+    "rateHint": "任意: 税率を入力すると、割引後の小計から税額を計算します。保存されるのは税額のみです。",
+    "productRate": "税率 (%)",
+    "productRateHint": "この商品の販売時の税率です（例: 消費税10%なら10）。販売価格は税抜きのままです。新しい注文明細はこの税率から始まります。",
+    "grossPrice": "税込販売価格",
+    "grossPriceHint": "税込価格を入力すると、税抜販売価格を計算します。",
+    "grossNeedsRate": "税込価格を入力するには税率を設定してください。",
+    "grossWithRate": "{amount}（税率{rate}込み）",
+    "lineRate": "税率 %",
+    "lineTax": "税額",
+    "net": "税抜",
+    "gross": "税込",
+    "enteredAmount": "入力された金額",
+    "fromLineRates": "税額は明細の税率から計算されます。注文全体の税額を入力するには、明細の税率を消去してください。",
+    "byRate": "{amount}に対する税 {rate}",
+    "otherTax": "その他の税",
+    "afterOrderDiscount": "明細の税額は、注文割引を明細に配分したあとで計算されます。"
   },
   "warehouseStock": {
     "onHand": "手持在庫",

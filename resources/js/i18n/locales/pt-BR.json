@@ -4051,7 +4051,22 @@
   "tax": {
     "amount": "Valor do imposto",
     "rate": "Alíquota",
-    "rateHint": "Opcional: informe uma alíquota para calcular o valor a partir do subtotal após os descontos. Somente o valor é salvo."
+    "rateHint": "Opcional: informe uma alíquota para calcular o valor a partir do subtotal após os descontos. Somente o valor é salvo.",
+    "productRate": "Alíquota de imposto (%)",
+    "productRateHint": "A alíquota com que este produto é vendido, por exemplo 17 para 17% de imposto. O preço de venda continua líquido (sem impostos). Novas linhas de pedido começam com esta alíquota.",
+    "grossPrice": "Preço de venda com impostos",
+    "grossPriceHint": "Digite um preço com impostos para calcular o preço de venda líquido.",
+    "grossNeedsRate": "Defina uma alíquota para informar um preço com impostos.",
+    "grossWithRate": "{amount} com {rate} de imposto",
+    "lineRate": "Imposto %",
+    "lineTax": "Imposto",
+    "net": "Líquido",
+    "gross": "Bruto",
+    "enteredAmount": "Valor informado",
+    "fromLineRates": "O imposto vem das alíquotas das linhas. Limpe as alíquotas das linhas para informar um único valor de imposto para o pedido.",
+    "byRate": "Imposto {rate} sobre {amount}",
+    "otherTax": "Outros impostos",
+    "afterOrderDiscount": "O imposto da linha é calculado depois que o desconto do pedido é dividido entre as linhas."
   },
   "warehouseStock": {
     "onHand": "Em estoque",

@@ -80,6 +80,7 @@ class ListProductsTool extends Tool
                 'barcode' => $p->barcode,
                 'price' => $p->price,
                 'selling_price' => $p->selling_price,
+                'tax_rate' => $p->tax_rate,
                 'stock' => $p->stock,
                 'reserved_stock' => $p->reserved_stock,
                 'available_stock' => $p->available_stock,

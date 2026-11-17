@@ -82,6 +82,11 @@ class UpdateProductMutation extends Mutation
                 'description' => 'Purchase/cost price',
                 'rules' => ['nullable', 'numeric', 'min:0'],
             ],
+            'tax_rate' => [
+                'type' => Type::float(),
+                'description' => 'Tax rate in percent the product is sold at (0-100); prices stay net of it. Null clears it',
+                'rules' => ['nullable', 'numeric', 'decimal:0,3', 'min:0', 'max:100'],
+            ],
             'currency' => [
                 'type' => Type::string(),
                 'description' => 'Currency code',

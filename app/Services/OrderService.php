@@ -25,6 +25,7 @@ use App\Models\Order\ReturnOrderItem;
 use App\Models\Shipping\Shipment;
 use App\Models\User;
 use App\Support\ApprovalSettings;
+use App\Support\LineTax;
 use App\Support\Money;
 use App\Support\OrderApprovalGate;
 use App\Support\SequenceNumberRetry;
@@ -281,13 +282,12 @@ final class OrderService
                 ];
             }
 
-            // Order tax = any order-level tax (web) plus the sum of per-line
-            // taxes (API). Exactly one side is non-zero per surface today, so
-            // this preserves both: web keeps its order-level tax with zero line
-            // tax; API keeps its summed line tax with no order-level tax.
-            // Totals are computed here from the priced lines; whatever money
-            // figures the caller sent are discarded.
-            $totals = $this->computeTotals(
+            // Order tax = the sum of the line taxes plus any order-level tax
+            // (see computeTotals() for how rated lines are taxed and why an
+            // order-level tax cannot be combined with them). Totals and the
+            // tax of every rated line are computed here from the priced
+            // lines; whatever money figures the caller sent are discarded.
+            [$totals, $orderItemRows] = $this->computeTotals(
                 $orderItemRows,
                 $data['discount_type'] ?? null,
                 $data['discount_value'] ?? null,
@@ -855,7 +855,12 @@ final class OrderService
      * Line discounts are priced and validated here too; the order's totals
      * are left to recalculateTotals(), which the caller runs afterwards.
      *
-     * @param  array<int, array{product_id:int, product_variant_id?:int|null, quantity:int, unit_price?:mixed, discount_type?:string|null, discount_value?:mixed}>  $items
+     * A line may carry tax_rate (the server computes its tax) or, without a
+     * rate, a tax amount (kept as given). Tax is not stock: changing only the
+     * lines' tax rates or amounts updates them in place, so it is allowed
+     * even once the lines are otherwise frozen (shipped, with returns).
+     *
+     * @param  array<int, array{product_id:int, product_variant_id?:int|null, quantity:int, unit_price?:mixed, discount_type?:string|null, discount_value?:mixed, tax_rate?:mixed, tax?:mixed}>  $items
      * @return string the recomputed gross subtotal (Money string)
      *
      * @api
@@ -869,9 +874,13 @@ final class OrderService
         $order->load('items.product', 'items.variant');
 
         // Resubmitting the lines unchanged (an edit that only touches the
-        // header) is a no-op. Recreating them would move stock between
-        // locations and drop the rows returns and shipments point at.
-        if ($this->linesUnchanged($order, $items)) {
+        // header, or only the lines' tax) is a no-op for stock. Recreating
+        // them would move stock between locations and drop the rows returns
+        // and shipments point at.
+        $unchanged = $this->matchUnchangedLines($order, $items);
+        if ($unchanged !== null) {
+            $this->applyLineTaxEdits($unchanged, $items);
+
             return Money::add('0', ...$order->items->pluck('subtotal')->all());
         }
 
@@ -1002,6 +1011,8 @@ final class OrderService
             $priced = $this->priceLine($unitPrice, $qty, [
                 'discount_type' => $item['discount_type'] ?? null,
                 'discount_value' => $item['discount_value'] ?? null,
+                'tax_rate' => $item['tax_rate'] ?? null,
+                'tax' => $item['tax'] ?? null,
             ], $index);
 
             $resolved[] = compact('item', 'product', 'variant', 'qty', 'unitPrice', 'priced');
@@ -1083,15 +1094,30 @@ final class OrderService
         mixed $orderTax,
         mixed $shipping,
     ): void {
-        $lines = $order->items()->get(['subtotal', 'discount_amount', 'tax'])
-            ->map(fn (OrderItem $item) => [
-                'subtotal' => $item->subtotal,
-                'discount_amount' => $item->discount_amount,
-                'tax' => $item->tax,
-            ])
-            ->all();
+        $items = $order->items()->orderBy('id')->get()->keyBy('id');
+        $lines = $items->map(fn (OrderItem $item) => [
+            'subtotal' => $item->subtotal,
+            'discount_amount' => $item->discount_amount,
+            'tax_rate' => $item->tax_rate,
+            'tax' => $item->tax,
+        ])->all();
 
-        $totals = $this->computeTotals($lines, $discountType, $discountValue, $orderTax, $shipping);
+        [$totals, $lines] = $this->computeTotals($lines, $discountType, $discountValue, $orderTax, $shipping);
+
+        // A rated line's tax follows its taxable amount, which an order
+        // discount change moves. Lines without a rate are left exactly as
+        // stored (older rows included). Save only lines that changed.
+        foreach ($lines as $id => $line) {
+            $item = $items[$id];
+            if ($item->tax_rate === null) {
+                continue;
+            }
+            $item->tax = $line['tax'];
+            $item->total = $line['total'];
+            if ($item->isDirty(['tax', 'total'])) {
+                $item->save();
+            }
+        }
 
         $this->applyTotals($order, $totals);
     }
@@ -1269,17 +1295,49 @@ final class OrderService
     }
 
     /**
-     * Whether a submitted line set matches the order's current lines: same
-     * product, variant, quantity and line discount, and (when submitted) the
-     * same unit price.
+     * Apply the tax fields of resubmitted, otherwise unchanged lines in place.
+     * A submitted line that sends neither tax_rate nor tax keeps its stored
+     * tax. One that sends either is read the way priceLine() reads a new
+     * line: a rate wins (its tax is computed by recalculateTotals()); without
+     * a rate, the tax amount sent (or none) is kept as given.
      *
+     * @param  array<int, OrderItem>  $matched  submitted index => current line
      * @param  array<int, array<string, mixed>>  $items
      */
-    private function linesUnchanged(Order $order, array $items): bool
+    private function applyLineTaxEdits(array $matched, array $items): void
+    {
+        foreach ($matched as $index => $item) {
+            $submitted = $items[$index];
+            if (! array_key_exists('tax_rate', $submitted) && ! array_key_exists('tax', $submitted)) {
+                continue;
+            }
+
+            $rate = LineTax::rate($submitted['tax_rate'] ?? null);
+            $item->tax_rate = $rate;
+            if ($rate === null) {
+                $item->tax = Money::of($submitted['tax'] ?? 0);
+                $item->total = Money::add(Money::subtract($item->subtotal, $item->discount_amount), $item->tax);
+            }
+            if ($item->isDirty(['tax_rate', 'tax', 'total'])) {
+                $item->save();
+            }
+        }
+    }
+
+    /**
+     * Match a submitted line set to the order's current lines: same product,
+     * variant, quantity and line discount, and (when submitted) the same unit
+     * price. Tax is not compared (see applyLineTaxEdits()).
+     *
+     * @param  array<int, array<string, mixed>>  $items
+     * @return array<int, OrderItem>|null submitted index => current line, or null when the lines changed
+     */
+    private function matchUnchangedLines(Order $order, array $items): ?array
     {
         $money = fn ($v) => ($v === null || $v === '') ? null : Money::of($v);
 
         $current = $order->items->map(fn (OrderItem $i) => [
+            'item' => $i,
             'key' => ((int) $i->product_id).'|'.((int) ($i->product_variant_id ?? 0)).'|'.((int) $i->quantity),
             'unit_price' => $money($i->unit_price),
             'discount_type' => $i->discount_type instanceof \BackedEnum ? $i->discount_type->value : ($i->discount_type ?: null),
@@ -1287,10 +1345,11 @@ final class OrderService
         ])->values()->all();
 
         if (count($current) !== count($items)) {
-            return false;
+            return null;
         }
 
-        foreach ($items as $submitted) {
+        $matched = [];
+        foreach ($items as $submittedIndex => $submitted) {
             $key = ((int) ($submitted['product_id'] ?? 0)).'|'.((int) ($submitted['product_variant_id'] ?? 0)).'|'.((int) ($submitted['quantity'] ?? 0));
             $found = null;
 
@@ -1321,13 +1380,14 @@ final class OrderService
             }
 
             if ($found === null) {
-                return false;
+                return null;
             }
 
+            $matched[$submittedIndex] = $current[$found]['item'];
             unset($current[$found]);
         }
 
-        return true;
+        return $matched;
     }
 
     /**
@@ -1401,8 +1461,12 @@ final class OrderService
     /**
      * Price one line: gross subtotal, its resolved discount, tax and total.
      *
-     * @param  array<string, mixed>  $item  may carry discount_type, discount_value, tax
-     * @return array{subtotal: string, discount_type: string|null, discount_value: string|null, discount_amount: string, tax: string, total: string}
+     * A line with a tax_rate gets its tax from computeTotals() (any tax
+     * amount sent with it is ignored); a line without one keeps the tax
+     * amount it was given.
+     *
+     * @param  array<string, mixed>  $item  may carry discount_type, discount_value, tax_rate, tax
+     * @return array{subtotal: string, discount_type: string|null, discount_value: string|null, discount_amount: string, tax_rate: string|null, tax: string, total: string}
      *
      * @throws ValidationException when the discount is invalid for this line
      */
@@ -1417,13 +1481,15 @@ final class OrderService
             "items.{$index}",
         );
 
-        $tax = Money::of($item['tax'] ?? 0);
+        $rate = LineTax::rate($item['tax_rate'] ?? null);
+        $tax = $rate === null ? Money::of($item['tax'] ?? 0) : '0.00';
 
         return [
             'subtotal' => $gross,
             'discount_type' => $type,
             'discount_value' => $value,
             'discount_amount' => $discount,
+            'tax_rate' => $rate,
             'tax' => $tax,
             'total' => Money::add(Money::subtract($gross, $discount), $tax),
         ];
@@ -1434,28 +1500,63 @@ final class OrderService
      *
      * Tax base rule: discounts come off merchandise only, before tax. The
      * order-level discount applies to the merchandise net of line discounts
-     * (never to tax or shipping); tax is an amount supplied on those
-     * discounted figures; shipping is added last. The stored discount_amount
-     * is the whole discount (lines + order), so
+     * (never to tax or shipping); shipping is added last, untaxed. The
+     * stored discount_amount is the whole discount (lines + order), so
      * subtotal - discount_amount + tax + shipping = total.
      *
-     * @param  array<int, array{subtotal: mixed, discount_amount?: mixed, tax?: mixed}>  $lines
-     * @return array<string, string|null>
+     * Tax is one of two kinds, never both:
+     *  - Line tax. A line with a tax_rate is taxed by LineTax: its taxable
+     *    amount is its net (after its line discount) less its share of the
+     *    order discount, and the tax per rate is rounded once and split back
+     *    across that rate's lines. A line without a rate keeps the tax amount
+     *    it carries (imports, API). The order's tax is the sum.
+     *  - Order-level tax: one amount for the whole order, added to the sum of
+     *    any line tax amounts (the behaviour before line rates existed).
+     * An order-level tax is refused when any line has a rate, so a rate can
+     * never be taxed twice.
+     *
+     * @template TKey of array-key
+     *
+     * @param  array<TKey, array{subtotal: mixed, discount_amount?: mixed, tax_rate?: mixed, tax?: mixed}>  $lines  in line order
+     * @return array{0: array<string, string|null>, 1: array<TKey, array<string, mixed>>} the order totals, and the lines with tax and total recomputed
+     *
+     * @throws ValidationException
      */
     private function computeTotals(array $lines, DiscountType|string|null $discountType, mixed $discountValue, mixed $orderTax, mixed $shipping): array
     {
-        $subtotal = Money::add(...array_map(fn (array $l) => $l['subtotal'] ?? 0, $lines));
-        $lineDiscounts = Money::add(...array_map(fn (array $l) => $l['discount_amount'] ?? 0, $lines));
-        $lineTax = Money::add(...array_map(fn (array $l) => $l['tax'] ?? 0, $lines));
+        $subtotal = Money::add(...array_map(fn (array $l) => $l['subtotal'] ?? 0, array_values($lines)));
+        $lineDiscounts = Money::add(...array_map(fn (array $l) => $l['discount_amount'] ?? 0, array_values($lines)));
 
         $net = Money::subtract($subtotal, $lineDiscounts);
         [$type, $value, $orderDiscount] = $this->resolveDiscount($net, $discountType, $discountValue, null);
 
+        if (! Money::isZero($orderTax) && LineTax::anyRated($lines)) {
+            throw ValidationException::withMessages([
+                'tax' => 'An order-level tax cannot be combined with line tax rates. Remove the order tax, or clear the rates on the lines.',
+            ]);
+        }
+
+        $taxed = LineTax::compute(array_map(fn (array $l) => [
+            'net' => Money::subtract($l['subtotal'] ?? 0, $l['discount_amount'] ?? 0),
+            'tax_rate' => $l['tax_rate'] ?? null,
+            'tax' => $l['tax'] ?? 0,
+        ], $lines), $orderDiscount);
+
+        foreach ($lines as $key => $line) {
+            $lines[$key]['tax_rate'] = $taxed[$key]['tax_rate'];
+            $lines[$key]['tax'] = $taxed[$key]['tax'];
+            $lines[$key]['total'] = Money::add(
+                Money::subtract($line['subtotal'] ?? 0, $line['discount_amount'] ?? 0),
+                $taxed[$key]['tax'],
+            );
+        }
+
+        $lineTax = Money::add(...array_column($taxed, 'tax'));
         $discount = Money::add($lineDiscounts, $orderDiscount);
         $tax = Money::add($orderTax, $lineTax);
         $shipping = Money::of($shipping);
 
-        return [
+        return [[
             'subtotal' => $subtotal,
             'discount_type' => $type,
             'discount_value' => $value,
@@ -1463,7 +1564,7 @@ final class OrderService
             'tax' => $tax,
             'shipping' => $shipping,
             'total' => Money::add(Money::subtract($subtotal, $discount), $tax, $shipping),
-        ];
+        ], $lines];
     }
 
     /**

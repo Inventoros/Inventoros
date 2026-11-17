@@ -4051,7 +4051,22 @@
   "tax": {
     "amount": "Importe del impuesto",
     "rate": "Tasa",
-    "rateHint": "Opcional: introduzca un tipo impositivo para calcular el importe a partir del subtotal después de los descuentos. Solo se guarda el importe."
+    "rateHint": "Opcional: introduzca un tipo impositivo para calcular el importe a partir del subtotal después de los descuentos. Solo se guarda el importe.",
+    "productRate": "Tipo impositivo (%)",
+    "productRateHint": "El tipo al que se vende este producto, por ejemplo 21 para un IVA del 21 %. El precio de venta sigue siendo neto (sin impuestos). Las nuevas líneas de pedido empiezan con este tipo.",
+    "grossPrice": "Precio de venta con impuestos",
+    "grossPriceHint": "Escriba un precio con impuestos para calcular el precio de venta neto.",
+    "grossNeedsRate": "Indique un tipo impositivo para introducir un precio con impuestos.",
+    "grossWithRate": "{amount} con {rate} de impuestos",
+    "lineRate": "Impuesto %",
+    "lineTax": "Impuesto",
+    "net": "Neto",
+    "gross": "Bruto",
+    "enteredAmount": "Importe introducido",
+    "fromLineRates": "El impuesto se calcula con los tipos de las líneas. Borre los tipos de las líneas para introducir un único importe de impuesto para el pedido.",
+    "byRate": "Impuesto {rate} sobre {amount}",
+    "otherTax": "Otros impuestos",
+    "afterOrderDiscount": "El impuesto de cada línea se calcula después de repartir el descuento del pedido entre las líneas."
   },
   "warehouseStock": {
     "onHand": "Existencias",

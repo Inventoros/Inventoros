@@ -39,6 +39,7 @@ use Illuminate\Support\Carbon;
  * @property string|null $currency
  * @property array|null $price_in_currencies
  * @property string|null $purchase_price
+ * @property string|null $tax_rate Percent the product is sold at; its price stays net of it (null = no rate)
  * @property int $stock
  * @property int|null $min_stock
  * @property int|null $max_stock
@@ -100,6 +101,7 @@ class Product extends Model
         'currency',
         'price_in_currencies',
         'purchase_price',
+        'tax_rate',
         'stock',
         'min_stock',
         'max_stock',
@@ -143,6 +145,7 @@ class Product extends Model
             'price' => 'decimal:2',
             'selling_price' => 'decimal:2',
             'purchase_price' => 'decimal:2',
+            'tax_rate' => 'decimal:3',
             'stock' => 'integer',
             // Selected by withEffectiveStock(); SUM() is a string on MySQL.
             'effective_stock' => 'integer',

@@ -72,6 +72,10 @@ final class StoreOrderRequest extends FormRequest
             'items.*.unit_price' => 'required|numeric|decimal:0,2|min:0',
             'items.*.discount_type' => ['nullable', Rule::in(DiscountType::values())],
             'items.*.discount_value' => 'nullable|numeric|decimal:0,2|min:0|max:99999999',
+            // A line's tax rate in percent: the server computes its tax. Without
+            // a rate, a line's tax is the amount sent (imported lines keep theirs).
+            'items.*.tax_rate' => 'nullable|numeric|decimal:0,3|min:0|max:100',
+            'items.*.tax' => 'nullable|numeric|decimal:0,2|min:0',
         ];
     }
 }

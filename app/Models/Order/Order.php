@@ -16,6 +16,7 @@ use App\Models\User;
 use App\Models\Warehouse;
 use App\Services\ApprovalService;
 use App\Support\ApprovalSettings;
+use App\Support\LineTax;
 use App\Support\Money;
 use App\Support\SequenceNumber;
 use App\Traits\LogsActivity;
@@ -328,6 +329,51 @@ class Order extends Model
     public function orderDiscountAmount(): string
     {
         return Money::subtract($this->discount_amount, $this->lineDiscountTotal());
+    }
+
+    /**
+     * Whether any line was taxed by rate (rather than by an entered amount).
+     */
+    public function hasLineTaxRates(): bool
+    {
+        return $this->items->contains(fn (OrderItem $item) => $item->tax_rate !== null);
+    }
+
+    /**
+     * The order's tax per rate: taxable amount and tax for each rate its
+     * lines were taxed at (highest first), then one entry with a null rate
+     * for any tax entered as an amount (on lines, or for the whole order).
+     * Empty when the order has no tax.
+     *
+     * @return array<int, array{rate: string|null, taxable: string, tax: string}>
+     */
+    public function taxBreakdown(): array
+    {
+        $lines = $this->items->sortBy('id')->mapWithKeys(fn (OrderItem $item) => [$item->id => [
+            'net' => Money::subtract($item->subtotal, $item->discount_amount),
+            'tax_rate' => $item->tax_rate,
+            'tax' => $item->tax,
+        ]])->all();
+
+        $computed = LineTax::compute($lines, $this->orderDiscountAmount());
+        // Report the stored line taxes: they are what the order charged.
+        foreach ($this->items as $item) {
+            $computed[$item->id]['tax'] = Money::of($item->tax);
+        }
+
+        $summary = LineTax::summarize($computed);
+        $ratedTaxable = Money::add(...array_column($summary, 'taxable'));
+        $otherTax = Money::max(Money::subtract($this->tax, Money::add(...array_column($summary, 'tax'))), 0);
+
+        if (! Money::isZero($otherTax)) {
+            $summary[] = [
+                'rate' => null,
+                'taxable' => Money::max(Money::subtract($this->subtotal, $this->discount_amount, $ratedTaxable), 0),
+                'tax' => $otherTax,
+            ];
+        }
+
+        return $summary;
     }
 
     /**

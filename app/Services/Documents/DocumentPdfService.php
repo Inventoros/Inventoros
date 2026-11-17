@@ -7,6 +7,7 @@ namespace App\Services\Documents;
 use App\Models\Order\Order;
 use App\Models\Purchasing\PurchaseOrder;
 use App\Services\ExchangeRates\ExchangeRateProviderRegistry;
+use App\Support\Money;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Barryvdh\DomPDF\PDF as DomPdf;
 
@@ -100,6 +101,11 @@ class DocumentPdfService
             'generatedDate' => now()->format('F j, Y'),
             'lineDiscountTotal' => $order->lineDiscountTotal(),
             'orderDiscountAmount' => $order->orderDiscountAmount(),
+            // Lines carry their own tax (by rate or as an amount): the lines
+            // show net, tax and gross, and the totals list the tax per rate.
+            'showLineTax' => $order->items->contains(fn ($item) => $item->tax_rate !== null || ! Money::isZero($item->tax)),
+            'hasLineTaxRates' => $order->hasLineTaxRates(),
+            'taxBreakdown' => $order->taxBreakdown(),
             'payments' => $showPayments
                 ? $order->payments()->withoutGlobalScopes()->active()->orderBy('paid_at')->orderBy('id')->get()
                 : collect(),

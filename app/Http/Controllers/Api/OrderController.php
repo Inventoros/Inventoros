@@ -131,7 +131,11 @@ class OrderController extends Controller
             'items.*.product_variant_id' => ['nullable', 'integer', Rule::exists('product_variants', 'id')->where('organization_id', $organizationId)],
             'items.*.quantity' => ['required', 'integer', 'min:1'],
             'items.*.unit_price' => ['nullable', 'numeric', 'decimal:0,2', 'min:0'],
+            // Tax amount for a line without a rate (kept as sent).
             'items.*.tax' => ['nullable', 'numeric', 'decimal:0,2', 'min:0'],
+            // Tax rate in percent: the server computes the line's tax from it
+            // (after discounts) and ignores items.*.tax for that line.
+            'items.*.tax_rate' => ['nullable', 'numeric', 'decimal:0,3', 'min:0', 'max:100'],
             'items.*.discount_type' => ['nullable', Rule::in(DiscountType::values())],
             'items.*.discount_value' => ['nullable', 'numeric', 'decimal:0,2', 'min:0', 'max:99999999'],
             'discount_type' => ['nullable', Rule::in(DiscountType::values())],

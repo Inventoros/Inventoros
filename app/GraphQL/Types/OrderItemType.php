@@ -65,6 +65,15 @@ class OrderItemType extends GraphQLType
                 'type' => Type::float(),
                 'description' => 'Line discount in money, taken off the line subtotal',
             ],
+            'net_amount' => [
+                'type' => Type::float(),
+                'description' => 'Line net: subtotal less the line discount, before tax',
+                'resolve' => fn (OrderItem $item) => (float) $item->netAmount(),
+            ],
+            'tax_rate' => [
+                'type' => Type::float(),
+                'description' => 'Tax rate in percent the line was taxed at (null when its tax is an amount as entered)',
+            ],
             'tax' => [
                 'type' => Type::float(),
                 'description' => 'Line tax',

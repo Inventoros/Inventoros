@@ -19,6 +19,7 @@ import { formatPercent } from '@/lib/reportFormat';
 import { usePermissions } from '@/composables/usePermissions';
 import axios from 'axios';
 import ImageUploader from '@/Components/ImageUploader.vue';
+import ProductTaxFields from '@/Components/ProductTaxFields.vue';
 import { formatMoney } from '@/lib/money';
 import { ArrowLeft, Eye, Zap, ChevronDown, Layers, Info, X, Trash2 } from '@lucide/vue';
 
@@ -82,6 +83,7 @@ const form = useForm({
     sku: props.product.sku,
     price: props.product.price,
     purchase_price: props.product.purchase_price || '',
+    tax_rate: props.product.tax_rate != null ? parseFloat(props.product.tax_rate) : '',
     // No `stock`: on-hand changes only through stock adjustments.
     min_stock: props.product.min_stock,
     reorder_point: props.product.reorder_point || '',
@@ -392,6 +394,13 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                 <p v-if="form.errors.price" :class="fieldError">{{ form.errors.price }}</p>
                             </div>
                         </div>
+
+                        <ProductTaxFields
+                            v-model:price="form.price"
+                            v-model:tax-rate="form.tax_rate"
+                            :symbol="getCurrencySymbol(product.currency || defaultCurrency)"
+                            :error="form.errors.tax_rate"
+                        />
 
                         <!-- Profit Indicator -->
                         <div v-if="form.price && form.purchase_price" class="rounded-lg border border-status-success/20 bg-status-success-soft p-3">

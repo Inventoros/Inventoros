@@ -2407,6 +2407,7 @@ components:
         price: { type: number, nullable: true }
         selling_price: { type: number, nullable: true }
         purchase_price: { type: number, nullable: true }
+        tax_rate: { type: string, nullable: true, description: "Tax rate in percent the product is sold at (\"27.000\"); price and selling_price are net of it. Null when not set." }
         currency: { type: string, nullable: true }
         price_in_currencies:
           type: object
@@ -2448,6 +2449,7 @@ components:
         price: { type: number, minimum: 0 }
         selling_price: { type: number, minimum: 0 }
         purchase_price: { type: number, minimum: 0 }
+        tax_rate: { type: number, minimum: 0, maximum: 100, nullable: true, description: "Tax rate in percent, up to 3 decimals. Prices stay net (tax exclusive); null clears it." }
         currency: { type: string, maxLength: 3 }
         stock: { type: integer, minimum: 0 }
         min_stock: { type: integer, minimum: 0 }
@@ -2532,7 +2534,16 @@ components:
         discount_amount: { type: number, description: "Whole discount (line discounts plus the order discount): subtotal - discount_amount + tax + shipping = total." }
         line_discount_total: { type: number, description: "Present when items are loaded." }
         order_discount_amount: { type: number, description: "Present when items are loaded." }
-        tax: { type: number }
+        tax: { type: number, description: "Sum of the line taxes, plus any order-level tax." }
+        tax_breakdown:
+          type: array
+          description: "Present when items are loaded. Taxable amount and tax per line tax rate (highest first), then one entry with a null rate for tax entered as an amount."
+          items:
+            type: object
+            properties:
+              rate: { type: string, nullable: true }
+              taxable: { type: string }
+              tax: { type: string }
         shipping: { type: number }
         total: { type: number, description: "Computed on the server, never taken from the client." }
         amount_paid: { type: number, description: "Present only with `view_payments` (role and token)." }
@@ -2565,6 +2576,8 @@ components:
         discount_type: { type: string, enum: [percent, fixed], nullable: true }
         discount_value: { type: number, nullable: true }
         discount_amount: { type: number }
+        net_amount: { type: string, description: "subtotal - discount_amount: the line's net before tax." }
+        tax_rate: { type: string, nullable: true, description: "Percent the line was taxed at. Null when its tax is an amount as sent." }
         tax: { type: number }
         total: { type: number, description: "subtotal - discount_amount + tax" }
         metadata: { type: object, additionalProperties: true, nullable: true }
@@ -2713,7 +2726,8 @@ components:
               product_id: { type: integer }
               quantity: { type: integer, minimum: 1 }
               unit_price: { type: number, minimum: 0, description: "Defaults to product.selling_price (or price)." }
-              tax: { type: number, minimum: 0 }
+              tax: { type: number, minimum: 0, description: "Tax amount for a line without tax_rate, kept as sent." }
+              tax_rate: { type: number, minimum: 0, maximum: 100, description: "Tax rate in percent (up to 3 decimals). The server computes the line tax from it after discounts and ignores tax. Lines are not taxed from the product's rate unless you send it." }
               discount_type: { type: string, enum: [percent, fixed] }
               discount_value: { type: number, minimum: 0, description: "A percentage (0-100) or an amount up to quantity x unit price." }
 

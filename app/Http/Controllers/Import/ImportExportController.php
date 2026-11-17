@@ -126,6 +126,8 @@ class ImportExportController extends Controller
             'supplier_name',
             'supplier_sku',
             'supplier_cost',
+            // Percent the product is sold at; price stays net of it.
+            'tax_rate',
         ];
 
         // One price column per additional currency the organization uses.
@@ -159,6 +161,7 @@ class ImportExportController extends Controller
                 'Example Supplier',
                 'EX-SUP-001',
                 '45.00',
+                '',
                 ...array_fill(0, count($currencies), ''),
             ], escape: '');
 

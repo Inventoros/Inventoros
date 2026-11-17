@@ -90,6 +90,43 @@ final class Money
     }
 
     /**
+     * Split an amount across weights in proportion, keeping every cent.
+     *
+     * Shares are taken from cumulative rounded targets, in the order the
+     * weights are given: each key gets round(amount x cumulative weight /
+     * total weight) less what the keys before it got. The shares always sum
+     * to the rounded amount exactly, and the same inputs always give the same
+     * split. When every weight is zero, every share is zero.
+     *
+     * @template TKey of array-key
+     *
+     * @param  array<TKey, int|float|string|null>  $weights  non-negative money values
+     * @return array<TKey, string>
+     */
+    public static function allocate(int|float|string|null $amount, array $weights): array
+    {
+        $amount = self::operand($amount);
+        $total = '0';
+        foreach ($weights as $weight) {
+            $total = bcadd($total, self::operand($weight), self::WORK_SCALE);
+        }
+
+        $cumulative = '0';
+        $allocated = '0.00';
+        $shares = [];
+        foreach ($weights as $key => $weight) {
+            $cumulative = bcadd($cumulative, self::operand($weight), self::WORK_SCALE);
+            $target = bccomp($total, '0', self::WORK_SCALE) === 0
+                ? '0.00'
+                : self::round(bcdiv(bcmul($amount, $cumulative, self::WORK_SCALE), $total, self::WORK_SCALE));
+            $shares[$key] = self::subtract($target, $allocated);
+            $allocated = $target;
+        }
+
+        return $shares;
+    }
+
+    /**
      * Round an arbitrary-precision decimal string half away from zero to 2 dp.
      */
     public static function round(string $value): string

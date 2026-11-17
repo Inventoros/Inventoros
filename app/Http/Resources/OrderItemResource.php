@@ -39,6 +39,11 @@ class OrderItemResource extends JsonResource
             'discount_type' => $this->discount_type,
             'discount_value' => $this->discount_value,
             'discount_amount' => $this->discount_amount,
+            // Subtotal less the line discount, before tax.
+            'net_amount' => $this->resource->netAmount(),
+            // Percent the line was taxed at; null when its tax is an amount
+            // as entered (imports, API lines sent without a rate).
+            'tax_rate' => $this->tax_rate,
             'tax' => $this->tax,
             'total' => $this->total,
             'metadata' => $this->metadata,

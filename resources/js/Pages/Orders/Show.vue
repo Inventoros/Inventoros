@@ -17,6 +17,7 @@ import { computed, ref, watch } from 'vue';
 import { usePermissions } from '@/composables/usePermissions';
 import { displayCalendarDate, displayDateTime, todayIsoDate } from '@/lib/dates';
 import { formatMoney } from '@/lib/money';
+import { formatTaxRate } from '@/lib/lineTax';
 import { invoiceState } from '@/lib/invoiceState';
 import { approvalStatusLabel, approvalStatusVariant, orderSourceLabel, orderStatusLabel, orderStatusVariant } from '@/lib/orderLabels';
 import { useI18n } from 'vue-i18n';
@@ -45,6 +46,9 @@ const props = defineProps({
 
 // Order amounts in the order's currency, grouped (see lib/money).
 const money = (value) => formatMoney(value, props.order.currency);
+
+// Lines taxed by rate: the summary lists the tax per rate.
+const hasLineTaxRates = computed(() => (props.order.items ?? []).some((item) => item.tax_rate != null));
 
 const paymentStatusVariant = (s) =>
     ({ unpaid: 'warning', partial: 'info', paid: 'success', overpaid: 'brand', refunded: 'neutral' }[s] || 'neutral');
@@ -308,8 +312,20 @@ const formatOrderDate = (date, long = false) =>
                                         <p class="font-medium tabular-nums text-text-primary">{{ money(item.unit_price) }}</p>
                                     </div>
 
+                                    <div class="text-end">
+                                        <p class="text-xs text-text-tertiary">{{ t('tax.net') }}</p>
+                                        <p class="font-medium tabular-nums text-text-primary">{{ money(item.net_amount) }}</p>
+                                    </div>
+
+                                    <div class="text-end">
+                                        <p class="text-xs text-text-tertiary">
+                                            {{ t('tax.lineTax') }}<template v-if="item.tax_rate != null"> ({{ formatTaxRate(item.tax_rate) }})</template>
+                                        </p>
+                                        <p class="font-medium tabular-nums text-text-primary">{{ money(item.tax || 0) }}</p>
+                                    </div>
+
                                     <div class="min-w-[100px] text-end">
-                                        <p class="text-xs text-text-tertiary">{{ t('common.total') }}</p>
+                                        <p class="text-xs text-text-tertiary">{{ t('tax.gross') }}</p>
                                         <p class="font-semibold tabular-nums text-text-primary">
                                             {{ money(item.total || item.subtotal || (item.quantity * item.unit_price)) }}
                                         </p>
@@ -495,7 +511,17 @@ const formatOrderDate = (date, long = false) =>
                                     <dd class="font-medium tabular-nums text-text-primary">-{{ money(order.order_discount_amount) }}</dd>
                                 </div>
 
-                                <div class="flex justify-between text-sm">
+                                <template v-if="hasLineTaxRates">
+                                    <div v-for="(entry, index) in order.tax_breakdown" :key="index" class="flex justify-between text-sm">
+                                        <dt class="text-text-secondary">
+                                            <template v-if="entry.rate != null">{{ t('tax.byRate', { rate: formatTaxRate(entry.rate), amount: money(entry.taxable) }) }}</template>
+                                            <template v-else>{{ t('tax.otherTax') }}</template>
+                                        </dt>
+                                        <dd class="font-medium tabular-nums text-text-primary">{{ money(entry.tax) }}</dd>
+                                    </div>
+                                    <p v-if="parseFloat(order.order_discount_amount) > 0" class="text-xs text-text-tertiary">{{ t('tax.afterOrderDiscount') }}</p>
+                                </template>
+                                <div v-else class="flex justify-between text-sm">
                                     <dt class="text-text-secondary">{{ t('common.tax') }}</dt>
                                     <dd class="font-medium tabular-nums text-text-primary">{{ money(order.tax || 0) }}</dd>
                                 </div>

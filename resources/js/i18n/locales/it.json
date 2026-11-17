@@ -4051,7 +4051,22 @@
   "tax": {
     "amount": "Importo dell'imposta",
     "rate": "Aliquota",
-    "rateHint": "Facoltativo: inserisci un'aliquota per calcolare l'importo dal subtotale dopo gli sconti. Viene salvato solo l'importo."
+    "rateHint": "Facoltativo: inserisci un'aliquota per calcolare l'importo dal subtotale dopo gli sconti. Viene salvato solo l'importo.",
+    "productRate": "Aliquota (%)",
+    "productRateHint": "L'aliquota con cui viene venduto questo prodotto, ad esempio 22 per un'IVA del 22%. Il prezzo di vendita resta netto (al netto delle imposte). Le nuove righe d'ordine partono da questa aliquota.",
+    "grossPrice": "Prezzo di vendita IVA inclusa",
+    "grossPriceHint": "Inserisci un prezzo comprensivo di imposte per calcolare il prezzo di vendita netto.",
+    "grossNeedsRate": "Imposta un'aliquota per inserire un prezzo comprensivo di imposte.",
+    "grossWithRate": "{amount} incl. imposta del {rate}",
+    "lineRate": "Imposta %",
+    "lineTax": "Imposta",
+    "net": "Netto",
+    "gross": "Lordo",
+    "enteredAmount": "Importo inserito",
+    "fromLineRates": "L'imposta deriva dalle aliquote delle righe. Cancella le aliquote delle righe per inserire un unico importo di imposta per l'ordine.",
+    "byRate": "Imposta {rate} su {amount}",
+    "otherTax": "Altra imposta",
+    "afterOrderDiscount": "L'imposta di riga viene calcolata dopo aver ripartito lo sconto dell'ordine tra le righe."
   },
   "warehouseStock": {
     "onHand": "Giacenza",

@@ -46,3 +46,40 @@ test('the order totals expose the taxable subtotal after line and order discount
     assert.equal(totals.value.taxable, 40.5);
     assert.equal(taxFromRate(totals.value.taxable, 13), 5.27); // 5.265 rounds up
 });
+
+test('once a line has a tax rate, the order tax is the sum of the line taxes (#416)', () => {
+    const form = reactive({
+        items: [
+            { unit_price: '10.00', quantity: 2, discount_type: 'fixed', discount_value: 2, tax_rate: 5 }, // 18 net
+            { unit_price: '20.00', quantity: 1, discount_type: '', discount_value: null, tax_rate: '27' }, // 20 net
+        ],
+        discount_type: 'percent',
+        discount_value: 10, // 3.80, shared: taxed on 16.20 and 18.00
+        tax: 99, // an order-level tax is not used alongside line rates
+        shipping: 5,
+    });
+
+    const totals = useOrderTotals(form);
+
+    assert.equal(totals.value.lineRates, true);
+    assert.deepEqual(totals.value.lineTaxes, [0.81, 4.86]);
+    assert.equal(totals.value.tax, 5.67);
+    assert.equal(totals.value.total, 44.87);
+    assert.deepEqual(totals.value.taxByRate.map((entry) => entry.rate), [27, 5]);
+});
+
+test('without line rates, the order-level tax and line tax amounts add up as before', () => {
+    const form = reactive({
+        items: [{ unit_price: '10.00', quantity: 1, tax_rate: '', tax: 2 }],
+        discount_type: '',
+        discount_value: null,
+        tax: 3,
+        shipping: 0,
+    });
+
+    const totals = useOrderTotals(form);
+
+    assert.equal(totals.value.lineRates, false);
+    assert.equal(totals.value.tax, 5);
+    assert.equal(totals.value.total, 15);
+});
