@@ -23,16 +23,11 @@
         "@tailwindcss/forms": "^0.5.11",
         "@tailwindcss/vite": "^4.3.3",
         "@vitejs/plugin-vue": "^6.0.5",
-        "concurrently": "^9.0.1",
+        "concurrently": "^10.0.7",
         "laravel-vite-plugin": "^3.2.1",
         "tailwindcss": "^4.3.3",
         "tailwindcss-animate": "^1.0.7",
         "vite": "^8.3.8"
-    },
-    "overrides": {
-        "concurrently": {
-            "shell-quote": "^1.12.0"
-        }
     },
     "dependencies": {
         "@inertiajs/vue3": "^3.0.0",
