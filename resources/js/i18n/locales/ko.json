@@ -4051,7 +4051,22 @@
   "tax": {
     "amount": "세액",
     "rate": "세율",
-    "rateHint": "선택 사항: 세율을 입력하면 할인 후 소계에서 세액을 계산합니다. 세액만 저장됩니다."
+    "rateHint": "선택 사항: 세율을 입력하면 할인 후 소계에서 세액을 계산합니다. 세액만 저장됩니다.",
+    "productRate": "세율 (%)",
+    "productRateHint": "이 제품의 판매 세율입니다. 예: 부가세 10%이면 10. 판매 가격은 세전(순액)으로 유지됩니다. 새 주문 항목은 이 세율로 시작합니다.",
+    "grossPrice": "세금 포함 판매 가격",
+    "grossPriceHint": "세금 포함 가격을 입력하면 세전 판매 가격을 계산합니다.",
+    "grossNeedsRate": "세금 포함 가격을 입력하려면 세율을 설정하세요.",
+    "grossWithRate": "{amount} (세율 {rate} 포함)",
+    "lineRate": "세율 %",
+    "lineTax": "세금",
+    "net": "세전",
+    "gross": "세후",
+    "enteredAmount": "입력한 금액",
+    "fromLineRates": "세금은 항목별 세율로 계산됩니다. 주문 전체의 세금을 입력하려면 항목의 세율을 지우세요.",
+    "byRate": "{amount}에 대한 세금 {rate}",
+    "otherTax": "기타 세금",
+    "afterOrderDiscount": "항목 세금은 주문 할인을 항목에 나눈 뒤에 계산됩니다."
   },
   "warehouseStock": {
     "onHand": "보유 재고",

@@ -18,6 +18,7 @@ import { useI18n } from 'vue-i18n';
 import { formatPercent } from '@/lib/reportFormat';
 import axios from 'axios';
 import ImageUploader from '@/Components/ImageUploader.vue';
+import ProductTaxFields from '@/Components/ProductTaxFields.vue';
 import { formatMoney } from '@/lib/money';
 import { ArrowLeft, Zap, X, Plus, Trash2, ChevronDown, Layers } from '@lucide/vue';
 
@@ -40,6 +41,7 @@ const form = useForm({
     sku: '',
     price: '',
     purchase_price: '',
+    tax_rate: '',
     currency: props.defaultCurrency || 'USD',
     price_in_currencies: [],
     stock: '',
@@ -364,6 +366,13 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                 <p v-if="form.errors.price" :class="fieldError">{{ form.errors.price }}</p>
                             </div>
                         </div>
+
+                        <ProductTaxFields
+                            v-model:price="form.price"
+                            v-model:tax-rate="form.tax_rate"
+                            :symbol="getCurrencySymbol(form.currency)"
+                            :error="form.errors.tax_rate"
+                        />
 
                         <!-- Profit Indicator -->
                         <div v-if="form.price && form.purchase_price" class="rounded-lg border border-status-success/20 bg-status-success-soft p-3">

@@ -13,6 +13,7 @@ import CustomerPicker from '@/Components/CustomerPicker.vue';
 import ProductPicker from '@/Components/ui/ProductPicker.vue';
 import DiscountInput from '@/Components/DiscountInput.vue';
 import { useOrderTotals, lineNetCents } from '@/composables/useOrderTotals';
+import { formatTaxRate } from '@/lib/lineTax';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import { ref, computed, defineAsyncComponent } from 'vue';
 import { useBarcodeWedge, useBarcodeLookup } from '@/composables/useBarcodeWedge';
@@ -63,7 +64,7 @@ const errorTargets = computed(() => ({
     shipping: 'shipping',
     tax: 'tax',
     items: 'add_product',
-    ...Object.fromEntries(form.items.flatMap((_, index) => [[`items.${index}.quantity`, fieldIdPrefix + '-repeat-1-' + index], [`items.${index}.unit_price`, fieldIdPrefix + '-repeat-2-' + index]])),
+    ...Object.fromEntries(form.items.flatMap((_, index) => [[`items.${index}.quantity`, fieldIdPrefix + '-repeat-1-' + index], [`items.${index}.unit_price`, fieldIdPrefix + '-repeat-2-' + index], [`items.${index}.tax_rate`, fieldIdPrefix + '-repeat-3-' + index]])),
 }));
 
 
@@ -103,6 +104,10 @@ const availableVariants = computed(() =>
         : []
 );
 
+// A new line starts at the product's tax rate (variants share it); blank
+// when the product has none. The rate stays editable per line.
+const productTaxRate = (product) => (product?.tax_rate != null && product.tax_rate !== '' ? parseFloat(product.tax_rate) : '');
+
 const onProductChange = () => {
     selectedVariant.value = null;
     variantError.value = '';
@@ -138,6 +143,7 @@ const addItem = () => {
             unit_price: linePrice(product, variant, form.currency) ?? '',
             discount_type: '',
             discount_value: null,
+            tax_rate: productTaxRate(product),
         });
     }
     selectedProduct.value = null;
@@ -175,6 +181,7 @@ const addScannedLine = (product, variant) => {
             sku: variant?.sku || product.sku,
             quantity: 1,
             unit_price: linePrice(product, variant, form.currency) ?? '',
+            tax_rate: productTaxRate(product),
         });
     }
     const line = form.items.find(item => item.product_id === product.id && item.product_variant_id === variantId);
@@ -264,7 +271,11 @@ const submit = () => {
         alert(t('orders.create.addAtLeastOneProduct'));
         return;
     }
-    form.post(route('orders.store'), { preserveScroll: true, onError: focusErrors });
+    // Once a line has a tax rate the order's tax is the sum of the line
+    // taxes, and the server refuses an order-level tax on top of it.
+    form
+        .transform((data) => (totals.value.lineRates ? { ...data, tax: 0 } : data))
+        .post(route('orders.store'), { preserveScroll: true, onError: focusErrors });
 };
 
 const availableProducts = computed(() =>
@@ -399,6 +410,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                         <p class="text-xs text-text-tertiary">SKU: {{ item.sku }}</p>
                                         <p v-if="form.errors[`items.${index}.product_variant_id`]" :class="fieldError" :id="errorId(`items.${index}.product_variant_id`)">{{ form.errors[`items.${index}.product_variant_id`] }}</p>
                                         <p v-if="form.errors[`items.${index}.unit_price`]" :class="fieldError" :id="errorId(`items.${index}.unit_price`)">{{ form.errors[`items.${index}.unit_price`] }}</p>
+                                        <p v-if="form.errors[`items.${index}.tax_rate`]" :class="fieldError" :id="errorId(`items.${index}.tax_rate`)">{{ form.errors[`items.${index}.tax_rate`] }}</p>
                                     </div>
                                     <div class="w-20">
                                         <label :for="fieldIdPrefix + '-repeat-1-' + index" class="mb-1 block text-[11px] text-text-tertiary">{{ t('orders.edit.qty') }}</label>
@@ -409,9 +421,21 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                         <label :for="fieldIdPrefix + '-repeat-2-' + index" class="mb-1 block text-[11px] text-text-tertiary">{{ t('orders.show.unitPrice') }}</label>
                                         <input :id="fieldIdPrefix + '-repeat-2-' + index" :value="item.unit_price" @input="updateItemPrice(index, $event.target.value)" type="number" step="0.01" min="0" :class="fieldInput" v-bind="fieldErrorAttrs(`items.${index}.unit_price`)" />
                                     </div>
+                                    <div class="w-20">
+                                        <label :for="fieldIdPrefix + '-repeat-3-' + index" class="mb-1 block text-[11px] text-text-tertiary">{{ t('tax.lineRate') }}</label>
+                                        <input :id="fieldIdPrefix + '-repeat-3-' + index" v-model="item.tax_rate" type="number" step="0.001" min="0" max="100" :class="fieldInput" v-bind="fieldErrorAttrs(`items.${index}.tax_rate`)" />
+                                    </div>
                                     <div class="w-24 text-end">
-                                        <label class="mb-1 block text-[11px] text-text-tertiary">{{ t('common.total') }}</label>
+                                        <p class="mb-1 text-[11px] text-text-tertiary">{{ t('tax.net') }}</p>
                                         <p class="font-semibold tabular-nums text-text-primary">{{ money(lineNetCents(item) / 100) }}</p>
+                                    </div>
+                                    <div class="w-20 text-end">
+                                        <p class="mb-1 text-[11px] text-text-tertiary">{{ t('tax.lineTax') }}</p>
+                                        <p class="tabular-nums text-text-secondary">{{ money(totals.lineTaxes[index]) }}</p>
+                                    </div>
+                                    <div class="w-24 text-end">
+                                        <p class="mb-1 text-[11px] text-text-tertiary">{{ t('tax.gross') }}</p>
+                                        <p class="font-semibold tabular-nums text-text-primary">{{ money(lineNetCents(item) / 100 + totals.lineTaxes[index]) }}</p>
                                     </div>
                                     <button :aria-label="t('common.delete')" type="button" @click="removeItem(index)" class="mt-4 rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-surface-sunken hover:text-status-danger"><Trash2 :size="16" /></button>
                                 </div>
@@ -499,7 +523,15 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                 <span class="text-text-secondary">{{ t('discounts.orderDiscount') }}</span>
                                 <span class="font-medium tabular-nums text-text-primary">-{{ money(totals.orderDiscount) }}</span>
                             </div>
-                            <TaxInput v-model="form.tax" :base="totals.taxable" :error="form.errors.tax" />
+                            <template v-if="totals.lineRates">
+                                <div v-for="entry in totals.taxByRate" :key="entry.rate" class="flex justify-between text-sm">
+                                    <span class="text-text-secondary">{{ t('tax.byRate', { rate: formatTaxRate(entry.rate), amount: money(entry.taxable) }) }}</span>
+                                    <span class="font-medium tabular-nums text-text-primary">{{ money(entry.tax) }}</span>
+                                </div>
+                                <p class="text-xs text-text-tertiary">{{ t('tax.fromLineRates') }}</p>
+                                <p v-if="form.errors.tax" :class="fieldError" :id="errorId('tax')">{{ form.errors.tax }}</p>
+                            </template>
+                            <TaxInput v-else v-model="form.tax" :base="totals.taxable" :error="form.errors.tax" />
                             <div>
                                 <label for="shipping" class="mb-1 block text-sm text-text-secondary">{{ t('common.shipping') }}</label>
                                 <input id="shipping" v-model.number="form.shipping" type="number" step="0.01" min="0" :class="fieldInput" v-bind="fieldErrorAttrs('shipping')" />

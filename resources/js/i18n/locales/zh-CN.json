@@ -4051,7 +4051,22 @@
   "tax": {
     "amount": "税额",
     "rate": "税率",
-    "rateHint": "可选：输入税率，即可根据折扣后的小计计算税额。仅保存税额。"
+    "rateHint": "可选：输入税率，即可根据折扣后的小计计算税额。仅保存税额。",
+    "productRate": "税率 (%)",
+    "productRateHint": "该产品的销售税率，例如 13% 增值税填 13。销售价格保持为不含税价格。新的订单行将以此税率开始。",
+    "grossPrice": "含税销售价格",
+    "grossPriceHint": "输入含税价格以计算不含税销售价格。",
+    "grossNeedsRate": "请先设置税率，再输入含税价格。",
+    "grossWithRate": "{amount}（含 {rate} 税）",
+    "lineRate": "税率 %",
+    "lineTax": "税额",
+    "net": "不含税",
+    "gross": "含税",
+    "enteredAmount": "已输入的金额",
+    "fromLineRates": "税额来自各行的税率。清除各行的税率后，可为整个订单输入一个税额。",
+    "byRate": "{amount} 的税 {rate}",
+    "otherTax": "其他税",
+    "afterOrderDiscount": "行税额在订单折扣分摊到各行之后计算。"
   },
   "warehouseStock": {
     "onHand": "现有库存",

@@ -4051,7 +4051,22 @@
   "tax": {
     "amount": "Vergi tutarı",
     "rate": "Oran",
-    "rateHint": "İsteğe bağlı: tutarı indirimlerden sonraki ara toplamdan hesaplamak için bir vergi oranı girin. Yalnızca tutar kaydedilir."
+    "rateHint": "İsteğe bağlı: tutarı indirimlerden sonraki ara toplamdan hesaplamak için bir vergi oranı girin. Yalnızca tutar kaydedilir.",
+    "productRate": "Vergi oranı (%)",
+    "productRateHint": "Bu ürünün satıldığı oran, örneğin %20 KDV için 20. Satış fiyatı net (vergi hariç) kalır. Yeni sipariş satırları bu oranla başlar.",
+    "grossPrice": "Vergi dahil satış fiyatı",
+    "grossPriceHint": "Net satış fiyatını hesaplamak için vergi dahil bir fiyat yazın.",
+    "grossNeedsRate": "Vergi dahil fiyat girmek için bir vergi oranı belirleyin.",
+    "grossWithRate": "{amount} ({rate} vergi dahil)",
+    "lineRate": "Vergi %",
+    "lineTax": "Vergi",
+    "net": "Net",
+    "gross": "Brüt",
+    "enteredAmount": "Girilen tutar",
+    "fromLineRates": "Vergi, satırların vergi oranlarından gelir. Sipariş için tek bir vergi tutarı girmek üzere satırlardaki oranları temizleyin.",
+    "byRate": "{amount} üzerinden {rate} vergi",
+    "otherTax": "Diğer vergi",
+    "afterOrderDiscount": "Satır vergisi, sipariş indirimi satırlara dağıtıldıktan sonra hesaplanır."
   },
   "warehouseStock": {
     "onHand": "Eldeki stok",

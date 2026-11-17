@@ -4051,7 +4051,22 @@
   "tax": {
     "amount": "Kwota podatku",
     "rate": "Stawka",
-    "rateHint": "Opcjonalnie: wpisz stawkę podatku, aby obliczyć kwotę od sumy częściowej po rabatach. Zapisywana jest tylko kwota."
+    "rateHint": "Opcjonalnie: wpisz stawkę podatku, aby obliczyć kwotę od sumy częściowej po rabatach. Zapisywana jest tylko kwota.",
+    "productRate": "Stawka podatku (%)",
+    "productRateHint": "Stawka, po której sprzedawany jest ten produkt, na przykład 23 dla 23% VAT. Cena sprzedaży pozostaje netto (bez podatku). Nowe pozycje zamówienia zaczynają się od tej stawki.",
+    "grossPrice": "Cena sprzedaży brutto",
+    "grossPriceHint": "Wpisz cenę brutto, aby obliczyć cenę sprzedaży netto.",
+    "grossNeedsRate": "Ustaw stawkę podatku, aby wpisać cenę brutto.",
+    "grossWithRate": "{amount} brutto (podatek {rate})",
+    "lineRate": "Podatek %",
+    "lineTax": "Podatek",
+    "net": "Netto",
+    "gross": "Brutto",
+    "enteredAmount": "Wpisana kwota",
+    "fromLineRates": "Podatek wynika ze stawek pozycji. Wyczyść stawki pozycji, aby wpisać jedną kwotę podatku dla zamówienia.",
+    "byRate": "Podatek {rate} od {amount}",
+    "otherTax": "Inny podatek",
+    "afterOrderDiscount": "Podatek pozycji jest liczony po rozdzieleniu rabatu zamówienia na pozycje."
   },
   "warehouseStock": {
     "onHand": "Stan magazynowy",

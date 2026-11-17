@@ -7,6 +7,7 @@ import TaxInput from '@/Components/TaxInput.vue';
 import CustomerPicker from '@/Components/CustomerPicker.vue';
 import DiscountInput from '@/Components/DiscountInput.vue';
 import { useOrderTotals, lineNetCents } from '@/composables/useOrderTotals';
+import { formatTaxRate, rateValue } from '@/lib/lineTax';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
@@ -18,6 +19,8 @@ const { t } = useI18n();
 
 const props = defineProps({
     order: Object,
+    // The tax entered for the whole order (order.tax less its line taxes).
+    orderLevelTax: { type: [String, Number], default: 0 },
     products: Array,
     // Waiting for approval: it cannot be shipped or delivered yet.
     awaitingApproval: { type: Boolean, default: false },
@@ -44,7 +47,7 @@ const form = useForm({
     status: props.order.status,
     order_date: toIsoDate(props.order.order_date),
     shipping: props.order.shipping || 0,
-    tax: props.order.tax || 0,
+    tax: parseFloat(props.orderLevelTax) || 0,
     discount_type: props.order.discount_type ?? '',
     discount_value: props.order.discount_value != null ? parseFloat(props.order.discount_value) : null,
     notes: props.order.notes || '',
@@ -56,6 +59,10 @@ const form = useForm({
         unit_price: parseFloat(item.unit_price),
         discount_type: item.discount_type ?? '',
         discount_value: item.discount_value != null ? parseFloat(item.discount_value) : null,
+        tax_rate: item.tax_rate != null ? parseFloat(item.tax_rate) : '',
+        // A line without a rate keeps the tax amount it was saved with
+        // (imported lines); a rated line's tax is recomputed on save.
+        tax: item.tax_rate == null ? parseFloat(item.tax) || 0 : 0,
     })),
 });
 
@@ -86,14 +93,21 @@ const variantsFor = (item) => {
     return product.variants.filter(v => v.is_active || v.id === item.product_variant_id);
 };
 
-const submit = () => {
-    form.put(route('orders.update', props.order.id), {
-        preserveScroll: true,
-    });
-};
-
 // Preview only: the server recomputes every total on save.
 const totals = useOrderTotals(form);
+
+const submit = () => {
+    // Once a line has a tax rate the order's tax is the sum of the line
+    // taxes, and the server refuses an order-level tax on top of it.
+    form
+        .transform((data) => (totals.value.lineRates ? { ...data, tax: 0 } : data))
+        .put(route('orders.update', props.order.id), {
+            preserveScroll: true,
+        });
+};
+
+// A line's product's tax rate (variants share it); blank when it has none.
+const productTaxRate = (product) => (product?.tax_rate != null && product.tax_rate !== '' ? parseFloat(product.tax_rate) : '');
 
 const addItem = () => {
     form.items.push({
@@ -104,6 +118,8 @@ const addItem = () => {
         unit_price: 0,
         discount_type: '',
         discount_value: null,
+        tax_rate: '',
+        tax: 0,
     });
 };
 
@@ -120,6 +136,9 @@ const onProductChange = (index) => {
     if (product && !product.has_variants) {
         item.unit_price = parseFloat(product.price) || 0;
     }
+    // A different product starts at its own tax rate.
+    item.tax_rate = productTaxRate(product);
+    item.tax = 0;
 };
 
 const onVariantChange = (index) => {
@@ -286,9 +305,9 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                             </p>
                                         </div>
 
-                                        <!-- Subtotal -->
+                                        <!-- Net -->
                                         <div class="md:col-span-2">
-                                            <label :class="fieldLabel">{{ t('common.subtotal') }}</label>
+                                            <p :class="fieldLabel">{{ t('tax.net') }}</p>
                                             <div class="flex h-9 items-center rounded-md border border-border-subtle bg-surface-sunken px-3">
                                                 <span class="text-sm font-semibold tabular-nums text-text-primary">
                                                     {{ formatMoney(lineNetCents(item) / 100, order.currency) }}
@@ -308,15 +327,42 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                             </button>
                                         </div>
                                     </div>
-                                    <div class="mt-3 md:w-1/2">
-                                        <DiscountInput
-                                            :id="`item_${index}_discount`"
-                                            v-model:type="item.discount_type"
-                                            v-model:value="item.discount_value"
-                                            :label="t('discounts.lineDiscount')"
-                                            :error="form.errors[`items.${index}.discount_value`] || form.errors[`items.${index}.discount_type`]"
-                                            compact
-                                        />
+                                    <div class="mt-3 grid grid-cols-1 gap-3 md:grid-cols-12">
+                                        <div class="md:col-span-6">
+                                            <DiscountInput
+                                                :id="`item_${index}_discount`"
+                                                v-model:type="item.discount_type"
+                                                v-model:value="item.discount_value"
+                                                :label="t('discounts.lineDiscount')"
+                                                :error="form.errors[`items.${index}.discount_value`] || form.errors[`items.${index}.discount_type`]"
+                                                compact
+                                            />
+                                        </div>
+                                        <!-- Line tax -->
+                                        <div class="md:col-span-2">
+                                            <label :for="`tax-rate-${index}`" class="mb-1 block text-[11px] text-text-tertiary">{{ t('tax.lineRate') }}</label>
+                                            <input
+                                                :id="`tax-rate-${index}`"
+                                                v-model="item.tax_rate"
+                                                type="number"
+                                                min="0"
+                                                max="100"
+                                                step="0.001"
+                                                :class="fieldInput"
+                                            />
+                                            <p v-if="form.errors[`items.${index}.tax_rate`]" :class="fieldError">
+                                                {{ form.errors[`items.${index}.tax_rate`] }}
+                                            </p>
+                                        </div>
+                                        <div class="text-end md:col-span-2">
+                                            <p class="mb-1 text-[11px] text-text-tertiary">{{ t('tax.lineTax') }}</p>
+                                            <p class="tabular-nums text-text-secondary">{{ formatMoney(totals.lineTaxes[index], order.currency) }}</p>
+                                            <p v-if="rateValue(item.tax_rate) === null && item.tax > 0" class="text-[11px] text-text-tertiary">{{ t('tax.enteredAmount') }}</p>
+                                        </div>
+                                        <div class="text-end md:col-span-2">
+                                            <p class="mb-1 text-[11px] text-text-tertiary">{{ t('tax.gross') }}</p>
+                                            <p class="font-semibold tabular-nums text-text-primary">{{ formatMoney(lineNetCents(item) / 100 + totals.lineTaxes[index], order.currency) }}</p>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -392,7 +438,15 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                 <span class="text-text-secondary">{{ t('discounts.orderDiscount') }}</span>
                                 <span class="font-medium tabular-nums text-text-primary">-{{ formatMoney(totals.orderDiscount, order.currency) }}</span>
                             </div>
-                            <TaxInput v-model="form.tax" :base="totals.taxable" :error="form.errors.tax" />
+                            <template v-if="totals.lineRates">
+                                <div v-for="entry in totals.taxByRate" :key="entry.rate" class="flex justify-between text-sm">
+                                    <span class="text-text-secondary">{{ t('tax.byRate', { rate: formatTaxRate(entry.rate), amount: formatMoney(entry.taxable, order.currency) }) }}</span>
+                                    <span class="font-medium tabular-nums text-text-primary">{{ formatMoney(entry.tax, order.currency) }}</span>
+                                </div>
+                                <p class="text-xs text-text-tertiary">{{ t('tax.fromLineRates') }}</p>
+                                <p v-if="form.errors.tax" :class="fieldError">{{ form.errors.tax }}</p>
+                            </template>
+                            <TaxInput v-else v-model="form.tax" :base="totals.taxable" :error="form.errors.tax" />
                             <div>
                                 <label for="shipping" class="mb-1 block text-sm text-text-secondary">{{ t('common.shipping') }}</label>
                                 <input id="shipping" v-model.number="form.shipping" type="number" step="0.01" min="0" :class="fieldInput" />

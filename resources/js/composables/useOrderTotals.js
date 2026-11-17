@@ -1,4 +1,5 @@
 import { computed } from 'vue';
+import { computeLineTaxes, rateValue, taxByRate } from '../lib/lineTax.js';
 
 /**
  * Live order totals for the order forms, mirroring OrderService on the server
@@ -8,6 +9,11 @@ import { computed } from 'vue';
  * discount comes off the merchandise net of line discounts; tax and shipping
  * are added after, never discounted. Money is handled in integer cents and
  * percentages round half up to the cent, as on the server.
+ *
+ * Tax is either per line or for the whole order, never both: once any line
+ * has a tax rate the order tax is the sum of the line taxes (see lib/lineTax)
+ * and the order-level tax field is not used; otherwise it is the order-level
+ * tax plus any line tax amounts (lines imported with an amount).
  */
 export const toCents = (value) => Math.round((parseFloat(value) || 0) * 100);
 
@@ -47,6 +53,11 @@ export function lineNetCents(item) {
     return gross - discountCents(gross, item.discount_type, item.discount_value);
 }
 
+/** Whether any of the lines has a tax rate. */
+export function hasLineTaxRates(items) {
+    return items.some((item) => rateValue(item.tax_rate) !== null);
+}
+
 export function useOrderTotals(form) {
     return computed(() => {
         const subtotal = form.items.reduce((sum, item) => sum + lineGrossCents(item), 0);
@@ -56,15 +67,31 @@ export function useOrderTotals(form) {
         );
         const net = subtotal - lineDiscounts;
         const orderDiscount = discountCents(net, form.discount_type, form.discount_value);
-        const tax = toCents(form.tax);
+        const lineRates = hasLineTaxRates(form.items);
+        const taxed = computeLineTaxes(
+            form.items.map((item) => ({ netCents: lineNetCents(item), taxRate: item.tax_rate, taxCents: toCents(item.tax) })),
+            orderDiscount,
+        );
+        const lineTax = taxed.reduce((sum, line) => sum + line.taxCents, 0);
+        const tax = (lineRates ? 0 : toCents(form.tax)) + lineTax;
         const shipping = toCents(form.shipping);
 
         return {
             subtotal: fromCents(subtotal),
             lineDiscounts: fromCents(lineDiscounts),
             orderDiscount: fromCents(orderDiscount),
-            // What a tax rate applies to: merchandise after every discount.
+            // What an order-level tax rate applies to: merchandise after every discount.
             taxable: fromCents(net - orderDiscount),
+            // True once any line has a tax rate: the order-level tax is not used.
+            lineRates,
+            // Per line, in form order: its tax (rate-computed or as entered).
+            lineTaxes: taxed.map((line) => fromCents(line.taxCents)),
+            // Per rate, highest first: [{ rate, taxable, tax }].
+            taxByRate: taxByRate(taxed).map((entry) => ({
+                rate: entry.rate,
+                taxable: fromCents(entry.taxableCents),
+                tax: fromCents(entry.taxCents),
+            })),
             tax: fromCents(tax),
             shipping: fromCents(shipping),
             total: fromCents(net - orderDiscount + tax + shipping),

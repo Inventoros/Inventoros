@@ -25,6 +25,7 @@ import axios from 'axios';
 import ImageGallery from '@/Components/ImageGallery.vue';
 import { usePermissions } from '@/composables/usePermissions';
 import { formatMoney } from '@/lib/money';
+import { formatTaxRate, grossFromNet } from '@/lib/lineTax';
 import { displayDate, displayDateTime } from '@/lib/dates';
 import { isAtOrBelowMinimum, onHandStock, stockStatus as stockStatusOf, stockValue } from '@/lib/productStock';
 import {
@@ -432,6 +433,9 @@ const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface
                                     </p>
                                     <p v-if="product.currency" class="mt-1 text-xs text-text-tertiary">
                                         {{ t('products.show.currencyValue', { currency: product.currency }) }}
+                                    </p>
+                                    <p v-if="product.tax_rate != null" class="mt-1 text-xs text-text-secondary">
+                                        {{ t('tax.grossWithRate', { amount: formatCurrency(grossFromNet(product.price, product.tax_rate)), rate: formatTaxRate(product.tax_rate) }) }}
                                     </p>
                                 </div>
                                 <div v-if="product.purchase_price">

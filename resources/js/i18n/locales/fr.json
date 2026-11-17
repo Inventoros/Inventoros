@@ -4051,7 +4051,22 @@
   "tax": {
     "amount": "Montant de la taxe",
     "rate": "Taux",
-    "rateHint": "Facultatif : saisissez un taux de taxe pour calculer le montant à partir du sous-total après remises. Seul le montant est enregistré."
+    "rateHint": "Facultatif : saisissez un taux de taxe pour calculer le montant à partir du sous-total après remises. Seul le montant est enregistré.",
+    "productRate": "Taux de taxe (%)",
+    "productRateHint": "Le taux auquel ce produit est vendu, par exemple 20 pour une TVA de 20 %. Le prix de vente reste hors taxes. Les nouvelles lignes de commande commencent à ce taux.",
+    "grossPrice": "Prix de vente TTC",
+    "grossPriceHint": "Saisissez un prix TTC pour calculer le prix de vente hors taxes.",
+    "grossNeedsRate": "Indiquez un taux de taxe pour saisir un prix TTC.",
+    "grossWithRate": "{amount} TTC (taxe de {rate})",
+    "lineRate": "Taxe %",
+    "lineTax": "Taxe",
+    "net": "HT",
+    "gross": "TTC",
+    "enteredAmount": "Montant saisi",
+    "fromLineRates": "La taxe provient des taux des lignes. Effacez les taux des lignes pour saisir un seul montant de taxe pour la commande.",
+    "byRate": "Taxe {rate} sur {amount}",
+    "otherTax": "Autre taxe",
+    "afterOrderDiscount": "La taxe de chaque ligne est calculée après répartition de la remise de commande entre les lignes."
   },
   "warehouseStock": {
     "onHand": "En stock",
