@@ -39,7 +39,12 @@ class PurchaseOrderResource extends JsonResource
             'approved_at' => $this->approved_at?->toIso8601String(),
             'needs_approval' => $this->status === 'draft' && $this->needsApproval(),
             'subtotal' => $this->subtotal,
+            // The line taxes plus any PO-level tax.
             'tax' => $this->tax,
+            // Taxable amount and tax per line tax rate, then one entry with
+            // a null rate for tax entered as an amount. converted_taxable and
+            // converted_tax are in the organization currency.
+            'tax_breakdown' => $this->whenLoaded('items', fn () => $this->resource->taxBreakdown()),
             'shipping' => $this->shipping,
             'total' => $this->total,
             'currency' => $this->currency,

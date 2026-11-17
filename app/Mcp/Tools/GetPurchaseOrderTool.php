@@ -72,8 +72,16 @@ class GetPurchaseOrderTool extends Tool
                 'remaining_quantity' => $i->remaining_quantity,
                 'unit_cost' => $i->unit_cost,
                 'subtotal' => $i->subtotal,
+                // Percent the line was taxed at; null when its tax is an
+                // amount as given.
+                'tax_rate' => $i->tax_rate,
+                'tax' => $i->tax,
                 'total' => $i->total,
             ])->all(),
+            // Taxable amount and tax per line tax rate (with the amounts in
+            // the organization currency), then one entry with a null rate
+            // for tax entered as an amount.
+            'tax_breakdown' => $po->taxBreakdown(),
             UntrustedText::NOTICE_KEY => UntrustedText::NOTICE,
         ]);
     }

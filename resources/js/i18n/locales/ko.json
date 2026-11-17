@@ -848,6 +848,7 @@
       "addItems": "품목 추가",
       "selectProduct": "제품 선택",
       "unitCost": "단가",
+      "netCostHint": "단가는 세전 금액입니다. 새 항목은 상품의 세율로 시작합니다.",
       "supplierSku": "공급업체 SKU",
       "orderItems": "주문 품목 ({count})",
       "createPo": "발주 생성",
@@ -4064,6 +4065,7 @@
     "gross": "세후",
     "enteredAmount": "입력한 금액",
     "fromLineRates": "세금은 항목별 세율로 계산됩니다. 주문 전체의 세금을 입력하려면 항목의 세율을 지우세요.",
+    "fromLineRatesPo": "세금은 항목별 세율로 계산됩니다. 발주 전체의 세금을 입력하려면 항목의 세율을 지우세요.",
     "byRate": "{amount}에 대한 세금 {rate}",
     "otherTax": "기타 세금",
     "afterOrderDiscount": "항목 세금은 주문 할인을 항목에 나눈 뒤에 계산됩니다."

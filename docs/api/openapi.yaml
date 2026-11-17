@@ -1004,7 +1004,7 @@ paths:
     post:
       tags: [Purchase Orders]
       summary: Create a purchase order
-      description: "Purchase orders in a currency other than the organization's carry an exchange rate snapshot: `exchange_rate`, `exchange_rate_from`, `exchange_rate_to`, `exchange_rate_provider`, `exchange_rate_effective_date`, `exchange_rate_retrieved_at`, `exchange_rate_source` (provider, fallback, confirmed or manual), `exchange_rate_set_by`, `exchange_rate_locked_at` (set when the PO leaves draft through `send` or `mark-sent`; the rate never changes after), `converted_subtotal`, `converted_tax`, `converted_shipping`, `converted_total`, plus `organization_currency` and `organization_currency_total` on every PO. A foreign-currency PO with no rate available is still created, with a null `exchange_rate`."
+      description: "Purchase orders in a currency other than the organization's carry an exchange rate snapshot: `exchange_rate`, `exchange_rate_from`, `exchange_rate_to`, `exchange_rate_provider`, `exchange_rate_effective_date`, `exchange_rate_retrieved_at`, `exchange_rate_source` (provider, fallback, confirmed or manual), `exchange_rate_set_by`, `exchange_rate_locked_at` (set when the PO leaves draft through `send` or `mark-sent`; the rate never changes after), `converted_subtotal`, `converted_tax`, `converted_shipping`, `converted_total`, plus `organization_currency` and `organization_currency_total` on every PO. A foreign-currency PO with no rate available is still created, with a null `exchange_rate`. Line tax: each line returns `tax_rate` (null when its tax is an amount as sent), `tax` and `total` (subtotal + tax); the PO's `tax` is the line taxes plus any PO-level tax, and is included in `converted_tax` and `converted_total`. With items loaded the PO also returns `tax_breakdown`: taxable amount and tax per line rate (highest first), then one entry with a null rate for tax entered as an amount, each with `converted_taxable` and `converted_tax` in the organization currency."
       requestBody:
         required: true
         content: { application/json: { schema: { $ref: '#/components/schemas/PurchaseOrderInput' } } }
@@ -2782,8 +2782,8 @@ components:
         order_date: { type: string, format: date }
         expected_date: { type: string, format: date }
         currency: { type: string, maxLength: 3 }
-        shipping: { type: number, minimum: 0 }
-        tax: { type: number, minimum: 0 }
+        shipping: { type: number, minimum: 0, description: "Never taxed." }
+        tax: { type: number, minimum: 0, description: "PO-level tax amount, for a PO whose lines have no tax_rate. Refused (422 on `tax`) when any line has a tax_rate. The PO's stored tax is this plus the line taxes." }
         notes: { type: string }
         exchange_rate_mode:
           type: string
@@ -2802,8 +2802,10 @@ components:
             properties:
               product_id: { type: integer }
               quantity: { type: integer, minimum: 1 }
-              unit_cost: { type: number, minimum: 0 }
+              unit_cost: { type: number, minimum: 0, description: "Net (before tax). Receiving records this net cost." }
               supplier_sku: { type: string, maxLength: 255 }
+              tax_rate: { type: number, minimum: 0, maximum: 100, nullable: true, description: "Tax rate in percent (up to 3 decimals). The server computes the line tax from it (lines grouped by rate, each rate's tax rounded once) and ignores tax. Lines are not taxed from the product's rate unless you send it. On update, a line with an `id` that sends neither tax_rate nor tax keeps its rate or amount." }
+              tax: { type: number, minimum: 0, description: "Tax amount for a line without tax_rate, kept as sent." }
 
     WarehouseInput:
       type: object

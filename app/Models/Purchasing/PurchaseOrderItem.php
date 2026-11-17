@@ -30,6 +30,7 @@ use Illuminate\Support\Carbon;
  * @property int $quantity_received
  * @property string $unit_cost
  * @property string $subtotal
+ * @property string|null $tax_rate Percent the line was taxed at; null when its tax is an amount as given
  * @property string $tax
  * @property string $total
  * @property string|null $notes
@@ -73,6 +74,7 @@ class PurchaseOrderItem extends Model
         'quantity_received',
         'unit_cost',
         'subtotal',
+        'tax_rate',
         'tax',
         'total',
         'notes',
@@ -87,6 +89,7 @@ class PurchaseOrderItem extends Model
         'receiving_location_id' => 'integer',
         'unit_cost' => 'decimal:2',
         'subtotal' => 'decimal:2',
+        'tax_rate' => 'decimal:3',
         'tax' => 'decimal:2',
         'total' => 'decimal:2',
         'metadata' => 'array',

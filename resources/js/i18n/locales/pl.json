@@ -848,6 +848,7 @@
       "addItems": "Dodaj pozycje",
       "selectProduct": "Wybierz produkt",
       "unitCost": "Koszt jednostkowy",
+      "netCostHint": "Koszty jednostkowe są netto (przed podatkiem). Nowe pozycje otrzymują stawkę podatku produktu.",
       "supplierSku": "SKU dostawcy",
       "orderItems": "Pozycje zamówienia ({count})",
       "createPo": "Utwórz zamówienie zakupu",
@@ -4064,6 +4065,7 @@
     "gross": "Brutto",
     "enteredAmount": "Wpisana kwota",
     "fromLineRates": "Podatek wynika ze stawek pozycji. Wyczyść stawki pozycji, aby wpisać jedną kwotę podatku dla zamówienia.",
+    "fromLineRatesPo": "Podatek wynika ze stawek pozycji. Wyczyść stawki pozycji, aby wpisać jedną kwotę podatku dla zamówienia zakupu.",
     "byRate": "Podatek {rate} od {amount}",
     "otherTax": "Inny podatek",
     "afterOrderDiscount": "Podatek pozycji jest liczony po rozdzieleniu rabatu zamówienia na pozycje."

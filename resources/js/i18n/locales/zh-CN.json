@@ -848,6 +848,7 @@
       "addItems": "添加商品",
       "selectProduct": "选择产品",
       "unitCost": "单位成本",
+      "netCostHint": "单位成本为净价（不含税）。新行默认使用商品的税率。",
       "supplierSku": "供应商 SKU",
       "orderItems": "订单商品（{count}）",
       "createPo": "创建采购订单",
@@ -4064,6 +4065,7 @@
     "gross": "含税",
     "enteredAmount": "已输入的金额",
     "fromLineRates": "税额来自各行的税率。清除各行的税率后，可为整个订单输入一个税额。",
+    "fromLineRatesPo": "税额来自各行的税率。清除各行的税率后，可为整个采购订单输入一个税额。",
     "byRate": "{amount} 的税 {rate}",
     "otherTax": "其他税",
     "afterOrderDiscount": "行税额在订单折扣分摊到各行之后计算。"

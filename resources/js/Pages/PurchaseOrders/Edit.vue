@@ -12,7 +12,9 @@ import PurchaseOrderExchangeRate from '@/Components/PurchaseOrderExchangeRate.vu
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import { ref, computed, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { defaultSupplierSku, defaultUnitCost } from '@/lib/purchaseOrderLine';
+import { defaultSupplierSku, defaultTaxRate, defaultUnitCost } from '@/lib/purchaseOrderLine';
+import { formatTaxRate, rateValue } from '@/lib/lineTax';
+import { usePurchaseOrderTotals } from '@/composables/usePurchaseOrderTotals';
 import { toIsoDate } from '@/lib/dates';
 import { formatMoney } from '@/lib/money';
 import { ArrowLeft, Plus, Trash2 } from '@lucide/vue';
@@ -22,6 +24,9 @@ const { t } = useI18n();
 
 const props = defineProps({
     purchaseOrder: Object,
+    // The PO-level part of the tax (purchaseOrder.tax already includes the
+    // line taxes, so it must not seed the PO tax field).
+    documentLevelTax: { type: [String, Number], default: 0 },
     suppliers: Array,
     products: Array,
     exchangeRate: { type: Object, default: null },
@@ -35,7 +40,7 @@ const form = useForm({
     expected_date: toIsoDate(props.purchaseOrder.expected_date),
     currency: props.purchaseOrder.currency || organizationCurrency.value,
     shipping: props.purchaseOrder.shipping || 0,
-    tax: props.purchaseOrder.tax || 0,
+    tax: Number(props.documentLevelTax) || 0,
     notes: props.purchaseOrder.notes || '',
     items: props.purchaseOrder.items?.map(item => ({
         id: item.id,
@@ -47,6 +52,10 @@ const form = useForm({
         quantity: item.quantity_ordered,
         unit_cost: item.unit_cost,
         supplier_sku: item.supplier_sku || '',
+        tax_rate: rateValue(item.tax_rate) ?? '',
+        // A line without a rate keeps the tax amount it has (API lines);
+        // a rated line's amount is recomputed from its rate.
+        tax: rateValue(item.tax_rate) === null ? item.tax : 0,
     })) || [],
     // Only sent when a permitted user enters (manual), accepts (confirm) or
     // refreshes (auto) the rate; otherwise the saved rate is kept.
@@ -64,13 +73,11 @@ const quantity = ref(1);
 const unitCost = ref(0);
 const supplierSku = ref('');
 
-const subtotal = computed(() => {
-    return form.items.reduce((sum, item) => sum + (item.quantity * item.unit_cost), 0);
-});
+// Net, tax per line and per rate, and gross, as the server will save them.
+const totals = usePurchaseOrderTotals(form);
 
-const total = computed(() => {
-    return subtotal.value + (parseFloat(form.tax) || 0) + (parseFloat(form.shipping) || 0);
-});
+// An amount in the organization's currency at the PO's rate.
+const converted = (value) => formatMoney(Number(value) * Number(effectiveRate.value), organizationCurrency.value);
 
 const productFor = (productId) => props.products.find(p => p.id == productId) ?? null;
 
@@ -122,6 +129,10 @@ const addItem = () => {
             quantity: quantity.value,
             unit_cost: unitCost.value || defaultUnitCost(product, variant, form.supplier_id),
             supplier_sku: supplierSku.value,
+            // Starts at the product's rate (variants share it); editable,
+            // blank for none.
+            tax_rate: defaultTaxRate(product),
+            tax: 0,
         });
     }
 
@@ -171,7 +182,11 @@ const onVariantSelected = () => {
 watch(() => form.supplier_id, () => prefillLine());
 
 const submit = () => {
-    form.put(route('purchase-orders.update', props.purchaseOrder.id));
+    // Once a line has a tax rate the PO's tax is the sum of the line taxes,
+    // and the server refuses a PO-level tax on top of it.
+    form
+        .transform((data) => (totals.value.lineRates ? { ...data, tax: 0 } : data))
+        .put(route('purchase-orders.update', props.purchaseOrder.id));
 };
 
 const formatCurrency = (value) => {
@@ -263,7 +278,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                         :currency="form.currency"
                         :order-date="form.order_date"
                         :organization-currency="organizationCurrency"
-                        :total="total"
+                        :total="totals.total"
                         :can-override="!!exchangeRates?.canOverride"
                         :current="exchangeRate ? { ...exchangeRate, order_date: purchaseOrder.order_date } : null"
                         @rate="(rate) => (effectiveRate = rate)"
@@ -339,7 +354,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                         class="rounded-lg border border-border-subtle bg-surface-canvas p-4"
                     >
                         <div class="grid grid-cols-1 gap-3 md:grid-cols-12">
-                            <div class="md:col-span-4">
+                            <div class="md:col-span-3">
                                 <p class="text-sm font-medium text-text-primary">{{ item.product_name }}</p>
                                 <p v-if="item.receiving_location" class="text-xs text-text-secondary">{{ t('variantReplenishment.receiveAt', { location: item.receiving_location.name, warehouse: item.receiving_location.warehouse?.name }) }}</p>
                                 <p class="text-xs text-text-tertiary">SKU: {{ item.sku || '-' }}</p>
@@ -354,6 +369,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                     </select>
                                 </template>
                                 <p v-if="form.errors[`items.${index}.product_variant_id`]" :class="fieldError">{{ form.errors[`items.${index}.product_variant_id`] }}</p>
+                                <p v-if="form.errors[`items.${index}.tax_rate`]" :class="fieldError">{{ form.errors[`items.${index}.tax_rate`] }}</p>
                             </div>
 
                             <div class="md:col-span-2">
@@ -381,13 +397,32 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                 />
                             </div>
 
-                            <div class="md:col-span-3">
-                                <label :class="fieldLabel">{{ t('common.subtotal') }}</label>
-                                <div class="flex h-9 items-center rounded-md border border-border-subtle bg-surface-sunken px-3">
-                                    <span class="text-sm font-semibold tabular-nums text-text-primary">
-                                        {{ formatCurrency(item.quantity * item.unit_cost) }}
-                                    </span>
-                                    <span v-if="effectiveRate" class="ms-auto text-[11px] tabular-nums text-text-tertiary">{{ formatMoney(item.quantity * item.unit_cost * Number(effectiveRate), organizationCurrency) }}</span>
+                            <div class="md:col-span-1">
+                                <label :for="`tax-rate-${index}`" :class="fieldLabel">{{ t('tax.lineRate') }}</label>
+                                <input
+                                    :id="`tax-rate-${index}`"
+                                    type="number"
+                                    v-model="item.tax_rate"
+                                    step="0.001"
+                                    min="0"
+                                    max="100"
+                                    :class="fieldInput"
+                                />
+                            </div>
+
+                            <div class="grid grid-cols-3 gap-2 text-end md:col-span-3">
+                                <div>
+                                    <p :class="fieldLabel">{{ t('tax.net') }}</p>
+                                    <p class="text-sm tabular-nums text-text-primary">{{ formatCurrency(totals.lineNets[index]) }}</p>
+                                </div>
+                                <div>
+                                    <p :class="fieldLabel">{{ t('tax.lineTax') }}</p>
+                                    <p class="text-sm tabular-nums text-text-secondary">{{ formatCurrency(totals.lineTaxes[index]) }}</p>
+                                </div>
+                                <div>
+                                    <p :class="fieldLabel">{{ t('tax.gross') }}</p>
+                                    <p class="text-sm font-semibold tabular-nums text-text-primary">{{ formatCurrency(totals.lineGross[index]) }}</p>
+                                    <p v-if="effectiveRate" class="text-[11px] tabular-nums text-text-tertiary">{{ converted(totals.lineGross[index]) }}</p>
                                 </div>
                             </div>
 
@@ -403,26 +438,38 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                             </div>
                         </div>
                     </div>
+                    <p class="text-xs text-text-tertiary">{{ t('purchaseOrders.create.netCostHint') }}</p>
 
                     <!-- Totals -->
                     <div class="flex justify-end pt-2">
                         <div class="w-full max-w-xs space-y-3 border-t border-border-subtle pt-3">
                             <div class="flex justify-between text-sm">
                                 <span class="text-text-secondary">{{ t('common.subtotal') }}</span>
-                                <span class="font-medium tabular-nums text-text-primary">{{ formatCurrency(subtotal) }}</span>
+                                <span class="font-medium tabular-nums text-text-primary">{{ formatCurrency(totals.subtotal) }}</span>
                             </div>
-                            <TaxInput v-model="form.tax" :base="subtotal" :error="form.errors.tax" />
+                            <template v-if="totals.lineRates">
+                                <div v-for="entry in totals.taxByRate" :key="entry.rate" class="flex justify-between gap-3 text-sm">
+                                    <span class="text-text-secondary">{{ t('tax.byRate', { rate: formatTaxRate(entry.rate), amount: formatCurrency(entry.taxable) }) }}</span>
+                                    <span class="text-end font-medium tabular-nums text-text-primary">
+                                        {{ formatCurrency(entry.tax) }}
+                                        <span v-if="effectiveRate" class="block text-[11px] font-normal text-text-tertiary">{{ converted(entry.tax) }}</span>
+                                    </span>
+                                </div>
+                                <p class="text-xs text-text-tertiary">{{ t('tax.fromLineRatesPo') }}</p>
+                                <p v-if="form.errors.tax" :class="fieldError">{{ form.errors.tax }}</p>
+                            </template>
+                            <TaxInput v-else v-model="form.tax" :base="totals.subtotal" :error="form.errors.tax" />
                             <div>
                                 <label for="shipping" class="mb-1 block text-sm text-text-secondary">{{ t('common.shipping') }}</label>
                                 <input id="shipping" v-model.number="form.shipping" type="number" step="0.01" min="0" :class="fieldInput" />
                             </div>
                             <div class="flex items-center justify-between border-t border-border-subtle pt-3">
                                 <span class="text-sm font-semibold text-text-primary">{{ t('common.total') }}</span>
-                                <span class="text-xl font-bold text-brand">{{ formatCurrency(total) }}</span>
+                                <span class="text-xl font-bold text-brand">{{ formatCurrency(totals.total) }}</span>
                             </div>
                             <div v-if="effectiveRate" class="flex items-center justify-between text-sm">
                                 <span class="text-text-secondary">{{ t('exchangeRates.po.totalIn', { currency: organizationCurrency }) }}</span>
-                                <span class="font-semibold tabular-nums text-text-primary">{{ formatMoney(total * Number(effectiveRate), organizationCurrency) }}</span>
+                                <span class="font-semibold tabular-nums text-text-primary">{{ converted(totals.total) }}</span>
                             </div>
                         </div>
                     </div>

@@ -848,6 +848,7 @@
       "addItems": "Agregar artículos",
       "selectProduct": "Seleccionar un producto",
       "unitCost": "Costo unitario",
+      "netCostHint": "Los costos unitarios son netos (antes de impuestos). Las líneas nuevas empiezan con el tipo de impuesto del producto.",
       "supplierSku": "SKU del proveedor",
       "orderItems": "Artículos del pedido ({count})",
       "createPo": "Crear orden de compra",
@@ -4064,6 +4065,7 @@
     "gross": "Bruto",
     "enteredAmount": "Importe introducido",
     "fromLineRates": "El impuesto se calcula con los tipos de las líneas. Borre los tipos de las líneas para introducir un único importe de impuesto para el pedido.",
+    "fromLineRatesPo": "El impuesto se calcula con los tipos de las líneas. Borre los tipos de las líneas para introducir un único importe de impuesto para la orden de compra.",
     "byRate": "Impuesto {rate} sobre {amount}",
     "otherTax": "Otros impuestos",
     "afterOrderDiscount": "El impuesto de cada línea se calcula después de repartir el descuento del pedido entre las líneas."

@@ -719,6 +719,7 @@
       "addItems": "Add Items",
       "selectProduct": "Select a product",
       "unitCost": "Unit Cost",
+      "netCostHint": "Unit costs are net (before tax). New lines start at the product's tax rate.",
       "supplierSku": "Supplier SKU",
       "orderItems": "Order Items ({count})",
       "createPo": "Create Purchase Order",
@@ -4064,6 +4065,7 @@
     "gross": "Gross",
     "enteredAmount": "Entered amount",
     "fromLineRates": "Tax comes from the line tax rates. Clear the rates on the lines to enter one tax amount for the order.",
+    "fromLineRatesPo": "Tax comes from the line tax rates. Clear the rates on the lines to enter one tax amount for the purchase order.",
     "byRate": "Tax {rate} on {amount}",
     "otherTax": "Other tax",
     "afterOrderDiscount": "Line tax is worked out after the order discount is shared across the lines."

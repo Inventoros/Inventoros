@@ -848,6 +848,7 @@
       "addItems": "商品を追加",
       "selectProduct": "商品を選択",
       "unitCost": "単価",
+      "netCostHint": "単価は税抜きです。新しい明細には商品の税率が入ります。",
       "supplierSku": "仕入先SKU",
       "orderItems": "発注商品（{count}件）",
       "createPo": "発注を作成",
@@ -4064,6 +4065,7 @@
     "gross": "税込",
     "enteredAmount": "入力された金額",
     "fromLineRates": "税額は明細の税率から計算されます。注文全体の税額を入力するには、明細の税率を消去してください。",
+    "fromLineRatesPo": "税額は明細の税率から計算されます。発注全体の税額を入力するには、明細の税率を消去してください。",
     "byRate": "{amount}に対する税 {rate}",
     "otherTax": "その他の税",
     "afterOrderDiscount": "明細の税額は、注文割引を明細に配分したあとで計算されます。"

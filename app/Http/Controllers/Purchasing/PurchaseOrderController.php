@@ -146,6 +146,9 @@ class PurchaseOrderController extends Controller
 
         return Inertia::render('PurchaseOrders/Show', [
             'purchaseOrder' => $purchaseOrder,
+            // Tax per line rate, then any tax entered as an amount, with the
+            // amounts in the organization currency.
+            'taxBreakdown' => $purchaseOrder->taxBreakdown(),
             'exchangeRate' => $purchaseOrder->exchangeRateSummary(),
             'canRecordExchangeRate' => $purchaseOrder->canRecordExchangeRate()
                 && $request->user()->hasPermission('edit_purchase_orders')
@@ -199,6 +202,10 @@ class PurchaseOrderController extends Controller
 
         return Inertia::render('PurchaseOrders/Edit', [
             'purchaseOrder' => $purchaseOrder,
+            // The PO-level part of the tax only: `tax` already includes the
+            // line taxes, so starting the form's PO tax field from it would
+            // count them twice on save.
+            'documentLevelTax' => $purchaseOrder->documentLevelTax(),
             'suppliers' => $suppliers,
             'products' => $products,
             'exchangeRate' => $purchaseOrder->exchangeRateSummary(),
@@ -539,7 +546,7 @@ class PurchaseOrderController extends Controller
                 }),
             ])
             ->orderBy('name')
-            ->get(['id', 'name', 'sku', 'barcode', 'price', 'purchase_price', 'stock', 'has_variants', 'category_id', 'location_id'])
+            ->get(['id', 'name', 'sku', 'barcode', 'price', 'purchase_price', 'tax_rate', 'stock', 'has_variants', 'category_id', 'location_id'])
             ->map(fn (Product $product) => [
                 'id' => $product->id,
                 'name' => $product->name,
@@ -547,6 +554,8 @@ class PurchaseOrderController extends Controller
                 'barcode' => $product->barcode,
                 'price' => $product->price,
                 'purchase_price' => $product->purchase_price,
+                // New PO lines start at this rate (variants share it).
+                'tax_rate' => $product->tax_rate,
                 'stock' => (int) $product->stock,
                 // What each linked supplier charges for this product and
                 // calls it, so a new PO line is priced at the chosen

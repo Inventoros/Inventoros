@@ -82,7 +82,7 @@ class PurchaseOrderType extends GraphQLType
             ],
             'tax' => [
                 'type' => Type::float(),
-                'description' => 'Tax amount',
+                'description' => 'Tax amount: the line taxes plus any PO-level tax',
             ],
             'shipping' => [
                 'type' => Type::float(),

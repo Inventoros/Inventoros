@@ -23,6 +23,12 @@ be selected.
 Invalid destinations or unavailable products/variants roll back the whole submitted
 delivery. No earlier line is silently left booked when a later line fails.
 
+## Line tax
+
+Unit costs on purchase order lines are net (before tax). A line's tax rate only
+adds tax to the order's totals; receiving records the net unit cost in the
+supplier price history and never changes the product's purchase price.
+
 ## Foreign-currency orders
 
 A purchase order in a supplier's currency is received at the exchange rate

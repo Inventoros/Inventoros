@@ -14,6 +14,7 @@ use App\Models\User;
 use App\Services\ExchangeRates\ExchangeRateProviderRegistry;
 use App\Support\ApprovalSettings;
 use App\Support\ExchangeMath;
+use App\Support\LineTax;
 use App\Support\Money;
 use App\Support\SequenceNumber;
 use App\Support\SequenceNumberRetry;
@@ -451,6 +452,69 @@ class PurchaseOrder extends Model
                 'total' => $this->organizationCurrencyTotal(),
             ],
         ];
+    }
+
+    /**
+     * Whether any line was taxed by rate (rather than by an amount).
+     */
+    public function hasLineTaxRates(): bool
+    {
+        return $this->items->contains(fn (PurchaseOrderItem $item) => $item->tax_rate !== null);
+    }
+
+    /**
+     * The part of the PO's tax entered for the whole PO: the stored tax less
+     * the line taxes it already includes. The edit form starts its PO-level
+     * tax field from this, never from `tax`, so line tax is not counted twice.
+     */
+    public function documentLevelTax(): string
+    {
+        $lineTax = $this->relationLoaded('items')
+            ? $this->items->pluck('tax')->all()
+            : $this->items()->pluck('tax')->all();
+
+        return Money::max(Money::subtract($this->tax, Money::add(...$lineTax)), 0);
+    }
+
+    /**
+     * The PO's tax per rate: taxable amount and tax for each rate its lines
+     * were taxed at (highest first), then one entry with a null rate for any
+     * tax entered as an amount (on lines, or for the whole PO). Empty when
+     * the PO has no tax.
+     *
+     * Each entry also carries the amounts in the organization's currency
+     * (`converted_taxable`, `converted_tax`): each converted on its own at
+     * the PO's rate, as is for a PO in that currency, null when the PO is in
+     * a foreign currency with no rate recorded. Converted one by one they
+     * can differ from `converted_tax` by a rounding unit.
+     *
+     * @return array<int, array{rate: string|null, taxable: string, tax: string, converted_taxable: string|null, converted_tax: string|null}>
+     */
+    public function taxBreakdown(): array
+    {
+        // The stored line taxes: they are what the PO charges.
+        $lines = $this->items->sortBy('id')->mapWithKeys(fn (PurchaseOrderItem $item) => [$item->id => [
+            'taxable' => Money::of($item->subtotal),
+            'tax' => Money::of($item->tax),
+            'tax_rate' => LineTax::rate($item->tax_rate),
+        ]])->all();
+
+        $summary = LineTax::summarize($lines);
+        $ratedTaxable = Money::add(...array_column($summary, 'taxable'));
+        $otherTax = Money::max(Money::subtract($this->tax, Money::add(...array_column($summary, 'tax'))), 0);
+
+        if (! Money::isZero($otherTax)) {
+            $summary[] = [
+                'rate' => null,
+                'taxable' => Money::max(Money::subtract($this->subtotal, $ratedTaxable), 0),
+                'tax' => $otherTax,
+            ];
+        }
+
+        return array_map(fn (array $entry) => $entry + [
+            'converted_taxable' => $this->toOrganizationCurrency($entry['taxable']),
+            'converted_tax' => $this->toOrganizationCurrency($entry['tax']),
+        ], $summary);
     }
 
     /**

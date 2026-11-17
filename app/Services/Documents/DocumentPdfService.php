@@ -23,15 +23,30 @@ class DocumentPdfService
 
     public function purchaseOrder(PurchaseOrder $purchaseOrder): DomPdf
     {
+        return Pdf::loadView('pdf.purchase-order-invoice', $this->purchaseOrderViewData($purchaseOrder));
+    }
+
+    /**
+     * The data the purchase order PDF renders.
+     *
+     * @return array<string, mixed>
+     */
+    public function purchaseOrderViewData(PurchaseOrder $purchaseOrder): array
+    {
         $purchaseOrder->loadMissing(['items', 'organization', 'supplier']);
 
-        return Pdf::loadView('pdf.purchase-order-invoice', [
+        return [
             'purchaseOrder' => $purchaseOrder,
             'organization' => $purchaseOrder->organization,
             'supplier' => $purchaseOrder->supplier,
             'generatedDate' => now()->format('F j, Y'),
             'exchangeRateSource' => self::exchangeRateSource($purchaseOrder),
-        ]);
+            // Lines carry their own tax (by rate or as an amount): the lines
+            // show net, tax and gross, and the totals list the tax per rate.
+            'showLineTax' => $purchaseOrder->items->contains(fn ($item) => $item->tax_rate !== null || ! Money::isZero($item->tax)),
+            'hasLineTaxRates' => $purchaseOrder->hasLineTaxRates(),
+            'taxBreakdown' => $purchaseOrder->taxBreakdown(),
+        ];
     }
 
     /**
