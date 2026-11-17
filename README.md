@@ -229,6 +229,13 @@ less install.sh
 sudo bash install.sh
 ```
 
+If you run PHP 8.4 and Node.js 22 yourself, Composer works too. Then open `/install` in your browser:
+
+```bash
+composer create-project inventoros/inventoros inventoros --no-dev
+cd inventoros && npm ci && npm run build
+```
+
 Docker Compose, Coolify, cPanel and manual installs are in the [installation guides](https://inventoros.com/docs/getting-started). Upgrading from 1.0.x? Follow [UPGRADE.md](UPGRADE.md) once.
 
 ## Learn more

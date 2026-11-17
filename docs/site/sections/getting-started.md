@@ -22,6 +22,14 @@ less install.sh
 sudo bash install.sh
 ```
 
+If you run PHP and Node.js yourself, you can download Inventoros with Composer instead and finish in the web installer. The server setup around it (web server, queue worker, scheduler) is in [Install on a VPS](installation-vps#install-with-composer-instead-of-git).
+
+```bash
+composer create-project inventoros/inventoros inventoros --no-dev
+cd inventoros
+npm ci && npm run build
+```
+
 ## Every method ends in the web installer
 
 However you deploy, you finish at `https://your-address/install`. The guided installer checks the server, connects to the database and creates the tables, then creates your organization and the first administrator. With the Docker-based methods the database details are already filled in.
