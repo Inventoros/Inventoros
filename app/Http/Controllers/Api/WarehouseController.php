@@ -11,6 +11,7 @@ use App\Http\Requests\Api\Warehouse\UpdateWarehouseRequest;
 use App\Models\Warehouse;
 use App\Services\WarehouseAccessService;
 use App\Services\WarehouseDeletionService;
+use App\Support\Search;
 use Dedoc\Scramble\Attributes\QueryParameter;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -40,9 +41,7 @@ class WarehouseController extends Controller
             ->tap(fn ($q) => app(WarehouseAccessService::class)->scopeWarehouses($q, $request->user()))
             ->when($request->input('search'), function ($query, $search) {
                 $query->where(function ($q) use ($search) {
-                    $q->where('name', 'like', "%{$search}%")
-                        ->orWhere('code', 'like', "%{$search}%")
-                        ->orWhere('city', 'like', "%{$search}%");
+                    Search::apply($q, ['name', 'code', 'city'], $search);
                 });
             })
             ->when($request->input('is_active') !== null, function ($query) use ($request) {

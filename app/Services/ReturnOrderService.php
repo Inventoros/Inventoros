@@ -16,6 +16,7 @@ use App\Models\Shipping\Shipment;
 use App\Models\Shipping\ShipmentItem;
 use App\Models\User;
 use App\Support\Money;
+use App\Support\Search;
 use App\Support\SequenceNumberRetry;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\Builder;
@@ -85,9 +86,7 @@ final class ReturnOrderService
             })
             ->when($search, function (Builder $q, string $search): void {
                 $q->where(function (Builder $inner) use ($search): void {
-                    $inner->where('order_number', 'like', "%{$search}%")
-                        ->orWhere('customer_name', 'like', "%{$search}%")
-                        ->orWhere('customer_email', 'like', "%{$search}%");
+                    Search::apply($inner, ['order_number', 'customer_name', 'customer_email'], $search);
                 });
             });
 

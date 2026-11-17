@@ -7,6 +7,7 @@ namespace App\Mcp\Tools;
 use App\Mcp\Concerns\AuthenticatesMcpRequest;
 use App\Models\Inventory\Supplier;
 use App\Support\PageSize;
+use App\Support\Search;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
@@ -46,7 +47,7 @@ class ListSuppliersTool extends Tool
             ->where('organization_id', $this->organizationId())
             ->when($request->get('search'), function ($q, $search) {
                 $q->where(function ($q) use ($search) {
-                    $q->where('name', 'like', "%{$search}%")->orWhere('code', 'like', "%{$search}%");
+                    Search::apply($q, ['name', 'code'], $search);
                 });
             })
             ->when($request->get('is_active') !== null, fn ($q) => $q->where('is_active', (bool) $request->get('is_active')))

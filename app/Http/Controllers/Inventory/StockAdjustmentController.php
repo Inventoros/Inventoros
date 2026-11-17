@@ -15,6 +15,7 @@ use App\Models\Inventory\StockAdjustmentRequest;
 use App\Models\User;
 use App\Services\ApprovalService;
 use App\Services\WarehouseAccessService;
+use App\Support\Search;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -44,8 +45,7 @@ class StockAdjustmentController extends Controller
             ->tap(fn ($q) => $this->warehouseAccess->scopeByLocation($q, $request->user(), 'stock_adjustments.location_id'))
             ->when($request->input('search'), function ($query, $search) {
                 $query->whereHas('product', function ($q) use ($search) {
-                    $q->where('name', 'like', "%{$search}%")
-                        ->orWhere('sku', 'like', "%{$search}%");
+                    Search::apply($q, ['name', 'sku'], $search);
                 });
             })
             ->when($request->input('type'), function ($query, $type) {

@@ -6,6 +6,7 @@ namespace App\Services;
 
 use App\Models\Inventory\StockAudit;
 use App\Models\Inventory\StockAuditItem;
+use App\Support\Search;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 
@@ -44,11 +45,9 @@ final class StockAuditReadService
         $filters = $this->filters($data);
         $query = StockAuditItem::where('stock_audit_id', $audit->id)->with(self::RELATIONS);
         if ($filters['search'] !== '') {
-            $needle = '%'.mb_strtolower($filters['search']).'%';
-            $query->where(fn ($q) => $q->whereHas('product', fn ($p) => $p->where('organization_id', $audit->organization_id)
-                ->where(fn ($p) => $p->whereRaw('LOWER(name) LIKE ?', [$needle])->orWhereRaw('LOWER(sku) LIKE ?', [$needle])->orWhereRaw('LOWER(barcode) LIKE ?', [$needle])))
-                ->orWhereHas('variant', fn ($v) => $v->where('organization_id', $audit->organization_id)
-                    ->where(fn ($v) => $v->whereRaw('LOWER(title) LIKE ?', [$needle])->orWhereRaw('LOWER(sku) LIKE ?', [$needle])->orWhereRaw('LOWER(barcode) LIKE ?', [$needle]))));
+            $needle = $filters['search'];
+            $query->where(fn ($q) => $q->whereHas('product', fn ($p) => Search::apply($p->where('organization_id', $audit->organization_id), ['name', 'sku', 'barcode'], $needle))
+                ->orWhereHas('variant', fn ($v) => Search::apply($v->where('organization_id', $audit->organization_id), ['title', 'sku', 'barcode'], $needle)));
         }
         match ($filters['item_status']) {
             'pending' => $query->whereNull('counted_quantity'),

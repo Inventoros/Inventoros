@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Reports;
 use App\Http\Controllers\Controller;
 use App\Services\Reports\ReportExporter;
 use App\Support\OrganizationCalendar;
+use App\Support\Search;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
@@ -52,11 +53,7 @@ class BatchExpiryReportController extends Controller
             $query->where('b.expiry_date', '<', $today->addDays((int) $filters['window'] + 1)->toDateString());
         }
         if ($filters['search'] !== '') {
-            $query->where(function ($search) use ($filters): void {
-                $value = '%'.$filters['search'].'%';
-                $search->where('b.batch_number', 'like', $value)
-                    ->orWhere('p.name', 'like', $value)->orWhere('p.sku', 'like', $value);
-            });
+            Search::apply($query, ['b.batch_number', 'p.name', 'p.sku'], $filters['search']);
         }
 
         $totals = (clone $query)->selectRaw(

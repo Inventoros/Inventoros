@@ -7,6 +7,7 @@ namespace App\Mcp\Tools;
 use App\Mcp\Concerns\AuthenticatesMcpRequest;
 use App\Models\Inventory\Product;
 use App\Support\PageSize;
+use App\Support\Search;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
@@ -45,9 +46,7 @@ class SearchProductsTool extends Tool
         $products = Product::query()
             ->forOrganization($this->organizationId())
             ->where(function ($q) use ($query) {
-                $q->where('name', 'like', "%{$query}%")
-                    ->orWhere('sku', 'like', "%{$query}%")
-                    ->orWhere('barcode', 'like', "%{$query}%");
+                Search::apply($q, ['name', 'sku', 'barcode'], $query);
             })
             ->orderBy('name')
             ->limit($limit)

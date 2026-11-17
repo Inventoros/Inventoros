@@ -8,6 +8,7 @@ use App\Enums\SecurityEvent;
 use App\Exports\ActivityLogExport;
 use App\Http\Controllers\Controller;
 use App\Models\ActivityLog;
+use App\Support\Search;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -61,10 +62,9 @@ class ActivityLogController extends Controller
             $query->whereDate('created_at', '<=', $request->date_to);
         }
 
-        // Search - escape LIKE wildcards to prevent unintended pattern matching
+        // Search (wildcards in the term are matched literally)
         if ($request->filled('search')) {
-            $search = str_replace(['%', '_'], ['\%', '\_'], $request->search);
-            $query->where('description', 'like', '%' . $search . '%');
+            Search::apply($query, ['description'], (string) $request->search);
         }
 
         $activities = $query->latest()

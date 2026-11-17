@@ -13,6 +13,7 @@ use App\Http\Requests\ReturnOrder\UpdateReturnLinesRequest;
 use App\Http\Resources\ReturnOrderResource;
 use App\Models\Order\ReturnOrder;
 use App\Services\ReturnOrderService;
+use App\Support\Search;
 use Dedoc\Scramble\Attributes\QueryParameter;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -46,10 +47,9 @@ class ReturnOrderController extends Controller
             ->tap(fn ($q) => $this->returns->scopeForUser($q, $request->user()))
             ->when($request->input('search'), function ($query, $search) {
                 $query->where(function ($q) use ($search) {
-                    $q->where('return_number', 'like', "%{$search}%")
+                    Search::apply($q, ['return_number'], $search)
                         ->orWhereHas('order', function ($oq) use ($search) {
-                            $oq->where('order_number', 'like', "%{$search}%")
-                                ->orWhere('customer_name', 'like', "%{$search}%");
+                            Search::apply($oq, ['order_number', 'customer_name'], $search);
                         });
                 });
             })

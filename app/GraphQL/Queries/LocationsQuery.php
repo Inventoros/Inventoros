@@ -7,6 +7,7 @@ namespace App\GraphQL\Queries;
 use App\GraphQL\Concerns\RequiresPermissions;
 use App\Models\Inventory\ProductLocation;
 use App\Services\WarehouseAccessService;
+use App\Support\Search;
 use Closure;
 use GraphQL\Type\Definition\ResolveInfo;
 use GraphQL\Type\Definition\Type;
@@ -78,8 +79,7 @@ class LocationsQuery extends Query
         if (! empty($args['search'])) {
             $search = $args['search'];
             $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                    ->orWhere('code', 'like', "%{$search}%");
+                Search::apply($q, ['name', 'code'], $search);
             });
         }
 

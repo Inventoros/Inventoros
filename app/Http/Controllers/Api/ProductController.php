@@ -14,6 +14,7 @@ use App\Services\ProductService;
 use App\Services\StockReservationService;
 use App\Support\ListSortColumns;
 use App\Support\ProductSearch;
+use App\Support\Search;
 use Dedoc\Scramble\Attributes\QueryParameter;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -53,9 +54,7 @@ class ProductController extends Controller
             })
             ->when($request->input('search'), function ($query, $search) {
                 $query->where(function ($q) use ($search) {
-                    $q->where('name', 'like', "%{$search}%")
-                        ->orWhere('sku', 'like', "%{$search}%")
-                        ->orWhere('barcode', 'like', "%{$search}%");
+                    Search::apply($q, ['name', 'sku', 'barcode'], $search);
 
                     ProductSearch::applyPluginFilter($q, (string) $search);
                 });

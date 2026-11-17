@@ -8,6 +8,7 @@ use App\Models\Inventory\ProductLocation;
 use App\Models\Inventory\StockReservation;
 use App\Models\User;
 use App\Models\Warehouse;
+use App\Support\Search;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Database\Query\JoinClause;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -80,8 +81,7 @@ final class StockBalanceService
             $query->where('location_id', $location->id);
         }
         if (! empty($filters['search'])) {
-            $search = '%'.mb_substr((string) $filters['search'], 0, 255).'%';
-            $query->where(fn ($q) => $q->where('sku', 'like', $search)->orWhere('product_name', 'like', $search)->orWhere('variant_title', 'like', $search));
+            Search::apply($query, ['sku', 'product_name', 'variant_title'], mb_substr((string) $filters['search'], 0, 255));
         }
         if (filter_var($filters['out_of_stock'] ?? false, FILTER_VALIDATE_BOOLEAN)) {
             $query->where('available', '=', 0);

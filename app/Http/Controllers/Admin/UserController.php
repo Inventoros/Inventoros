@@ -12,6 +12,7 @@ use App\Models\Role;
 use App\Models\User;
 use App\Services\UserManagementService;
 use App\Support\RoleAssignmentGuard;
+use App\Support\Search;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -38,8 +39,7 @@ class UserController extends Controller
             ->forOrganization($user->organization_id)
             ->when($request->input('search'), function ($query, $search) {
                 $query->where(function ($q) use ($search) {
-                    $q->where('name', 'like', "%{$search}%")
-                        ->orWhere('email', 'like', "%{$search}%");
+                    Search::apply($q, ['name', 'email'], $search);
                 });
             })
             ->when($request->input('role'), function ($query, $role) {

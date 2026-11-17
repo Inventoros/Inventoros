@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\ProductCategory\StoreProductCategoryRequest;
 use App\Http\Requests\ProductCategory\UpdateProductCategoryRequest;
 use App\Models\Inventory\ProductCategory;
+use App\Support\Search;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -34,7 +35,7 @@ class ProductCategoryController extends Controller
         $categories = ProductCategory::forOrganization($organizationId)
             ->withCount('products')
             ->when($request->input('search'), function ($query, $search) {
-                $query->where('name', 'like', "%{$search}%");
+                Search::apply($query, ['name'], $search);
             })
             ->latest()
             ->paginate(15)

@@ -8,6 +8,7 @@ use App\GraphQL\Concerns\RequiresPermissions;
 use App\GraphQL\Support\ListResourceLimits;
 use App\Models\Order\Order;
 use App\Support\ListSortColumns;
+use App\Support\Search;
 use Closure;
 use GraphQL\Type\Definition\ResolveInfo;
 use GraphQL\Type\Definition\Type;
@@ -97,13 +98,7 @@ class OrdersQuery extends Query
         if (! empty($args['search'])) {
             $search = $args['search'];
             $query->where(function ($q) use ($search) {
-                $q->where('order_number', 'like', "%{$search}%")
-                    ->orWhere('customer_name', 'like', "%{$search}%")
-                    ->orWhere('customer_email', 'like', "%{$search}%")
-                        ->orWhere('external_id', 'like', "%{$search}%")
-                        ->orWhere('external_reference', 'like', "%{$search}%")
-                        ->orWhere('metadata->channel_order_number', 'like', "%{$search}%")
-                        ->orWhere('metadata->shopify->name', 'like', "%{$search}%");
+                Search::apply($q, ['order_number', 'customer_name', 'customer_email', 'external_id', 'external_reference', 'metadata->channel_order_number', 'metadata->shopify->name'], $search);
             });
         }
 

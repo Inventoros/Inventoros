@@ -8,6 +8,7 @@ use App\GraphQL\Concerns\RequiresPermissions;
 use App\Models\Inventory\Product;
 use App\Services\StockReservationService;
 use App\Support\ListSortColumns;
+use App\Support\Search;
 use Closure;
 use GraphQL\Type\Definition\ResolveInfo;
 use GraphQL\Type\Definition\Type;
@@ -97,9 +98,7 @@ class ProductsQuery extends Query
         if (! empty($args['search'])) {
             $search = $args['search'];
             $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                    ->orWhere('sku', 'like', "%{$search}%")
-                    ->orWhere('barcode', 'like', "%{$search}%");
+                Search::apply($q, ['name', 'sku', 'barcode'], $search);
             });
         }
 

@@ -22,6 +22,7 @@ use App\Services\StockAuditReviewService;
 use App\Services\StockAuditService;
 use App\Services\WarehouseAccessService;
 use App\Support\ApprovalSettings;
+use App\Support\Search;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -91,8 +92,7 @@ class StockAuditController extends Controller
             ->tap(fn ($q) => $this->warehouseAccess->scopeStockAudits($q, $request->user()))
             ->when($request->input('search'), function ($query, $search) {
                 $query->where(function ($q) use ($search) {
-                    $q->where('audit_number', 'like', "%{$search}%")
-                        ->orWhere('name', 'like', "%{$search}%");
+                    Search::apply($q, ['audit_number', 'name'], $search);
                 });
             })
             ->when($request->input('status'), function ($query, $status) {

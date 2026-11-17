@@ -8,6 +8,7 @@ use App\GraphQL\Concerns\RequiresPermissions;
 use App\GraphQL\Support\ListResourceLimits;
 use App\Models\Inventory\StockTransfer;
 use App\Services\WarehouseAccessService;
+use App\Support\Search;
 use GraphQL\Type\Definition\Type;
 use Rebing\GraphQL\Support\Facades\GraphQL;
 use Rebing\GraphQL\Support\Query;
@@ -49,7 +50,7 @@ class StockTransfersQuery extends Query
             ->forOrganization($this->organizationId())
             ->tap(fn ($q) => app(WarehouseAccessService::class)->scopeByAnyLocation($q, $this->actor(), ['from_location_id', 'to_location_id']))
             ->when($args['status'] ?? null, fn ($query, $status) => $query->byStatus($status))
-            ->when($args['search'] ?? null, fn ($query, $search) => $query->where('transfer_number', 'like', "%{$search}%"))
+            ->when($args['search'] ?? null, fn ($query, $search) => Search::apply($query, ['transfer_number'], $search))
             ->latest()
             ->latest('id')
             ->limit(max(1, min($args['limit'] ?? 50, 100)))

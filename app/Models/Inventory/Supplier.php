@@ -7,6 +7,7 @@ namespace App\Models\Inventory;
 use App\Models\Auth\Organization;
 use App\Models\Concerns\BelongsToOrganization;
 use App\Models\Purchasing\PurchaseOrder;
+use App\Support\Search;
 use App\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -183,10 +184,7 @@ class Supplier extends Model
     public function scopeSearch($query, $term)
     {
         return $query->where(function ($q) use ($term) {
-            $q->where('name', 'like', "%{$term}%")
-                ->orWhere('code', 'like', "%{$term}%")
-                ->orWhere('email', 'like', "%{$term}%")
-                ->orWhere('contact_name', 'like', "%{$term}%");
+            Search::apply($q, ['name', 'code', 'email', 'contact_name'], $term);
         });
     }
 

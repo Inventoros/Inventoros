@@ -7,6 +7,7 @@ namespace App\Mcp\Tools;
 use App\Mcp\Concerns\AuthenticatesMcpRequest;
 use App\Models\Inventory\WorkOrder;
 use App\Support\PageSize;
+use App\Support\Search;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
@@ -43,9 +44,9 @@ class ListWorkOrdersTool extends Tool
             ->accessibleTo($this->user())
             ->when($request->get('search'), function ($q, $s) {
                 $q->where(function ($q) use ($s) {
-                    $q->where('work_order_number', 'like', "%{$s}%")
+                    Search::apply($q, ['work_order_number'], $s)
                         ->orWhereHas('product', function ($q2) use ($s) {
-                            $q2->where('name', 'like', "%{$s}%")->orWhere('sku', 'like', "%{$s}%");
+                            Search::apply($q2, ['name', 'sku'], $s);
                         });
                 });
             })

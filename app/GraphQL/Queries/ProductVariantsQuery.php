@@ -6,6 +6,7 @@ namespace App\GraphQL\Queries;
 
 use App\GraphQL\Concerns\RequiresPermissions;
 use App\Models\Inventory\ProductVariant;
+use App\Support\Search;
 use GraphQL\Type\Definition\Type;
 use Rebing\GraphQL\Support\Facades\GraphQL;
 use Rebing\GraphQL\Support\Query;
@@ -47,9 +48,7 @@ class ProductVariantsQuery extends Query
             ->where('organization_id', $this->organizationId())
             ->when($args['product_id'] ?? null, fn ($query, $productId) => $query->where('product_id', $productId))
             ->when($args['search'] ?? null, function ($query, $search) {
-                $query->where(fn ($q) => $q->where('sku', 'like', "%{$search}%")
-                    ->orWhere('barcode', 'like', "%{$search}%")
-                    ->orWhere('title', 'like', "%{$search}%"));
+                $query->where(fn ($q) => Search::apply($q, ['sku', 'barcode', 'title'], $search));
             })
             ->when(isset($args['is_active']), fn ($query) => $query->where('is_active', $args['is_active']))
             ->orderBy('product_id')

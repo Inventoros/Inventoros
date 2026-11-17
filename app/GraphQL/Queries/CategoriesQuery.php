@@ -7,6 +7,7 @@ namespace App\GraphQL\Queries;
 use App\GraphQL\Concerns\RequiresPermissions;
 use App\GraphQL\Support\ListResourceLimits;
 use App\Models\Inventory\ProductCategory;
+use App\Support\Search;
 use Closure;
 use GraphQL\Type\Definition\ResolveInfo;
 use GraphQL\Type\Definition\Type;
@@ -91,7 +92,7 @@ class CategoriesQuery extends Query
         }
 
         if (! empty($args['search'])) {
-            $query->where('name', 'like', "%{$args['search']}%");
+            Search::apply($query, ['name'], (string) $args['search']);
         }
 
         $limit = max(0, min($args['limit'] ?? 50, 100));
