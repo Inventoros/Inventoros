@@ -7,6 +7,7 @@ namespace App\Mcp\Tools;
 use App\Mcp\Concerns\AuthenticatesMcpRequest;
 use App\Mcp\Support\UntrustedText;
 use App\Models\Inventory\Product;
+use App\Models\Inventory\ProductSupplier;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Laravel\Mcp\Request;
@@ -74,6 +75,7 @@ class GetProductTool extends Tool
                 'name' => $s->name,
                 'supplier_sku' => $s->pivot?->supplier_sku,
                 'cost_price' => $s->pivot?->cost_price,
+                'cost_currency' => ProductSupplier::costCurrencyOf($s),
                 'lead_time_days' => $s->pivot?->lead_time_days,
                 'is_primary' => (bool) $s->pivot?->is_primary,
             ])->all(),

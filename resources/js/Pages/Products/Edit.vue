@@ -71,6 +71,7 @@ const prepareExistingSuppliers = () => {
             supplier_id: s.id,
             supplier_sku: s.pivot?.supplier_sku || '',
             cost_price: s.pivot?.cost_price ?? '',
+            cost_currency: s.pivot?.cost_currency || s.currency || '',
             lead_time_days: s.pivot?.lead_time_days ?? '',
             minimum_order_quantity: s.pivot?.minimum_order_quantity ?? '',
             is_primary: !!s.pivot?.is_primary,
@@ -574,7 +575,6 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                             :suppliers="suppliers"
                             :linked="product.suppliers || []"
                             :errors="form.errors"
-                            :currency-symbol="getCurrencySymbol(product.currency || defaultCurrency)"
                         />
                     </div>
                 </Card>

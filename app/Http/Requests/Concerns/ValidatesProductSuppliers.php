@@ -52,6 +52,9 @@ trait ValidatesProductSuppliers
             ],
             'suppliers.*.supplier_sku' => ['nullable', 'string', 'max:255'],
             'suppliers.*.cost_price' => ['nullable', 'numeric', 'min:0', 'max:99999999.99'],
+            // The currency of cost_price; omitted, an existing link keeps its
+            // currency and a new one takes the supplier's.
+            'suppliers.*.cost_currency' => ['nullable', 'string', 'size:3', 'alpha:ascii'],
             'suppliers.*.lead_time_days' => ['nullable', 'integer', 'min:0', 'max:3650'],
             'suppliers.*.minimum_order_quantity' => ['nullable', 'integer', 'min:1', 'max:1000000'],
             'suppliers.*.is_primary' => ['nullable', 'boolean'],

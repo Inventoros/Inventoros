@@ -3,26 +3,32 @@ import { computed } from 'vue';
 import { Link } from '@inertiajs/vue3';
 import { useI18n } from 'vue-i18n';
 import Button from '@/Components/ui/Button.vue';
+import CurrencySelect from '@/Components/CurrencySelect.vue';
+import { useCurrency } from '@/composables/useCurrency';
 import { Plus, Trash2, Truck } from '@lucide/vue';
 
 /**
- * Edits a product's supplier links: supplier, supplier SKU, cost, lead time,
- * minimum order quantity and exactly one primary supplier. v-model is the `suppliers` array the
- * product form submits; `errors` is the Inertia form's error bag.
+ * Edits a product's supplier links: supplier, supplier SKU, cost and the
+ * currency it is in, lead time, minimum order quantity and exactly one
+ * primary supplier. v-model is the `suppliers` array the product form
+ * submits; `errors` is the Inertia form's error bag.
+ *
+ * A cost is in its own currency: the supplier's when the supplier is picked,
+ * kept when the supplier's currency changes later, and editable.
  */
 const props = defineProps({
     modelValue: { type: Array, default: () => [] },
-    // Active suppliers of the organization: [{ id, name, code }]
+    // Active suppliers of the organization: [{ id, name, code, currency }]
     suppliers: { type: Array, default: () => [] },
     // Suppliers already linked (may include inactive ones not in `suppliers`)
     linked: { type: Array, default: () => [] },
     errors: { type: Object, default: () => ({}) },
-    currencySymbol: { type: String, default: '$' },
 });
 
 const emit = defineEmits(['update:modelValue']);
 
 const { t } = useI18n();
+const { organizationCurrency } = useCurrency();
 
 const options = computed(() => {
     const byId = new Map();
@@ -40,6 +46,12 @@ const update = (next) => {
     emit('update:modelValue', next);
 };
 
+// The currency a supplier bills in (its own, else the organization's).
+const supplierCurrency = (supplierId) => {
+    const supplier = options.value.find((s) => s.id === Number(supplierId));
+    return supplier?.currency || organizationCurrency.value;
+};
+
 const addRow = () => {
     const used = new Set(rows.value.map((r) => Number(r.supplier_id)));
     const next = options.value.find((s) => !used.has(s.id));
@@ -49,6 +61,7 @@ const addRow = () => {
             supplier_id: next ? next.id : '',
             supplier_sku: '',
             cost_price: '',
+            cost_currency: next ? supplierCurrency(next.id) : organizationCurrency.value,
             lead_time_days: '',
             minimum_order_quantity: '',
             is_primary: rows.value.length === 0,
@@ -64,6 +77,19 @@ const setField = (index, field, value) => {
     update(rows.value.map((r, i) => (i === index ? { ...r, [field]: value } : r)));
 };
 
+// Picking another supplier prices the row in that supplier's currency.
+const setSupplier = (index, supplierId) => {
+    update(rows.value.map((r, i) => (i === index
+        ? { ...r, supplier_id: supplierId, cost_currency: supplierId ? supplierCurrency(supplierId) : r.cost_currency }
+        : r)));
+};
+
+const rowCurrency = (row) => row.cost_currency || supplierCurrency(row.supplier_id);
+
+// A link kept in another currency than the supplier now bills in.
+const currencyDiffers = (row) => row.supplier_id !== '' && row.supplier_id != null
+    && rowCurrency(row) !== supplierCurrency(row.supplier_id);
+
 const makePrimary = (index) => {
     update(rows.value.map((r, i) => ({ ...r, is_primary: i === index })));
 };
@@ -76,6 +102,7 @@ const error = (index, field) => props.errors?.[`suppliers.${index}.${field}`];
 const fieldLabel = 'mb-1 block text-xs font-medium text-text-secondary';
 const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface-canvas px-3 text-sm text-text-primary placeholder:text-text-tertiary ds-focus-ring';
 const fieldError = 'mt-1 text-xs text-status-danger';
+const currencyInput = '-ms-px h-9 w-[5.5rem] shrink-0 rounded-e-md border border-border-subtle bg-surface-canvas ps-2 pe-7 text-sm text-text-primary ds-focus-ring';
 </script>
 
 <template>
@@ -87,14 +114,14 @@ const fieldError = 'mt-1 text-xs text-status-danger';
             :key="index"
             class="rounded-lg border border-border-subtle bg-surface-sunken/40 p-3"
         >
-            <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-12">
+            <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-13">
                 <div class="sm:col-span-2 lg:col-span-3">
                     <label :for="`supplier-${index}`" :class="fieldLabel">{{ t('productSuppliers.supplier') }}</label>
                     <select
                         :id="`supplier-${index}`"
                         :value="row.supplier_id"
                         :class="fieldInput"
-                        @change="setField(index, 'supplier_id', $event.target.value ? Number($event.target.value) : '')"
+                        @change="setSupplier(index, $event.target.value ? Number($event.target.value) : '')"
                     >
                         <option value="">{{ t('productSuppliers.selectSupplier') }}</option>
                         <option
@@ -122,23 +149,31 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                     <p v-if="error(index, 'supplier_sku')" :class="fieldError">{{ error(index, 'supplier_sku') }}</p>
                 </div>
 
-                <div class="lg:col-span-2">
+                <div class="lg:col-span-3">
                     <label :for="`supplier-cost-${index}`" :class="fieldLabel">{{ t('productSuppliers.costPrice') }}</label>
-                    <div class="relative">
-                        <div class="pointer-events-none absolute inset-y-0 start-0 flex items-center ps-3">
-                            <span class="text-sm text-text-tertiary">{{ currencySymbol }}</span>
-                        </div>
+                    <div class="flex">
                         <input
                             :id="`supplier-cost-${index}`"
                             :value="row.cost_price"
                             type="number"
                             step="0.01"
                             min="0"
-                            :class="[fieldInput, 'ps-7']"
+                            :class="[fieldInput, 'min-w-0 flex-1 rounded-e-none']"
                             @input="setField(index, 'cost_price', $event.target.value)"
                         />
+                        <CurrencySelect
+                            :id="`supplier-cost-currency-${index}`"
+                            :model-value="rowCurrency(row)"
+                            :aria-label="t('productSuppliers.costCurrency')"
+                            :class="currencyInput"
+                            @update:model-value="setField(index, 'cost_currency', $event)"
+                        />
                     </div>
+                    <p v-if="currencyDiffers(row)" class="mt-1 text-xs text-text-tertiary">
+                        {{ t('productSuppliers.supplierCurrencyDiffers', { currency: supplierCurrency(row.supplier_id) }) }}
+                    </p>
                     <p v-if="error(index, 'cost_price')" :class="fieldError">{{ error(index, 'cost_price') }}</p>
+                    <p v-if="error(index, 'cost_currency')" :class="fieldError">{{ error(index, 'cost_currency') }}</p>
                 </div>
 
                 <div class="lg:col-span-2">

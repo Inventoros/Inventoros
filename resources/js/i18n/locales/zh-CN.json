@@ -938,7 +938,19 @@
     "source": "来源",
     "sourceLink": "供应商关联",
     "sourcePurchaseOrder": "采购单 {number}",
-    "recordedBy": "记录人"
+    "recordedBy": "记录人",
+    "costCurrency": "成本币种",
+    "supplierCurrencyDiffers": "该供应商现在以 {currency} 结算。",
+    "approximately": "≈ {amount}",
+    "rateOf": "{date} 的汇率",
+    "staleRateOf": "{date} 的过期汇率",
+    "fallbackRateOf": "{date} 的备用汇率",
+    "noRate": "未保存 {currency} 汇率",
+    "rateTitle": "1 {from} = {rate} {to}",
+    "currencyNotRecorded": "未记录币种",
+    "supplierCharged": "供应商价格：{amount}",
+    "convertedNote": "标有 ≈ 的金额按贵组织保存的汇率换算为 {currency}，仅供参考。",
+    "convertedHistoryNote": "标有 ≈ 的金额按每笔成本记录当天保存的汇率换算为 {currency}。"
   },
   "quickReorder": {
     "createPo": "创建采购单",

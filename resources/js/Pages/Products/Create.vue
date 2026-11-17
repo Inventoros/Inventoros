@@ -569,7 +569,6 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                 v-model="form.suppliers"
                                 :suppliers="suppliers"
                                 :errors="form.errors"
-                                :currency-symbol="getCurrencySymbol(form.currency)"
                             />
                         </div>
                     </Card>

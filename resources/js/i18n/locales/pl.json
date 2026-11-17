@@ -938,7 +938,19 @@
     "source": "Źródło",
     "sourceLink": "Powiązanie z dostawcą",
     "sourcePurchaseOrder": "Zamówienie zakupu {number}",
-    "recordedBy": "Przez"
+    "recordedBy": "Przez",
+    "costCurrency": "Waluta kosztu",
+    "supplierCurrencyDiffers": "Dostawca rozlicza się teraz w {currency}.",
+    "approximately": "≈ {amount}",
+    "rateOf": "Kurs z {date}",
+    "staleRateOf": "Nieaktualny kurs z {date}",
+    "fallbackRateOf": "Kurs zapasowy z {date}",
+    "noRate": "Brak zapisanego kursu {currency}",
+    "rateTitle": "1 {from} = {rate} {to}",
+    "currencyNotRecorded": "Waluta nie została zapisana",
+    "supplierCharged": "Cena dostawcy: {amount}",
+    "convertedNote": "Kwoty oznaczone ≈ są przeliczone na {currency} według kursów zapisanych dla Twojej organizacji, poglądowo.",
+    "convertedHistoryNote": "Kwoty oznaczone ≈ są przeliczone na {currency} według kursu zapisanego dla dnia, w którym zapisano dany koszt."
   },
   "quickReorder": {
     "createPo": "Utwórz zamówienie zakupu",

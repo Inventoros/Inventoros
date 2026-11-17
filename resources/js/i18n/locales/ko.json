@@ -938,7 +938,19 @@
     "source": "출처",
     "sourceLink": "공급업체 연결",
     "sourcePurchaseOrder": "발주 {number}",
-    "recordedBy": "기록자"
+    "recordedBy": "기록자",
+    "costCurrency": "원가 통화",
+    "supplierCurrencyDiffers": "이 공급업체는 이제 {currency}(으)로 청구합니다.",
+    "approximately": "≈ {amount}",
+    "rateOf": "{date} 환율",
+    "staleRateOf": "{date}의 오래된 환율",
+    "fallbackRateOf": "{date}의 대체 환율",
+    "noRate": "저장된 {currency} 환율 없음",
+    "rateTitle": "1 {from} = {rate} {to}",
+    "currencyNotRecorded": "통화가 기록되지 않음",
+    "supplierCharged": "공급업체 가격: {amount}",
+    "convertedNote": "≈ 표시 금액은 조직에 저장된 환율로 {currency}에 환산한 참고 금액입니다.",
+    "convertedHistoryNote": "≈ 표시 금액은 각 원가가 기록된 날짜에 저장된 환율로 {currency}에 환산한 금액입니다."
   },
   "quickReorder": {
     "createPo": "발주 생성",

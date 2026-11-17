@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Resources;
 
 use App\Models\Inventory\Product;
+use App\Models\Inventory\ProductSupplier;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -69,6 +70,7 @@ class ProductResource extends JsonResource
                 'code' => $supplier->code,
                 'supplier_sku' => $supplier->pivot->supplier_sku,
                 'cost_price' => $supplier->pivot->cost_price !== null ? (float) $supplier->pivot->cost_price : null,
+                'cost_currency' => ProductSupplier::costCurrencyOf($supplier),
                 'lead_time_days' => $supplier->pivot->lead_time_days,
                 'minimum_order_quantity' => $supplier->pivot->minimum_order_quantity,
                 'is_primary' => (bool) $supplier->pivot->is_primary,

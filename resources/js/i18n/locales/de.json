@@ -938,7 +938,19 @@
     "source": "Quelle",
     "sourceLink": "Lieferantenverknüpfung",
     "sourcePurchaseOrder": "Einkaufsbestellung {number}",
-    "recordedBy": "Von"
+    "recordedBy": "Von",
+    "costCurrency": "Währung der Kosten",
+    "supplierCurrencyDiffers": "Der Lieferant rechnet jetzt in {currency} ab.",
+    "approximately": "≈ {amount}",
+    "rateOf": "Kurs vom {date}",
+    "staleRateOf": "Veralteter Kurs vom {date}",
+    "fallbackRateOf": "Ersatzkurs vom {date}",
+    "noRate": "Kein {currency}-Kurs gespeichert",
+    "rateTitle": "1 {from} = {rate} {to}",
+    "currencyNotRecorded": "Währung nicht erfasst",
+    "supplierCharged": "Preis des Lieferanten: {amount}",
+    "convertedNote": "Mit ≈ markierte Beträge sind zur Orientierung zu den für Ihre Organisation gespeicherten Wechselkursen in {currency} umgerechnet.",
+    "convertedHistoryNote": "Mit ≈ markierte Beträge sind zum Kurs des Tages, an dem die Kosten erfasst wurden, in {currency} umgerechnet."
   },
   "quickReorder": {
     "createPo": "Einkaufsbestellung erstellen",

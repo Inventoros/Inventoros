@@ -809,7 +809,19 @@
     "source": "Source",
     "sourceLink": "Supplier link",
     "sourcePurchaseOrder": "PO {number}",
-    "recordedBy": "By"
+    "recordedBy": "By",
+    "costCurrency": "Cost currency",
+    "supplierCurrencyDiffers": "The supplier now bills in {currency}.",
+    "approximately": "≈ {amount}",
+    "rateOf": "Rate of {date}",
+    "staleRateOf": "Stale rate of {date}",
+    "fallbackRateOf": "Fallback rate of {date}",
+    "noRate": "No {currency} rate stored",
+    "rateTitle": "1 {from} = {rate} {to}",
+    "currencyNotRecorded": "Currency not recorded",
+    "supplierCharged": "Supplier's price: {amount}",
+    "convertedNote": "Amounts marked ≈ are converted to {currency} at the exchange rates stored for your organization, for reference.",
+    "convertedHistoryNote": "Amounts marked ≈ are converted to {currency} at the rate stored for the day each cost was recorded."
   },
   "quickReorder": {
     "createPo": "Create PO",

@@ -938,7 +938,19 @@
     "source": "Origine",
     "sourceLink": "Collegamento fornitore",
     "sourcePurchaseOrder": "OdA {number}",
-    "recordedBy": "Da"
+    "recordedBy": "Da",
+    "costCurrency": "Valuta del costo",
+    "supplierCurrencyDiffers": "Il fornitore ora fattura in {currency}.",
+    "approximately": "≈ {amount}",
+    "rateOf": "Tasso del {date}",
+    "staleRateOf": "Tasso non aggiornato del {date}",
+    "fallbackRateOf": "Tasso di riserva del {date}",
+    "noRate": "Nessun tasso {currency} salvato",
+    "rateTitle": "1 {from} = {rate} {to}",
+    "currencyNotRecorded": "Valuta non registrata",
+    "supplierCharged": "Prezzo del fornitore: {amount}",
+    "convertedNote": "Gli importi contrassegnati con ≈ sono convertiti in {currency} ai tassi di cambio salvati per la tua organizzazione, a titolo indicativo.",
+    "convertedHistoryNote": "Gli importi contrassegnati con ≈ sono convertiti in {currency} al tasso salvato per il giorno in cui è stato registrato ciascun costo."
   },
   "quickReorder": {
     "createPo": "Crea OdA",

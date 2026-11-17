@@ -938,7 +938,19 @@
     "source": "Kaynak",
     "sourceLink": "Tedarikçi bağlantısı",
     "sourcePurchaseOrder": "SAS {number}",
-    "recordedBy": "Kaydeden"
+    "recordedBy": "Kaydeden",
+    "costCurrency": "Maliyet para birimi",
+    "supplierCurrencyDiffers": "Tedarikçi artık {currency} ile faturalandırıyor.",
+    "approximately": "≈ {amount}",
+    "rateOf": "{date} kuru",
+    "staleRateOf": "{date} tarihli eski kur",
+    "fallbackRateOf": "{date} tarihli yedek kur",
+    "noRate": "Kayıtlı {currency} kuru yok",
+    "rateTitle": "1 {from} = {rate} {to}",
+    "currencyNotRecorded": "Para birimi kaydedilmemiş",
+    "supplierCharged": "Tedarikçi fiyatı: {amount}",
+    "convertedNote": "≈ ile işaretli tutarlar, bilgi amaçlı olarak kuruluşunuz için kayıtlı döviz kurlarıyla {currency} birimine çevrilmiştir.",
+    "convertedHistoryNote": "≈ ile işaretli tutarlar, her maliyetin kaydedildiği gün için kayıtlı kurla {currency} birimine çevrilmiştir."
   },
   "quickReorder": {
     "createPo": "SAS Oluştur",

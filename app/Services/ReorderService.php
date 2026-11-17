@@ -7,6 +7,7 @@ namespace App\Services;
 use App\Models\ActivityLog;
 use App\Models\Auth\Organization;
 use App\Models\Inventory\Product;
+use App\Models\Inventory\ProductSupplier;
 use App\Models\Inventory\Supplier;
 use App\Models\Purchasing\PurchaseOrder;
 use App\Models\Purchasing\PurchaseOrderItem;
@@ -119,10 +120,33 @@ final class ReorderService
     /**
      * Unit cost for a line: the supplier's link cost, else the product's
      * purchase price, else its price.
+     *
+     * With $currency (the purchase order's), only an amount already in that
+     * currency is used: the link cost when the link is in it, the product's
+     * prices when the product is priced in it. Nothing else is converted
+     * here, so a line with no cost in the order's currency starts at zero
+     * for the buyer to fill in rather than at a figure in another currency.
      */
-    public function unitCost(Product $product, ?Supplier $primary = null): string
+    public function unitCost(Product $product, ?Supplier $primary = null, ?string $currency = null): string
     {
-        return Money::of($primary?->pivot?->cost_price ?? $product->purchase_price ?? $product->price ?? 0);
+        if ($currency === null) {
+            return Money::of($primary?->pivot?->cost_price ?? $product->purchase_price ?? $product->price ?? 0);
+        }
+
+        $currency = strtoupper(trim($currency));
+
+        if ($primary?->pivot?->cost_price !== null && ProductSupplier::costCurrencyOf($primary) === $currency) {
+            return Money::of($primary->pivot->cost_price);
+        }
+
+        $productCurrency = ProductSupplier::normalizeCurrency($product->currency)
+            ?? Organization::currencyFor($product->organization_id === null ? null : (int) $product->organization_id);
+
+        if ($productCurrency === $currency) {
+            return Money::of($product->purchase_price ?? $product->price ?? 0);
+        }
+
+        return Money::of(0);
     }
 
     /**
@@ -205,7 +229,7 @@ final class ReorderService
             foreach ($products as $product) {
                 $primary = $this->primarySupplier($product);
                 $quantity = $this->suggestedQuantity($product, $primary);
-                $unitCost = $this->unitCost($product, $primary);
+                $unitCost = $this->unitCost($product, $primary, $currency);
                 $lineTotal = Money::multiply($unitCost, $quantity);
 
                 PurchaseOrderItem::create([

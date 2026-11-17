@@ -938,7 +938,19 @@
     "source": "Source",
     "sourceLink": "Lien fournisseur",
     "sourcePurchaseOrder": "BC {number}",
-    "recordedBy": "Par"
+    "recordedBy": "Par",
+    "costCurrency": "Devise du coût",
+    "supplierCurrencyDiffers": "Le fournisseur facture désormais en {currency}.",
+    "approximately": "≈ {amount}",
+    "rateOf": "Taux du {date}",
+    "staleRateOf": "Taux périmé du {date}",
+    "fallbackRateOf": "Taux de secours du {date}",
+    "noRate": "Aucun taux {currency} enregistré",
+    "rateTitle": "1 {from} = {rate} {to}",
+    "currencyNotRecorded": "Devise non enregistrée",
+    "supplierCharged": "Prix du fournisseur : {amount}",
+    "convertedNote": "Les montants marqués ≈ sont convertis en {currency} aux taux de change enregistrés pour votre organisation, à titre indicatif.",
+    "convertedHistoryNote": "Les montants marqués ≈ sont convertis en {currency} au taux enregistré pour le jour où chaque coût a été saisi."
   },
   "quickReorder": {
     "createPo": "Créer un BC",

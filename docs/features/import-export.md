@@ -36,6 +36,11 @@ columns after the others: `Tax Rate` and `Price Incl. Tax` (price plus tax at
 that rate, blank without a rate), for stores that list gross prices. The
 import does not read `Price Incl. Tax` back; change `price` instead.
 
+`supplier_cost` is in the currency of the supplier link. `supplier_cost_currency`
+(a three-letter code such as `EUR`) sets that currency; left blank, an existing
+link keeps its currency and a new link takes the supplier's. Exports write it
+as **Supplier Cost Currency**.
+
 Product exports include an **Inventoros Text Encoding** column. Keep it when
 re-importing an export: it distinguishes protective spreadsheet escaping from
 literal apostrophes and preserves text identifiers such as `@PART`, `'@PART`,

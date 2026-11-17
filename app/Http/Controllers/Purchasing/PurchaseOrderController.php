@@ -16,6 +16,7 @@ use App\Http\Requests\SendDocumentEmailRequest;
 use App\Models\ExchangeRates\ExchangeRateSetting;
 use App\Models\Inventory\Product;
 use App\Models\Inventory\ProductLocation;
+use App\Models\Inventory\ProductSupplier;
 use App\Models\Inventory\ProductVariant;
 use App\Models\Inventory\Supplier;
 use App\Models\Purchasing\PurchaseOrder;
@@ -546,7 +547,7 @@ class PurchaseOrderController extends Controller
                 }),
             ])
             ->orderBy('name')
-            ->get(['id', 'name', 'sku', 'barcode', 'price', 'purchase_price', 'tax_rate', 'stock', 'has_variants', 'category_id', 'location_id'])
+            ->get(['id', 'organization_id', 'name', 'sku', 'barcode', 'price', 'purchase_price', 'currency', 'tax_rate', 'stock', 'has_variants', 'category_id', 'location_id'])
             ->map(fn (Product $product) => [
                 'id' => $product->id,
                 'name' => $product->name,
@@ -554,6 +555,9 @@ class PurchaseOrderController extends Controller
                 'barcode' => $product->barcode,
                 'price' => $product->price,
                 'purchase_price' => $product->purchase_price,
+                // The currency price and purchase_price are in: a new line
+                // is prefilled from them only on a PO in this currency.
+                'currency' => $product->currency,
                 // New PO lines start at this rate (variants share it).
                 'tax_rate' => $product->tax_rate,
                 'stock' => (int) $product->stock,
@@ -564,6 +568,7 @@ class PurchaseOrderController extends Controller
                     ->map(fn ($supplier) => [
                         'supplier_id' => $supplier->id,
                         'cost_price' => $supplier->pivot->cost_price,
+                        'cost_currency' => ProductSupplier::costCurrencyOf($supplier),
                         'supplier_sku' => $supplier->pivot->supplier_sku,
                     ])->values()->all(),
                 'has_variants' => (bool) $product->has_variants,

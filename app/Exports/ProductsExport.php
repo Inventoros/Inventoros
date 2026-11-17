@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Exports;
 
 use App\Models\Inventory\Product;
+use App\Models\Inventory\ProductSupplier;
 use App\Services\ReorderService;
 use App\Support\Money;
 use App\Support\ProductCurrencyColumns;
@@ -122,6 +123,8 @@ final class ProductsExport extends ProductSpreadsheetValueBinder implements From
             // back by the import.
             'Tax Rate',
             'Price Incl. Tax',
+            // The currency Supplier Cost is in (the link's own, #429).
+            'Supplier Cost Currency',
             ProductSpreadsheetText::HEADING,
         ];
     }
@@ -172,6 +175,7 @@ final class ProductsExport extends ProductSpreadsheetValueBinder implements From
             ),
             $product->tax_rate ?? '',
             $product->tax_rate === null ? '' : Money::add($product->price, Money::percentOf($product->price, $product->tax_rate)),
+            $primary !== null ? ProductSupplier::costCurrencyOf($primary) : '',
             ProductSpreadsheetText::ENCODING,
         ], $this->headings());
     }

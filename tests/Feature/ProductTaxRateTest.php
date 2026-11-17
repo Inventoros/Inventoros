@@ -168,7 +168,7 @@ final class ProductTaxRateTest extends TestCase
 
         // New columns come last, before the text-encoding marker, so files
         // mapped by position keep their old columns where they were.
-        $this->assertSame(['Tax Rate', 'Price Incl. Tax', 'Inventoros Text Encoding'], array_slice($headings, -3));
+        $this->assertSame(['Tax Rate', 'Price Incl. Tax', 'Supplier Cost Currency', 'Inventoros Text Encoding'], array_slice($headings, -4));
         $this->assertSame('Price', $headings[7]);
 
         $this->assertEquals(5, $rows['BOOK-1']['Tax Rate']);

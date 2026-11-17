@@ -32,7 +32,11 @@ class ProductSupplierInputType extends InputType
             ],
             'cost_price' => [
                 'type' => Type::float(),
-                'description' => 'What the supplier charges per unit',
+                'description' => 'What the supplier charges per unit, in cost_currency',
+            ],
+            'cost_currency' => [
+                'type' => Type::string(),
+                'description' => "ISO 4217 code of cost_price. Omitted: an existing link keeps its currency, a new one takes the supplier's.",
             ],
             'lead_time_days' => [
                 'type' => Type::int(),
