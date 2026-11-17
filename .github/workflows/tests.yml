@@ -175,8 +175,9 @@ jobs:
         with:
           node-version: '22'
 
+      # Fails on any advisory except the dated exceptions in scripts/npm-audit.mjs.
       - name: npm audit (all locked dependencies)
-        run: npm audit --package-lock-only
+        run: node scripts/npm-audit.mjs
 
   js-unit:
     if: github.event_name != 'schedule'
