@@ -15,6 +15,7 @@ use App\Models\System\SystemSetting;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 class CheckReorderPointsCommandTest extends TestCase
@@ -77,7 +78,7 @@ class CheckReorderPointsCommandTest extends TestCase
         ]);
     }
 
-    /** @test */
+    #[Test]
     public function it_creates_purchase_orders_when_stock_is_below_reorder_point(): void
     {
         $product = Product::create([
@@ -116,7 +117,7 @@ class CheckReorderPointsCommandTest extends TestCase
         $this->assertEquals(50, $item->quantity_ordered);
     }
 
-    /** @test */
+    #[Test]
     public function it_skips_products_with_existing_pending_purchase_orders(): void
     {
         $product = Product::create([
@@ -170,7 +171,7 @@ class CheckReorderPointsCommandTest extends TestCase
         $this->assertEquals(1, $poCount);
     }
 
-    /** @test */
+    #[Test]
     public function it_also_skips_products_with_sent_purchase_orders(): void
     {
         $product = Product::create([
@@ -224,7 +225,7 @@ class CheckReorderPointsCommandTest extends TestCase
         $this->assertEquals(1, $poCount);
     }
 
-    /** @test */
+    #[Test]
     public function it_respects_organization_scoping(): void
     {
         // Product in org 1 - needs reorder
@@ -294,7 +295,7 @@ class CheckReorderPointsCommandTest extends TestCase
         $this->assertEquals(100, $org2Item->quantity_ordered);
     }
 
-    /** @test */
+    #[Test]
     public function it_skips_products_without_supplier(): void
     {
         Product::create([
@@ -316,7 +317,7 @@ class CheckReorderPointsCommandTest extends TestCase
         $this->assertEquals(0, PurchaseOrder::count());
     }
 
-    /** @test */
+    #[Test]
     public function it_skips_products_with_null_reorder_point(): void
     {
         $product = Product::create([
@@ -342,7 +343,7 @@ class CheckReorderPointsCommandTest extends TestCase
         $this->assertEquals(0, PurchaseOrder::count());
     }
 
-    /** @test */
+    #[Test]
     public function it_skips_products_with_zero_reorder_quantity(): void
     {
         $product = Product::create([
@@ -368,7 +369,7 @@ class CheckReorderPointsCommandTest extends TestCase
         $this->assertEquals(0, PurchaseOrder::count());
     }
 
-    /** @test */
+    #[Test]
     public function it_groups_products_by_supplier_into_single_po(): void
     {
         $product1 = Product::create([
@@ -417,7 +418,7 @@ class CheckReorderPointsCommandTest extends TestCase
         $this->assertCount(2, $items);
     }
 
-    /** @test */
+    #[Test]
     public function it_creates_separate_pos_for_different_suppliers(): void
     {
         $supplier2 = Supplier::create([
@@ -469,7 +470,7 @@ class CheckReorderPointsCommandTest extends TestCase
         $this->assertCount(2, $pos);
     }
 
-    /** @test */
+    #[Test]
     public function it_does_not_create_po_when_stock_is_above_reorder_point(): void
     {
         $product = Product::create([
@@ -495,7 +496,7 @@ class CheckReorderPointsCommandTest extends TestCase
         $this->assertEquals(0, PurchaseOrder::count());
     }
 
-    /** @test */
+    #[Test]
     public function it_logs_activity_for_auto_created_purchase_orders(): void
     {
         $product = Product::create([
@@ -574,7 +575,7 @@ class CheckReorderPointsCommandTest extends TestCase
         $this->assertEquals(102.0, (float) $po->total);
     }
 
-    /** @test */
+    #[Test]
     public function it_skips_run_when_lock_is_already_held(): void
     {
         $product = Product::create([
