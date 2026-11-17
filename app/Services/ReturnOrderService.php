@@ -161,22 +161,8 @@ final class ReturnOrderService
     private function allocateAmount(string $amount, array $weights): array
     {
         ksort($weights, SORT_NUMERIC);
-        $weightTotal = '0';
-        foreach ($weights as $weight) {
-            $weightTotal = bcadd($weightTotal, $weight, 8);
-        }
-        $cumulative = '0.00';
-        $allocated = '0.00';
-        $result = [];
-        foreach ($weights as $key => $weight) {
-            $cumulative = bcadd($cumulative, $weight, 8);
-            $target = bccomp($weightTotal, '0', 8) === 0 ? '0.00'
-                : Money::round(bcdiv(bcmul($amount, $cumulative, 8), $weightTotal, 8));
-            $result[$key] = Money::subtract($target, $allocated);
-            $allocated = $target;
-        }
 
-        return $result;
+        return Money::allocate($amount, $weights);
     }
 
     /**

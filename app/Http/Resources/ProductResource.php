@@ -30,6 +30,9 @@ class ProductResource extends JsonResource
             'display_price' => $this->display_price,
             'selling_price' => $this->selling_price,
             'purchase_price' => $this->purchase_price,
+            // Percent the product is sold at (null when not set). price and
+            // selling_price are net of it.
+            'tax_rate' => $this->tax_rate,
             'currency' => $this->currency,
             'price_in_currencies' => $this->price_in_currencies,
             'stock' => $this->stock,

@@ -73,9 +73,12 @@ class GetOrderTool extends Tool
                 'unit_price' => $item->unit_price,
                 'subtotal' => $item->subtotal,
                 'discount_amount' => $item->discount_amount,
+                'net_amount' => $item->netAmount(),
+                'tax_rate' => $item->tax_rate,
                 'tax' => $item->tax,
                 'total' => $item->total,
             ])->all(),
+            'tax_breakdown' => $order->taxBreakdown(),
         ];
 
         // Payment position only for tokens that may see payments.

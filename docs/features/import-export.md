@@ -28,6 +28,14 @@ notification.
 One row per product, matched by `sku`. Required: `name`, `sku`, `price`,
 `stock`. Download the template for the full column list.
 
+`price` is the net selling price (before tax). `tax_rate` is the percent the
+product is sold at, for example `27` for 27% VAT. On import a number sets the
+rate (0 to 100, up to three decimals), a blank cell clears it, and a file
+without the column leaves every product's rate unchanged. Exports add two
+columns after the others: `Tax Rate` and `Price Incl. Tax` (price plus tax at
+that rate, blank without a rate), for stores that list gross prices. The
+import does not read `Price Incl. Tax` back; change `price` instead.
+
 Product exports include an **Inventoros Text Encoding** column. Keep it when
 re-importing an export: it distinguishes protective spreadsheet escaping from
 literal apostrophes and preserves text identifiers such as `@PART`, `'@PART`,
@@ -87,7 +95,7 @@ order line. The column names match the line-items export.
 | `product_sku` / `variant_sku` | one of them | A variant SKU is also accepted in `product_sku`. Products sold by variant need a variant SKU. |
 | `quantity` | yes | Whole number, 1 or more. |
 | `unit_price` | no | Blank uses the product's price in the order's currency: its own price (or the variant's) when the order is in the product's currency, otherwise its price for that currency. With no price in that currency the order fails; fill in `unit_price`. |
-| `line_tax` | no | Tax on this line. |
+| `line_tax` | no | Tax on this line, as an amount. It is kept as given: imported lines carry no tax rate. |
 | `unit_cost` | no | What one unit cost you when it was sold, 0 or more. Used by the profit margin and inventory turnover reports. See unit cost below. |
 | `order_tax`, `order_shipping` | no | Order-level amounts. |
 | `currency` | no | Blank uses the organization's currency. |

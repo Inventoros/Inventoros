@@ -102,7 +102,8 @@
         }
         .items-table th:last-child,
         .items-table th:nth-child(3),
-        .items-table th:nth-child(4) {
+        .items-table th:nth-child(4),
+        .items-table th:nth-child(5) {
             text-align: right;
         }
         .items-table td {
@@ -112,7 +113,8 @@
         }
         .items-table td:last-child,
         .items-table td:nth-child(3),
-        .items-table td:nth-child(4) {
+        .items-table td:nth-child(4),
+        .items-table td:nth-child(5) {
             text-align: right;
         }
         .items-table tr:nth-child(even) {
@@ -234,12 +236,23 @@
         <div class="items-section">
             <table class="items-table">
                 <thead>
+                    @if($showLineTax ?? false)
+                    <tr>
+                        <th style="width: 32%;">Item</th>
+                        <th style="width: 8%;">Qty</th>
+                        <th style="width: 15%;">Unit Price</th>
+                        <th style="width: 15%;">Net</th>
+                        <th style="width: 15%;">Tax</th>
+                        <th style="width: 15%;">Gross</th>
+                    </tr>
+                    @else
                     <tr>
                         <th style="width: 45%;">Item</th>
                         <th style="width: 15%;">Qty</th>
                         <th style="width: 20%;">Unit Price</th>
                         <th style="width: 20%;">Amount</th>
                     </tr>
+                    @endif
                 </thead>
                 <tbody>
                     @foreach($order->items as $item)
@@ -253,7 +266,16 @@
                         </td>
                         <td>{{ $item->quantity }}</td>
                         <td>{{ $order->currency ?? 'USD' }} {{ number_format((float) $item->unit_price, 2) }}</td>
+                        @if($showLineTax ?? false)
+                        <td>{{ $order->currency ?? 'USD' }} {{ number_format((float) $item->netAmount(), 2) }}</td>
+                        <td>
+                            {{ $order->currency ?? 'USD' }} {{ number_format((float) $item->tax, 2) }}
+                            @if($item->tax_rate !== null)<div class="item-sku">{{ rtrim(rtrim((string) $item->tax_rate, '0'), '.') }}%</div>@endif
+                        </td>
+                        <td>{{ $order->currency ?? 'USD' }} {{ number_format((float) $item->total, 2) }}</td>
+                        @else
                         <td>{{ $order->currency ?? 'USD' }} {{ number_format((float) $item->subtotal, 2) }}</td>
+                        @endif
                     </tr>
                     @endforeach
                 </tbody>
@@ -279,7 +301,14 @@
                     <td>-{{ $order->currency ?? 'USD' }} {{ number_format((float) $orderDiscountAmount, 2) }}</td>
                 </tr>
                 @endif
-                @if((float) $order->tax > 0)
+                @if($hasLineTaxRates ?? false)
+                @foreach($taxBreakdown as $entry)
+                <tr>
+                    <td>@if($entry['rate'] !== null)Tax {{ rtrim(rtrim((string) $entry['rate'], '0'), '.') }}% on {{ $order->currency ?? 'USD' }} {{ number_format((float) $entry['taxable'], 2) }}@else Other tax @endif</td>
+                    <td>{{ $order->currency ?? 'USD' }} {{ number_format((float) $entry['tax'], 2) }}</td>
+                </tr>
+                @endforeach
+                @elseif((float) $order->tax > 0)
                 <tr>
                     <td>Tax</td>
                     <td>{{ $order->currency ?? 'USD' }} {{ number_format((float) $order->tax, 2) }}</td>

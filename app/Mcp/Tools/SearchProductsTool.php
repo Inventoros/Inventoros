@@ -51,7 +51,7 @@ class SearchProductsTool extends Tool
             })
             ->orderBy('name')
             ->limit($limit)
-            ->get(['id', 'sku', 'name', 'barcode', 'stock', 'price', 'selling_price', 'min_stock']);
+            ->get(['id', 'sku', 'name', 'barcode', 'stock', 'price', 'selling_price', 'tax_rate', 'min_stock']);
 
         return Response::json([
             'count' => $products->count(),

@@ -6,6 +6,7 @@ namespace App\Exports;
 
 use App\Models\Inventory\Product;
 use App\Services\ReorderService;
+use App\Support\Money;
 use App\Support\ProductCurrencyColumns;
 use App\Support\ProductSpreadsheetText;
 use App\Support\ProductSpreadsheetValueBinder;
@@ -115,6 +116,12 @@ final class ProductsExport extends ProductSpreadsheetValueBinder implements From
             'Supplier SKU',
             'Supplier Cost',
             ...array_map(fn (string $code) => "Price {$code}", $this->currencies()),
+            // Added after the existing columns so files mapped by position
+            // keep working. Price stays net; "Price Incl. Tax" is Price plus
+            // Tax Rate, for stores that list gross prices, and is not read
+            // back by the import.
+            'Tax Rate',
+            'Price Incl. Tax',
             ProductSpreadsheetText::HEADING,
         ];
     }
@@ -163,6 +170,8 @@ final class ProductsExport extends ProductSpreadsheetValueBinder implements From
                 fn (string $code) => $prices[$code] ?? '',
                 $this->currencies(),
             ),
+            $product->tax_rate ?? '',
+            $product->tax_rate === null ? '' : Money::add($product->price, Money::percentOf($product->price, $product->tax_rate)),
             ProductSpreadsheetText::ENCODING,
         ], $this->headings());
     }

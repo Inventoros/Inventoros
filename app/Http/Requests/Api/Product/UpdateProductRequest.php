@@ -36,6 +36,9 @@ final class UpdateProductRequest extends FormRequest
             'price' => ['nullable', 'numeric', 'min:0'],
             'selling_price' => ['nullable', 'numeric', 'min:0'],
             'purchase_price' => ['nullable', 'numeric', 'min:0'],
+            // Tax rate in percent the product is sold at (e.g. 27 for 27% VAT).
+            // price and selling_price stay net (tax exclusive); null clears it.
+            'tax_rate' => ['nullable', 'numeric', 'decimal:0,3', 'min:0', 'max:100'],
             'currency' => ['nullable', 'string', 'max:3'],
             // On-hand stock only moves through the audited ledger; a product
             // edit that wrote it straight to the row could put sold units back.

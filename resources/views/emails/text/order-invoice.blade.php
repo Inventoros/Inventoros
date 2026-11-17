@@ -13,5 +13,8 @@ Thank you for your order. Your invoice from {!! $brandName !!} for order #{!! $o
 Invoice Number: {!! $order->invoice_number !!}
 Order Number: #{!! $order->order_number !!}
 Invoice Date: {!! ($order->invoice_issued_at ?? now())->format('M j, Y') !!}
+@if((float) $order->tax > 0)
+Tax: {!! number_format((float) $order->tax, 2) !!} {!! $order->currency !!}
+@endif
 Total: {!! number_format((float) $order->total, 2) !!} {!! $order->currency !!}
 @include('emails.text.partials.footer')

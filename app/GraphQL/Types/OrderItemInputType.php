@@ -50,8 +50,13 @@ class OrderItemInputType extends InputType
             ],
             'tax' => [
                 'type' => Type::float(),
-                'description' => 'Tax amount for this line item',
+                'description' => 'Tax amount for this line item, kept as sent when the line has no tax_rate',
                 'rules' => ['nullable', 'numeric', 'decimal:0,2', 'min:0'],
+            ],
+            'tax_rate' => [
+                'type' => Type::float(),
+                'description' => 'Tax rate in percent (0-100). The server computes the line tax from it, after discounts, and ignores tax',
+                'rules' => ['nullable', 'numeric', 'decimal:0,3', 'min:0', 'max:100'],
             ],
         ];
     }

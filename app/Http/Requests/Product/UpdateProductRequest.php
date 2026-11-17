@@ -41,6 +41,8 @@ final class UpdateProductRequest extends FormRequest
             'description' => 'nullable|string',
             'price' => 'required|numeric|min:0',
             'purchase_price' => 'nullable|numeric|min:0',
+            // Percent the product is sold at; the price stays net of it.
+            'tax_rate' => 'nullable|numeric|decimal:0,3|min:0|max:100',
             // No `stock`: on-hand only moves through stock adjustments, so a
             // stale edit form cannot put sold units back. A submitted value is
             // dropped (ProductService::update ignores it too).

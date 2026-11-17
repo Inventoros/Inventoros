@@ -57,6 +57,9 @@ class OrderResource extends JsonResource
             'line_discount_total' => $this->whenLoaded('items', fn () => $this->resource->lineDiscountTotal()),
             'order_discount_amount' => $this->whenLoaded('items', fn () => $this->resource->orderDiscountAmount()),
             'tax' => $this->tax,
+            // Taxable amount and tax per line tax rate, then one entry with a
+            // null rate for tax entered as an amount.
+            'tax_breakdown' => $this->whenLoaded('items', fn () => $this->resource->taxBreakdown()),
             'shipping' => $this->shipping,
             'total' => $this->total,
             // Payment position is financial detail behind view_payments: absent

@@ -36,6 +36,12 @@
             <td width="50%" style="padding: 8px 0;"><span style="color: #6b7280; font-size: 14px;">Invoice Date:</span></td>
             <td width="50%" style="padding: 8px 0; text-align: right;"><strong style="color: #111827; font-size: 14px;">{{ ($order->invoice_issued_at ?? now())->format('M j, Y') }}</strong></td>
         </tr>
+        @if((float) $order->tax > 0)
+        <tr>
+            <td width="50%" style="padding: 8px 0;"><span style="color: #6b7280; font-size: 14px;">Tax:</span></td>
+            <td width="50%" style="padding: 8px 0; text-align: right;"><strong style="color: #111827; font-size: 14px;">{{ number_format((float) $order->tax, 2) }} {{ $order->currency }}</strong></td>
+        </tr>
+        @endif
         <tr>
             <td width="50%" style="padding: 8px 0;"><span style="color: #6b7280; font-size: 14px;">Total:</span></td>
             <td width="50%" style="padding: 8px 0; text-align: right;"><strong style="color: #111827; font-size: 14px;">{{ number_format((float) $order->total, 2) }} {{ $order->currency }}</strong></td>

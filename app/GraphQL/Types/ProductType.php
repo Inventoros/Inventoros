@@ -49,6 +49,10 @@ class ProductType extends GraphQLType
                 'type' => Type::float(),
                 'description' => 'Purchase/cost price',
             ],
+            'tax_rate' => [
+                'type' => Type::float(),
+                'description' => 'Tax rate in percent the product is sold at; prices are net of it (null when not set)',
+            ],
             'currency' => [
                 'type' => Type::string(),
                 'description' => 'Currency code',

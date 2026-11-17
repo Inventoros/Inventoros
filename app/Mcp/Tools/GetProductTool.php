@@ -54,6 +54,7 @@ class GetProductTool extends Tool
             'price' => $product->price,
             'selling_price' => $product->selling_price,
             'purchase_price' => $product->purchase_price,
+            'tax_rate' => $product->tax_rate,
             'currency' => $product->currency,
             'stock' => $product->stock,
             'total_stock' => $product->total_stock,

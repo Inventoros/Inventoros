@@ -7,6 +7,7 @@ namespace App\Models\Order;
 use App\Enums\DiscountType;
 use App\Models\Inventory\Product;
 use App\Models\Inventory\ProductVariant;
+use App\Support\Money;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -28,6 +29,7 @@ use Illuminate\Support\Carbon;
  * @property DiscountType|null $discount_type
  * @property string|null $discount_value
  * @property string $discount_amount
+ * @property string|null $tax_rate Percent the line was taxed at; null when its tax is an amount as entered
  * @property string $tax
  * @property string $total
  * @property array|null $metadata
@@ -59,6 +61,7 @@ class OrderItem extends Model
         'discount_type',
         'discount_value',
         'discount_amount',
+        'tax_rate',
         'tax',
         'total',
         'metadata',
@@ -81,10 +84,20 @@ class OrderItem extends Model
             'discount_type' => DiscountType::class,
             'discount_value' => 'decimal:2',
             'discount_amount' => 'decimal:2',
+            'tax_rate' => 'decimal:3',
             'tax' => 'decimal:2',
             'total' => 'decimal:2',
             'metadata' => 'array',
         ];
+    }
+
+    /**
+     * The line's net: its gross subtotal less its own line discount, before
+     * tax (and before any share of an order-level discount).
+     */
+    public function netAmount(): string
+    {
+        return Money::subtract($this->subtotal, $this->discount_amount);
     }
 
     /**

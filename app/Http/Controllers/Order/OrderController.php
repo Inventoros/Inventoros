@@ -311,6 +311,10 @@ class OrderController extends Controller
 
         return Inertia::render('Orders/Edit', [
             'order' => $order,
+            // The tax entered for the whole order, without the line taxes
+            // order.tax already includes, so saving the form unchanged does
+            // not add the line taxes a second time.
+            'orderLevelTax' => $this->orderService->orderLevelTax($order),
             'products' => $products,
             'awaitingApproval' => $order->isPendingApproval(),
         ]);
@@ -548,7 +552,7 @@ class OrderController extends Controller
                 }
             })])
             ->orderBy('name')
-            ->get(['id', 'name', 'sku', 'barcode', 'price', 'currency', 'price_in_currencies', 'stock', 'has_variants', 'category_id', 'location_id'])
+            ->get(['id', 'name', 'sku', 'barcode', 'price', 'currency', 'price_in_currencies', 'tax_rate', 'stock', 'has_variants', 'category_id', 'location_id'])
             ->map(fn (Product $product) => [
                 'id' => $product->id,
                 'name' => $product->name,
@@ -559,6 +563,8 @@ class OrderController extends Controller
                 // OrderService prices a line sent without a unit price.
                 'currency' => filled($product->currency) ? strtoupper(trim((string) $product->currency)) : Organization::currencyFor($organizationId),
                 'prices' => (object) array_change_key_case(array_filter((array) ($product->price_in_currencies ?? []), 'is_numeric'), CASE_UPPER),
+                // Pre-fills a new line's tax rate (variants share it).
+                'tax_rate' => $product->tax_rate,
                 'stock' => (int) $product->stock,
                 'has_variants' => (bool) $product->has_variants,
                 'variants' => $product->has_variants
