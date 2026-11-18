@@ -72,8 +72,12 @@ final class Search
      * @param  array<int, string>  $columns
      * @return TBuilder
      */
-    public static function apply(EloquentBuilder|QueryBuilder $query, array $columns, string $term): EloquentBuilder|QueryBuilder
+    public static function apply(EloquentBuilder|QueryBuilder $query, array $columns, string|int|float $term): EloquentBuilder|QueryBuilder
     {
+        // A JSON body or an MCP call can send a number ("search": 1001);
+        // it is searched as the text it reads as.
+        $term = (string) $term;
+
         return $query->where(function (EloquentBuilder|QueryBuilder $group) use ($columns, $term): void {
             foreach ($columns as $column) {
                 self::orWhereContains($group, $column, $term);
@@ -89,7 +93,7 @@ final class Search
      * @param  TBuilder  $query
      * @return TBuilder
      */
-    public static function orWhereContains(EloquentBuilder|QueryBuilder $query, string $column, string $term): EloquentBuilder|QueryBuilder
+    public static function orWhereContains(EloquentBuilder|QueryBuilder $query, string $column, string|int|float $term): EloquentBuilder|QueryBuilder
     {
         return self::whereContains($query, $column, $term, 'or');
     }
@@ -103,8 +107,9 @@ final class Search
      * @param  'and'|'or'  $boolean
      * @return TBuilder
      */
-    public static function whereContains(EloquentBuilder|QueryBuilder $query, string $column, string $term, string $boolean = 'and'): EloquentBuilder|QueryBuilder
+    public static function whereContains(EloquentBuilder|QueryBuilder $query, string $column, string|int|float $term, string $boolean = 'and'): EloquentBuilder|QueryBuilder
     {
+        $term = (string) $term;
         $base = $query instanceof EloquentBuilder ? $query->getQuery() : $query;
         $pgsql = $base->getConnection()->getDriverName() === 'pgsql';
         $like = ($pgsql ? 'ilike' : 'like').' ? escape \''.self::ESCAPE.'\'';
