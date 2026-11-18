@@ -46,7 +46,7 @@ final class GraphQLSortAllowlistTest extends TestCase
     }
 
     #[DataProvider('listQueries')]
-    public function test_a_column_outside_the_allowlist_is_a_validation_error(string $field): void
+    public function test_a_column_outside_the_allowlist_is_a_validation_error(string $field, string $column): void
     {
         $response = $this->postJson('/graphql', [
             'query' => "{ {$field}(sort_by: \"organization_id\") { id } }",
@@ -83,7 +83,7 @@ final class GraphQLSortAllowlistTest extends TestCase
     }
 
     #[DataProvider('listQueries')]
-    public function test_direction_is_case_insensitive_and_id_is_sortable(string $field): void
+    public function test_direction_is_case_insensitive_and_id_is_sortable(string $field, string $column): void
     {
         foreach (['ASC', 'Desc', 'desc'] as $direction) {
             $response = $this->postJson('/graphql', [

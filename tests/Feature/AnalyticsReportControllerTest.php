@@ -108,7 +108,7 @@ class AnalyticsReportControllerTest extends TestCase
     }
 
     #[DataProvider('reportRoutes')]
-    public function test_each_report_requires_view_reports(string $route): void
+    public function test_each_report_requires_view_reports(string $route, string $component): void
     {
         $this->actingAs($this->userWith(['view_products', 'view_orders']))
             ->get(route($route))
