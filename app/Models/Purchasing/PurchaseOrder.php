@@ -659,8 +659,12 @@ class PurchaseOrder extends Model
 
         // Judged in the organization's currency, the currency the threshold
         // is set in. A foreign-currency PO with no rate recorded cannot be
-        // shown to be under the threshold, so it needs approval.
-        $total = $this->organizationCurrencyTotal();
+        // shown to be under the threshold, so it needs approval. Nor can one
+        // whose rate was typed in by hand: whoever raises the PO could
+        // otherwise enter a tiny rate to keep a large order under it.
+        $total = $this->isForeignCurrency() && $this->exchange_rate_source === self::RATE_SOURCE_MANUAL
+            ? null
+            : $this->organizationCurrencyTotal();
 
         return ApprovalSettings::forOrganization($organization)
             ->purchaseOrderNeedsApproval($total === null ? null : (float) $total);

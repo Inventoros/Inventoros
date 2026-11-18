@@ -68,7 +68,7 @@ Over the REST and GraphQL APIs the same choices are `exchange_rate_mode` (`auto`
 
 ## Approvals
 
-When purchase order approvals are on, the threshold is compared with the total in your organization's currency, including tax and shipping (whether the tax comes from line tax rates or is entered for the whole purchase order). A purchase order in another currency with no rate recorded cannot be compared, so it needs approval. Changing the rate of an approved draft sends it back for approval, like changing its total.
+When purchase order approvals are on, the threshold is compared with the total in your organization's currency, including tax and shipping (whether the tax comes from line tax rates or is entered for the whole purchase order). A purchase order in another currency with no rate recorded cannot be compared, so it needs approval. Neither can one whose rate was entered by hand, so it needs approval too, whatever its converted total. Changing the rate of an approved draft sends it back for approval, like changing its total.
 
 ## Older purchase orders
 
