@@ -68,6 +68,7 @@ use Illuminate\Support\Facades\DB;
  * @property Carbon|null $order_date
  * @property Carbon|null $shipped_at
  * @property Carbon|null $delivered_at
+ * @property Carbon|null $backordered_at
  * @property string|null $notes
  * @property array|null $metadata
  * @property Carbon|null $created_at
@@ -141,6 +142,7 @@ class Order extends Model
         'order_date',
         'shipped_at',
         'delivered_at',
+        'backordered_at',
         'notes',
         'metadata',
     ];
@@ -168,6 +170,7 @@ class Order extends Model
             'order_date' => 'datetime',
             'shipped_at' => 'datetime',
             'delivered_at' => 'datetime',
+            'backordered_at' => 'datetime',
             'approved_at' => 'datetime',
             'invoice_issued_at' => 'datetime',
             'invoice_sent_at' => 'datetime',
@@ -617,6 +620,20 @@ class Order extends Model
     {
         return $this->shipped_at !== null
             || in_array($this->status, [OrderStatus::SHIPPED, OrderStatus::DELIVERED], true);
+    }
+
+    /**
+     * Whether any line still has units on backorder. This is the authoritative
+     * test; the backordered_at timestamp is a denormalisation the order service
+     * keeps in step with it. Uses the loaded items when present, else a query.
+     */
+    public function hasOutstandingBackorder(): bool
+    {
+        if ($this->relationLoaded('items')) {
+            return $this->items->contains(fn (OrderItem $item) => (int) $item->quantity_backordered > 0);
+        }
+
+        return $this->items()->where('quantity_backordered', '>', 0)->exists();
     }
 
     /**

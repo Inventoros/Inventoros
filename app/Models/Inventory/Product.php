@@ -56,6 +56,7 @@ use Illuminate\Support\Carbon;
  * @property int|null $location_id
  * @property bool $is_active
  * @property bool $has_variants
+ * @property bool $allow_backorder
  * @property array|null $metadata
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
@@ -107,6 +108,7 @@ class Product extends Model
         'max_stock',
         'reorder_point',
         'reorder_quantity',
+        'allow_backorder',
         'barcode',
         'barcode_type',
         'notes',
@@ -153,6 +155,7 @@ class Product extends Model
             'max_stock' => 'integer',
             'reorder_point' => 'integer',
             'reorder_quantity' => 'integer',
+            'allow_backorder' => 'boolean',
             'is_active' => 'boolean',
             'has_variants' => 'boolean',
             'tracking_type' => TrackingType::class,
