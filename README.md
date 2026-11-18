@@ -229,7 +229,7 @@ less install.sh
 sudo bash install.sh
 ```
 
-If you run PHP 8.4 and Node.js 22 yourself, Composer works too. Then open `/install` in your browser:
+If you run PHP 8.4 and Node.js 22 yourself, Composer works too ([guide](https://inventoros.com/docs/installation-composer)). Then open `/install` in your browser:
 
 <a href="https://packagist.org/packages/inventoros/inventoros"><img src="https://img.shields.io/packagist/v/inventoros/inventoros?style=for-the-badge&logo=packagist&logoColor=white&label=Packagist&color=F28D1A" alt="inventoros/inventoros on Packagist"></a>
 
