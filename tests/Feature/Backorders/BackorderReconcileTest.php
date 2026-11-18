@@ -185,12 +185,11 @@ class BackorderReconcileTest extends TestCase
         $this->rawStock($product, 5);
         $fulfilled = $this->backorders()->reconcileForProduct($this->organization->id, $product->id, null);
 
-        // Reconcile only touches OPEN orders: the cancelled one is skipped and
-        // its (now moot) backorder line is left untouched by reconciliation.
-        // (Clearing a cancelled order's backorder is Order-lifecycle scope, Task 6.)
+        // Reconcile only touches OPEN orders, so it fulfils nothing here; and
+        // cancel() has already cleared the (now moot) backorder.
         $this->assertSame(0, $fulfilled);
         $this->assertSame('cancelled', $order->fresh()->status->value);
-        $this->assertSame(2, (int) $order->items()->first()->quantity_backordered);
+        $this->assertSame(0, (int) $order->items()->first()->quantity_backordered);
     }
 
     public function test_listener_ignores_a_decrease(): void
