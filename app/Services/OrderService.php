@@ -25,6 +25,7 @@ use App\Models\Order\ReturnOrderItem;
 use App\Models\Shipping\Shipment;
 use App\Models\User;
 use App\Support\ApprovalSettings;
+use App\Support\BackorderSettings;
 use App\Support\LineTax;
 use App\Support\Money;
 use App\Support\OrderApprovalGate;
@@ -132,6 +133,9 @@ final class OrderService
         $order = SequenceNumberRetry::create(fn () => DB::transaction(function () use ($data, $creator, $adjustStock, $reservationOwner, $reservationReference) {
             $orgId = $data['organization_id'];
             $data['order_number'] = Order::generateOrderNumber($orgId);
+            // Short lines are accepted as backorders only when the org's
+            // master switch is on; per-product opt-in is checked per line.
+            $backorderEnabled = BackorderSettings::forOrganization((int) $orgId)->enabled;
 
             // Batch-lock every referenced product (and variant) in single
             // SELECT ... FOR UPDATE queries so concurrent orders can't race the
@@ -190,7 +194,7 @@ final class OrderService
                 }
 
                 $lines[] = compact('item', 'product', 'variant', 'target', 'key', 'index')
-                    + ['qty' => (int) $item['quantity']];
+                    + ['qty' => (int) $item['quantity'], 'fulfillQty' => (int) $item['quantity'], 'backorderedQty' => 0];
             }
 
             // An order fulfilling a reservation consumes its holds first, so
@@ -209,20 +213,32 @@ final class OrderService
             // Validate availability across ALL lines first. Lines sharing a
             // target (same product, or same variant) accumulate against one
             // running balance, which starts at the target's available stock
-            // (on hand less active reservations), read under the row lock.
+            // (on hand less active reservations), read under the row lock. A
+            // line short of the balance is split: the units the balance covers
+            // are fulfilled, and the remainder is backordered when the org
+            // switch is on and the product is opted in, otherwise refused
+            // exactly as before.
             $running = [];
             $available = [];
-            foreach ($adjustStock ? $lines : [] as $line) {
+            foreach ($adjustStock ? array_keys($lines) : [] as $i) {
+                $line = $lines[$i];
                 $key = $line['key'];
                 $available[$key] ??= (int) $line['target']->stock
                     - $reservations->reservedTotal((int) $line['product']->id, $line['variant']?->id);
-                $running[$key] = ($running[$key] ?? $available[$key]) - $line['qty'];
-                if ($running[$key] < 0) {
+                $balance = $running[$key] ?? $available[$key];
+                $fulfillQty = max(0, min($line['qty'], $balance));
+                $backorderedQty = $line['qty'] - $fulfillQty;
+                $running[$key] = $balance - $fulfillQty;
+
+                if ($backorderedQty > 0 && ! ($backorderEnabled && (bool) $line['product']->allow_backorder)) {
                     throw new InsufficientStockException(
                         'Insufficient stock for '.$this->lineLabel($line)
                         .'. Available: '.max(0, $available[$key]).", Requested: {$line['qty']}"
                     );
                 }
+
+                $lines[$i]['fulfillQty'] = $fulfillQty;
+                $lines[$i]['backorderedQty'] = $backorderedQty;
             }
 
             // Build order-item rows + stock-adjustment rows. quantity_before and
@@ -240,46 +256,55 @@ final class OrderService
                 $product = $line['product'];
                 $variant = $line['variant'];
                 $qty = $line['qty'];
+                $fulfillQty = $line['fulfillQty'];
                 $key = $line['key'];
                 $targets[$key] = $line['target'];
 
                 // unit_price is optional: callers may omit it and get the
                 // product's price in the order's currency (see unitPriceFor).
                 $unitPrice = $this->unitPriceFor($item, $product, $variant, $data['currency'], $line['index']);
-                // Price the line and validate its discount before anything is
-                // written, so a bad discount rejects the whole order cleanly.
+                // Price the whole line (the customer is charged for every unit,
+                // including backordered ones they will receive once it arrives),
+                // and validate its discount before anything is written so a bad
+                // discount rejects the whole order cleanly.
                 $orderItemRows[] = [
                     'product_id' => $product->id,
                     'product_variant_id' => $variant?->id,
                     'product_name' => $product->name,
                     'sku' => $variant?->sku ?? $product->sku,
                     'quantity' => $qty,
+                    'quantity_backordered' => $line['backorderedQty'],
                     'unit_price' => $unitPrice,
                     // Cost at the time of sale, for margin and turnover reports.
                     'unit_cost' => OrderItem::costAtSale($product, $variant),
                 ] + $this->priceLine($unitPrice, $qty, $item, $line['index']);
 
-                $perTargetQty[$key] = ($perTargetQty[$key] ?? 0) + $qty;
-                $beforeForEntry = $threadStock[$key] ?? (int) $line['target']->stock;
-                $afterForEntry = $beforeForEntry - $qty;
-                $threadStock[$key] = $afterForEntry;
+                // Only the fulfilled portion leaves stock; a backordered
+                // remainder writes no ledger row and draws no bins until it is
+                // reconciled when stock arrives.
+                if ($fulfillQty > 0) {
+                    $perTargetQty[$key] = ($perTargetQty[$key] ?? 0) + $fulfillQty;
+                    $beforeForEntry = $threadStock[$key] ?? (int) $line['target']->stock;
+                    $afterForEntry = $beforeForEntry - $fulfillQty;
+                    $threadStock[$key] = $afterForEntry;
 
-                $adjustmentRows[] = [
-                    'organization_id' => $orgId,
-                    'product_id' => $product->id,
-                    'product_variant_id' => $variant?->id,
-                    'user_id' => $creator->id,
-                    'type' => 'order_fulfillment',
-                    'quantity_before' => $beforeForEntry,
-                    'quantity_after' => $afterForEntry,
-                    'adjustment_quantity' => -$qty,
-                    'reason' => null,  // set after order_number known
-                    'notes' => null,
-                    'reference_type' => Order::class,
-                    'reference_id' => null,  // set after $order is created
-                    'created_at' => $now,
-                    'updated_at' => $now,
-                ];
+                    $adjustmentRows[] = [
+                        'organization_id' => $orgId,
+                        'product_id' => $product->id,
+                        'product_variant_id' => $variant?->id,
+                        'user_id' => $creator->id,
+                        'type' => 'order_fulfillment',
+                        'quantity_before' => $beforeForEntry,
+                        'quantity_after' => $afterForEntry,
+                        'adjustment_quantity' => -$fulfillQty,
+                        'reason' => null,  // set after order_number known
+                        'notes' => null,
+                        'reference_type' => Order::class,
+                        'reference_id' => null,  // set after $order is created
+                        'created_at' => $now,
+                        'updated_at' => $now,
+                    ];
+                }
             }
 
             // Order tax = the sum of the line taxes plus any order-level tax
@@ -299,6 +324,11 @@ final class OrderService
             // Record whether this order took its lines out of stock, so no
             // later cancel/reject/delete/edit gives back units it never took.
             $order->stock_committed = $adjustStock;
+            // Flag the order as backordered when any line kept a remainder, so
+            // it can be held from shipping and reconciled when stock arrives.
+            $order->backordered_at = collect($lines)->contains(fn (array $l) => $l['backorderedQty'] > 0)
+                ? $now
+                : null;
             $this->applyTotals($order, $totals);
             $order->save();
 
@@ -342,10 +372,12 @@ final class OrderService
             $allocator = app(TrackedStockAllocationService::class);
             foreach ($adjustStock ? $order->items : [] as $orderItem) {
                 $product = $products->get($orderItem->product_id);
+                $fulfilled = (int) $orderItem->quantity_fulfilled;
                 // A variant line draws on the variant's stock, never the
-                // parent's serials/batches (replaceItems skips them too).
-                if ($product !== null && $orderItem->product_variant_id === null) {
-                    $allocator->allocateForOrderItem($product, (int) $orderItem->quantity, $orderItem, $claimed);
+                // parent's serials/batches (replaceItems skips them too), and
+                // only the fulfilled portion of a backordered line allocates.
+                if ($fulfilled > 0 && $product !== null && $orderItem->product_variant_id === null) {
+                    $allocator->allocateForOrderItem($product, $fulfilled, $orderItem, $claimed);
                 }
             }
 
