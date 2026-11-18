@@ -1,6 +1,83 @@
 # Upgrade Guide
 
-## Organization SMTP hosts (security change after v2.5.0)
+## Upgrading from v2.5.0 to v2.6.0
+
+The [2.6.0 release notes](docs/releases/2.6.0.md) describe every change and
+list the migrations. Requirements are unchanged: PHP 8.4.1 or newer, MySQL
+8.0+ or PostgreSQL 13+, and Node.js 20.19+ or 22.12+ if you build the frontend.
+
+1. Back up the database, `.env` (with `APP_KEY`), uploads and installed
+   plugins.
+2. Update the way your install is meant to be updated:
+   - **Docker and Coolify:** pull the 2.6.0 image and recreate the app, worker
+     and scheduler; the app runs the migrations on start. Never use the in-app
+     updater in a container. If a 2.5.0 container was left in maintenance mode
+     by it, run
+     `docker compose -f docker-compose.prod.yml exec app rm -f storage/framework/down`.
+   - **Linux installer:** `sudo bash install.sh --version 2.6.0`.
+   - **cPanel, Composer and other in-app updates:** Admin > Update. Set PHP's
+     `memory_limit` to at least 256M first. If an earlier attempt failed,
+     delete the `extracted_*` folders and any `update_*.zip` in
+     `storage/app/temp` before retrying: the 2.5.0 updater, which runs this
+     upgrade, copies them into its backup and can run out of memory.
+   - **Source (git):** check out `v2.6.0`, then
+     `composer install --no-dev --optimize-autoloader`,
+     `npm ci && npm run build`, `php artisan migrate --force` and
+     `php artisan optimize`.
+3. Restart queue workers (`php artisan queue:restart`, or restart the worker
+   and scheduler containers).
+4. Run `php artisan inventoros:check-smtp-hosts` (see
+   [Organization SMTP hosts](#organization-smtp-hosts)).
+
+On PostgreSQL, a migration builds trigram search indexes without
+`CONCURRENTLY`, so writes to the products, orders, customers, suppliers and
+purchase orders tables may wait while it runs on large tables. The `pg_trgm`
+extension must be installed or creatable by the database user, as before.
+
+### Behaviour changes
+
+- **Two-factor.** Users signed in with two-factor are asked for a code once
+  more after the upgrade. Each code then works only once (a second sign-in in
+  the same 30-second window gets "This code was already used; wait for the
+  next one."), and 5 wrong codes in 15 minutes lock authenticator codes for
+  the rest of that window. Recovery codes still work.
+  `php artisan inventoros:2fa-unlock user@example.com` clears a lockout. With
+  several app servers, use a shared cache store so the limit applies across
+  them.
+- **Current password.** Changing the sign-in email, enabling two-factor and
+  creating an API token in Settings ask for the current password.
+- **API tokens.** An emailed password reset, or an administrator setting a
+  user's password, revokes that user's API tokens. See also
+  [API token scopes](#api-token-scopes).
+- **Orders.** Statuses only move forward: cancelled and delivered are final,
+  and shipped can only become delivered. Orders that earlier versions moved
+  back from shipped (pending or processing with `shipped_at` set) are treated
+  as shipped; list them with
+  `SELECT id, organization_id FROM orders WHERE status IN ('pending','processing') AND shipped_at IS NOT NULL;`
+  and clear `shipped_at` on any that never shipped. With order approval on,
+  editing the terms of an approved order with no shipment yet sends it back
+  for approval.
+- **REST and GraphQL.** `GET /api/v1/reports` is paginated (15 by default, up
+  to 100 with `per_page`). Orders and purchase orders accept at most 500 lines.
+  GraphQL mutations sent with `GET` are refused, and a mutation request holds
+  at most 10 root fields (`GRAPHQL_MUTATION_MAX_ROOT_FIELDS`).
+- **Webhooks.** Deliveries add `X-Webhook-Timestamp` and
+  `X-Webhook-Signature-V2` (hex HMAC-SHA256 of `{timestamp}.{body}`).
+  `X-Webhook-Signature` is still sent unchanged.
+- **MCP.** The server speaks protocol revision 2026-07-28; clients that open
+  with `initialize` on 2025-11-25, 2025-06-18 or 2025-03-26 keep working. Requests with a browser
+  `Origin` other than `APP_URL` or localhost are refused.
+- **Product import** needs `create_products` or `edit_products` as well as
+  `import_data`.
+- **Exchange rates.** Existing purchase orders have no rate recorded. With
+  purchase order approvals and a threshold on, a purchase order in another
+  currency without a rate, or with a hand-entered rate, needs approval,
+  existing unapproved drafts included. Suppliers stored as `USD` stay USD,
+  since that cannot be told apart from the old default; review them.
+- **Browsers.** The frontend targets Chrome and Edge 111, Firefox 114 and
+  Safari 16.4 or newer.
+
+### Organization SMTP hosts
 
 Organizations other than the administrator organization can no longer send
 mail through an SMTP host on a loopback, private, link-local or otherwise
@@ -27,6 +104,24 @@ checked when email settings are saved and again before each message is sent.
 - The settings page's "send test email" shows the transport error only to the
   administrator organization; other organizations see a generic message, and
   the detail is logged. It is limited to 6 attempts per minute.
+
+### API token scopes
+
+A personal access token's abilities now also limit user management and
+saved reports, not only the route it calls:
+
+- Managing administrators or managers (creating, promoting, or changing their
+  email or password) needs a full-access token: one created with every
+  permission selected in Settings > API tokens, or a `*` token. A narrower
+  token gets a 403 explaining that it is scoped.
+- A narrower token can only grant roles and build permission sets from the
+  permissions it includes.
+- Running a saved report needs the token to include the data source's view
+  permission as well as `view_reports`: `view_products`, `view_orders`,
+  `view_customers`, `view_suppliers` or `view_purchase_orders`. Re-create
+  report-only integration tokens with the matching `view_*` abilities.
+
+Signed-in web sessions are unaffected.
 
 ## Upgrading from v2.0.0 to v2.1.0
 
@@ -63,24 +158,6 @@ Keep the pre-upgrade database and file backup together. If rollback is needed,
 restore that pair and the previous application artifact while writers and
 workers remain stopped; do not use blanket migration rollback as a substitute
 for restoring inventory data.
-
-### API token scopes
-
-A personal access token's abilities now also limit user management and
-saved reports, not only the route it calls:
-
-- Managing administrators or managers (creating, promoting, or changing their
-  email or password) needs a full-access token: one created with every
-  permission selected in Settings > API tokens, or a `*` token. A narrower
-  token gets a 403 explaining that it is scoped.
-- A narrower token can only grant roles and build permission sets from the
-  permissions it includes.
-- Running a saved report needs the token to include the data source's view
-  permission as well as `view_reports`: `view_products`, `view_orders`,
-  `view_customers`, `view_suppliers` or `view_purchase_orders`. Re-create
-  report-only integration tokens with the matching `view_*` abilities.
-
-Signed-in web sessions are unaffected.
 
 ## Upgrading from v1.0.x to v2.0.0
 
