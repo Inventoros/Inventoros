@@ -21,8 +21,17 @@ use Illuminate\Support\Facades\DB;
 final class McpRecipients
 {
     /**
-     * The order's customer email, its linked customer's email and the
-     * customer's portal contacts that have not been revoked.
+     * Marks an order created through MCP (in its metadata). Its free-text
+     * customer email was typed by the agent, so it is not "on file".
+     */
+    public const CREATED_VIA_KEY = 'created_via';
+
+    public const CREATED_VIA_MCP = 'mcp';
+
+    /**
+     * The order's customer email (unless the order was created through
+     * MCP), its linked customer's email and the customer's portal contacts
+     * that have not been revoked.
      *
      * @return array<int, string>
      */
@@ -31,7 +40,7 @@ final class McpRecipients
         $order->loadMissing('customer');
         $customer = $order->customer;
 
-        $addresses = [$order->customer_email, $customer?->email];
+        $addresses = [self::createdThroughMcp($order) ? null : $order->customer_email, $customer?->email];
 
         if ($customer !== null && (int) $customer->organization_id === (int) $order->organization_id) {
             $contacts = $customer->contacts()->whereNull('revoked_at')->pluck('email')->all();
@@ -39,6 +48,16 @@ final class McpRecipients
         }
 
         return self::normalize($addresses);
+    }
+
+    /**
+     * Whether the order was created by an MCP tool.
+     */
+    public static function createdThroughMcp(Order $order): bool
+    {
+        $metadata = is_array($order->metadata) ? $order->metadata : [];
+
+        return ($metadata[self::CREATED_VIA_KEY] ?? null) === self::CREATED_VIA_MCP;
     }
 
     /**

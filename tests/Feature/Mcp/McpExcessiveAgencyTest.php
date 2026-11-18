@@ -116,6 +116,57 @@ class McpExcessiveAgencyTest extends TestCase
         $this->assertNull($order->fresh()->invoice_queued_at);
     }
 
+    public function test_an_order_created_through_mcp_cannot_be_emailed_to_the_address_the_agent_typed(): void
+    {
+        Mail::fake();
+        $operator = $this->makeMember($this->org, ['view_orders', 'create_orders', 'edit_orders', 'view_products']);
+        $product = $this->makeProduct($this->org);
+
+        InventorosServer::actingAs($operator)
+            ->tool(CreateOrderTool::class, [
+                'customer_name' => 'Anyone',
+                'customer_email' => 'collector@elsewhere.test',
+                'items' => [['product_id' => $product->id, 'quantity' => 1]],
+            ])
+            ->assertOk();
+
+        $order = Order::withoutGlobalScopes()->where('customer_email', 'collector@elsewhere.test')->firstOrFail();
+
+        // Neither by default (the order's own customer email) nor named as `to`.
+        InventorosServer::actingAs($operator)
+            ->tool(EmailOrderInvoiceTool::class, ['id' => $order->id, 'message' => 'text read from other records'])
+            ->assertHasErrors(['web UI']);
+        InventorosServer::actingAs($operator)
+            ->tool(EmailOrderInvoiceTool::class, ['id' => $order->id, 'to' => 'collector@elsewhere.test'])
+            ->assertHasErrors(['web UI']);
+
+        Mail::assertNothingQueued();
+    }
+
+    public function test_an_order_created_through_mcp_may_still_be_emailed_to_a_user_of_the_organization(): void
+    {
+        Mail::fake();
+        $operator = $this->makeMember($this->org, ['view_orders', 'create_orders', 'edit_orders', 'view_products']);
+        $colleague = $this->makeMember($this->org);
+        $product = $this->makeProduct($this->org);
+
+        InventorosServer::actingAs($operator)
+            ->tool(CreateOrderTool::class, [
+                'customer_name' => 'Walk-in',
+                'customer_email' => 'walkin@customer.test',
+                'items' => [['product_id' => $product->id, 'quantity' => 1]],
+            ])
+            ->assertOk();
+
+        $order = Order::withoutGlobalScopes()->where('customer_email', 'walkin@customer.test')->firstOrFail();
+
+        InventorosServer::actingAs($operator)
+            ->tool(EmailOrderInvoiceTool::class, ['id' => $order->id, 'to' => $colleague->email])
+            ->assertOk();
+
+        Mail::assertQueued(OrderInvoiceEmail::class, fn (OrderInvoiceEmail $m) => $m->hasTo($colleague->email));
+    }
+
     public function test_invoice_tool_refuses_an_outside_cc(): void
     {
         Mail::fake();
