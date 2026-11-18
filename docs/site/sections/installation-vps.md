@@ -44,7 +44,7 @@ sudo mysql -e "GRANT ALL PRIVILEGES ON inventoros.* TO 'inventoros'@'localhost';
 sudo mysql -e "FLUSH PRIVILEGES;"
 ```
 
-6. Clone and set up Inventoros (or download it with Composer instead, see [Install with Composer instead of git](#install-with-composer-instead-of-git)):
+6. Clone and set up Inventoros (or download it with Composer instead, see [Install with Composer](installation-composer)):
 
 ```bash
 cd /var/www
@@ -195,7 +195,7 @@ sudo mysql -e "GRANT ALL PRIVILEGES ON inventoros.* TO 'inventoros'@'localhost';
 sudo mysql -e "FLUSH PRIVILEGES;"
 ```
 
-7. Clone and set up Inventoros (or download it with Composer instead, see [Install with Composer instead of git](#install-with-composer-instead-of-git)), then edit `.env` as in Ubuntu step 7 (including `APP_ENV=production` and `APP_DEBUG=false`):
+7. Clone and set up Inventoros (or download it with Composer instead, see [Install with Composer](installation-composer)), then edit `.env` as in Ubuntu step 7 (including `APP_ENV=production` and `APP_DEBUG=false`):
 
 ```bash
 cd /var/www
@@ -287,7 +287,7 @@ sudo mysql -e "GRANT ALL PRIVILEGES ON inventoros.* TO 'inventoros'@'localhost';
 sudo mysql -e "FLUSH PRIVILEGES;"
 ```
 
-7. The remaining steps are identical to Ubuntu. Clone the repo (or download it with Composer instead, see [Install with Composer instead of git](#install-with-composer-instead-of-git)), install dependencies, build assets, configure `.env`, set permissions, and configure Nginx (Ubuntu steps 6 through 10):
+7. The remaining steps are identical to Ubuntu. Clone the repo (or download it with Composer instead, see [Install with Composer](installation-composer)), install dependencies, build assets, configure `.env`, set permissions, and configure Nginx (Ubuntu steps 6 through 10):
 
 ```bash
 cd /var/www
@@ -301,20 +301,7 @@ sudo php artisan key:generate
 
 ## Install with Composer instead of git
 
-Inventoros is also on Packagist, so you can download it with Composer in place of the `git clone` step in any of the guides above:
-
-```bash
-cd /var/www
-sudo composer create-project inventoros/inventoros inventoros --no-dev
-cd inventoros
-sudo npm ci && sudo npm run build
-```
-
-Composer installs the PHP dependencies, copies `.env.example` to `.env` and generates `APP_KEY`, so carry on with editing `.env` (Ubuntu step 7). Composer picks the latest release. To install a specific one, add its version after the folder name: `composer create-project inventoros/inventoros inventoros <version> --no-dev`. Leave out `--no-dev` only if you want to run the development tools.
-
-Releases up to and including 2.5.0 were published before the Composer package, so `create-project` with one of them also creates and migrates a SQLite database in `database/database.sqlite` and keeps the test suites. The web installer still runs as normal: choose your database there, and delete the SQLite file if you don't use it.
-
-The download has no `.git` folder and leaves out the test suites, so update it from the admin panel like any other VPS install (see [Updates & Backups](updates)), not with `git pull`. Don't run `composer update` to upgrade either: it only moves the PHP libraries to newer versions than the release was tested with, and leaves Inventoros itself on the same version.
+You can download Inventoros with `composer create-project inventoros/inventoros` in place of the `git clone` step in any of the guides above, then carry on with editing `.env`. [Install with Composer](installation-composer) covers it in full, including how to update a Composer install.
 
 ## Scheduler and queue worker
 

@@ -10,9 +10,10 @@ This guide covers the installation methods and the system requirements. Pick the
 | [Install with Docker](installation-docker) | Servers that already run Docker, and IT teams | Docker and Docker Compose |
 | [Cloud & Coolify](installation-cloud) | A new cloud server, or a Coolify instance | An account with a cloud provider, or Coolify |
 | [Install on cPanel](installation-cpanel) | Shared hosting | cPanel with PHP 8.4 and a MySQL database |
-| [Install on a VPS](installation-vps) | Running PHP directly, without Docker, from git or `composer create-project` | Nginx, PHP-FPM, MySQL or PostgreSQL, Composer and Node.js |
+| [Install on a VPS](installation-vps) | Running PHP directly, without Docker | Nginx, PHP-FPM, MySQL or PostgreSQL, Composer and Node.js |
+| [Install with Composer](installation-composer) | PHP developers, or trying Inventoros on your own computer | PHP 8.4, Composer, Node.js and a MySQL or PostgreSQL database |
 
-The Docker-based methods (one-command, Docker, cloud and Coolify) run the official production image with a queue worker, a scheduler and PostgreSQL, and upgrade by switching to the new release's image. cPanel and manual VPS installs use the PHP package and update from the admin panel.
+The Docker-based methods (one-command, Docker, cloud and Coolify) run the official production image with a queue worker, a scheduler and PostgreSQL, and upgrade by switching to the new release's image. cPanel, VPS and Composer installs run PHP directly and update from the admin panel.
 
 On a Linux server, the quickest start is:
 
@@ -22,7 +23,7 @@ less install.sh
 sudo bash install.sh
 ```
 
-If you run PHP and Node.js yourself, you can download Inventoros with Composer instead and finish in the web installer. The server setup around it (web server, queue worker, scheduler) is in [Install on a VPS](installation-vps#install-with-composer-instead-of-git).
+If you run PHP and Node.js yourself, you can download Inventoros with Composer instead and finish in the web installer. The steps around it (trying it locally, the web server, queue worker and scheduler, and updating) are in [Install with Composer](installation-composer).
 
 ```bash
 composer create-project inventoros/inventoros inventoros --no-dev
