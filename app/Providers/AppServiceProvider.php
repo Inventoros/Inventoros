@@ -6,6 +6,7 @@ namespace App\Providers;
 
 use App\Listeners\DocumentEmailDelivered;
 use App\Listeners\SecurityEventSubscriber;
+use App\Listeners\BackorderReconcileSubscriber;
 use App\Listeners\WebhookEventSubscriber;
 use App\Models\Customer;
 use App\Models\Inventory\Product;
@@ -151,6 +152,9 @@ class AppServiceProvider extends ServiceProvider
 
         // Register webhook event subscriber
         WebhookEventSubscriber::subscribe();
+
+        // Fulfil backorders when stock arrives (listens on stock_adjusted).
+        BackorderReconcileSubscriber::subscribe();
 
         // The active organization: the one picked with the organization
         // switcher (session) or the one an API token is bound to; a token

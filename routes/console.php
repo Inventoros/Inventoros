@@ -46,6 +46,10 @@ Schedule::command('reports:send-scheduled')->everyFifteenMinutes()->withoutOverl
 // release them so their owners hear about it (stock_reservation_released).
 Schedule::command('reservations:release-expired')->everyFiveMinutes()->withoutOverlapping();
 
+// Safety net: fulfil any backorder whose stock is now available, in case a
+// stock-increase path did not reconcile it directly (stock_adjusted hook).
+Schedule::command('inventory:reconcile-backorders')->everyFifteenMinutes()->withoutOverlapping();
+
 // Carrier tracking poll for in-transit shipments (backstop for the EasyPost
 // webhook). Rate-limited per organization inside the command.
 Schedule::command('shipping:track')->everyThirtyMinutes()->withoutOverlapping();

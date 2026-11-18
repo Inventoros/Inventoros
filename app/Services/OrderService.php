@@ -1053,8 +1053,6 @@ final class OrderService
         // 4. Fulfil each line: create the item, then decrement the right target —
         //    consuming bins + allocating serials/batches for product lines.
         $subtotal = '0';
-        $locationStock = app(ProductLocationStockService::class);
-        $allocator = app(TrackedStockAllocationService::class);
 
         foreach ($resolved as $line) {
             $item = $line['item'];
@@ -1080,30 +1078,66 @@ final class OrderService
                 continue;
             }
 
-            if ($variant !== null) {
-                $locationStock->consume($variant, $qty, $this->fulfillingWarehouseId($order), actor: $viewer);
-                StockAdjustment::adjustVariant(
-                    $variant, -$qty, 'order_fulfillment',
-                    "Order {$order->order_number} edited", null, $order, allowNegative: false,
-                    actor: $this->restockActor($order, $actor),
-                    syncBins: false,
-                    preferWarehouseId: $this->fulfillingWarehouseId($order),
-                );
-            } else {
-                // consume() before adjust() so the lazy bin seed reads the
-                // pre-decrement total; allocate after the item exists.
-                $locationStock->consume($product, $qty, $this->fulfillingWarehouseId($order), actor: $viewer);
-                StockAdjustment::adjust(
-                    $product, -$qty, 'order_fulfillment',
-                    "Order {$order->order_number} edited", null, $order, allowNegative: false,
-                    actor: $this->restockActor($order, $actor),
-                    syncBins: false,
-                );
-                $allocator->allocateForOrderItem($product, $qty, $orderItem);
-            }
+            $this->fulfilLine($order, $product, $variant, $orderItem, $qty, "Order {$order->order_number} edited", $actor, $viewer);
         }
 
         return $subtotal;
+    }
+
+    /**
+     * Fulfil `$qty` units of one order line from stock: draw the line's bins
+     * (preferring the order's warehouse), write the `order_fulfillment` ledger
+     * row, and allocate serials/batches for a product line. Shared by the order
+     * edit (replaceItems) and backorder reconciliation so both move stock the
+     * same audited way — never a bare decrement. Must run inside the caller's
+     * transaction with the product/variant row locked; a non-positive $qty is a
+     * no-op. $viewer gates warehouse access (null = unrestricted), $actor is the
+     * ledger attribution (resolved through restockActor).
+     *
+     * @internal
+     */
+    public function fulfilLine(
+        Order $order,
+        Product $product,
+        ?ProductVariant $variant,
+        OrderItem $orderItem,
+        int $qty,
+        string $reason,
+        ?User $actor = null,
+        ?User $viewer = null,
+        ?\Illuminate\Database\Eloquent\Collection $claimed = null,
+    ): void {
+        if ($qty <= 0) {
+            return;
+        }
+
+        $warehouseId = $this->fulfillingWarehouseId($order);
+        $ledgerActor = $this->restockActor($order, $actor);
+        $locationStock = app(ProductLocationStockService::class);
+
+        if ($variant !== null) {
+            $locationStock->consume($variant, $qty, $warehouseId, actor: $viewer);
+            StockAdjustment::adjustVariant(
+                $variant, -$qty, 'order_fulfillment',
+                $reason, null, $order, allowNegative: false,
+                actor: $ledgerActor,
+                syncBins: false,
+                preferWarehouseId: $warehouseId,
+            );
+
+            return;
+        }
+
+        // consume() before adjust() so the lazy bin seed reads the
+        // pre-decrement total; allocate after the ledger row.
+        $locationStock->consume($product, $qty, $warehouseId, actor: $viewer);
+        StockAdjustment::adjust(
+            $product, -$qty, 'order_fulfillment',
+            $reason, null, $order, allowNegative: false,
+            actor: $ledgerActor,
+            syncBins: false,
+        );
+        app(TrackedStockAllocationService::class)->allocateForOrderItem($product, $qty, $orderItem, $claimed);
     }
 
     /**
