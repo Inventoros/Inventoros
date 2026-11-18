@@ -25,7 +25,7 @@ The updater downloads and unpacks each release in `storage/app/temp` and deletes
 
 On Docker, do not use the in-app updater: the files it replaces are lost when the container is recreated. Pull the new image instead, as described in [Install with Docker](installation-docker#updating).
 
-The updater rebuilds the caches itself. If you run a manual install (cPanel or VPS from source), you can also re-cache yourself:
+The updater rebuilds the caches itself. If you run a manual install (cPanel, or a VPS installed from git or with Composer), you can also re-cache yourself:
 
 ```bash
 php artisan config:cache

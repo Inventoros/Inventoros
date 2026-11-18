@@ -314,7 +314,7 @@ Composer installs the PHP dependencies, copies `.env.example` to `.env` and gene
 
 Releases up to and including 2.5.0 were published before the Composer package, so `create-project` with one of them also creates and migrates a SQLite database in `database/database.sqlite` and keeps the test suites. The web installer still runs as normal: choose your database there, and delete the SQLite file if you don't use it.
 
-The download has no `.git` folder and leaves out the test suites, so update it from the admin panel like any other VPS install (see [Updates & Backups](updates)), not with `git pull`.
+The download has no `.git` folder and leaves out the test suites, so update it from the admin panel like any other VPS install (see [Updates & Backups](updates)), not with `git pull`. Don't run `composer update` to upgrade either: it only moves the PHP libraries to newer versions than the release was tested with, and leaves Inventoros itself on the same version.
 
 ## Scheduler and queue worker
 
