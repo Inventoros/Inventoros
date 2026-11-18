@@ -57,6 +57,16 @@ class FileUpdateService
      * is unpacked into during a restore. Only these are ever swept; anything
      * else in the directory (a plugin upload in flight, say) is left alone.
      */
+    /**
+     * A restore unpacks the backup into restore_{unix time}_{random}. One
+     * started less than this long ago may still be running (the update lock
+     * it holds expires after 15 minutes, a large restore can take longer),
+     * so the sweep never removes it, whatever age limit it was given.
+     */
+    public const RESTORE_RUNNING_SECONDS = 21600;
+
+    private const RESTORE_FOLDER = '/^restore_(\d{9,11})(?:_|$)/';
+
     private const TEMP_ARTIFACT_PATTERNS = [
         '/^update_[A-Za-z0-9_]+\.zip$/',
         '/^extracted_[A-Za-z0-9_]+$/',
@@ -1059,7 +1069,7 @@ class FileUpdateService
 
             $path = "{$this->tempPath}/{$name}";
             $stat = @lstat($path);
-            if ($stat === false || ($cutoff !== null && $stat['mtime'] > $cutoff)) {
+            if ($stat === false || ($cutoff !== null && $stat['mtime'] > $cutoff) || $this->restoreMayBeRunning($name)) {
                 continue;
             }
 
@@ -1076,6 +1086,19 @@ class FileUpdateService
         }
 
         return $result;
+    }
+
+    /**
+     * Whether a restore_* folder belongs to a restore started recently
+     * enough to still be running (judged by the start time in its name).
+     */
+    private function restoreMayBeRunning(string $name): bool
+    {
+        if (preg_match(self::RESTORE_FOLDER, $name, $match) !== 1) {
+            return false;
+        }
+
+        return (int) $match[1] > time() - self::RESTORE_RUNNING_SECONDS;
     }
 
     /**

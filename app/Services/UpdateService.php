@@ -10,6 +10,7 @@ use App\Services\Update\GitHubReleaseService;
 use App\Support\ArtisanProcess;
 use App\Support\SafeZipExtractor;
 use Exception;
+use Illuminate\Contracts\Cache\Lock;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\File;
@@ -36,6 +37,12 @@ class UpdateService
     public const LOCK = 'inventoros:update';
 
     public const LOCK_SECONDS = 900;
+
+    /**
+     * The update lock while update() holds it, so the restore it runs on
+     * failure does not try to take it a second time.
+     */
+    private ?Lock $heldLock = null;
 
     /**
      * @var string The current installed version of the application
@@ -207,6 +214,8 @@ class UpdateService
                 'error' => 'update_in_progress',
             ];
         }
+
+        $this->heldLock = $lock;
 
         $maintenanceStarted = false;
         $wasInMaintenance = app()->isDownForMaintenance();
@@ -385,6 +394,7 @@ class UpdateService
                     $this->log($progressCallback, 'Could not disable maintenance mode: run php artisan up.');
                 }
             }
+            $this->heldLock = null;
             $lock->release();
         }
     }
@@ -392,10 +402,44 @@ class UpdateService
     /**
      * Restore from backup.
      *
+     * Holds the update lock (LOCK) for the whole restore, like an update, so
+     * update:clean-temp, an update or another restore cannot run meanwhile
+     * and delete the unpacked backup. The rollback inside update() already
+     * holds the lock and restores under it.
+     *
      * @param  string  $backupPath  Path to the backup file
      * @return array{success: bool, message: string, error?: string} Restore result
      */
     public function restoreFromBackup(string $backupPath): array
+    {
+        if ($this->heldLock !== null) {
+            return $this->performRestore($backupPath);
+        }
+
+        $lock = Cache::lock(self::LOCK, self::LOCK_SECONDS);
+
+        if (! $lock->get()) {
+            return [
+                'success' => false,
+                'message' => 'An update or restore is already in progress. Please wait for it to finish.',
+                'error' => 'update_in_progress',
+            ];
+        }
+
+        $this->heldLock = $lock;
+
+        try {
+            return $this->performRestore($backupPath);
+        } finally {
+            $this->heldLock = null;
+            $lock->release();
+        }
+    }
+
+    /**
+     * @return array{success: bool, message: string, error?: string}
+     */
+    protected function performRestore(string $backupPath): array
     {
         $maintenanceStarted = false;
         $wasInMaintenance = app()->isDownForMaintenance();
