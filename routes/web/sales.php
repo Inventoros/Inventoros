@@ -83,6 +83,7 @@ Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.sh
 Route::delete('/orders/{order}', [OrderController::class, 'destroy'])->name('orders.destroy')->middleware('permission:delete_orders');
 Route::post('/orders/{order}/approve', [OrderController::class, 'approve'])->name('orders.approve')->middleware('permission:approve_orders');
 Route::post('/orders/{order}/reject', [OrderController::class, 'reject'])->name('orders.reject')->middleware('permission:approve_orders');
+Route::post('/orders/{order}/fulfill-backorder', [OrderController::class, 'fulfillBackorder'])->name('orders.fulfill-backorder')->middleware('permission:manage_stock');
 
 // Order Payments
 Route::post('/orders/payments/mark-pre-tracking-paid', [OrderPaymentController::class, 'markPreTrackingPaid'])->name('orders.payments.mark-pre-tracking-paid')->middleware('permission:record_payments');
