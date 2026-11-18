@@ -115,10 +115,10 @@ final class ExchangeRateService
      */
     public function fetchAndStore(ExchangeRateProvider $provider, string $base, array $symbols, ?CarbonImmutable $date, array $config, ?int $organizationId, CarbonImmutable $requested): FetchedRates
     {
-        $shareable = $provider->capabilities()->shareable;
+        $shareable = ExchangeRateProviderRegistry::isShareable($provider);
         $scope = $shareable ? null : $organizationId;
 
-        $fetched = $provider->fetch($base, array_values($symbols), $date, $config);
+        $fetched = $this->callProvider($provider, fn () => $provider->fetch($base, array_values($symbols), $date, $config));
 
         if ($fetched->base !== $base) {
             throw ExchangeRateException::invalidResponse("{$provider->name()} answered for {$fetched->base} instead of {$base}.");
@@ -165,7 +165,7 @@ final class ExchangeRateService
     public function latestStored(int $organizationId, string $providerId, array $currencies): array
     {
         $provider = $this->providers->get($providerId);
-        $shareable = $provider?->capabilities()->shareable ?? false;
+        $shareable = $provider !== null && ExchangeRateProviderRegistry::isShareable($provider);
         $to = Organization::currencyFor($organizationId);
         $today = OrganizationCalendar::today(Organization::find($organizationId));
 
@@ -190,8 +190,8 @@ final class ExchangeRateService
             return null;
         }
 
+        $key = $this->currenciesKey($provider, $settings);
         $config = $settings->configFor($providerId);
-        $key = 'exchange-rates:currencies:'.$providerId.':'.($provider->capabilities()->shareable ? 'shared' : $settings->organization_id).':'.sha1((string) json_encode($config));
 
         $cached = Cache::get($key);
         if (is_array($cached)) {
@@ -204,7 +204,7 @@ final class ExchangeRateService
                 fn (string $code) => FetchedRates::isCurrencyCode($code),
             ));
         } catch (Throwable $e) {
-            Log::info('Exchange rate provider could not list its currencies', ['provider' => $providerId, 'error' => $e->getMessage()]);
+            Log::info('Exchange rate provider could not list its currencies', ['provider' => $providerId, 'exception' => $e::class, 'error' => ProviderErrorMessage::redact($e->getMessage())]);
 
             return null;
         }
@@ -248,7 +248,60 @@ final class ExchangeRateService
     public function coolDown(string $providerId, ?int $scope, ExchangeRateException $e): void
     {
         $seconds = max((int) config('exchange_rates.failure_cooldown_seconds', 300), (int) ($e->retryAfterSeconds ?? 0));
-        Cache::put($this->cooldownKey($providerId, $scope), $e->getMessage(), now()->addSeconds(min($seconds, 86400)));
+        Cache::put($this->cooldownKey($providerId, $scope), ProviderErrorMessage::redact($e->getMessage()), now()->addSeconds(min($seconds, 86400)));
+    }
+
+    /**
+     * Whether core asks providers about this code at all: only the
+     * currencies the application supports (config/currencies.php).
+     */
+    public static function isSupportedCurrency(string $code): bool
+    {
+        $code = strtoupper(trim($code));
+
+        return FetchedRates::isCurrencyCode($code)
+            && array_key_exists($code, (array) config('currencies.supported', []));
+    }
+
+    /**
+     * The earliest date a rate is ever asked for. Older purchase orders are
+     * saved without a provider rate.
+     */
+    public static function earliestDate(): CarbonImmutable
+    {
+        try {
+            return CarbonImmutable::parse((string) config('exchange_rates.earliest_date', '1999-01-04'))->startOfDay();
+        } catch (Throwable) {
+            return CarbonImmutable::parse('1999-01-04');
+        }
+    }
+
+    /**
+     * Run a provider call. Plugins supply providers, so anything a provider
+     * throws other than ExchangeRateException is logged and reported as the
+     * provider being unavailable: it fails this provider and organization
+     * only, never the sync batch or the page that asked.
+     *
+     * @template T
+     *
+     * @param  callable(): T  $call
+     * @return T
+     *
+     * @throws ExchangeRateException
+     */
+    public function callProvider(ExchangeRateProvider $provider, callable $call): mixed
+    {
+        try {
+            return $call();
+        } catch (ExchangeRateException $e) {
+            throw $e;
+        } catch (Throwable $e) {
+            $message = ProviderErrorMessage::redact($e->getMessage());
+
+            Log::warning('Exchange rate provider failed unexpectedly', ['provider' => $provider->id(), 'exception' => $e::class, 'error' => $message]);
+
+            throw ExchangeRateException::unavailable($provider->name().' failed unexpectedly'.($message !== '' ? ': '.$message : '.'), $e);
+        }
     }
 
     /**
@@ -267,11 +320,12 @@ final class ExchangeRateService
         }
 
         $capabilities = $provider->capabilities();
-        $scope = $capabilities->shareable ? null : $organizationId;
+        $shareable = ExchangeRateProviderRegistry::isShareable($provider);
+        $scope = $shareable ? null : $organizationId;
         $staleAfter = max(1, (int) $settings->stale_after_days);
         $today = OrganizationCalendar::today(Organization::find($organizationId))->startOfDay();
 
-        $row = $this->newestStored($organizationId, $providerId, $capabilities->shareable, $from, $to, $requested);
+        $row = $this->newestStored($organizationId, $providerId, $shareable, $from, $to, $requested);
         $known = $row !== null && (
             $row->effective_date->toDateString() === $requested->toDateString()
             || Cache::get($this->memoKey($providerId, $scope, $from, $to, $requested)) === $row->effective_date->toDateString()
@@ -282,21 +336,35 @@ final class ExchangeRateService
             && ($capabilities->historical || $requested->equalTo($today));
 
         if (! $known && $canFetch) {
-            if ($this->coolingDown($providerId, $scope)) {
+            $refusal = $this->refusal($provider, $settings, $scope, $from, $to, $requested);
+
+            if ($refusal !== null) {
+                // Never sent to the provider: an unknown or unsupported code,
+                // a date before the floor, or a request it already refused.
+                $result['error'] = RateQuote::ERROR_UNSUPPORTED;
+                $result['detail'] = $refusal;
+            } elseif ($this->coolingDown($providerId, $scope)) {
                 $result['error'] = RateQuote::ERROR_FETCH_FAILED;
                 $result['detail'] = (string) Cache::get($this->cooldownKey($providerId, $scope));
             } else {
                 try {
                     $this->fetchLocked($provider, $settings->configFor($providerId), $organizationId, $scope, $from, $to, $requested, $today);
-                    $row = $this->newestStored($organizationId, $providerId, $capabilities->shareable, $from, $to, $requested);
-                } catch (ExchangeRateException $e) {
+                    $row = $this->newestStored($organizationId, $providerId, $shareable, $from, $to, $requested);
+                } catch (Throwable $e) {
+                    $e = $e instanceof ExchangeRateException ? $e : ExchangeRateException::unavailable($provider->name().' failed unexpectedly.', $e);
+                    $message = ProviderErrorMessage::redact($e->getMessage());
+
                     if ($e->isTransient()) {
                         $this->coolDown($providerId, $scope, $e);
+                    } elseif ($e->reason === ExchangeRateException::UNSUPPORTED) {
+                        // Asking again for the same request gets the same
+                        // answer: remember it instead of asking on every page load.
+                        Cache::put($this->refusedKey($providerId, $scope, $from, $to, $requested), $message, now()->addDay());
                     }
 
-                    Log::info('Exchange rate lookup failed', ['provider' => $providerId, 'from' => $from, 'to' => $to, 'reason' => $e->reason, 'error' => $e->getMessage()]);
+                    Log::info('Exchange rate lookup failed', ['provider' => $providerId, 'from' => $from, 'to' => $to, 'reason' => $e->reason, 'error' => $message]);
                     $result['error'] = $e->reason === ExchangeRateException::UNSUPPORTED ? RateQuote::ERROR_UNSUPPORTED : RateQuote::ERROR_FETCH_FAILED;
-                    $result['detail'] = $e->getMessage();
+                    $result['detail'] = $message;
                 }
             }
         }
@@ -311,6 +379,49 @@ final class ExchangeRateService
         $result[$age <= $staleAfter ? 'fresh' : 'stale'] = $row;
 
         return $result;
+    }
+
+    /**
+     * Why a request must not be sent to the provider, or null when it may.
+     */
+    private function refusal(ExchangeRateProvider $provider, ExchangeRateSetting $settings, ?int $scope, string $from, string $to, CarbonImmutable $requested): ?string
+    {
+        foreach ([$from, $to] as $code) {
+            if (! self::isSupportedCurrency($code)) {
+                return "{$code} is not a supported currency.";
+            }
+        }
+
+        if ($requested->lessThan(self::earliestDate())) {
+            return 'Exchange rates are not looked up for dates before '.self::earliestDate()->toDateString().'.';
+        }
+
+        // The provider's own list, when it is already known (it is loaded
+        // for the settings page and kept for a day).
+        $listed = Cache::get($this->currenciesKey($provider, $settings));
+        if (is_array($listed) && $listed !== []) {
+            foreach ([$from, $to] as $code) {
+                if (! in_array($code, $listed, true)) {
+                    return "{$provider->name()} does not quote {$code}.";
+                }
+            }
+        }
+
+        $refused = Cache::get($this->refusedKey($provider->id(), $scope, $from, $to, $requested));
+
+        return is_string($refused) ? $refused : null;
+    }
+
+    private function currenciesKey(ExchangeRateProvider $provider, ExchangeRateSetting $settings): string
+    {
+        $config = $settings->configFor($provider->id());
+
+        return 'exchange-rates:currencies:'.$provider->id().':'.(ExchangeRateProviderRegistry::isShareable($provider) ? 'shared' : $settings->organization_id).':'.sha1((string) json_encode($config));
+    }
+
+    private function refusedKey(string $providerId, ?int $scope, string $from, string $to, CarbonImmutable $requested): string
+    {
+        return 'exchange-rates:refused:'.$providerId.':'.($scope ?? 'shared').':'.$from.':'.$to.':'.$requested->toDateString();
     }
 
     /**
