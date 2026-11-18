@@ -41,10 +41,6 @@ Before upgrading, read the Upgrade section of the [2.6.0 release notes](docs/rel
 - The frontend is built with Vite 8 and `laravel-vite-plugin` 3 (#434). The default browser targets rise to Chrome and Edge 111, Firefox 114 and Safari 16.4. Building from source still needs Node.js 20.19+ or 22.12+.
 - Dependency refresh within the existing constraints, including Laravel 13.43, Sanctum 4.5 and Inertia 3.7 (#432). Development only: PHPUnit 13 (#439) and concurrently 10 (#433).
 
-### Fixed
-
-- The in-app updater checks that it can write the application files and the web root before it enables maintenance mode, and stops with a message when it cannot. Inside the Docker image, where the code is owned by root, an update used to fail halfway, fail to roll back for the same reason and leave the site in maintenance mode.
-
 ### Security
 
 - Two-factor sessions are bound to the user who passed the challenge, and every staff sign-in clears the marker, so a session that passed two-factor for one account no longer lets another account skip it (#354). The session id is renewed after the challenge, a recovery code, and enabling two-factor (#412). Sessions verified before the upgrade are asked for a code once more.
@@ -85,6 +81,7 @@ Before upgrading, read the Upgrade section of the [2.6.0 release notes](docs/rel
 - A numeric search term sent as a JSON number to the REST API or an MCP list tool no longer fails with a server error (#448).
 - The order edit form no longer counts imported line taxes twice when the order is saved (#425).
 - Saved report exports no longer fail when the report name contains a slash (#394).
+- The in-app updater checks that it can write the application files and the web root before it enables maintenance mode, and stops with a message when it cannot. Inside the Docker image, where the code is owned by root, an update used to fail halfway, fail to roll back for the same reason and leave the site in maintenance mode (#451).
 
 ## [2.5.0] - 2026-11-13
 
