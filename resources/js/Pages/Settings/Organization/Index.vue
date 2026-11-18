@@ -18,6 +18,7 @@ const props = defineProps({
     organization: Object,
     user: Object,
     approvalSettings: { type: Object, default: () => ({}) },
+    backorderSettings: { type: Object, default: () => ({}) },
     canManageOrganization: { type: Boolean, default: false },
     can: { type: Object, default: () => ({ manageOrganization: false, viewUsers: false }) },
     portal: { type: Object, default: () => ({ enabled: false, login_url: null }) },
@@ -110,6 +111,17 @@ const submitApprovals = () => {
         .patch(route('settings.organization.update.approvals'), { preserveScroll: true });
 };
 
+// Backorders. Master switch off by default; default_allow seeds a new
+// product's "allow backorder" toggle.
+const backordersForm = useForm({
+    enabled: !!props.backorderSettings.enabled,
+    default_allow: !!props.backorderSettings.default_allow,
+});
+
+const submitBackorders = () => {
+    backordersForm.patch(route('settings.organization.update.backorders'), { preserveScroll: true });
+};
+
 const toggleRow = 'flex items-start gap-3 min-h-11 py-2';
 const toggleBox = 'mt-0.5 h-5 w-5 shrink-0 rounded border-border-strong text-brand ds-focus-ring disabled:opacity-60';
 
@@ -122,6 +134,7 @@ const tabs = computed(() => [
     { key: 'general', label: t('settings.organization.generalInfo') },
     { key: 'regional', label: t('settings.organization.regionalSettings') },
     { key: 'approvals', label: t('approvals.settings.tab') },
+    { key: 'backorders', label: t('backorders.settings.tab') },
     ...(canViewUsers.value ? [{ key: 'users', label: t('settings.organization.userManagement') }] : []),
     { key: 'portal', label: t('portal.settings.tab') },
 ]);
@@ -415,6 +428,43 @@ const tabs = computed(() => [
 
                         <div v-if="canManage" class="flex justify-end">
                             <Button type="submit" variant="default" :loading="approvalsForm.processing" :disabled="approvalsForm.processing">
+                                {{ t('common.saveChanges') }}
+                            </Button>
+                        </div>
+                    </div>
+                </form>
+            </Card>
+        </SectionPanel>
+
+        <!-- Backorders Tab -->
+        <SectionPanel tab="backorders" class="mt-6">
+            <Card :padded="false">
+                <form @submit.prevent="submitBackorders">
+                    <div class="px-5 pt-5">
+                        <h3 class="text-sm font-semibold text-text-primary">{{ t('backorders.settings.title') }}</h3>
+                        <p class="mt-1 text-sm text-text-secondary">{{ t('backorders.settings.description') }}</p>
+                    </div>
+                    <div class="space-y-6 p-5">
+                        <!-- Master switch -->
+                        <label :class="toggleRow">
+                            <input v-model="backordersForm.enabled" type="checkbox" :class="toggleBox" :disabled="!canManage" />
+                            <span>
+                                <span class="block text-sm font-medium text-text-primary">{{ t('backorders.settings.enabled') }}</span>
+                                <span class="block text-xs text-text-tertiary">{{ t('backorders.settings.enabledHelp') }}</span>
+                            </span>
+                        </label>
+
+                        <!-- Default for new products -->
+                        <label :class="toggleRow">
+                            <input v-model="backordersForm.default_allow" type="checkbox" :class="toggleBox" :disabled="!canManage || !backordersForm.enabled" />
+                            <span>
+                                <span class="block text-sm font-medium text-text-primary">{{ t('backorders.settings.defaultAllow') }}</span>
+                                <span class="block text-xs text-text-tertiary">{{ t('backorders.settings.defaultAllowHelp') }}</span>
+                            </span>
+                        </label>
+
+                        <div v-if="canManage" class="flex justify-end">
+                            <Button type="submit" variant="default" :loading="backordersForm.processing" :disabled="backordersForm.processing">
                                 {{ t('common.saveChanges') }}
                             </Button>
                         </div>

@@ -50,6 +50,13 @@ const money = (value) => formatMoney(value, props.order.currency);
 // Lines taxed by rate: the summary lists the tax per rate.
 const hasLineTaxRates = computed(() => (props.order.items ?? []).some((item) => item.tax_rate != null));
 
+// Backorders: the order is held from shipping until stock arrives; staff who
+// manage stock can fulfil it once it has.
+const isBackordered = computed(() => !!props.order.backordered_at);
+const canFulfillBackorder = computed(() => hasPermission('manage_stock'));
+const fulfillBackorderForm = useForm({});
+const fulfillBackorder = () => fulfillBackorderForm.post(route('orders.fulfill-backorder', props.order.id), { preserveScroll: true });
+
 const paymentStatusVariant = (s) =>
     ({ unpaid: 'warning', partial: 'info', paid: 'success', overpaid: 'brand', refunded: 'neutral' }[s] || 'neutral');
 
@@ -271,6 +278,21 @@ const formatOrderDate = (date, long = false) =>
             <p class="text-sm text-status-warning">{{ t('orders.approval.blocksShipping') }}</p>
         </div>
 
+        <div v-if="isBackordered" class="mt-4 flex flex-wrap items-start gap-2 rounded-lg border border-status-warning/20 bg-status-warning-soft p-3">
+            <AlertTriangle :size="16" class="mt-0.5 shrink-0 text-status-warning" />
+            <p class="flex-1 text-sm text-status-warning">{{ t('backorders.show.heldBanner') }}</p>
+            <Button
+                v-if="canFulfillBackorder"
+                size="sm"
+                variant="outline"
+                :loading="fulfillBackorderForm.processing"
+                :disabled="fulfillBackorderForm.processing"
+                @click="fulfillBackorder"
+            >
+                {{ t('backorders.show.fulfillAction') }}
+            </Button>
+        </div>
+
         <!-- Plugin tabs: none registered renders the core content unchanged -->
         <PluginTabs :components="pluginComponents?.tabs">
             <div class="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
@@ -305,6 +327,9 @@ const formatOrderDate = (date, long = false) =>
                                     <div class="ms-auto text-end">
                                         <p class="text-xs text-text-tertiary">{{ t('common.quantity') }}</p>
                                         <p class="font-medium tabular-nums text-text-primary">{{ item.quantity }}</p>
+                                        <p v-if="item.quantity_backordered > 0" class="text-xs text-status-warning">
+                                            {{ t('backorders.show.lineSplit', { fulfilled: item.quantity_fulfilled, backordered: item.quantity_backordered }) }}
+                                        </p>
                                     </div>
 
                                     <div class="text-end">
