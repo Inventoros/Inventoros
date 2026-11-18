@@ -1234,6 +1234,16 @@ final class OrderService
                 return $locked;
             }
 
+            // Ship-together backstop: an order with outstanding backorders is
+            // held from shipping until every line's stock arrives. The primary
+            // guard is at ShipmentService::create(); this covers a direct move.
+            if (in_array($to, [OrderStatus::SHIPPED, OrderStatus::DELIVERED], true) && $locked->backordered_at !== null) {
+                throw new InvalidStateException(
+                    'This order has items on backorder and cannot ship until all stock arrives.',
+                    'invalid_state_transition'
+                );
+            }
+
             $error = $locked->transitionErrorTo($to);
             if ($error !== null) {
                 throw new InvalidStateException($error, 'invalid_state_transition');
