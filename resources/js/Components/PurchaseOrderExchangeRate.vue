@@ -11,7 +11,7 @@ import Button from '@/Components/ui/Button.vue';
 import axios from 'axios';
 import { computed, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { displayCalendarDate, toIsoDate } from '@/lib/dates';
+import { displayCalendarDate, isBeforeToday, toIsoDate } from '@/lib/dates';
 import { formatMoney } from '@/lib/money';
 
 const { t } = useI18n();
@@ -52,8 +52,11 @@ const load = async () => {
     loading.value = true;
     failed.value = false;
     try {
+        // The server takes dates up to today only and treats a missing date
+        // as today, so today and later are sent without one.
+        const date = props.orderDate && isBeforeToday(props.orderDate) ? props.orderDate : undefined;
         const { data } = await axios.get(route('purchase-orders.exchange-rate'), {
-            params: { currency: props.currency.toUpperCase(), date: props.orderDate || undefined },
+            params: { currency: props.currency.toUpperCase(), date },
         });
         if (id === requestId) quote.value = data.data;
     } catch {

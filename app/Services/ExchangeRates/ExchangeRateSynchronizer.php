@@ -11,6 +11,7 @@ use App\Support\OrganizationCalendar;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
+use Throwable;
 
 /**
  * Keeps each organization's rates current.
@@ -70,7 +71,7 @@ final class ExchangeRateSynchronizer
             ->all();
 
         $codes = array_unique([...$settings->configuredCurrencies(), ...$supplierCurrencies]);
-        $codes = array_values(array_filter($codes, fn (string $code) => $code !== $base && FetchedRates::isCurrencyCode($code)));
+        $codes = array_values(array_filter($codes, fn (string $code) => $code !== $base && ExchangeRateService::isSupportedCurrency($code)));
         sort($codes);
 
         return $codes;
@@ -105,13 +106,23 @@ final class ExchangeRateSynchronizer
                 continue;
             }
 
-            if (! $provider->capabilities()->automatic) {
+            try {
+                $automatic = $provider->capabilities()->automatic;
+                $shareable = ExchangeRateProviderRegistry::isShareable($provider);
+            } catch (Throwable $e) {
+                Log::warning('Exchange rate provider failed unexpectedly', ['provider' => $provider->id(), 'exception' => $e::class, 'error' => ProviderErrorMessage::redact($e->getMessage())]);
+                $orgs[$organizationId]['errors'][] = "{$provider->name()} failed unexpectedly.";
+                $orgs[$organizationId]['transient'] = true;
+
+                continue;
+            }
+
+            if (! $automatic) {
                 // Manual rates: nothing to fetch.
                 continue;
             }
 
             $config = $setting->configFor($provider->id());
-            $shareable = $provider->capabilities()->shareable;
             $scope = $shareable ? null : $organizationId;
 
             foreach ($needed as $from) {
@@ -142,7 +153,11 @@ final class ExchangeRateSynchronizer
                 try {
                     $requested = OrganizationCalendar::today(Organization::find(array_key_first($group['organizations'])))->startOfDay();
                     $fetched = $this->rates->fetchAndStore($provider, $group['base'], $symbols, null, $group['config'], $group['scope'], $requested);
-                } catch (ExchangeRateException $e) {
+                } catch (Throwable $e) {
+                    // fetchAndStore() already turns a provider's unexpected
+                    // exception into "unavailable"; anything else that goes
+                    // wrong for this group fails it the same way, never the run.
+                    $e = $e instanceof ExchangeRateException ? $e : ExchangeRateException::unavailable($provider->name().' failed unexpectedly.', $e);
                     $failure = $e;
 
                     if ($e->isTransient()) {
@@ -151,7 +166,7 @@ final class ExchangeRateSynchronizer
                         $this->rates->coolDown($provider->id(), $group['scope'], $e);
                     }
 
-                    Log::warning('Exchange rate sync request failed', ['provider' => $provider->id(), 'base' => $group['base'], 'reason' => $e->reason, 'error' => $e->getMessage()]);
+                    Log::warning('Exchange rate sync request failed', ['provider' => $provider->id(), 'base' => $group['base'], 'reason' => $e->reason, 'error' => ProviderErrorMessage::redact($e->getMessage())]);
                 }
             }
 
@@ -171,7 +186,7 @@ final class ExchangeRateSynchronizer
                 if ($failure->reason === ExchangeRateException::UNSUPPORTED) {
                     $orgs[$organizationId]['unsupported'][] = "{$group['base']}/{$to}";
                 } else {
-                    $orgs[$organizationId]['errors'][] = "{$group['base']}/{$to}: {$failure->getMessage()}";
+                    $orgs[$organizationId]['errors'][] = "{$group['base']}/{$to}: ".ProviderErrorMessage::redact($failure->getMessage());
                     $orgs[$organizationId]['transient'] = $orgs[$organizationId]['transient'] || $failure->isTransient();
                     $orgs[$organizationId]['retryAfter'] = max($orgs[$organizationId]['retryAfter'] ?? 0, $failure->retryAfterSeconds ?? 0) ?: null;
                 }
@@ -207,7 +222,8 @@ final class ExchangeRateSynchronizer
 
         $settings->last_sync_attempt_at = $now;
         $settings->last_sync_status = $status;
-        $settings->last_sync_error = $messages === [] ? null : mb_substr(implode(' ', $messages), 0, 2000);
+        // Provider messages can quote URLs and keys: redacted before storing.
+        $settings->last_sync_error = $messages === [] ? null : mb_substr(ProviderErrorMessage::redact(implode(' ', $messages)), 0, 2000);
 
         if ($status !== ExchangeRateSetting::STATUS_FAILED) {
             $settings->last_synced_at = $now;

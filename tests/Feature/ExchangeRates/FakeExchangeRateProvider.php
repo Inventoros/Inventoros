@@ -10,6 +10,7 @@ use App\Services\ExchangeRates\FetchedRates;
 use App\Services\ExchangeRates\ProviderCapabilities;
 use App\Services\ExchangeRates\ProviderConfigField;
 use Carbon\CarbonImmutable;
+use Throwable;
 
 /**
  * A plugin-style provider for tests: licensed per customer (not shareable),
@@ -23,7 +24,7 @@ final class FakeExchangeRateProvider implements ExchangeRateProvider
     /** @var array<string, string> "EUR/HUF" => rate */
     public array $rates = ['EUR/HUF' => '366.10', 'USD/HUF' => '331.20', 'EUR/USD' => '1.1'];
 
-    public ?ExchangeRateException $failWith = null;
+    public ?Throwable $failWith = null;
 
     public string $effectiveDate = '2026-11-16';
 

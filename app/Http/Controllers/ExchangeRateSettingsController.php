@@ -9,9 +9,11 @@ use App\Models\ExchangeRates\ExchangeRateSetting;
 use App\Models\ExchangeRates\OrganizationExchangeRate;
 use App\Models\Inventory\Supplier;
 use App\Services\ExchangeRates\ExchangeRateProvider;
+use App\Services\ExchangeRates\ExchangeRateProviderRegistry;
 use App\Services\ExchangeRates\ExchangeRateService;
 use App\Services\ExchangeRates\ExchangeRateSynchronizer;
 use App\Services\ExchangeRates\ProviderConfigField;
+use App\Services\ExchangeRates\ProviderErrorMessage;
 use App\Services\ExchangeRates\Providers\ManualProvider;
 use App\Support\ExchangeMath;
 use App\Support\OrganizationCalendar;
@@ -53,7 +55,8 @@ class ExchangeRateSettingsController extends Controller
                 'name' => $provider->name(),
                 'description' => $provider->description(),
                 'plugin' => $registry->pluginFor($provider->id()),
-                'capabilities' => $provider->capabilities()->toArray(),
+                // Shareable as core applies it: never for a provider with settings.
+                'capabilities' => ExchangeRateProviderRegistry::effectiveCapabilities($provider)->toArray(),
                 'fields' => collect($provider->configFields())
                     ->map(fn (ProviderConfigField $field) => $field->toArray() + [
                         // Secrets: only whether one is stored, never the value.
@@ -91,7 +94,9 @@ class ExchangeRateSettingsController extends Controller
                 'last_synced_at' => $settings->last_synced_at?->toIso8601String(),
                 'last_sync_attempt_at' => $settings->last_sync_attempt_at?->toIso8601String(),
                 'last_sync_status' => $settings->last_sync_status,
-                'last_sync_error' => $settings->last_sync_error,
+                // Redacted again on display: rows stored by earlier versions
+                // may hold a provider URL or key.
+                'last_sync_error' => $settings->last_sync_error === null ? null : ProviderErrorMessage::redact($settings->last_sync_error),
                 'sync_failures' => (int) $settings->sync_failures,
                 'next_sync_at' => $settings->next_sync_at?->toIso8601String(),
             ],

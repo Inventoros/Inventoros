@@ -13,6 +13,7 @@ use App\Http\Requests\PurchaseOrder\ProcessReceivingRequest;
 use App\Http\Requests\PurchaseOrder\StorePurchaseOrderRequest;
 use App\Http\Requests\PurchaseOrder\UpdatePurchaseOrderRequest;
 use App\Http\Requests\SendDocumentEmailRequest;
+use App\Models\Auth\Organization;
 use App\Models\ExchangeRates\ExchangeRateSetting;
 use App\Models\Inventory\Product;
 use App\Models\Inventory\ProductLocation;
@@ -26,9 +27,11 @@ use App\Services\ExchangeRates\PurchaseOrderExchangeRates;
 use App\Services\PurchaseOrderEmailService;
 use App\Services\PurchaseOrderService;
 use App\Services\WarehouseAccessService;
+use App\Support\OrganizationCalendar;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -444,17 +447,35 @@ class PurchaseOrderController extends Controller
      * The exchange rate a purchase order in $currency would take on $date,
      * for the create and edit forms (JSON). Reads stored rates and asks the
      * provider only when nothing recent is stored.
+     *
+     * Only supported currencies and dates from the earliest rate date up to
+     * today (in the organization's time zone) are accepted, and the route is
+     * throttled per user, so the form cannot be used to make the provider
+     * answer arbitrary requests. The provider's own error message is left
+     * out: the form shows a generic one, and administrators see the detail
+     * on Settings > Exchange rates.
      */
     public function exchangeRateQuote(Request $request, ExchangeRateService $rates): JsonResponse
     {
+        $organizationId = (int) $request->user()->organization_id;
+
+        if (is_string($request->query('currency'))) {
+            $request->merge(['currency' => strtoupper(trim($request->query('currency')))]);
+        }
+
         $validated = $request->validate([
-            'currency' => ['required', 'string', 'size:3', 'alpha'],
-            'date' => ['nullable', 'date_format:Y-m-d'],
+            'currency' => ['required', 'string', 'size:3', Rule::in(array_keys((array) config('currencies.supported', [])))],
+            'date' => [
+                'nullable',
+                'date_format:Y-m-d',
+                'after_or_equal:'.ExchangeRateService::earliestDate()->toDateString(),
+                'before_or_equal:'.OrganizationCalendar::today(Organization::find($organizationId))->toDateString(),
+            ],
         ]);
 
-        $quote = $rates->quote((int) $request->user()->organization_id, $validated['currency'], $validated['date'] ?? null);
+        $quote = $rates->quote($organizationId, $validated['currency'], $validated['date'] ?? null);
 
-        return response()->json(['data' => $quote->toArray()]);
+        return response()->json(['data' => array_merge($quote->toArray(), ['error_detail' => null])]);
     }
 
     /**

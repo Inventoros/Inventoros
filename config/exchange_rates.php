@@ -37,6 +37,18 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Earliest date
+    |--------------------------------------------------------------------------
+    |
+    | Rates are never requested for a date before this one (the first ECB
+    | reference rates). A purchase order dated earlier is saved without a
+    | provider rate; an administrator can still enter one.
+    |
+    */
+    'earliest_date' => env('EXCHANGE_RATES_EARLIEST_DATE', '1999-01-04'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Synchronization
     |--------------------------------------------------------------------------
     |

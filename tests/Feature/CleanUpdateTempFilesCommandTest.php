@@ -98,6 +98,24 @@ final class CleanUpdateTempFilesCommandTest extends TestCase
         $this->assertContains('update_1700000000_abcd1234.zip', $this->left());
     }
 
+    public function test_it_never_removes_the_folder_of_a_restore_that_may_still_be_running(): void
+    {
+        // A restore unpacks the backup into restore_{time}_{random}. Even
+        // when the update lock has expired under a long restore, a sweep
+        // without an age limit must leave a recent one alone.
+        $running = 'restore_'.time().'_0a1b2c3d';
+        File::ensureDirectoryExists($this->temp.'/'.$running.'/app');
+        $finished = 'restore_'.(time() - FileUpdateService::RESTORE_RUNNING_SECONDS - 60).'_0a1b2c3d';
+        File::ensureDirectoryExists($this->temp.'/'.$finished);
+
+        $this->artisan('update:clean-temp')->assertSuccessful();
+
+        $this->assertContains($running, $this->left());
+        $this->assertTrue(File::isDirectory($this->temp.'/'.$running.'/app'));
+        $this->assertNotContains($finished, $this->left());
+        $this->assertNotContains('restore_1700000000', $this->left());
+    }
+
     public function test_it_refuses_while_an_update_is_running(): void
     {
         $lock = Cache::lock(UpdateService::LOCK, 60);

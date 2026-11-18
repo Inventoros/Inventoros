@@ -97,6 +97,36 @@ final class ExchangeRateProviderRegistry
     }
 
     /**
+     * Whether core stores a provider's rates once for every organization.
+     *
+     * Only a provider that declares itself shareable AND has no settings
+     * qualifies. Settings are per organization (a base URL, an API key, an
+     * account), so the rates an organization fetches with its own settings
+     * are its own: storing them in the shared table would let one
+     * organization supply rates to all the others. Such a provider is
+     * treated as not shareable whatever it declares.
+     */
+    public static function isShareable(ExchangeRateProvider $provider): bool
+    {
+        return $provider->capabilities()->shareable && $provider->configFields() === [];
+    }
+
+    /**
+     * The capabilities core applies to a provider: what it declares, with
+     * shareable corrected by isShareable().
+     */
+    public static function effectiveCapabilities(ExchangeRateProvider $provider): ProviderCapabilities
+    {
+        $declared = $provider->capabilities();
+
+        return new ProviderCapabilities(
+            automatic: $declared->automatic,
+            historical: $declared->historical,
+            shareable: self::isShareable($provider),
+        );
+    }
+
+    /**
      * The plugin that registered a provider, or null for a core one.
      */
     public function pluginFor(string $id): ?string

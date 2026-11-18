@@ -794,6 +794,8 @@ Capabilities decide how core treats your provider:
 - `historical`: `fetch()` accepts a past `$date` (a purchase order dated in the past asks for that date). Without it, only today's rates are requested.
 - `shareable`: the data is public and the same for every customer. Core then stores one copy for the whole installation and makes one request for every organization that needs the same pair. **If your data is licensed per customer (each organization uses its own API key), declare `shareable: false`**: rates are then fetched with each organization's own settings, stored per organization and never shown to another one.
 
+**A provider with settings is never shared.** If `configFields()` returns any field (an API key, an account, a base URL), each organization fetches with its own values, and a rate one organization fetched could otherwise be served to all the others. Core therefore treats such a provider as not shareable, stores its rates per organization and shows it as not shared on the settings page, whatever `capabilities()` declares. Only a provider without settings can be shareable.
+
 `$config` is the organization's settings for your provider, keyed by your field keys. Secret fields are encrypted at rest with the app key, never sent to the browser, and kept when an administrator leaves the field blank.
 
 Report failures with `ExchangeRateException`, never by returning made-up rates:
@@ -805,6 +807,12 @@ Report failures with `ExchangeRateException`, never by returning made-up rates:
 | `ExchangeRateException::unsupported($message)` | The pair, base or date cannot be quoted | Reports the currency as unsupported, no early retry |
 | `ExchangeRateException::invalidResponse($message)` | The response is malformed | Records the error, no early retry |
 | `ExchangeRateException::misconfigured($message)` | A missing or rejected API key | Records the error for the administrator |
+
+Anything else your provider throws (a `TypeError`, an HTTP client exception, a bug) is caught by core, logged, and handled like `unavailable` for your provider and that organization only: other organizations and providers in the same sync run are not affected, and the purchase order form shows no rate instead of an error. Throw `ExchangeRateException` yourself so the administrator gets a useful reason.
+
+Core only asks for currencies listed in `config/currencies.php` (and in your `supportedCurrencies()` once known) and for dates from `exchange_rates.earliest_date` (1999-01-04 by default) onwards. A request you answered with `unsupported` is not repeated for a day.
+
+Your error messages are shown to administrators on Settings > Exchange rates and stored as the last sync error, never to people who only create purchase orders. Core removes URL user info and query strings, and values that look like keys or tokens, before storing or showing them, but do not put credentials in messages in the first place.
 
 Leave a symbol you cannot quote out of the result rather than throwing for the whole request. `FetchedRates` validates what you return (three-letter codes, positive decimal rates with at most ten integer digits, a real date not in the future) and turns anything else into an `invalidResponse`. Pass rates as decimal strings when your source has them as text; floats are accepted and normalized to ten decimals.
 

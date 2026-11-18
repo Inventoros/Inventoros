@@ -15,7 +15,8 @@ use Illuminate\Console\Command;
  * fail), and leftovers older than a day are swept when an update or a backup
  * starts. This command clears the rest on demand, for example files left by
  * versions before that cleanup existed. Nothing else in the temp directory is
- * touched, and nothing is removed while an update is running.
+ * touched, nothing is removed while an update or a restore is running, and
+ * a restore folder from the last six hours is always kept.
  */
 class CleanUpdateTempFilesCommand extends Command
 {
