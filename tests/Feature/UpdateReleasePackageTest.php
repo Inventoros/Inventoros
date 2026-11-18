@@ -411,6 +411,66 @@ final class UpdateReleasePackageTest extends TestCase
         $this->assertNotContains('down', $this->artisanCalls);
     }
 
+    public function test_the_update_is_refused_before_maintenance_mode_when_app_files_are_read_only(): void
+    {
+        // The Docker image keeps its code owned by root. Swapping the files
+        // fails there, and so does the rollback, which would leave the site
+        // in maintenance mode: refuse while the site is still up.
+        if (PHP_OS_FAMILY === 'Windows' || (function_exists('posix_geteuid') && posix_geteuid() === 0)) {
+            $this->markTestSkipped('Needs POSIX permissions and a non-root user.');
+        }
+
+        $this->fakeGitHub($this->makeRelease());
+        chmod($this->base.'/app', 0555);
+
+        try {
+            $result = $this->updater()->update();
+        } finally {
+            chmod($this->base.'/app', 0755);
+        }
+
+        $this->assertFalse($result['success']);
+        $this->assertStringContainsString($this->base.'/app cannot be written', $result['message']);
+        $this->assertStringContainsString('pulling the new image', $result['message']);
+        $this->assertNotContains('down', $this->artisanCalls);
+        $this->assertSame('<?php // old kept', File::get($this->base.'/app/Kept.php'));
+        $this->assertSame('1.0.8', File::get($this->base.'/VERSION'));
+    }
+
+    public function test_writable_paths_pass_the_preflight_and_read_only_ones_are_listed(): void
+    {
+        if (PHP_OS_FAMILY === 'Windows' || (function_exists('posix_geteuid') && posix_geteuid() === 0)) {
+            $this->markTestSkipped('Needs POSIX permissions and a non-root user.');
+        }
+
+        $extract = $this->root.'/extracted';
+        $zip = new ZipArchive;
+        $zip->open($this->makeRelease());
+        $zip->extractTo($extract);
+        $zip->close();
+
+        $files = $this->app->make(FileUpdateService::class);
+        $this->assertSame([], $files->unwritablePaths($extract));
+
+        // Runtime state the update never writes may stay read-only.
+        chmod($this->base.'/storage', 0555);
+        chmod($this->web.'/.htaccess', 0444);
+        chmod($this->web.'/build', 0555);
+        chmod($this->base.'/vendor', 0555);
+
+        try {
+            $this->assertSame(
+                [$this->base.'/vendor', $this->web.'/build'],
+                $files->unwritablePaths($extract),
+            );
+        } finally {
+            chmod($this->base.'/storage', 0755);
+            chmod($this->web.'/.htaccess', 0644);
+            chmod($this->web.'/build', 0755);
+            chmod($this->base.'/vendor', 0755);
+        }
+    }
+
     public function test_a_failed_migration_restores_app_files_web_root_and_database(): void
     {
         $state = new \stdClass;

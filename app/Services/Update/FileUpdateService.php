@@ -596,9 +596,61 @@ class FileUpdateService
             );
         }
 
+        $unwritable = $this->unwritablePaths($extractPath);
+        if ($unwritable !== []) {
+            $shown = array_slice($unwritable, 0, 5);
+            $more = count($unwritable) > count($shown) ? ' and '.(count($unwritable) - count($shown)).' more' : '';
+
+            throw new Exception(
+                'The update cannot replace the application files: '.implode(', ', $shown).$more
+                .' cannot be written by the user PHP runs as. Nothing was changed. On Docker, upgrade by '
+                .'pulling the new image instead; otherwise give that user write access and run the update again.'
+            );
+        }
+
         $manifest['version'] = $version;
 
         return $manifest;
+    }
+
+    /**
+     * The existing paths installRelease() would have to write but this
+     * process cannot: the application directory, the entries the package
+     * replaces in it, the web root and the web root entries it overwrites.
+     *
+     * Checked before maintenance mode, because a failure halfway through the
+     * file swap also stops the rollback (it writes the same paths), which
+     * leaves the site in maintenance mode. The Docker image keeps its code
+     * owned by root, so the in-app updater must stop here there.
+     *
+     * @return array<int, string>
+     */
+    public function unwritablePaths(string $extractPath): array
+    {
+        $paths = [];
+        $check = function (string $path) use (&$paths): void {
+            if (file_exists($path) && ! is_writable($path)) {
+                $paths[] = $path;
+            }
+        };
+
+        $base = $this->basePath();
+        $check($base);
+        foreach ($this->entries($extractPath.'/inventoros') as $name) {
+            if (! in_array($name, self::APP_SKIP, true) && ! $this->isEnvFile($name)) {
+                $check("{$base}/{$name}");
+            }
+        }
+
+        $webRoot = $this->publicPath();
+        $check($webRoot);
+        foreach ($this->entries($extractPath.'/public_html') as $name) {
+            if (! in_array($name, self::WEB_SKIP, true) && ! in_array($name, self::WEB_KEEP_IF_PRESENT, true)) {
+                $check("{$webRoot}/{$name}");
+            }
+        }
+
+        return array_values(array_unique($paths));
     }
 
     /**
