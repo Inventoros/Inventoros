@@ -6,6 +6,7 @@ namespace App\Mcp\Tools;
 
 use App\Exceptions\BusinessRuleException;
 use App\Mcp\Concerns\AuthenticatesMcpRequest;
+use App\Mcp\Support\McpRecipients;
 use App\Mcp\Support\UntrustedText;
 use App\Services\OrderService;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
@@ -73,6 +74,9 @@ class CreateOrderTool extends Tool
         ]);
 
         $validated['status'] ??= 'pending';
+        // The customer email given here was typed by the agent: never treat
+        // it as an address on file when an MCP tool emails this order later.
+        $validated['metadata'] = [McpRecipients::CREATED_VIA_KEY => McpRecipients::CREATED_VIA_MCP];
         $validated['order_date'] ??= now();
         // No currency: OrderService uses the organization's currency.
 

@@ -59,8 +59,13 @@ class EmailOrderInvoiceTool extends Tool
             return Response::error('Order not found in this organization.');
         }
 
+        // With no `to`, the invoice goes to the order's customer email (or
+        // its customer's): that address is checked like an explicit one.
+        $order->loadMissing('customer');
+        $to = $request->get('to') ?: ($order->customer_email ?: $order->customer?->email);
+
         $refused = McpRecipients::violation(
-            $request->get('to'),
+            $to,
             (array) ($request->get('cc') ?? []),
             McpRecipients::forOrder($order),
             $this->organizationId(),
