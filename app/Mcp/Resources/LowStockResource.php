@@ -27,9 +27,14 @@ class LowStockResource extends Resource
         $rows = Product::query()
             ->forOrganization($this->organizationId())
             ->lowStock()
-            ->orderByRaw('(min_stock - stock) DESC')
+            // Products sold by variant keep their stock on the variants, so
+            // sort by the same effective stock lowStock() checks.
+            ->orderByRaw('(min_stock - '.Product::effectiveStockSql('products').') DESC')
             ->limit(200)
-            ->get(['id', 'sku', 'name', 'stock', 'min_stock', 'reorder_point', 'reorder_quantity']);
+            ->select(['id', 'sku', 'name', 'stock', 'min_stock', 'reorder_point', 'reorder_quantity'])
+            ->withEffectiveStock()
+            ->get()
+            ->each(fn (Product $product) => $product->append('total_stock')->makeHidden('effective_stock'));
 
         return Response::json([
             'count' => $rows->count(),

@@ -8,6 +8,8 @@ use App\Exceptions\BusinessRuleException;
 use App\GraphQL\Middleware\EnforcePermissions;
 use App\Models\User;
 use GraphQL\Error\Error;
+use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Validation\ValidationException;
 use Rebing\GraphQL\Error\ValidationError;
 
@@ -62,6 +64,11 @@ trait RequiresPermissions
             throw new ValidationError('validation', $e->validator);
         } catch (BusinessRuleException $e) {
             throw new Error($e->getMessage());
+        } catch (AuthorizationException $e) {
+            // e.g. a warehouse-restricted user moving stock they can't reach.
+            throw new Error($e->getMessage() !== '' ? $e->getMessage() : 'This action is unauthorized.');
+        } catch (ModelNotFoundException) {
+            throw new Error('The requested record was not found.');
         }
     }
 }

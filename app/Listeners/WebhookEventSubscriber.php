@@ -651,6 +651,8 @@ final class WebhookEventSubscriber
                 'price' => $product->price,
                 'purchase_price' => $product->purchase_price,
                 'stock' => $product->stock,
+                // Products sold by variant keep their stock on the variants.
+                'total_stock' => $product->total_stock,
                 'min_stock' => $product->min_stock,
                 'is_active' => $product->is_active,
                 'category_id' => $product->category_id,

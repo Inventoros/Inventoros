@@ -501,6 +501,30 @@ class OrderApiTest extends TestCase
         $this->assertDatabaseHas('orders', ['id' => $order->id, 'status' => 'cancelled']);
     }
 
+    public function test_a_refused_cancel_saves_none_of_the_other_changes(): void
+    {
+        Sanctum::actingAs($this->admin);
+
+        // Moved back to processing after its goods left (shipped_at kept).
+        $order = $this->createOrder(['status' => 'processing']);
+        $order->forceFill(['shipped_at' => now()])->saveQuietly();
+
+        $this->patchJson("/api/v1/orders/{$order->id}", [
+            'status' => 'cancelled',
+            'customer_name' => 'Changed Name',
+        ])->assertStatus(422)->assertJsonPath('error', 'invalid_state_transition');
+
+        $this->assertDatabaseHas('orders', ['id' => $order->id, 'status' => 'processing', 'customer_name' => 'Test Customer']);
+    }
+
+    public function test_malformed_list_filters_are_ignored(): void
+    {
+        Sanctum::actingAs($this->admin);
+        $this->createOrder();
+
+        $this->getJson('/api/v1/orders?search[]=a&date_from=foo&date_to=2026-02-31')->assertOk();
+    }
+
     public function test_cannot_update_order_from_different_organization(): void
     {
         Sanctum::actingAs($this->admin);

@@ -114,61 +114,67 @@ class UpdateOrderMutation extends Mutation
             }
         }
 
-        // Order-level discount change: recomputed under the order's row lock
-        // by the same service the web and REST surfaces use.
-        if (array_key_exists('discount_type', $args) || array_key_exists('discount_value', $args)) {
-            try {
-                $order = app(\App\Services\OrderService::class)->changeOrderDiscount(
-                    $order,
-                    $args['discount_type'] ?? null,
-                    $args['discount_value'] ?? null,
-                );
-            } catch (\Illuminate\Validation\ValidationException $e) {
-                throw new Error(collect($e->errors())->flatten()->first() ?? $e->getMessage());
+        // One transaction: a refused cancel or status change must not leave
+        // the discount or other field changes from the same request saved.
+        $order = \Illuminate\Support\Facades\DB::transaction(function () use ($order, $args, $updateData) {
+            // Order-level discount change: recomputed under the order's row lock
+            // by the same service the web and REST surfaces use.
+            if (array_key_exists('discount_type', $args) || array_key_exists('discount_value', $args)) {
+                try {
+                    $order = app(\App\Services\OrderService::class)->changeOrderDiscount(
+                        $order,
+                        $args['discount_type'] ?? null,
+                        $args['discount_value'] ?? null,
+                    );
+                } catch (\Illuminate\Validation\ValidationException $e) {
+                    throw new Error(collect($e->errors())->flatten()->first() ?? $e->getMessage());
+                }
             }
-        }
 
-        // Detect a cancel transition: the status-only change that must restock.
-        // Route it through OrderService::cancel() so the web, REST, and GraphQL
-        // surfaces share one locked, idempotent, guard-enforcing implementation.
-        $cancelling = ($updateData['status'] ?? null) === 'cancelled'
-            && $order->status !== \App\Enums\OrderStatus::CANCELLED;
+            // Detect a cancel transition: the status-only change that must restock.
+            // Route it through OrderService::cancel() so the web, REST, and GraphQL
+            // surfaces share one locked, idempotent, guard-enforcing implementation.
+            $cancelling = ($updateData['status'] ?? null) === 'cancelled'
+                && $order->status !== \App\Enums\OrderStatus::CANCELLED;
 
-        if ($cancelling) {
-            unset($updateData['status']);
-        }
-
-        // An order waiting for approval cannot ship or be delivered yet.
-        if (isset($updateData['status']) && $order->approvalBlocks($updateData['status'])) {
-            throw new Error(Order::APPROVAL_PENDING_MESSAGE);
-        }
-
-        // Handle status change timestamps
-        if (isset($updateData['status'])) {
-            if ($updateData['status'] === 'shipped' && !$order->shipped_at) {
-                $updateData['shipped_at'] = now();
+            if ($cancelling) {
+                unset($updateData['status']);
             }
-            if ($updateData['status'] === 'delivered' && !$order->delivered_at) {
-                $updateData['delivered_at'] = now();
-            }
-        }
 
-        if ($updateData !== []) {
-            try {
-                $order->update($updateData);
-            } catch (BusinessRuleException $e) {
-                // The model's transition backstop (a concurrent status change).
-                throw new Error($e->getMessage());
+            // An order waiting for approval cannot ship or be delivered yet.
+            if (isset($updateData['status']) && $order->approvalBlocks($updateData['status'])) {
+                throw new Error(Order::APPROVAL_PENDING_MESSAGE);
             }
-        }
 
-        if ($cancelling) {
-            try {
-                $order = app(\App\Services\OrderService::class)->cancel($order);
-            } catch (BusinessRuleException $e) {
-                throw new Error($e->getMessage());
+            // Handle status change timestamps
+            if (isset($updateData['status'])) {
+                if ($updateData['status'] === 'shipped' && !$order->shipped_at) {
+                    $updateData['shipped_at'] = now();
+                }
+                if ($updateData['status'] === 'delivered' && !$order->delivered_at) {
+                    $updateData['delivered_at'] = now();
+                }
             }
-        }
+
+            if ($updateData !== []) {
+                try {
+                    $order->update($updateData);
+                } catch (BusinessRuleException $e) {
+                    // The model's transition backstop (a concurrent status change).
+                    throw new Error($e->getMessage());
+                }
+            }
+
+            if ($cancelling) {
+                try {
+                    $order = app(\App\Services\OrderService::class)->cancel($order);
+                } catch (BusinessRuleException $e) {
+                    throw new Error($e->getMessage());
+                }
+            }
+
+            return $order;
+        });
 
         $order->load('items');
 

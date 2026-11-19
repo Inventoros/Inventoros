@@ -67,6 +67,7 @@ class LookupBarcodeTool extends Tool
                 'name' => $product->name,
                 'barcode' => $product->barcode,
                 'stock' => $product->stock,
+                'total_stock' => $product->total_stock,
                 'available_stock' => $product->available_stock,
                 'price' => $product->price,
                 'selling_price' => $product->selling_price,
