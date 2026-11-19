@@ -653,6 +653,8 @@
       "reorderPointHint": "Otomatik yeniden siparişi tetikleyen stok seviyesi",
       "reorderQuantity": "Yeniden Sipariş Miktarı",
       "reorderQuantityHint": "Stok yeniden sipariş noktasına ulaştığında sipariş edilecek miktar",
+      "allowBackorder": "Bekleyen siparişe izin ver",
+      "allowBackorderHint": "Stokta olmadığında bu ürün için sipariş kabul et ve stok geldiğinde karşıla.",
       "leaveEmptyToDisable": "Devre dışı bırakmak için boş bırakın",
       "inventoryTracking": "Envanter Takibi",
       "inventoryTrackingHint": "Bu ürünün tekil birimlerinin nasıl takip edileceğini seçin.",
@@ -3467,6 +3469,25 @@
     "verifiedOne": "{name}: {expected} / {scanned}",
     "overScanned": "{name}: {scanned} tarandı, yalnızca {expected} bekleniyordu",
     "notOnTransfer": "{name} bu transferde yok."
+  },
+  "backorders": {
+    "settings": {
+      "tab": "Bekleyen siparişler",
+      "title": "Bekleyen siparişler",
+      "description": "Stokta olmayan ürünler için sipariş kabul edin ve stok gelene kadar sevkiyatı bekletin.",
+      "enabled": "Bekleyen siparişlere izin ver",
+      "enabledHelp": "Açıkken, aşağıda izin verilen bir ürün mevcut stokun üzerinde sipariş edilebilir.",
+      "defaultAllow": "Yeni ürünlerde varsayılan olarak etkinleştir",
+      "defaultAllowHelp": "Yeni ürünler bekleyen siparişe izin verilmiş olarak başlar. Her ürünü yine ayrı ayrı değiştirebilirsiniz."
+    },
+    "filterLabel": "Bekleyen siparişler",
+    "filterAll": "Tüm siparişler",
+    "filterOnly": "Yalnızca bekleyenler",
+    "show": {
+      "heldBanner": "Bu siparişte bekleyen ürünler var ve stok gelene kadar sevkiyatı bekletiliyor.",
+      "fulfillAction": "Bekleyenleri karşıla",
+      "lineSplit": "{fulfilled} karşılandı, {backordered} bekliyor"
+    }
   },
   "approvals": {
     "title": "Onaylar",

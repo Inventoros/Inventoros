@@ -653,6 +653,8 @@
       "reorderPointHint": "Voorraadniveau dat automatisch nabestellen activeert",
       "reorderQuantity": "Bestelaantal",
       "reorderQuantityHint": "Te bestellen aantal wanneer de voorraad het bestelpunt bereikt",
+      "allowBackorder": "Nabestelling toestaan",
+      "allowBackorderHint": "Bestellingen voor dit product aannemen als het niet op voorraad is, en ze uitvoeren zodra er voorraad binnenkomt.",
       "leaveEmptyToDisable": "Laat leeg om uit te schakelen",
       "inventoryTracking": "Voorraadregistratie",
       "inventoryTrackingHint": "Kies hoe afzonderlijke eenheden van dit product worden geregistreerd.",
@@ -3467,6 +3469,25 @@
     "verifiedOne": "{name}: {scanned} van {expected}",
     "overScanned": "{name}: {scanned} gescand, slechts {expected} verwacht",
     "notOnTransfer": "{name} staat niet op deze overboeking."
+  },
+  "backorders": {
+    "settings": {
+      "tab": "Nabestellingen",
+      "title": "Nabestellingen",
+      "description": "Neem bestellingen aan voor producten zonder voorraad en houd de verzending vast tot de voorraad binnen is.",
+      "enabled": "Nabestellingen toestaan",
+      "enabledHelp": "Indien aan, kan een hieronder toegestaan product boven de beschikbare voorraad worden besteld.",
+      "defaultAllow": "Standaard inschakelen voor nieuwe producten",
+      "defaultAllowHelp": "Nieuwe producten staan nabestellingen meteen toe. Je kunt elk product nog afzonderlijk aanpassen."
+    },
+    "filterLabel": "Nabestellingen",
+    "filterAll": "Alle bestellingen",
+    "filterOnly": "Alleen nabestellingen",
+    "show": {
+      "heldBanner": "Deze bestelling bevat nabestelde artikelen en wordt pas verzonden als de voorraad binnen is.",
+      "fulfillAction": "Nabestelling uitvoeren",
+      "lineSplit": "{fulfilled} uitgevoerd, {backordered} nabesteld"
+    }
   },
   "approvals": {
     "title": "Goedkeuringen",

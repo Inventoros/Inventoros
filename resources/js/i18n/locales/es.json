@@ -653,6 +653,8 @@
       "reorderPointHint": "Nivel de stock que activa el reabastecimiento automático",
       "reorderQuantity": "Cantidad de reorden",
       "reorderQuantityHint": "Cantidad a pedir cuando el stock alcanza el punto de reorden",
+      "allowBackorder": "Permitir pedidos pendientes",
+      "allowBackorderHint": "Aceptar pedidos de este producto cuando no hay existencias y completarlos cuando llegue el stock.",
       "leaveEmptyToDisable": "Déjalo vacío para desactivar",
       "inventoryTracking": "Seguimiento de inventario",
       "inventoryTrackingHint": "Elige cómo hacer el seguimiento de las unidades individuales de este producto.",
@@ -3467,6 +3469,25 @@
     "verifiedOne": "{name}: {scanned} de {expected}",
     "overScanned": "{name}: {scanned} escaneados, solo se esperaban {expected}",
     "notOnTransfer": "{name} no está en esta transferencia."
+  },
+  "backorders": {
+    "settings": {
+      "tab": "Pedidos pendientes",
+      "title": "Pedidos pendientes",
+      "description": "Acepta pedidos de productos sin existencias y retén su envío hasta que llegue el stock.",
+      "enabled": "Permitir pedidos pendientes",
+      "enabledHelp": "Si está activado, un producto habilitado puede pedirse por encima de su stock disponible.",
+      "defaultAllow": "Activar por defecto en productos nuevos",
+      "defaultAllowHelp": "Los productos nuevos empiezan con los pedidos pendientes permitidos. Puedes cambiar cada producto por separado."
+    },
+    "filterLabel": "Pedidos pendientes",
+    "filterAll": "Todos los pedidos",
+    "filterOnly": "Solo con pendientes",
+    "show": {
+      "heldBanner": "Este pedido tiene artículos pendientes y su envío está retenido hasta que llegue el stock.",
+      "fulfillAction": "Completar pendientes",
+      "lineSplit": "{fulfilled} completados, {backordered} pendientes"
+    }
   },
   "approvals": {
     "title": "Aprobaciones",

@@ -653,6 +653,8 @@
       "reorderPointHint": "Poziom stanu, który uruchamia automatyczne ponowne zamówienie",
       "reorderQuantity": "Ilość do zamówienia",
       "reorderQuantityHint": "Ilość zamawiana, gdy stan osiągnie punkt ponownego zamówienia",
+      "allowBackorder": "Zezwalaj na zamówienia oczekujące",
+      "allowBackorderHint": "Przyjmuj zamówienia na ten produkt, gdy go brakuje, i realizuj je po dostawie towaru.",
       "leaveEmptyToDisable": "Pozostaw puste, aby wyłączyć",
       "inventoryTracking": "Śledzenie zapasów",
       "inventoryTrackingHint": "Wybierz sposób śledzenia poszczególnych sztuk tego produktu.",
@@ -3467,6 +3469,25 @@
     "verifiedOne": "{name}: {scanned} z {expected}",
     "overScanned": "{name}: zeskanowano {scanned}, oczekiwano tylko {expected}",
     "notOnTransfer": "{name} nie znajduje się w tym przesunięciu."
+  },
+  "backorders": {
+    "settings": {
+      "tab": "Zamówienia oczekujące",
+      "title": "Zamówienia oczekujące",
+      "description": "Przyjmuj zamówienia na niedostępne produkty i wstrzymuj ich wysyłkę do czasu dostawy towaru.",
+      "enabled": "Zezwalaj na zamówienia oczekujące",
+      "enabledHelp": "Po włączeniu produkt dopuszczony poniżej można zamówić ponad dostępny stan.",
+      "defaultAllow": "Domyślnie włączaj dla nowych produktów",
+      "defaultAllowHelp": "Nowe produkty od początku zezwalają na zamówienia oczekujące. Każdy produkt nadal można zmienić osobno."
+    },
+    "filterLabel": "Zamówienia oczekujące",
+    "filterAll": "Wszystkie zamówienia",
+    "filterOnly": "Tylko oczekujące",
+    "show": {
+      "heldBanner": "To zamówienie zawiera pozycje oczekujące na dostawę, a jego wysyłka jest wstrzymana do czasu dostawy towaru.",
+      "fulfillAction": "Zrealizuj oczekujące",
+      "lineSplit": "zrealizowane: {fulfilled}, oczekujące: {backordered}"
+    }
   },
   "approvals": {
     "title": "Zatwierdzenia",

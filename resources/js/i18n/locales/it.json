@@ -653,6 +653,8 @@
       "reorderPointHint": "Livello di scorte che attiva il riordino automatico",
       "reorderQuantity": "Quantità di riordino",
       "reorderQuantityHint": "Quantità da ordinare quando le scorte raggiungono il punto di riordino",
+      "allowBackorder": "Consenti ordini in arretrato",
+      "allowBackorderHint": "Accetta ordini per questo prodotto quando è esaurito ed evadili quando arriva la merce.",
       "leaveEmptyToDisable": "Lascia vuoto per disattivare",
       "inventoryTracking": "Tracciamento inventario",
       "inventoryTrackingHint": "Scegli come tracciare le singole unità di questo prodotto.",
@@ -3467,6 +3469,25 @@
     "verifiedOne": "{name}: {scanned} di {expected}",
     "overScanned": "{name}: {scanned} scansionati, solo {expected} previsti",
     "notOnTransfer": "{name} non è in questo trasferimento."
+  },
+  "backorders": {
+    "settings": {
+      "tab": "Ordini in arretrato",
+      "title": "Ordini in arretrato",
+      "description": "Accetta ordini per prodotti esauriti e trattienine la spedizione finché non arriva la merce.",
+      "enabled": "Consenti ordini in arretrato",
+      "enabledHelp": "Se attivo, un prodotto abilitato può essere ordinato oltre la giacenza disponibile.",
+      "defaultAllow": "Attiva per impostazione predefinita sui nuovi prodotti",
+      "defaultAllowHelp": "I nuovi prodotti consentono gli ordini in arretrato fin dall’inizio. Puoi comunque modificare ogni prodotto singolarmente."
+    },
+    "filterLabel": "Ordini in arretrato",
+    "filterAll": "Tutti gli ordini",
+    "filterOnly": "Solo in arretrato",
+    "show": {
+      "heldBanner": "Questo ordine contiene articoli in arretrato e la spedizione è sospesa finché non arriva la merce.",
+      "fulfillAction": "Evadi arretrato",
+      "lineSplit": "{fulfilled} evasi, {backordered} in arretrato"
+    }
   },
   "approvals": {
     "title": "Approvazioni",
