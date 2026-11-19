@@ -34,6 +34,7 @@ const props = defineProps({
     pluginComponents: Object,
     initialType: { type: String, default: 'standard' },
     backordersEnabled: { type: Boolean, default: false },
+    backorderDefaultAllow: { type: Boolean, default: false },
 });
 
 const form = useForm({
@@ -49,7 +50,7 @@ const form = useForm({
     min_stock: '',
     reorder_point: '',
     reorder_quantity: '',
-    allow_backorder: false,
+    allow_backorder: props.backorderDefaultAllow,
     category_id: '',
     location_id: '',
     barcode: '',

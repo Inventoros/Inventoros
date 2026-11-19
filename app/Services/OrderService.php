@@ -135,7 +135,7 @@ final class OrderService
             $data['order_number'] = Order::generateOrderNumber($orgId);
             // Short lines are accepted as backorders only when the org's
             // master switch is on; per-product opt-in is checked per line.
-            $backorderEnabled = BackorderSettings::forOrganization((int) $orgId)->enabled;
+            $backorderSettings = BackorderSettings::forOrganization((int) $orgId);
 
             // Batch-lock every referenced product (and variant) in single
             // SELECT ... FOR UPDATE queries so concurrent orders can't race the
@@ -230,7 +230,7 @@ final class OrderService
                 $backorderedQty = $line['qty'] - $fulfillQty;
                 $running[$key] = $balance - $fulfillQty;
 
-                if ($backorderedQty > 0 && ! ($backorderEnabled && (bool) $line['product']->allow_backorder)) {
+                if ($backorderedQty > 0 && ! $backorderSettings->allowsBackorderFor($line['product'])) {
                     throw new InsufficientStockException(
                         'Insufficient stock for '.$this->lineLabel($line)
                         .'. Available: '.max(0, $available[$key]).", Requested: {$line['qty']}"
@@ -989,6 +989,17 @@ final class OrderService
             }
         }
 
+        // Units already on backorder stay allowed on backorder after an edit,
+        // even if the org switch or the product's opt-in has since been
+        // turned off: turning backorders off never strands an open order.
+        $priorBackordered = [];
+        foreach ($order->items as $existing) {
+            $key = $existing->product_variant_id !== null
+                ? "v{$existing->product_variant_id}"
+                : "p{$existing->product_id}";
+            $priorBackordered[$key] = ($priorBackordered[$key] ?? 0) + (int) $existing->quantity_backordered;
+        }
+
         foreach ($order->items as $existing) {
             $this->restockItem($existing, "Order {$order->order_number} edited", $order, $restockable[$existing->id] ?? 0, $actor);
             $existing->delete();
@@ -1016,7 +1027,7 @@ final class OrderService
         //    availability across all lines against a running balance that
         //    starts at available stock (on hand less active reservations).
         $reservations = app(StockReservationService::class);
-        $backorderEnabled = BackorderSettings::forOrganization((int) $order->organization_id)->enabled;
+        $backorderSettings = BackorderSettings::forOrganization((int) $order->organization_id);
         $resolved = [];
         $running = [];
         $available = [];
@@ -1060,10 +1071,14 @@ final class OrderService
                 $backorderedQty = $qty - $fulfillQty;
                 $running[$key] = $balance - $fulfillQty;
 
-                if ($backorderedQty > 0 && ! ($backorderEnabled && (bool) $product->allow_backorder)) {
-                    throw new InsufficientStockException(
-                        "Insufficient stock for {$product->name}. Available: ".max(0, $available[$key]).", requested: {$qty}"
-                    );
+                if ($backorderedQty > 0 && ! $backorderSettings->allowsBackorderFor($product)) {
+                    $carried = $priorBackordered[$key] ?? 0;
+                    if ($backorderedQty > $carried) {
+                        throw new InsufficientStockException(
+                            "Insufficient stock for {$product->name}. Available: ".max(0, $available[$key]).", requested: {$qty}"
+                        );
+                    }
+                    $priorBackordered[$key] = $carried - $backorderedQty;
                 }
             }
 
@@ -1284,10 +1299,7 @@ final class OrderService
             // held from shipping until every line's stock arrives. The primary
             // guard is at ShipmentService::create(); this covers a direct move.
             if (in_array($to, [OrderStatus::SHIPPED, OrderStatus::DELIVERED], true) && $locked->backordered_at !== null) {
-                throw new InvalidStateException(
-                    'This order has items on backorder and cannot ship until all stock arrives.',
-                    'invalid_state_transition'
-                );
+                throw new InvalidStateException(Order::BACKORDER_HOLD_MESSAGE, 'invalid_state_transition');
             }
 
             $error = $locked->transitionErrorTo($to);

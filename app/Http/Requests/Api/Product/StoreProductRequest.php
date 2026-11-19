@@ -48,6 +48,7 @@ final class StoreProductRequest extends FormRequest
             // In one of the user's warehouses; opening stock needs one.
             'location_id' => [Rule::requiredIf(fn () => (int) $this->input('stock') > 0 && app(WarehouseAccessService::class)->isRestricted($this->user())), 'nullable', 'integer', Rule::exists('product_locations', 'id')->where('organization_id', $organizationId), new AccessibleProductLocation($this->user())],
             'is_active' => ['nullable', 'boolean'],
+            'allow_backorder' => ['sometimes', 'boolean'],
             'tracking_type' => ['nullable', 'string', 'in:none,batch,serial'],
             'metadata' => ['nullable', 'array'],
 

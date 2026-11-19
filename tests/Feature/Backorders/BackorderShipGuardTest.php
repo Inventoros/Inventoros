@@ -84,6 +84,23 @@ class BackorderShipGuardTest extends TestCase
         }
     }
 
+    public function test_direct_status_save_to_shipped_blocked_while_backordered(): void
+    {
+        // The web and REST order edits set the status on the model directly
+        // rather than through transitionStatus(); the model backstop holds.
+        $order = $this->makeOrder([[$this->backorderProduct(), 5]])->fresh();
+
+        try {
+            $order->update(['status' => OrderStatus::PROCESSING]);
+            $order->update(['status' => OrderStatus::SHIPPED]);
+            $this->fail('A backordered order must not save as shipped.');
+        } catch (InvalidStateException $e) {
+            $this->assertStringContainsStringIgnoringCase('backorder', $e->getMessage());
+        }
+
+        $this->assertNotSame(OrderStatus::SHIPPED, $order->fresh()->status);
+    }
+
     public function test_ship_allowed_after_full_reconcile(): void
     {
         $product = $this->backorderProduct();

@@ -464,6 +464,15 @@ class Order extends Model
             if ($order->isDirty('status') && $order->approvalBlocks($order->status)) {
                 throw new InvalidStateException(self::APPROVAL_PENDING_MESSAGE, 'approval_pending');
             }
+
+            // Ship-together: an order with outstanding backorders never saves
+            // as shipped or delivered, whichever surface moves it (the web and
+            // REST order edits set the status directly, not through
+            // OrderService::transitionStatus()).
+            if ($order->isDirty('status') && $order->backordered_at !== null
+                && in_array($order->status, [OrderStatus::SHIPPED, OrderStatus::DELIVERED], true)) {
+                throw new InvalidStateException(self::BACKORDER_HOLD_MESSAGE, 'invalid_state_transition');
+            }
         });
 
         static::updated(function (Order $order) {
@@ -689,6 +698,8 @@ class Order extends Model
     public const STATUSES_BLOCKED_BY_APPROVAL = [OrderStatus::SHIPPED, OrderStatus::DELIVERED];
 
     public const APPROVAL_PENDING_MESSAGE = 'This order is waiting for approval. Approve it before shipping or delivering it.';
+
+    public const BACKORDER_HOLD_MESSAGE = 'This order has items on backorder and cannot ship until all stock arrives.';
 
     /**
      * Whether moving this order to $status is blocked because it is still

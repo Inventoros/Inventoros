@@ -143,6 +143,39 @@ class BackorderLifecycleTest extends TestCase
         $this->assertNull($order->fresh()->backordered_at);
     }
 
+    public function test_edit_after_switch_off_keeps_the_existing_backorder(): void
+    {
+        $product = $this->product(stock: 2);
+        $order = $this->order($product, 5); // fulfilled 2, backordered 3
+
+        $this->enableBackorders(false);
+
+        // Re-price the line without growing it: the 3 units already on
+        // backorder stay on backorder instead of the edit being refused.
+        DB::transaction(fn () => $this->orders()->replaceItems($order->fresh(), [
+            ['product_id' => $product->id, 'quantity' => 5, 'unit_price' => '12.00'],
+        ], $this->creator));
+
+        $item = $order->fresh()->items()->first();
+        $this->assertSame(3, (int) $item->quantity_backordered);
+        $this->assertNotNull($order->fresh()->backordered_at);
+        $this->assertSame(0, (int) $product->fresh()->stock);
+    }
+
+    public function test_edit_after_switch_off_cannot_grow_the_backorder(): void
+    {
+        $product = $this->product(stock: 2);
+        $order = $this->order($product, 5); // fulfilled 2, backordered 3
+
+        $this->enableBackorders(false);
+
+        $this->expectException(\App\Exceptions\InsufficientStockException::class);
+
+        DB::transaction(fn () => $this->orders()->replaceItems($order->fresh(), [
+            ['product_id' => $product->id, 'quantity' => 6, 'unit_price' => '10.00'],
+        ], $this->creator));
+    }
+
     public function test_master_switch_off_still_reconciles_existing_backorders(): void
     {
         $product = $this->product(stock: 0);

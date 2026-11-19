@@ -515,7 +515,13 @@ class OrderController extends Controller
             abort(403, 'Unauthorized action.');
         }
 
-        app(BackorderService::class)->reconcileOrder($order, $request->user());
+        try {
+            app(BackorderService::class)->reconcileOrder($order, $request->user());
+        } catch (BusinessRuleException $e) {
+            // e.g. the stock sits in bins the order's warehouse cannot draw
+            // from, or a reservation took it: flash rather than 500.
+            return redirect()->back()->with('error', $e->getMessage());
+        }
 
         return redirect()->back()->with('success', __('Backorders fulfilled where stock allowed.'));
     }

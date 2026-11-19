@@ -48,6 +48,17 @@ final class BackorderService
         }
 
         return DB::transaction(function () use ($organizationId, $productId, $variantId) {
+            // Lock the candidate orders BEFORE the product/variant rows, in id
+            // order. cancel(), replaceItems() and reconcileOrder() all lock the
+            // order first and the product second; taking the product first
+            // here would invert that order and deadlock against them.
+            $orderIds = $this->openBackorderedQuery($organizationId, $productId, $variantId)
+                ->distinct()
+                ->pluck('order_id')
+                ->sort()
+                ->values();
+            $orders = Order::whereIn('id', $orderIds)->orderBy('id')->lockForUpdate()->get()->keyBy('id');
+
             $product = Product::withTrashed()
                 ->where('organization_id', $organizationId)
                 ->whereKey($productId)
@@ -75,7 +86,7 @@ final class BackorderService
                     break; // nothing left to give
                 }
 
-                $order = Order::whereKey($item->order_id)->lockForUpdate()->first();
+                $order = $orders->get($item->order_id);
                 if (! $this->isOpenBackorder($order)) {
                     continue; // a cancel/ship won the race, or it already cleared
                 }
@@ -112,14 +123,16 @@ final class BackorderService
                 return;
             }
 
-            $locked->load(['items.product', 'items.variant']);
+            $locked->load('items');
             $reservations = app(StockReservationService::class);
 
             foreach ($locked->items as $item) {
-                if ((int) $item->quantity_backordered <= 0 || $item->product === null) {
+                if ((int) $item->quantity_backordered <= 0) {
                     continue;
                 }
 
+                // withTrashed, like reconcileForProduct(): a product deleted
+                // since the order was placed still fulfils its backorder.
                 $product = Product::withTrashed()->whereKey($item->product_id)->lockForUpdate()->first();
                 if ($product === null) {
                     continue;
@@ -127,6 +140,9 @@ final class BackorderService
                 $variant = $item->product_variant_id !== null
                     ? ProductVariant::withTrashed()->whereKey($item->product_variant_id)->lockForUpdate()->first()
                     : null;
+                if ($item->product_variant_id !== null && $variant === null) {
+                    continue; // never fulfil a variant line from the parent's stock
+                }
                 $target = $variant ?? $product;
 
                 $available = (int) $target->stock - $reservations->reservedTotal((int) $item->product_id, $variant?->id);
@@ -230,7 +246,8 @@ final class BackorderService
 
     private function clearIfComplete(Order $order): void
     {
-        if (! $order->fresh()->hasOutstandingBackorder()) {
+        // Query the lines directly rather than reloading the whole order.
+        if (! $order->items()->where('quantity_backordered', '>', 0)->exists()) {
             $order->update(['backordered_at' => null]);
         }
     }
