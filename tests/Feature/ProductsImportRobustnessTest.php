@@ -119,4 +119,43 @@ class ProductsImportRobustnessTest extends TestCase
         $this->assertSame(0, $import->getStats()['updated']);
         $this->assertSame($original, $product->fresh()->getAttributes());
     }
+
+    public function test_updating_from_a_file_without_some_columns_keeps_those_fields(): void
+    {
+        $category = \App\Models\Inventory\ProductCategory::create(['organization_id' => $this->org->id, 'name' => 'Books']);
+        $product = Product::create([
+            'organization_id' => $this->org->id, 'sku' => 'PART-1', 'name' => 'Old', 'price' => 1,
+            'currency' => 'USD', 'stock' => 5, 'min_stock' => 3, 'barcode' => '1234567890128',
+            'description' => 'Kept', 'notes' => 'Kept notes', 'purchase_price' => 0.5,
+            'category_id' => $category->id, 'is_active' => false,
+        ]);
+
+        $importer = User::factory()->admin()->forOrganization($this->org->id)->create();
+        $import = new ProductsImport($this->org->id, $importer);
+        $import->collection(new Collection([
+            collect(['sku' => 'PART-1', 'name' => 'New', 'price' => 12, 'stock' => 5]),
+        ]));
+
+        $fresh = $product->fresh();
+        $this->assertSame('New', $fresh->name);
+        $this->assertEquals(12, $fresh->price);
+        $this->assertSame('1234567890128', $fresh->barcode);
+        $this->assertSame('Kept', $fresh->description);
+        $this->assertSame('Kept notes', $fresh->notes);
+        $this->assertEquals(0.5, $fresh->purchase_price);
+        $this->assertSame(3, (int) $fresh->min_stock);
+        $this->assertSame($category->id, $fresh->category_id);
+        $this->assertFalse((bool) $fresh->is_active, 'An archived product must stay archived.');
+    }
+
+    public function test_a_status_cell_with_spaces_still_counts_as_active(): void
+    {
+        $importer = User::factory()->admin()->forOrganization($this->org->id)->create();
+        $import = new ProductsImport($this->org->id, $importer);
+        $import->collection(new Collection([
+            collect(['sku' => 'SPACE-1', 'name' => 'Spaced', 'price' => 1, 'stock' => 0, 'status' => 'Active ']),
+        ]));
+
+        $this->assertTrue((bool) Product::where('sku', 'SPACE-1')->value('is_active'));
+    }
 }

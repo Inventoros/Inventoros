@@ -236,16 +236,17 @@ trait HasRolesAndPermissions
             // same slug must not grant its permissions to every user with
             // this base role in every organization.
             $systemRole = Role::systemBySlug('system-'.$this->role);
-            if ($systemRole && $systemRole->permissions) {
-                $permissions = array_merge($permissions, $systemRole->permissions);
+            if ($systemRole) {
+                $permissions = array_merge($permissions, $systemRole->getAllPermissions());
             }
         }
 
-        // Get permissions from custom roles
+        // Get permissions from custom roles, including those granted through
+        // their active permission sets, so this list matches hasPermission().
+        // RoleAssignmentGuard relies on it to stop a user managing someone
+        // who holds more than they do.
         foreach ($this->rolesInActiveOrganization() as $role) {
-            if ($role->permissions) {
-                $permissions = array_merge($permissions, $role->permissions);
-            }
+            $permissions = array_merge($permissions, $role->getAllPermissions());
         }
 
         return array_values(array_unique($permissions));

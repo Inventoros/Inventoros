@@ -448,7 +448,7 @@ const thClass =
 
         <!-- Floating barcode scan button -->
         <button
-            v-if="$page.props.auth.permissions.includes('products.view')"
+            v-if="hasPermission('view_products')"
             @click="openScanner"
             class="fixed bottom-6 end-6 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-brand text-brand-foreground shadow-md transition-colors duration-200 hover:bg-brand-hover"
             :title="t('products.scanBarcode')"

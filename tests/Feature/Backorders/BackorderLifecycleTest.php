@@ -191,4 +191,19 @@ class BackorderLifecycleTest extends TestCase
         $this->assertSame(0, (int) $order->items()->first()->quantity_backordered);
         $this->assertNull($order->fresh()->backordered_at);
     }
+
+    public function test_an_order_created_as_cancelled_takes_no_stock(): void
+    {
+        $product = $this->product(stock: 10);
+
+        $order = $this->orders()->create([
+            'customer_name' => 'Acme',
+            'status' => 'cancelled',
+            'order_date' => now()->toDateString(),
+            'items' => [['product_id' => $product->id, 'quantity' => 4, 'unit_price' => 10.00]],
+        ], $this->creator);
+
+        $this->assertSame(10, (int) $product->fresh()->stock);
+        $this->assertFalse((bool) $order->fresh()->stock_committed);
+    }
 }
