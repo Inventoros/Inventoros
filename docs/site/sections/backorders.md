@@ -5,7 +5,7 @@ Inventoros can accept a sales order for more than you have on hand, record the s
 Backordering has a master switch and a per-product toggle, and a line can be backordered only when both are on.
 
 1. Open **Settings > Organization > Backorders** (needs `manage_organization`) and tick **Allow backorders**. Optionally tick **Enable for new products by default** to pre-select the product toggle on new products.
-2. On a product's form, tick **Allow backorder**. The toggle appears only while the organization switch is on.
+2. On a product's form, tick **Allow backorder**. The toggle appears only while the organization switch is on. Over the REST API, set `allow_backorder` when creating or updating a product.
 
 ## How a backorder is created
 
@@ -15,7 +15,7 @@ If a product is not opted in, or the master switch is off, a short line is refus
 
 ## Shipping is held until stock arrives
 
-An order with any backordered units cannot be shipped: creating a shipment for it is refused until every line is fulfilled. This keeps an order shipping together rather than in pieces. The hold is driven by the order's own backordered state, not by the master switch, so turning the switch off later never lets a backordered order ship early.
+An order with any backordered units cannot be shipped: creating a shipment for it, or setting its status to shipped or delivered by any route (the order form, REST, GraphQL or MCP), is refused until every line is fulfilled. This keeps an order shipping together rather than in pieces. The hold is driven by the order's own backordered state, not by the master switch, so turning the switch off later never lets a backordered order ship early.
 
 ## Fulfilling a backorder
 
@@ -29,7 +29,7 @@ Reconciliation moves stock the same audited way order creation does: it draws th
 
 ## Cancelling, rejecting, deleting and editing
 
-Only the fulfilled units ever left stock, so cancelling, rejecting or deleting a backordered order returns only those to inventory and clears the backorder. Editing an order recomputes the split against current stock, so growing a line past what is available backorders the difference, and shrinking it back into stock clears the backorder.
+Only the fulfilled units ever left stock, so cancelling, rejecting or deleting a backordered order returns only those to inventory and clears the backorder. Editing an order recomputes the split against current stock, so growing a line past what is available backorders the difference, and shrinking it back into stock clears the backorder. If backorders have since been turned off, for the organization or the product, an edit keeps the units already on backorder but cannot add more.
 
 ## What is not covered yet
 
