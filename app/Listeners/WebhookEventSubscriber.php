@@ -747,6 +747,7 @@ final class WebhookEventSubscriber
                 'order_date' => $order->order_date,
                 'shipped_at' => $order->shipped_at?->toIso8601String(),
                 'delivered_at' => $order->delivered_at?->toIso8601String(),
+                'backordered_at' => $order->backordered_at?->toIso8601String(),
                 'created_at' => $order->created_at?->toIso8601String(),
                 'updated_at' => $order->updated_at?->toIso8601String(),
                 'items' => $order->items->map(fn ($item) => [
@@ -755,6 +756,8 @@ final class WebhookEventSubscriber
                     'product_name' => $item->product_name,
                     'sku' => $item->sku,
                     'quantity' => $item->quantity,
+                    'quantity_fulfilled' => $item->quantity_fulfilled,
+                    'quantity_backordered' => (int) $item->quantity_backordered,
                     'unit_price' => $item->unit_price,
                     'subtotal' => $item->subtotal,
                     'total' => $item->total,

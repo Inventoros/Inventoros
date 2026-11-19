@@ -6,9 +6,13 @@ Full release notes, with the pull request behind each change, are on [GitHub Rel
 
 ## [Unreleased]
 
+## [2.6.1] - 2026-11-19
+
+This release adds three migrations, all additive, and a scheduled command. See the [2.6.1 release notes](docs/releases/2.6.1.md).
+
 ### Added
 
-- Backorders. An organization can accept a sales order past available stock and hold it from shipping until the stock arrives (off by default). A master switch under Settings > Organization > Backorders and a per-product "Allow backorder" toggle gate it: a short line is then split into fulfilled and backordered units, the order is held from shipping, and it reconciles oldest order first when stock comes back (purchase-order receiving, stock adjustments, a per-order "Fulfil backorder" action, or the scheduled `inventory:reconcile-backorders` sweep). Cancelling, rejecting or deleting a backordered order restocks only the units that left; editing recomputes the split. The web app, REST, GraphQL and MCP all follow the same rule through the shared order service.
+- Backorders (#453, #454). An organization can accept a sales order past available stock and hold it from shipping until the stock arrives (off by default). A master switch under Settings > Organization > Backorders and a per-product "Allow backorder" toggle gate it: a short line is then split into fulfilled and backordered units, the order is held from shipping, and it reconciles oldest order first when stock comes back (purchase-order receiving, stock adjustments, a per-order "Fulfil backorder" action, or the scheduled `inventory:reconcile-backorders` sweep). Cancelling, rejecting or deleting a backordered order restocks only the units that left; editing recomputes the split. The web app, REST, GraphQL and MCP all follow the same rule through the shared order service, and an order on backorder cannot be set to shipped or delivered by any of them. The REST product endpoints accept and return `allow_backorder`, order webhooks include `backordered_at` and each line's `quantity_fulfilled` and `quantity_backordered`, and pick lists show only the units in stock.
 
 ## [2.6.0] - 2026-11-18
 
@@ -364,7 +368,8 @@ Before upgrading: take a database backup you have checked, run `php artisan opti
 
 Releases 1.0.0 to 1.0.8 are described on [GitHub Releases](https://github.com/Inventoros/Inventoros/releases?q=v1.0).
 
-[Unreleased]: https://github.com/Inventoros/Inventoros/compare/v2.6.0...HEAD
+[Unreleased]: https://github.com/Inventoros/Inventoros/compare/v2.6.1...HEAD
+[2.6.1]: https://github.com/Inventoros/Inventoros/compare/v2.6.0...v2.6.1
 [2.6.0]: https://github.com/Inventoros/Inventoros/compare/v2.5.0...v2.6.0
 [2.5.0]: https://github.com/Inventoros/Inventoros/compare/v2.4.0...v2.5.0
 [2.4.0]: https://github.com/Inventoros/Inventoros/compare/v2.3.0...v2.4.0

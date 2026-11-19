@@ -1,5 +1,18 @@
 # Upgrade Guide
 
+## Upgrading from v2.6.0 to v2.6.1
+
+Requirements are unchanged. Back up first, then update the same way as for
+2.6.0 below, with the version set to 2.6.1. Docker installs pull the 2.6.1
+image and must not use the in-app updater.
+
+Three migrations add columns, each with a default, so existing data needs no
+changes: `products.allow_backorder` (false), `order_items.quantity_backordered`
+(0) and `orders.backordered_at` (null). The scheduler gains
+`inventory:reconcile-backorders`, every fifteen minutes; installs that already
+run `schedule:run` pick it up with no change. Backorders stay off until an
+administrator turns them on under Settings > Organization > Backorders.
+
 ## Upgrading from v2.5.0 to v2.6.0
 
 The [2.6.0 release notes](docs/releases/2.6.0.md) describe every change and

@@ -521,6 +521,10 @@ class OrderController extends Controller
             // e.g. the stock sits in bins the order's warehouse cannot draw
             // from, or a reservation took it: flash rather than 500.
             return redirect()->back()->with('error', $e->getMessage());
+        } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
+            // The stock is in bins this user's warehouse access does not
+            // cover; someone with access to them can fulfil it.
+            return redirect()->back()->with('error', $e->getMessage());
         }
 
         return redirect()->back()->with('success', __('Backorders fulfilled where stock allowed.'));

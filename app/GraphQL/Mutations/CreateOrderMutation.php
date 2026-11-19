@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\GraphQL\Mutations;
 
+use App\Exceptions\BusinessRuleException;
 use App\Exceptions\InsufficientStockException;
 use App\Exceptions\InvalidOrderItemException;
 use App\GraphQL\Concerns\RequiresPermissions;
@@ -132,6 +133,10 @@ class CreateOrderMutation extends Mutation
             // web/REST/MCP surfaces.
             $order = app(OrderService::class)->create($args, $user, $args['source'] ?? 'graphql');
         } catch (InsufficientStockException|InvalidOrderItemException $e) {
+            throw new Error($e->getMessage());
+        } catch (BusinessRuleException $e) {
+            // Other refusals with safe messages, such as an order on
+            // backorder or waiting for approval being created as shipped.
             throw new Error($e->getMessage());
         } catch (ValidationException $e) {
             // Discount problems found while pricing the order.

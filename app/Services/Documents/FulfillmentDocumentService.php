@@ -55,7 +55,9 @@ final class FulfillmentDocumentService
             ->map(fn (OrderItem $item) => [
                 'name' => $item->product_name,
                 'sku' => $item->sku,
-                'quantity' => max(0, $item->quantity - (int) ($shipped[$item->id] ?? 0)),
+                // Units still on backorder never left stock, so they are not
+                // on the shelf to pick yet.
+                'quantity' => max(0, $item->quantity_fulfilled - (int) ($shipped[$item->id] ?? 0)),
             ])
             ->filter(fn (array $line) => $line['quantity'] > 0)
             ->values()->all();

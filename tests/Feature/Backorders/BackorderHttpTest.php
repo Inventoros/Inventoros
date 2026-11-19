@@ -14,6 +14,7 @@ use App\Services\OrderService;
 use App\Services\ProductLocationStockService;
 use App\Support\BackorderSettings;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
 class BackorderHttpTest extends TestCase
@@ -122,5 +123,31 @@ class BackorderHttpTest extends TestCase
                 ->component('Orders/Index')
                 ->has('orders.data', 1)
                 ->where('orders.data.0.id', $backordered->id));
+    }
+
+    public function test_rest_create_as_shipped_while_backordered_is_a_validation_error(): void
+    {
+        $product = $this->backorderProduct();
+        Sanctum::actingAs($this->admin);
+
+        $this->postJson('/api/v1/orders', [
+            'customer_name' => 'Acme',
+            'status' => 'shipped',
+            'items' => [['product_id' => $product->id, 'quantity' => 2, 'unit_price' => 10]],
+        ])->assertStatus(422)->assertJsonValidationErrors('status');
+
+        $this->assertSame(0, Order::count());
+    }
+
+    public function test_graphql_create_as_shipped_while_backordered_returns_the_reason(): void
+    {
+        $product = $this->backorderProduct();
+        Sanctum::actingAs($this->admin);
+
+        $response = $this->postJson('/graphql', ['query' => 'mutation { createOrder(customer_name: "Acme", status: "shipped", items: [{product_id: '.$product->id.', quantity: 2, unit_price: 10}]) { id } }']);
+
+        $response->assertOk();
+        $this->assertStringContainsString('backorder', (string) $response->json('errors.0.message'));
+        $this->assertSame(0, Order::count());
     }
 }

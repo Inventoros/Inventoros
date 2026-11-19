@@ -154,6 +154,12 @@ class OrderController extends Controller
             // Preserve the API's 422 contract: stock/variant problems surface as
             // an `items` validation error rather than a generic 500.
             throw ValidationException::withMessages(['items' => [$e->getMessage()]]);
+        } catch (InvalidStateException $e) {
+            // The order can't start in the requested status (an order on
+            // backorder or waiting for approval cannot be created shipped).
+            throw ValidationException::withMessages(['status' => [$e->getMessage()]]);
+        } catch (BusinessRuleException $e) {
+            throw ValidationException::withMessages(['items' => [$e->getMessage()]]);
         }
 
         $order->load('items');

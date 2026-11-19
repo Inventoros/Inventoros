@@ -81,15 +81,12 @@ final class BackorderService
             $onHand = (int) $target->stock;
             $fulfilled = 0;
 
-            foreach ($this->openBackorderedItems($organizationId, $productId, $variantId) as $item) {
+            foreach ($this->lockedBackorderedItems($orders, $productId, $variantId) as $item) {
                 if ($onHand - $reserved <= 0) {
                     break; // nothing left to give
                 }
 
                 $order = $orders->get($item->order_id);
-                if (! $this->isOpenBackorder($order)) {
-                    continue; // a cancel/ship won the race, or it already cleared
-                }
 
                 $give = min((int) $item->quantity_backordered, $onHand - $reserved);
                 if ($give <= 0) {
@@ -190,7 +187,14 @@ final class BackorderService
 
         $total = 0;
         foreach ($groups as $group) {
-            $total += $this->reconcileForProduct($group['org'], $group['product'], $group['variant']);
+            // One product that cannot be fulfilled (for example a serial-
+            // tracked product with too few registered serials in strict
+            // mode) must not stop the sweep for every product after it.
+            try {
+                $total += $this->reconcileForProduct($group['org'], $group['product'], $group['variant']);
+            } catch (\Throwable $e) {
+                report($e);
+            }
         }
 
         return $total;
@@ -202,20 +206,40 @@ final class BackorderService
     }
 
     /**
-     * Open backordered lines for a product/variant, oldest order first (by
+     * The backordered lines for a product/variant on the already-locked
+     * orders that are still open backorders, oldest order first (by
      * backordered_at, then order id).
      *
+     * The lines are read with a locking read. On MySQL a plain read inside
+     * the transaction would see the snapshot taken by the first read, from
+     * before the order locks were granted, so it could return lines a
+     * concurrent edit has since deleted and recreated.
+     *
+     * @param  \Illuminate\Support\Collection<int, Order>  $orders
      * @return \Illuminate\Support\Collection<int, OrderItem>
      */
-    private function openBackorderedItems(int $organizationId, int $productId, ?int $variantId)
+    private function lockedBackorderedItems($orders, int $productId, ?int $variantId)
     {
-        return $this->openBackorderedQuery($organizationId, $productId, $variantId)
-            ->with('order')
+        $open = $orders->filter(fn (Order $order) => $this->isOpenBackorder($order));
+        if ($open->isEmpty()) {
+            return collect();
+        }
+
+        return OrderItem::query()
+            ->whereIn('order_id', $open->keys()->all())
+            ->where('product_id', $productId)
+            ->where('quantity_backordered', '>', 0)
+            ->where(fn ($query) => $variantId === null
+                ? $query->whereNull('product_variant_id')
+                : $query->where('product_variant_id', $variantId))
+            ->orderBy('id')
+            ->lockForUpdate()
             ->get()
             ->sortBy(fn (OrderItem $item) => sprintf(
-                '%020d-%020d',
-                $item->order->backordered_at?->getTimestamp() ?? 0,
+                '%020d-%020d-%020d',
+                $open->get($item->order_id)->backordered_at?->getTimestamp() ?? 0,
                 (int) $item->order_id,
+                (int) $item->id,
             ))
             ->values();
     }
@@ -246,8 +270,14 @@ final class BackorderService
 
     private function clearIfComplete(Order $order): void
     {
-        // Query the lines directly rather than reloading the whole order.
-        if (! $order->items()->where('quantity_backordered', '>', 0)->exists()) {
+        // Query the lines directly rather than reloading the whole order. A
+        // locking read sees the latest committed lines (see
+        // lockedBackorderedItems()), not the transaction's first snapshot.
+        $outstanding = $order->items()
+            ->where('quantity_backordered', '>', 0)
+            ->lockForUpdate()
+            ->first(['id']);
+        if ($outstanding === null) {
             $order->update(['backordered_at' => null]);
         }
     }
