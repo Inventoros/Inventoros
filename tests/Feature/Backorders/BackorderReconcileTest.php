@@ -226,4 +226,33 @@ class BackorderReconcileTest extends TestCase
         $this->assertSame(0, (int) $order->items()->first()->quantity_backordered);
         $this->assertNull($order->fresh()->backordered_at);
     }
+
+    public function test_sweep_continues_past_a_product_that_fails(): void
+    {
+        // A serial-tracked product with stock but no registered serials can't
+        // be fulfilled in strict tracked mode, so reconciling it throws.
+        $failing = $this->product(stock: 0);
+        $failing->forceFill(['tracking_type' => 'serial'])->save();
+        $healthy = $this->product(stock: 0);
+        $stuck = $this->backorder($failing, 2);
+        $order = $this->backorder($healthy, 3);
+        $this->rawStock($failing, 2);
+        $this->rawStock($healthy, 3);
+        config(['inventory.strict_tracked_stock' => true]);
+
+        $this->assertSame(3, $this->backorders()->reconcileAll());
+        $this->assertSame(0, (int) $order->items()->first()->quantity_backordered);
+        $this->assertSame(2, (int) $stuck->items()->first()->quantity_backordered);
+    }
+
+    public function test_pick_list_lists_only_the_fulfilled_units(): void
+    {
+        $product = $this->product(stock: 3);
+        $order = $this->backorder($product, 5); // 3 fulfilled, 2 on backorder
+
+        $data = app(\App\Services\Documents\FulfillmentDocumentService::class)->pickListData($order->fresh());
+
+        $this->assertCount(1, $data['lines']);
+        $this->assertSame(3, $data['lines'][0]['quantity']);
+    }
 }
