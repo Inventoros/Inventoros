@@ -13,6 +13,7 @@
         { "slug": "work-orders", "label": "Work Orders", "anchor": "work-orders", "group": "Use", "description": "Build assemblies from their bill of materials, with variants, serial and batch tracking and kits." },
         { "slug": "exchange-rates", "label": "Exchange Rates", "anchor": "exchange-rates", "group": "Use", "description": "Purchase orders in a supplier's currency: providers, stored rates, synchronization, overrides and locking." },
         { "slug": "shipping", "label": "Shipping & Carriers", "anchor": "shipping", "group": "Use", "description": "Ship orders, buy labels through EasyPost, track shipments and email customers." },
+        { "slug": "backorders", "label": "Backorders", "anchor": "backorders", "group": "Use", "description": "Accept orders past available stock, hold them from shipping, and reconcile them as stock arrives." },
         { "slug": "plugins", "label": "Plugin Development", "anchor": "plugins", "group": "Extend", "description": "Build, test and publish plugins with the manifest, hooks, filters and UI extension points." },
         { "slug": "updates", "label": "Updates & Backups", "anchor": "updates", "group": "Operate", "description": "Update from the admin panel with signed releases, and back up and restore your installation." }
     ]

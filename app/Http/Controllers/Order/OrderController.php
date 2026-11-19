@@ -21,6 +21,7 @@ use App\Models\Inventory\Product;
 use App\Models\Inventory\ProductVariant;
 use App\Models\Order\Order;
 use App\Models\Warehouse;
+use App\Services\BackorderService;
 use App\Services\Documents\FulfillmentDocumentService;
 use App\Services\OrderService;
 use App\Services\Shipping\OrderShippingPanel;
@@ -80,6 +81,9 @@ class OrderController extends Controller
             ->when($request->input('source'), function ($query, $source) {
                 $query->bySource($source);
             })
+            ->when($request->boolean('backordered'), function ($query) {
+                $query->whereNotNull('backordered_at');
+            })
             // Filtering by payment status would reveal which orders are paid,
             // so it only applies for users who may see payments.
             ->when($canViewPayments && in_array($request->input('payment_status'), PaymentStatus::values(), true), function ($query) use ($request) {
@@ -116,7 +120,7 @@ class OrderController extends Controller
 
         return Inertia::render('Orders/Index', [
             'orders' => $orders,
-            'filters' => $request->only($canViewPayments ? ['search', 'status', 'source', 'payment_status'] : ['search', 'status', 'source']),
+            'filters' => $request->only($canViewPayments ? ['search', 'status', 'source', 'payment_status', 'backordered'] : ['search', 'status', 'source', 'backordered']),
             'statuses' => ['pending', 'processing', 'shipped', 'delivered', 'cancelled'],
             'canViewPayments' => $canViewPayments,
             'paymentStatuses' => $canViewPayments ? PaymentStatus::values() : [],
@@ -498,6 +502,28 @@ class OrderController extends Controller
         }
 
         return redirect()->back()->with('success', __('Order rejected.'));
+    }
+
+    /**
+     * Fulfil an order's outstanding backorders from stock that has arrived. The
+     * order screen offers this once stock is available; it reconciles as far as
+     * the current available stock allows and clears the backorder when done.
+     */
+    public function fulfillBackorder(Request $request, Order $order)
+    {
+        if ($order->organization_id !== $request->user()->organization_id) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        try {
+            app(BackorderService::class)->reconcileOrder($order, $request->user());
+        } catch (BusinessRuleException $e) {
+            // e.g. the stock sits in bins the order's warehouse cannot draw
+            // from, or a reservation took it: flash rather than 500.
+            return redirect()->back()->with('error', $e->getMessage());
+        }
+
+        return redirect()->back()->with('success', __('Backorders fulfilled where stock allowed.'));
     }
 
     /**

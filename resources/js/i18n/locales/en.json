@@ -524,6 +524,8 @@
       "reorderPointHint": "Stock level that triggers automatic reorder",
       "reorderQuantity": "Reorder Quantity",
       "reorderQuantityHint": "Quantity to order when stock reaches reorder point",
+      "allowBackorder": "Allow backorder",
+      "allowBackorderHint": "Accept orders for this product when it is out of stock, and fulfil them once stock arrives.",
       "leaveEmptyToDisable": "Leave empty to disable",
       "inventoryTracking": "Inventory Tracking",
       "inventoryTrackingHint": "Choose how to track individual units of this product.",
@@ -3338,6 +3340,25 @@
     "verifiedOne": "{name}: {scanned} of {expected}",
     "overScanned": "{name}: {scanned} scanned, only {expected} expected",
     "notOnTransfer": "{name} is not on this transfer."
+  },
+  "backorders": {
+    "settings": {
+      "tab": "Backorders",
+      "title": "Backorders",
+      "description": "Accept orders for out-of-stock products and hold them from shipping until stock arrives.",
+      "enabled": "Allow backorders",
+      "enabledHelp": "When on, a product opted in below can be ordered past its available stock.",
+      "defaultAllow": "Enable for new products by default",
+      "defaultAllowHelp": "New products start with backorders allowed. You can still change each product individually."
+    },
+    "filterLabel": "Backorders",
+    "filterAll": "All orders",
+    "filterOnly": "Backordered only",
+    "show": {
+      "heldBanner": "This order has items on backorder and is held from shipping until the stock arrives.",
+      "fulfillAction": "Fulfil backorder",
+      "lineSplit": "{fulfilled} fulfilled, {backordered} on backorder"
+    }
   },
   "approvals": {
     "title": "Approvals",

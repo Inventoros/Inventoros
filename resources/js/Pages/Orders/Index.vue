@@ -51,6 +51,7 @@ const search = ref(props.filters?.search || '');
 const status = ref(props.filters?.status || '');
 const source = ref(props.filters?.source || '');
 const paymentStatus = ref(props.filters?.payment_status || '');
+const backordered = ref(!!props.filters?.backordered);
 
 const formatCurrency = (value, currency) =>
     formatMoney(value, currency);
@@ -60,6 +61,7 @@ const searchOrders = () => {
         search: search.value,
         status: status.value,
         source: source.value,
+        backordered: backordered.value ? 1 : '',
         ...(props.canViewPayments ? { payment_status: paymentStatus.value } : {}),
     }, { preserveState: true, preserveScroll: true });
 };
@@ -69,6 +71,7 @@ const clearFilters = () => {
     status.value = '';
     source.value = '';
     paymentStatus.value = '';
+    backordered.value = false;
     searchOrders();
 };
 
@@ -156,6 +159,13 @@ const selectClass =
                         <select id="source" v-model="source" :class="selectClass">
                             <option value="">{{ t('orders.allSources') }}</option>
                             <option v-for="src in sources" :key="src" :value="src">{{ sourceText(src) }}</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="backordered" class="mb-1 block text-xs font-medium text-text-secondary">{{ t('backorders.filterLabel') }}</label>
+                        <select id="backordered" v-model="backordered" :class="selectClass">
+                            <option :value="false">{{ t('backorders.filterAll') }}</option>
+                            <option :value="true">{{ t('backorders.filterOnly') }}</option>
                         </select>
                     </div>
                     <div v-if="canViewPayments">

@@ -74,6 +74,8 @@ class OrderResource extends JsonResource
             'order_date' => $this->order_date?->toIso8601String(),
             'shipped_at' => $this->shipped_at?->toIso8601String(),
             'delivered_at' => $this->delivered_at?->toIso8601String(),
+            // Non-null while the order has items on backorder (held from shipping).
+            'backordered_at' => $this->backordered_at?->toIso8601String(),
             'notes' => $this->notes,
             'metadata' => $this->metadata,
             // Resolved to plain arrays here: Inertia turns a nested resource

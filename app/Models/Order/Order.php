@@ -68,6 +68,7 @@ use Illuminate\Support\Facades\DB;
  * @property Carbon|null $order_date
  * @property Carbon|null $shipped_at
  * @property Carbon|null $delivered_at
+ * @property Carbon|null $backordered_at
  * @property string|null $notes
  * @property array|null $metadata
  * @property Carbon|null $created_at
@@ -141,6 +142,7 @@ class Order extends Model
         'order_date',
         'shipped_at',
         'delivered_at',
+        'backordered_at',
         'notes',
         'metadata',
     ];
@@ -168,6 +170,7 @@ class Order extends Model
             'order_date' => 'datetime',
             'shipped_at' => 'datetime',
             'delivered_at' => 'datetime',
+            'backordered_at' => 'datetime',
             'approved_at' => 'datetime',
             'invoice_issued_at' => 'datetime',
             'invoice_sent_at' => 'datetime',
@@ -461,6 +464,15 @@ class Order extends Model
             if ($order->isDirty('status') && $order->approvalBlocks($order->status)) {
                 throw new InvalidStateException(self::APPROVAL_PENDING_MESSAGE, 'approval_pending');
             }
+
+            // Ship-together: an order with outstanding backorders never saves
+            // as shipped or delivered, whichever surface moves it (the web and
+            // REST order edits set the status directly, not through
+            // OrderService::transitionStatus()).
+            if ($order->isDirty('status') && $order->backordered_at !== null
+                && in_array($order->status, [OrderStatus::SHIPPED, OrderStatus::DELIVERED], true)) {
+                throw new InvalidStateException(self::BACKORDER_HOLD_MESSAGE, 'invalid_state_transition');
+            }
         });
 
         static::updated(function (Order $order) {
@@ -620,6 +632,20 @@ class Order extends Model
     }
 
     /**
+     * Whether any line still has units on backorder. This is the authoritative
+     * test; the backordered_at timestamp is a denormalisation the order service
+     * keeps in step with it. Uses the loaded items when present, else a query.
+     */
+    public function hasOutstandingBackorder(): bool
+    {
+        if ($this->relationLoaded('items')) {
+            return $this->items->contains(fn (OrderItem $item) => (int) $item->quantity_backordered > 0);
+        }
+
+        return $this->items()->where('quantity_backordered', '>', 0)->exists();
+    }
+
+    /**
      * Scope a query to filter by approval status.
      *
      * @param  Builder<static>  $query
@@ -672,6 +698,8 @@ class Order extends Model
     public const STATUSES_BLOCKED_BY_APPROVAL = [OrderStatus::SHIPPED, OrderStatus::DELIVERED];
 
     public const APPROVAL_PENDING_MESSAGE = 'This order is waiting for approval. Approve it before shipping or delivering it.';
+
+    public const BACKORDER_HOLD_MESSAGE = 'This order has items on backorder and cannot ship until all stock arrives.';
 
     /**
      * Whether moving this order to $status is blocked because it is still

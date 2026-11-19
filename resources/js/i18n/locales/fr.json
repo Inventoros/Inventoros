@@ -653,6 +653,8 @@
       "reorderPointHint": "Niveau de stock qui déclenche le réapprovisionnement automatique",
       "reorderQuantity": "Quantité de réapprovisionnement",
       "reorderQuantityHint": "Quantité à commander lorsque le stock atteint le seuil de réapprovisionnement",
+      "allowBackorder": "Autoriser les commandes en attente",
+      "allowBackorderHint": "Accepter les commandes de ce produit en rupture de stock et les traiter dès que le stock arrive.",
       "leaveEmptyToDisable": "Laissez vide pour désactiver",
       "inventoryTracking": "Suivi de l'inventaire",
       "inventoryTrackingHint": "Choisissez comment suivre les unités individuelles de ce produit.",
@@ -3467,6 +3469,25 @@
     "verifiedOne": "{name} : {scanned} sur {expected}",
     "overScanned": "{name} : {scanned} scanné(s), seulement {expected} attendu(s)",
     "notOnTransfer": "{name} ne fait pas partie de ce transfert."
+  },
+  "backorders": {
+    "settings": {
+      "tab": "Commandes en attente",
+      "title": "Commandes en attente",
+      "description": "Acceptez les commandes de produits en rupture de stock et bloquez leur expédition jusqu’à l’arrivée du stock.",
+      "enabled": "Autoriser les commandes en attente",
+      "enabledHelp": "Lorsque cette option est activée, un produit autorisé peut être commandé au-delà de son stock disponible.",
+      "defaultAllow": "Activer par défaut pour les nouveaux produits",
+      "defaultAllowHelp": "Les nouveaux produits autorisent les commandes en attente dès leur création. Vous pouvez toujours modifier chaque produit."
+    },
+    "filterLabel": "Commandes en attente",
+    "filterAll": "Toutes les commandes",
+    "filterOnly": "En attente uniquement",
+    "show": {
+      "heldBanner": "Cette commande contient des articles en attente et son expédition est bloquée jusqu’à l’arrivée du stock.",
+      "fulfillAction": "Traiter les articles en attente",
+      "lineSplit": "{fulfilled} traités, {backordered} en attente"
+    }
   },
   "approvals": {
     "title": "Approbations",

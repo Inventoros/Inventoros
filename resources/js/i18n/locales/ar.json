@@ -653,6 +653,8 @@
       "reorderPointHint": "مستوى المخزون الذي يُطلق إعادة الطلب التلقائية",
       "reorderQuantity": "كمية إعادة الطلب",
       "reorderQuantityHint": "الكمية المطلوب طلبها عندما يصل المخزون إلى نقطة إعادة الطلب",
+      "allowBackorder": "السماح بالطلب المؤجل",
+      "allowBackorderHint": "قبول طلبات هذا المنتج عند نفاد مخزونه، وتنفيذها عند وصول المخزون.",
       "leaveEmptyToDisable": "اتركه فارغاً للتعطيل",
       "inventoryTracking": "تتبع المخزون",
       "inventoryTrackingHint": "اختر طريقة تتبع الوحدات الفردية لهذا المنتج.",
@@ -3467,6 +3469,25 @@
     "verifiedOne": "{name}: {scanned} من {expected}",
     "overScanned": "{name}: تم مسح {scanned}، والمتوقع {expected} فقط",
     "notOnTransfer": "{name} غير موجود في هذا التحويل."
+  },
+  "backorders": {
+    "settings": {
+      "tab": "الطلبات المؤجلة",
+      "title": "الطلبات المؤجلة",
+      "description": "قبول طلبات المنتجات غير المتوفرة في المخزون وتعليق شحنها حتى وصول المخزون.",
+      "enabled": "السماح بالطلبات المؤجلة",
+      "enabledHelp": "عند التفعيل، يمكن طلب المنتج المسموح له أدناه بما يتجاوز مخزونه المتاح.",
+      "defaultAllow": "التفعيل للمنتجات الجديدة افتراضيًا",
+      "defaultAllowHelp": "تبدأ المنتجات الجديدة بالسماح بالطلب المؤجل. يمكنك تغيير كل منتج على حدة."
+    },
+    "filterLabel": "الطلبات المؤجلة",
+    "filterAll": "كل الطلبات",
+    "filterOnly": "المؤجلة فقط",
+    "show": {
+      "heldBanner": "يحتوي هذا الطلب على عناصر مؤجلة، وشحنه معلّق حتى وصول المخزون.",
+      "fulfillAction": "تنفيذ الطلب المؤجل",
+      "lineSplit": "{fulfilled} منفذة، {backordered} مؤجلة"
+    }
   },
   "approvals": {
     "title": "الموافقات",

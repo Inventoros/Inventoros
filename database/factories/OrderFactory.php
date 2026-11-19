@@ -22,4 +22,12 @@ class OrderFactory extends Factory
             'currency' => 'USD',
         ];
     }
+
+    /**
+     * An order flagged as having outstanding backordered items.
+     */
+    public function backordered(): static
+    {
+        return $this->state(fn () => ['backordered_at' => now()]);
+    }
 }

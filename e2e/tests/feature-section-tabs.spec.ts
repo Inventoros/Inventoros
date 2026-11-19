@@ -1,7 +1,7 @@
 import { test, expect, type Page } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 
-const routes = [['/settings/organization', 5], ['/import-export', 3], ['/approvals', 2]] as const;
+const routes = [['/settings/organization', 6], ['/import-export', 3], ['/approvals', 2]] as const;
 
 for (const width of [320, 375, 768, 1440]) {
     for (const [path, count] of routes) {
@@ -85,8 +85,8 @@ async function overrideProps(page: Page, path: string, change: (props: any) => v
 test('organization sections respect the server user-management capability', async ({ page }) => {
     await overrideProps(page, '/settings/organization', props => { props.can.viewUsers = false; });
     await expect(page.getByRole('tab', { name: 'User Management', exact: true })).toHaveCount(0);
-    await expect(page.getByRole('tab')).toHaveCount(4);
-    await expect(page.getByRole('tabpanel', { includeHidden: true })).toHaveCount(4);
+    await expect(page.getByRole('tab')).toHaveCount(5);
+    await expect(page.getByRole('tabpanel', { includeHidden: true })).toHaveCount(5);
 });
 
 test('Import/Export hides unauthorized datasets and falls back from a forbidden requested tab', async ({ page }) => {

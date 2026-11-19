@@ -34,6 +34,9 @@ class OrderItemResource extends JsonResource
             ),
             'sku' => $this->sku,
             'quantity' => $this->quantity,
+            // How this line splits: what left stock vs what is still awaited.
+            'quantity_backordered' => (int) $this->quantity_backordered,
+            'quantity_fulfilled' => (int) $this->quantity_fulfilled,
             'unit_price' => $this->unit_price,
             'subtotal' => $this->subtotal,
             'discount_type' => $this->discount_type,

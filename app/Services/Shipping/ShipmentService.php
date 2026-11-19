@@ -100,6 +100,12 @@ final class ShipmentService
                 throw new ShippingException("Order {$locked->order_number} is waiting for approval and cannot be shipped until it is approved.");
             }
 
+            // Ship-together: an order with outstanding backorders is held until
+            // every line's stock has arrived (and its backorder reconciled).
+            if ($locked->backordered_at !== null) {
+                throw new ShippingException("Order {$locked->order_number} has items on backorder and cannot ship until all stock arrives.");
+            }
+
             $lines = $this->resolveLines($locked, $data['items'] ?? []);
             $warehouseId = $this->resolveWarehouse($locked, $data['warehouse_id'] ?? null, $settings);
 

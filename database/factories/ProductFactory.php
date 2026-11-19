@@ -24,6 +24,15 @@ class ProductFactory extends Factory
             'min_stock' => fake()->numberBetween(5, 50),
             'max_stock' => fake()->numberBetween(100, 1000),
             'is_active' => true,
+            'allow_backorder' => false,
         ];
+    }
+
+    /**
+     * A product that may be ordered past its available stock.
+     */
+    public function allowBackorder(): static
+    {
+        return $this->state(fn () => ['allow_backorder' => true]);
     }
 }

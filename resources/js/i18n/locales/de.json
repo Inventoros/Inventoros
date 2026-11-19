@@ -653,6 +653,8 @@
       "reorderPointHint": "Bestand, der eine automatische Nachbestellung auslöst",
       "reorderQuantity": "Nachbestellmenge",
       "reorderQuantityHint": "Zu bestellende Menge, wenn der Bestand den Meldebestand erreicht",
+      "allowBackorder": "Rückstand zulassen",
+      "allowBackorderHint": "Bestellungen für dieses Produkt annehmen, wenn es nicht vorrätig ist, und sie ausführen, sobald Bestand eintrifft.",
       "leaveEmptyToDisable": "Leer lassen zum Deaktivieren",
       "inventoryTracking": "Bestandsverfolgung",
       "inventoryTrackingHint": "Wählen Sie, wie einzelne Einheiten dieses Produkts verfolgt werden.",
@@ -3467,6 +3469,25 @@
     "verifiedOne": "{name}: {scanned} von {expected}",
     "overScanned": "{name}: {scanned} gescannt, nur {expected} erwartet",
     "notOnTransfer": "{name} ist nicht Teil dieser Umlagerung."
+  },
+  "backorders": {
+    "settings": {
+      "tab": "Rückstände",
+      "title": "Rückstände",
+      "description": "Bestellungen für nicht vorrätige Produkte annehmen und bis zum Eintreffen des Bestands vom Versand zurückhalten.",
+      "enabled": "Rückstände zulassen",
+      "enabledHelp": "Wenn aktiviert, kann ein unten freigegebenes Produkt über den verfügbaren Bestand hinaus bestellt werden.",
+      "defaultAllow": "Für neue Produkte standardmäßig aktivieren",
+      "defaultAllowHelp": "Neue Produkte erlauben Rückstände von Anfang an. Jedes Produkt lässt sich weiterhin einzeln ändern."
+    },
+    "filterLabel": "Rückstände",
+    "filterAll": "Alle Bestellungen",
+    "filterOnly": "Nur mit Rückstand",
+    "show": {
+      "heldBanner": "Diese Bestellung enthält Artikel im Rückstand und wird bis zum Eintreffen des Bestands vom Versand zurückgehalten.",
+      "fulfillAction": "Rückstand ausführen",
+      "lineSplit": "{fulfilled} ausgeführt, {backordered} im Rückstand"
+    }
   },
   "approvals": {
     "title": "Genehmigungen",

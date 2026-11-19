@@ -653,6 +653,8 @@
       "reorderPointHint": "자동 재주문을 트리거하는 재고 수준",
       "reorderQuantity": "재주문 수량",
       "reorderQuantityHint": "재고가 재주문점에 도달했을 때 주문할 수량",
+      "allowBackorder": "이월 주문 허용",
+      "allowBackorderHint": "재고가 없을 때도 이 제품의 주문을 받고, 재고가 입고되면 처리합니다.",
       "leaveEmptyToDisable": "비활성화하려면 비워 두세요",
       "inventoryTracking": "재고 추적",
       "inventoryTrackingHint": "이 제품의 개별 단위를 추적할 방법을 선택하세요.",
@@ -3467,6 +3469,25 @@
     "verifiedOne": "{name}: {expected}개 중 {scanned}개",
     "overScanned": "{name}: {scanned}개 스캔됨, 예상 수량은 {expected}개",
     "notOnTransfer": "{name}은(는) 이 이동에 포함되지 않습니다."
+  },
+  "backorders": {
+    "settings": {
+      "tab": "이월 주문",
+      "title": "이월 주문",
+      "description": "재고가 없는 제품의 주문을 받고 재고가 입고될 때까지 배송을 보류합니다.",
+      "enabled": "이월 주문 허용",
+      "enabledHelp": "켜면 아래에서 허용한 제품을 가용 재고보다 많이 주문할 수 있습니다.",
+      "defaultAllow": "새 제품에 기본으로 사용",
+      "defaultAllowHelp": "새 제품은 이월 주문이 허용된 상태로 시작합니다. 제품별로 변경할 수 있습니다."
+    },
+    "filterLabel": "이월 주문",
+    "filterAll": "모든 주문",
+    "filterOnly": "이월 주문만",
+    "show": {
+      "heldBanner": "이 주문에는 이월된 품목이 있어 재고가 입고될 때까지 배송이 보류됩니다.",
+      "fulfillAction": "이월 주문 처리",
+      "lineSplit": "{fulfilled}개 처리됨, {backordered}개 이월"
+    }
   },
   "approvals": {
     "title": "승인",

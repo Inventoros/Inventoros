@@ -8,6 +8,7 @@ use App\Enums\Permission;
 use App\Http\Controllers\Controller;
 use App\Models\Auth\Organization;
 use App\Support\ApprovalSettings;
+use App\Support\BackorderSettings;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -39,6 +40,7 @@ class OrganizationSettingsController extends Controller
             'organization' => $organization,
             'user' => $user,
             'approvalSettings' => ApprovalSettings::forOrganization($organization)->toArray(),
+            'backorderSettings' => BackorderSettings::forOrganization($organization)->toArray(),
             // Explicit capability flags. The page must not rely on
             // `user.is_admin`: it is an accessor that is never serialized, so
             // the page used to render read-only even for administrators.
@@ -136,6 +138,32 @@ class OrganizationSettingsController extends Controller
         $organization->update(['settings' => $settings]);
 
         return redirect()->back()->with('success', __('Approval settings saved.'));
+    }
+
+    /**
+     * Update the organization's backorder settings: the master switch and the
+     * default a new product's backorder toggle is seeded with. Both are off by
+     * default.
+     */
+    public function updateBackorders(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'enabled' => 'boolean',
+            'default_allow' => 'boolean',
+        ]);
+
+        $organization = Organization::findOrFail($request->user()->organization_id);
+
+        $backorders = BackorderSettings::fromArray(array_merge(
+            BackorderSettings::forOrganization($organization)->toArray(),
+            $validated,
+        ));
+
+        $settings = $organization->settings ?? [];
+        $settings[BackorderSettings::KEY] = $backorders->toArray();
+        $organization->update(['settings' => $settings]);
+
+        return redirect()->back()->with('success', __('Backorder settings saved.'));
     }
 
     /**

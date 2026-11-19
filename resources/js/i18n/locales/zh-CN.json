@@ -653,6 +653,8 @@
       "reorderPointHint": "触发自动补货的库存水平",
       "reorderQuantity": "补货数量",
       "reorderQuantityHint": "库存达到补货点时的订购数量",
+      "allowBackorder": "允许缺货订购",
+      "allowBackorderHint": "该产品缺货时仍接受订单，到货后再履行。",
       "leaveEmptyToDisable": "留空则停用",
       "inventoryTracking": "库存跟踪",
       "inventoryTrackingHint": "选择如何跟踪此产品的单件商品。",
@@ -3467,6 +3469,25 @@
     "verifiedOne": "{name}：{scanned} / {expected}",
     "overScanned": "{name}：已扫描 {scanned}，预期仅 {expected}",
     "notOnTransfer": "{name} 不在此调拨单中。"
+  },
+  "backorders": {
+    "settings": {
+      "tab": "缺货订单",
+      "title": "缺货订单",
+      "description": "接受缺货产品的订单，并在到货前暂停发货。",
+      "enabled": "允许缺货订单",
+      "enabledHelp": "开启后，下方允许的产品可以超出可用库存下单。",
+      "defaultAllow": "默认对新产品启用",
+      "defaultAllowHelp": "新产品默认允许缺货订购。你仍然可以单独修改每个产品。"
+    },
+    "filterLabel": "缺货订单",
+    "filterAll": "所有订单",
+    "filterOnly": "仅缺货订单",
+    "show": {
+      "heldBanner": "此订单包含缺货商品，到货前暂停发货。",
+      "fulfillAction": "履行缺货",
+      "lineSplit": "已履行 {fulfilled}，缺货 {backordered}"
+    }
   },
   "approvals": {
     "title": "审批",

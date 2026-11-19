@@ -50,6 +50,7 @@ final class UpdateProductRequest extends FormRequest
             'max_stock' => 'nullable|integer|min:0',
             'reorder_point' => 'nullable|integer|min:0',
             'reorder_quantity' => 'nullable|integer|min:0',
+            'allow_backorder' => 'boolean',
             'barcode' => ['nullable', 'string', 'max:255', new BarcodeMatchesType($this->exists('barcode_type') ? $this->input('barcode_type') : $product->barcode_type)],
             'barcode_type' => ['nullable', Rule::enum(BarcodeType::class)],
             'notes' => 'nullable|string',

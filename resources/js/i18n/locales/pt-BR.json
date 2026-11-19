@@ -653,6 +653,8 @@
       "reorderPointHint": "Nível de estoque que aciona a reposição automática",
       "reorderQuantity": "Quantidade de Reposição",
       "reorderQuantityHint": "Quantidade a pedir quando o estoque atingir o ponto de reposição",
+      "allowBackorder": "Permitir pedidos em espera",
+      "allowBackorderHint": "Aceitar pedidos deste produto quando estiver sem estoque e atendê-los quando o estoque chegar.",
       "leaveEmptyToDisable": "Deixe em branco para desativar",
       "inventoryTracking": "Rastreamento de Estoque",
       "inventoryTrackingHint": "Escolha como rastrear as unidades individuais deste produto.",
@@ -3467,6 +3469,25 @@
     "verifiedOne": "{name}: {scanned} de {expected}",
     "overScanned": "{name}: {scanned} escaneados, apenas {expected} esperados",
     "notOnTransfer": "{name} não está nesta transferência."
+  },
+  "backorders": {
+    "settings": {
+      "tab": "Pedidos em espera",
+      "title": "Pedidos em espera",
+      "description": "Aceite pedidos de produtos sem estoque e segure o envio até o estoque chegar.",
+      "enabled": "Permitir pedidos em espera",
+      "enabledHelp": "Quando ativado, um produto liberado abaixo pode ser pedido acima do estoque disponível.",
+      "defaultAllow": "Ativar por padrão para novos produtos",
+      "defaultAllowHelp": "Novos produtos começam com pedidos em espera permitidos. Você ainda pode alterar cada produto individualmente."
+    },
+    "filterLabel": "Pedidos em espera",
+    "filterAll": "Todos os pedidos",
+    "filterOnly": "Somente em espera",
+    "show": {
+      "heldBanner": "Este pedido tem itens em espera e o envio está retido até o estoque chegar.",
+      "fulfillAction": "Atender itens em espera",
+      "lineSplit": "{fulfilled} atendidos, {backordered} em espera"
+    }
   },
   "approvals": {
     "title": "Aprovações",

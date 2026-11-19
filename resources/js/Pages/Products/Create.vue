@@ -33,6 +33,8 @@ const props = defineProps({
     barcodeTypes: { type: Array, default: () => [] },
     pluginComponents: Object,
     initialType: { type: String, default: 'standard' },
+    backordersEnabled: { type: Boolean, default: false },
+    backorderDefaultAllow: { type: Boolean, default: false },
 });
 
 const form = useForm({
@@ -48,6 +50,7 @@ const form = useForm({
     min_stock: '',
     reorder_point: '',
     reorder_quantity: '',
+    allow_backorder: props.backorderDefaultAllow,
     category_id: '',
     location_id: '',
     barcode: '',
@@ -473,6 +476,15 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                 <p v-if="form.errors.reorder_quantity" :class="fieldError">{{ form.errors.reorder_quantity }}</p>
                             </div>
                         </div>
+
+                        <!-- Allow backorder: only offered when the organization has backorders turned on. -->
+                        <label v-if="backordersEnabled" class="flex items-start gap-3">
+                            <input id="allow_backorder" v-model="form.allow_backorder" type="checkbox" class="mt-0.5 h-4 w-4 rounded border-border-subtle text-brand focus:ring-ds-focus-ring" />
+                            <span>
+                                <span class="block text-sm font-medium text-text-primary">{{ t('products.form.allowBackorder') }}</span>
+                                <span class="block text-xs text-text-tertiary">{{ t('products.form.allowBackorderHint') }}</span>
+                            </span>
+                        </label>
 
                         <div class="grid grid-cols-1 gap-4 @sm:grid-cols-2">
                             <!-- Location -->

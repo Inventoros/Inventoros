@@ -8,6 +8,7 @@ use App\Enums\DiscountType;
 use App\Models\Inventory\Product;
 use App\Models\Inventory\ProductVariant;
 use App\Support\Money;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -22,6 +23,8 @@ use Illuminate\Support\Carbon;
  * @property string $product_name
  * @property string|null $sku
  * @property int $quantity
+ * @property int $quantity_backordered Units on this line not yet fulfilled from stock (0 unless backordered)
+ * @property-read int $quantity_fulfilled quantity − quantity_backordered: the units that left stock
  * @property string $unit_price
  * @property string|null $unit_cost Unit cost at the time of sale (null when unknown)
  * @property Carbon|null $unit_cost_backfilled_at Set when unit_cost was estimated from current cost by the backfill
@@ -54,6 +57,7 @@ class OrderItem extends Model
         'product_name',
         'sku',
         'quantity',
+        'quantity_backordered',
         'unit_price',
         'unit_cost',
         'unit_cost_backfilled_at',
@@ -77,6 +81,7 @@ class OrderItem extends Model
         return [
             'product_variant_id' => 'integer',
             'quantity' => 'integer',
+            'quantity_backordered' => 'integer',
             'unit_price' => 'decimal:2',
             'unit_cost' => 'decimal:2',
             'unit_cost_backfilled_at' => 'datetime',
@@ -89,6 +94,19 @@ class OrderItem extends Model
             'total' => 'decimal:2',
             'metadata' => 'array',
         ];
+    }
+
+    /**
+     * The units of this line that were fulfilled from stock: the ordered
+     * quantity less whatever is still on backorder.
+     *
+     * @return Attribute<int, never>
+     */
+    protected function quantityFulfilled(): Attribute
+    {
+        return Attribute::make(
+            get: fn (): int => (int) $this->quantity - (int) $this->quantity_backordered,
+        );
     }
 
     /**

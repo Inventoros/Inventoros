@@ -23,6 +23,7 @@ use App\Services\ProductService;
 use App\Services\StockReservationService;
 use App\Services\WarehouseAccessService;
 use App\Services\WarehouseStockLevelService;
+use App\Support\BackorderSettings;
 use App\Support\PluginQueryGuard;
 use App\Support\ProductSearch;
 use App\Support\Search;
@@ -161,6 +162,8 @@ class ProductController extends Controller
             ['value' => 'assembly', 'label' => 'Assembly'],
         ];
 
+        $backorders = BackorderSettings::forOrganization($organizationId);
+
         return Inertia::render('Products/Create', [
             'categories' => $categories,
             'locations' => $locations,
@@ -170,6 +173,9 @@ class ProductController extends Controller
             'productTypes' => $productTypes,
             'initialType' => in_array($request->input('type'), array_column($productTypes, 'value'), true) ? $request->input('type') : 'standard',
             'barcodeTypes' => BarcodeType::options(),
+            'backordersEnabled' => $backorders->enabled,
+            // The organization's default seeds a new product's toggle.
+            'backorderDefaultAllow' => $backorders->enabled && $backorders->defaultAllow,
             'pluginComponents' => [
                 'header' => get_page_components('products.create', 'header'),
                 'beforeForm' => get_page_components('products.create', 'before-form'),
@@ -422,6 +428,7 @@ class ProductController extends Controller
             'defaultCurrency' => $defaultCurrency,
             'productTypes' => $productTypes,
             'barcodeTypes' => BarcodeType::options(),
+            'backordersEnabled' => BackorderSettings::forOrganization($organizationId)->enabled,
             'pluginComponents' => [
                 'header' => get_page_components('products.edit', 'header'),
                 'beforeForm' => get_page_components('products.edit', 'before-form'),
