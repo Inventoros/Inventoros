@@ -59,7 +59,14 @@ class PurchaseOrderItem extends Model
             }
         };
 
-        static::saved($reopen);
+        // Laravel fires saved even when nothing changed; resubmitting a line
+        // as it was (the web form sends every line) is not a change to the
+        // approved terms.
+        static::saved(function (PurchaseOrderItem $item) use ($reopen): void {
+            if ($item->wasRecentlyCreated || $item->wasChanged()) {
+                $reopen($item);
+            }
+        });
         static::deleted($reopen);
     }
 

@@ -273,6 +273,23 @@ class PurchaseOrderApiTest extends TestCase
         $this->assertSame('21.09', (string) $po->total);
     }
 
+    public function test_a_total_beyond_the_storable_range_is_a_validation_error(): void
+    {
+        Sanctum::actingAs($this->admin);
+
+        // A normal order in a currency like IDR can exceed decimal(12,2).
+        $this->postJson('/api/v1/purchase-orders', [
+            'supplier_id' => $this->supplier->id,
+            'order_date' => now()->toDateString(),
+            'currency' => 'USD',
+            'items' => [
+                ['product_id' => $this->product->id, 'quantity' => 1000, 'unit_cost' => 15000000],
+            ],
+        ])->assertStatus(422)->assertJsonValidationErrors(['items']);
+
+        $this->assertSame(0, PurchaseOrder::where('supplier_id', $this->supplier->id)->count());
+    }
+
     public function test_create_purchase_order_validates_required_fields(): void
     {
         Sanctum::actingAs($this->admin);

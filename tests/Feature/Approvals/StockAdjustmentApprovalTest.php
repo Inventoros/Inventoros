@@ -155,6 +155,27 @@ class StockAdjustmentApprovalTest extends TestCase
         $this->assertSame(2, StockAdjustmentRequest::count());
     }
 
+    public function test_the_value_threshold_is_compared_in_the_organization_currency(): void
+    {
+        $this->enableApprovals([
+            'stock_adjustments_enabled' => true,
+            'stock_adjustments_value_threshold' => 1000,
+        ]);
+
+        // EUR product in a USD organization with no stored EUR rate: the value
+        // can't be shown to be under the threshold, so it is held.
+        $this->product->update(['currency' => 'EUR', 'purchase_price' => 1]);
+        $this->webAdjust(-1);
+        $this->assertSame(100, $this->product->fresh()->stock);
+        $this->assertSame(1, StockAdjustmentRequest::count());
+
+        // Same currency, under the threshold: applied straight away.
+        $this->product->update(['currency' => 'USD']);
+        $this->webAdjust(-1);
+        $this->assertSame(99, $this->product->fresh()->stock);
+        $this->assertSame(1, StockAdjustmentRequest::count());
+    }
+
     public function test_variant_adjustments_are_held_and_applied_to_the_variant(): void
     {
         $this->enableApprovals(['stock_adjustments_enabled' => true]);

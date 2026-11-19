@@ -87,6 +87,21 @@ class PurchaseOrderThresholdBypassTest extends TestCase
         $this->assertFalse($po->canBeSent());
     }
 
+    public function test_saving_a_line_unchanged_keeps_the_approval(): void
+    {
+        $po = $this->draftPo(1500);
+        $this->actingAs($this->requester)->post(route('purchase-orders.submit-approval', $po));
+        $this->actingAs($this->approver)->post(route('approvals.approve', ['type' => 'purchase_order', 'id' => $po->id]));
+        $this->assertSame(PurchaseOrder::APPROVAL_APPROVED, $po->fresh()->approval_status);
+
+        $item = $po->items()->first();
+        $item->save(); // the web form resubmits every line as it was
+        $this->assertSame(PurchaseOrder::APPROVAL_APPROVED, $po->fresh()->approval_status);
+
+        $item->update(['quantity_ordered' => 11]);
+        $this->assertNull($po->fresh()->approval_status);
+    }
+
     public function test_a_null_shipping_is_treated_as_zero_not_stored_as_null(): void
     {
         $po = $this->draftPo(500);
