@@ -65,7 +65,9 @@ class OrderController extends Controller
             ->when($request->input('warehouse_id'), function ($query, $warehouseId) {
                 $query->where('warehouse_id', $warehouseId);
             })
-            ->when(is_string($request->input('search')) ? $request->input('search') : null, function ($query, $search) {
+            // A string or number (JSON clients send numeric searches); an
+            // array (?search[]=a) is ignored rather than a 500.
+            ->when(is_string($request->input('search')) || is_int($request->input('search')) || is_float($request->input('search')) ? $request->input('search') : null, function ($query, $search) {
                 $query->where(function ($q) use ($search) {
                     Search::apply($q, ['order_number', 'customer_name', 'customer_email', 'external_id', 'external_reference', 'metadata->channel_order_number', 'metadata->shopify->name'], $search);
                 });
