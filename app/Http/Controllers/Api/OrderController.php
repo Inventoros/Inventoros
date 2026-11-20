@@ -65,7 +65,9 @@ class OrderController extends Controller
             ->when($request->input('warehouse_id'), function ($query, $warehouseId) {
                 $query->where('warehouse_id', $warehouseId);
             })
-            ->when($request->input('search'), function ($query, $search) {
+            // A string or number (JSON clients send numeric searches); an
+            // array (?search[]=a) is ignored rather than a 500.
+            ->when(is_string($request->input('search')) || is_int($request->input('search')) || is_float($request->input('search')) ? $request->input('search') : null, function ($query, $search) {
                 $query->where(function ($q) use ($search) {
                     Search::apply($q, ['order_number', 'customer_name', 'customer_email', 'external_id', 'external_reference', 'metadata->channel_order_number', 'metadata->shopify->name'], $search);
                 });
@@ -76,10 +78,10 @@ class OrderController extends Controller
             ->when($request->input('source'), function ($query, $source) {
                 $query->bySource($source);
             })
-            ->when($request->input('date_from'), function ($query, $dateFrom) {
+            ->when($this->dateFilter($request->input('date_from')), function ($query, $dateFrom) {
                 $query->where('order_date', '>=', $dateFrom);
             })
-            ->when($request->input('date_to'), function ($query, $dateTo) {
+            ->when($this->dateFilter($request->input('date_to')), function ($query, $dateTo) {
                 $query->where('order_date', '<=', $dateTo);
             })
             // Only for callers who may see payments; otherwise ignored.
@@ -278,31 +280,36 @@ class OrderController extends Controller
             unset($validated['status']);
         }
 
-        if ($discountChanged) {
-            $order = $this->orderService->changeOrderDiscount($order, $discountType, $discountValue);
-        }
+        // One transaction: a refused cancel (goods already shipped) must not
+        // leave the discount or field changes from the same request saved.
+        try {
+            $order = DB::transaction(function () use ($order, $validated, $discountChanged, $discountType, $discountValue, $cancelTransition) {
+                if ($discountChanged) {
+                    $order = $this->orderService->changeOrderDiscount($order, $discountType, $discountValue);
+                }
 
-        if ($validated !== []) {
-            try {
-                $order->update($validated);
-            } catch (InvalidStateException $e) {
-                // The model's transition backstop (a concurrent status change).
-                return response()->json([
-                    'message' => $e->getMessage(),
-                    'error' => $e->errorCode,
-                ], 422);
-            }
-        }
+                if ($validated !== []) {
+                    // The model's transition backstop (a concurrent status
+                    // change) throws InvalidStateException.
+                    $order->update($validated);
+                }
 
-        if ($cancelTransition) {
-            try {
-                $order = $this->orderService->cancel($order);
-            } catch (BusinessRuleException $e) {
-                return response()->json([
-                    'message' => $e->getMessage(),
-                    'error' => 'invalid_state_transition',
-                ], 422);
-            }
+                if ($cancelTransition) {
+                    $order = $this->orderService->cancel($order);
+                }
+
+                return $order;
+            });
+        } catch (InvalidStateException $e) {
+            return response()->json([
+                'message' => $e->getMessage(),
+                'error' => $e->errorCode,
+            ], 422);
+        } catch (BusinessRuleException $e) {
+            return response()->json([
+                'message' => $e->getMessage(),
+                'error' => 'invalid_state_transition',
+            ], 422);
         }
 
         $order->load('items');
@@ -438,5 +445,20 @@ class OrderController extends Controller
             'message' => 'Invoice emailed',
             'data' => new OrderResource($order),
         ]);
+    }
+
+    /**
+     * A Y-m-d date filter value, or null when it is missing or not a date,
+     * so a malformed filter is ignored instead of reaching the database.
+     */
+    private function dateFilter(mixed $value): ?string
+    {
+        if (! is_string($value) || preg_match('/^\d{4}-\d{2}-\d{2}$/', $value) !== 1) {
+            return null;
+        }
+
+        [$year, $month, $day] = array_map('intval', explode('-', $value));
+
+        return checkdate($month, $day, $year) ? $value : null;
     }
 }

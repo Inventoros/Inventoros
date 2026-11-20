@@ -50,7 +50,11 @@ class SearchProductsTool extends Tool
             })
             ->orderBy('name')
             ->limit($limit)
-            ->get(['id', 'sku', 'name', 'barcode', 'stock', 'price', 'selling_price', 'tax_rate', 'min_stock']);
+            ->select(['id', 'sku', 'name', 'barcode', 'stock', 'price', 'selling_price', 'tax_rate', 'min_stock'])
+            // total_stock: products sold by variant keep their stock there.
+            ->withEffectiveStock()
+            ->get()
+            ->each(fn (Product $product) => $product->append('total_stock')->makeHidden('effective_stock'));
 
         return Response::json([
             'count' => $products->count(),

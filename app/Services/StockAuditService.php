@@ -306,7 +306,11 @@ final class StockAuditService
                 );
             }
 
-            foreach ($locked->items()->with(['product', 'variant'])->lazyById(200) as $item) {
+            // withTrashed: a product deleted after it was counted still books
+            // its recount; without it the relation is null and the
+            // adjustment fails, so the audit could never be completed.
+            $withTrashed = fn ($query) => $query->withTrashed();
+            foreach ($locked->items()->with(['product' => $withTrashed, 'variant' => $withTrashed])->lazyById(200) as $item) {
                 if ($locked->require_variance_approval && StockAuditReviewService::needsReview($item)) {
                     throw new InvalidStateException('Review all variances and finish requested recounts before completing the audit.', 'unreviewed_variances');
                 }

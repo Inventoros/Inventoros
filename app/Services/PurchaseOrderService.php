@@ -56,6 +56,7 @@ final class PurchaseOrderService
 
         [$subtotal, $orderItems] = $this->buildNewItems($organizationId, $data['items']);
         [$tax, $orderItems] = $this->applyLineTax($orderItems, $data['tax'] ?? 0);
+        $this->assertWithinMoneyRange(Money::add($subtotal, $tax, $data['shipping'] ?? 0));
 
         // Before the transaction: finding the rate may ask the provider.
         $snapshot = $this->exchangeRates->snapshotFor($organizationId, (string) $data['currency'], $data['order_date'], $data, null, $creator) ?? [];
@@ -218,6 +219,7 @@ final class PurchaseOrderService
                 $data['tax'] ?? $purchaseOrder->tax,
                 $data['shipping'] ?? $purchaseOrder->shipping,
             );
+            $this->assertWithinMoneyRange($data['total']);
 
             $purchaseOrder->fill($data);
             if ($snapshot !== null) {
@@ -403,5 +405,19 @@ final class PurchaseOrderService
         }
 
         return [Money::add($documentTax, ...array_column($taxed, 'tax')), $rows];
+    }
+
+    /**
+     * Purchase order amounts are stored as decimal(12,2). A larger total
+     * (a normal order in IDR or VND can reach it) would fail the insert with
+     * a database error, so refuse it as a validation error instead.
+     */
+    private function assertWithinMoneyRange(string|int|float $total): void
+    {
+        if (Money::compare((string) $total, '9999999999.99') > 0) {
+            throw ValidationException::withMessages([
+                'items' => 'The purchase order total is larger than Inventoros can store (9,999,999,999.99). Split it into smaller orders.',
+            ]);
+        }
     }
 }

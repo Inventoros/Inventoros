@@ -715,7 +715,15 @@ final class ReturnOrderService
 
         // Load lines only after the parent lock: MySQL's consistent-read
         // snapshot must be established after any earlier receiver commits.
-        $locked->load('items.product', 'items.variant', 'items.orderItem.variant');
+        // Deleted products and variants still take their returned units back,
+        // as OrderService::releaseStock() does: without withTrashed() the
+        // line was skipped and the return marked received with no restock.
+        $withTrashed = fn ($query) => $query->withTrashed();
+        $locked->load([
+            'items.product' => $withTrashed,
+            'items.variant' => $withTrashed,
+            'items.orderItem.variant' => $withTrashed,
+        ]);
 
         $alreadyReceived = ReturnOrderItem::query()
             ->whereHas('returnOrder', fn ($query) => $query->withoutGlobalScopes()

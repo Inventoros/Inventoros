@@ -437,6 +437,19 @@ final class ProductsImport extends ProductSpreadsheetValueBinder implements Skip
             ->where('organization_id', $this->organizationId)
             ->first();
 
+        // Updating from a file that leaves a column out keeps that field: a
+        // sku,name,price,stock sheet must not blank every product's
+        // category, location, barcode, notes and status. A column that is
+        // present with an empty cell still clears the field.
+        if ($product) {
+            if (! $row->has('category')) {
+                $categoryId = $product->category_id;
+            }
+            if (! $row->has('location')) {
+                $locationId = $product->location_id === null ? null : (int) $product->location_id;
+            }
+        }
+
         $actor = $this->actingUser();
         if ($actor !== null) {
             if ($product) {
@@ -463,9 +476,9 @@ final class ProductsImport extends ProductSpreadsheetValueBinder implements Skip
             }
         }
 
-        // Convert status string to is_active boolean
+        // Convert status string to is_active boolean ("Active " counts).
         $status = $row['status'] ?? 'active';
-        $isActive = strtolower($status) === 'active';
+        $isActive = strtolower(trim((string) $status)) === 'active';
 
         // Marked exports have already been decoded without losing literal
         // identifiers. Every subsequent export still escapes formula cells.
@@ -490,6 +503,22 @@ final class ProductsImport extends ProductSpreadsheetValueBinder implements Skip
             'notes' => $sanitise($row['notes'] ?? null),
             'organization_id' => $this->organizationId,
         ];
+
+        if ($product) {
+            $optionalColumns = [
+                'barcode' => 'barcode',
+                'description' => 'description',
+                'purchase_price' => 'purchase_price',
+                'min_stock' => 'min_stock',
+                'status' => 'is_active',
+                'notes' => 'notes',
+            ];
+            foreach ($optionalColumns as $column => $field) {
+                if (! $row->has($column)) {
+                    unset($productData[$field]);
+                }
+            }
+        }
 
         // A file without a tax_rate column leaves the rate alone (files made
         // before the column existed); a blank cell clears it.

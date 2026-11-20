@@ -64,8 +64,8 @@ Schedule::command('exchange-rates:sync')->hourly()->withoutOverlapping();
 // runaway). Run nightly at off-peak times. Defaults are conservative:
 // 365 days for activity logs, 30 days for non-failed webhook
 // deliveries; operators can override per their compliance policy.
-Schedule::command('activity-logs:prune')->dailyAt('03:00');
-Schedule::command('webhooks:prune')->dailyAt('03:30');
+Schedule::command('activity-logs:prune')->dailyAt('03:00')->withoutOverlapping();
+Schedule::command('webhooks:prune')->dailyAt('03:30')->withoutOverlapping();
 
 // Queued export files past config('exports.retention_days'); capped per run
 // (see PruneDataExportsCommand) so a backlog clears over several nights.

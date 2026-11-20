@@ -50,9 +50,29 @@ class PruneActivityLogsCommand extends Command
             return Command::SUCCESS;
         }
 
-        $deleted = ActivityLog::where('created_at', '<', $cutoff)->delete();
+        $deleted = $this->deleteInBatches(ActivityLog::where('created_at', '<', $cutoff));
         $this->info("Pruned {$deleted} activity_logs rows older than {$cutoff->toDateTimeString()} ({$days} days).");
 
         return Command::SUCCESS;
+    }
+
+    /**
+     * Delete in batches of ids so a first run over years of history never
+     * holds one long lock on the table or overruns the undo log.
+     *
+     * @param  \Illuminate\Database\Eloquent\Builder<\Illuminate\Database\Eloquent\Model>  $query
+     */
+    private function deleteInBatches($query, int $batch = 5000): int
+    {
+        $deleted = 0;
+        do {
+            $ids = (clone $query)->orderBy('id')->limit($batch)->pluck('id');
+            if ($ids->isEmpty()) {
+                break;
+            }
+            $deleted += $query->getModel()->newQueryWithoutScopes()->whereKey($ids->all())->delete();
+        } while ($ids->count() === $batch);
+
+        return $deleted;
     }
 }

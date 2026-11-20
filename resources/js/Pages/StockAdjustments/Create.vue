@@ -158,7 +158,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                 </select>
                                 <!-- Scan Icon Button -->
                                 <button
-                                    v-if="$page.props.auth.permissions.includes('stock_adjustments.create')"
+                                    v-if="$page.props.auth.permissions.includes('manage_stock')"
                                     type="button"
                                     @click="openScanner"
                                     class="absolute end-2 top-1/2 -translate-y-1/2 rounded-md p-1.5 text-text-tertiary transition-colors hover:text-brand"

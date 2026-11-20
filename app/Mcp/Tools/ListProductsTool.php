@@ -81,6 +81,8 @@ class ListProductsTool extends Tool
                 'selling_price' => $p->selling_price,
                 'tax_rate' => $p->tax_rate,
                 'stock' => $p->stock,
+                // Products sold by variant keep their stock on the variants.
+                'total_stock' => $p->total_stock,
                 'reserved_stock' => $p->reserved_stock,
                 'available_stock' => $p->available_stock,
                 'min_stock' => $p->min_stock,

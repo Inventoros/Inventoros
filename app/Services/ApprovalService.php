@@ -21,6 +21,7 @@ use App\Models\Order\Order;
 use App\Models\Purchasing\PurchaseOrder;
 use App\Models\Scopes\OrganizationScope;
 use App\Models\User;
+use App\Services\ExchangeRates\OrganizationCurrencyConverter;
 use App\Services\Organizations\ActiveOrganization;
 use App\Support\ApprovalSettings;
 use Illuminate\Database\Eloquent\Model;
@@ -178,23 +179,54 @@ final class ApprovalService
     // ==================== STOCK ADJUSTMENTS ====================
 
     /**
-     * The money value of an adjustment: |quantity| x unit cost, using the
-     * variant's cost for a variant and falling back to the selling price
-     * when no purchase price is recorded.
+     * The money value of an adjustment in the organization's currency:
+     * |quantity| x unit cost, using the variant's cost for a variant and
+     * falling back to the selling price when no purchase price is recorded.
+     * Null when there is no cost, or when the product is priced in another
+     * currency with no stored exchange rate.
      */
     public function adjustmentValue(Product $product, ?ProductVariant $variant, int $quantity): ?float
+    {
+        return $this->organizationAdjustmentValue($product, $variant, $quantity)['value'];
+    }
+
+    public function stockAdjustmentNeedsApproval(Product $product, ?ProductVariant $variant, int $quantity): bool
+    {
+        $value = $this->organizationAdjustmentValue($product, $variant, $quantity);
+
+        // A value that cannot be converted cannot be shown to be under the
+        // threshold, so it is treated as over it (as purchase orders are).
+        return ApprovalSettings::forOrganization($product->organization_id)
+            ->stockAdjustmentNeedsApproval($quantity, $value['unconvertible'] ? PHP_FLOAT_MAX : $value['value']);
+    }
+
+    /**
+     * @return array{value: float|null, unconvertible: bool}
+     */
+    private function organizationAdjustmentValue(Product $product, ?ProductVariant $variant, int $quantity): array
     {
         $unit = $variant
             ? ($variant->purchase_price ?? $variant->price ?? $product->purchase_price ?? $product->price)
             : ($product->purchase_price ?? $product->price);
 
-        return $unit === null ? null : round(abs($quantity) * (float) $unit, 2);
-    }
+        if ($unit === null) {
+            return ['value' => null, 'unconvertible' => false];
+        }
 
-    public function stockAdjustmentNeedsApproval(Product $product, ?ProductVariant $variant, int $quantity): bool
-    {
-        return ApprovalSettings::forOrganization($product->organization_id)
-            ->stockAdjustmentNeedsApproval($quantity, $this->adjustmentValue($product, $variant, $quantity));
+        $value = round(abs($quantity) * (float) $unit, 2);
+
+        // Product prices are in the product's own currency; the threshold is
+        // in the organization's.
+        $converted = app(OrganizationCurrencyConverter::class)
+            ->toOrganizationCurrency((int) $product->organization_id, $value, $product->currency);
+
+        if ($converted === null) {
+            return ['value' => $value, 'unconvertible' => false]; // same currency
+        }
+
+        return $converted['amount'] === null
+            ? ['value' => null, 'unconvertible' => true]
+            : ['value' => round((float) $converted['amount'], 2), 'unconvertible' => false];
     }
 
     /**

@@ -255,7 +255,13 @@ class ExchangeRateSettingsController extends Controller
 
         $validated = $request->validate([
             'currency' => ['required', 'string', Rule::in(array_keys((array) config('currencies.supported', []))), Rule::notIn([$baseCurrency])],
-            'rate' => ['required', 'numeric', 'gt:0', 'max:9999999999', 'decimal:0,10'],
+            // isValidRate: the rate math rejects forms the numeric rule
+            // accepts (".5", "5.", "+2"), which would otherwise be a 500.
+            'rate' => ['required', 'numeric', 'gt:0', 'max:9999999999', 'decimal:0,10', function (string $attribute, mixed $value, \Closure $fail): void {
+                if (! \App\Support\ExchangeMath::isValidRate($value)) {
+                    $fail(__('Enter the rate as a plain number, for example 0.5 or 395.12.'));
+                }
+            }],
             'effective_date' => ['required', 'date_format:Y-m-d', 'before_or_equal:'.$today],
         ]);
 

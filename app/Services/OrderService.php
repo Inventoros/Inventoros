@@ -115,6 +115,14 @@ final class OrderService
      */
     public function create(array $data, User $creator, string $source = 'manual', bool $adjustStock = true, bool $announce = true): Order
     {
+        // An order recorded as already cancelled never takes stock: cancel()
+        // and deletion both skip a cancelled order, so stock taken here could
+        // never come back. The order import does the same.
+        $initialStatus = $data['status'] ?? null;
+        if (($initialStatus instanceof OrderStatus ? $initialStatus : OrderStatus::tryFrom((string) $initialStatus)) === OrderStatus::CANCELLED) {
+            $adjustStock = false;
+        }
+
         if ($adjustStock && isset($data['warehouse_id'])) {
             app(WarehouseAccessService::class)->authorizeWarehouse($creator, (int) $data['warehouse_id']);
         }

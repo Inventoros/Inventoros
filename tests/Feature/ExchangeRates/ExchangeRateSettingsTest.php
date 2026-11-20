@@ -214,6 +214,9 @@ final class ExchangeRateSettingsTest extends TestCase
             ['currency' => 'HUF', 'rate' => '1', 'effective_date' => '2026-11-15'],
             ['currency' => 'EUR', 'rate' => '0', 'effective_date' => '2026-11-15'],
             ['currency' => 'EUR', 'rate' => '360', 'effective_date' => '2026-12-01'],
+            // Pass the numeric rule but not the rate math: no longer a 500.
+            ['currency' => 'EUR', 'rate' => '.5', 'effective_date' => '2026-11-15'],
+            ['currency' => 'EUR', 'rate' => '+2', 'effective_date' => '2026-11-15'],
         ] as $bad) {
             $this->actingAs($admin)->post(route('settings.exchange-rates.rates.store'), $bad)->assertSessionHasErrors();
         }

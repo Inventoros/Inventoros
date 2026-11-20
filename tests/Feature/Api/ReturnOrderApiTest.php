@@ -104,6 +104,20 @@ class ReturnOrderApiTest extends TestCase
         $this->postJson("/api/v1/returns/{$id}/complete")->assertOk()->assertJsonPath('data.status', 'completed');
     }
 
+    public function test_receiving_restocks_a_product_deleted_since_the_sale(): void
+    {
+        Sanctum::actingAs($this->admin);
+        $stockBefore = (int) $this->product->fresh()->stock;
+
+        $id = $this->postJson('/api/v1/returns', $this->payload(2))->assertCreated()->json('data.id');
+        $this->postJson("/api/v1/returns/{$id}/approve")->assertOk();
+
+        $this->product->delete(); // soft delete after the sale
+
+        $this->postJson("/api/v1/returns/{$id}/receive")->assertOk()->assertJsonPath('data.status', 'received');
+        $this->assertSame($stockBefore + 2, (int) Product::withTrashed()->find($this->product->id)->stock);
+    }
+
     public function test_reject_appends_reason(): void
     {
         Sanctum::actingAs($this->admin);
