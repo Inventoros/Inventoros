@@ -7,6 +7,7 @@ use App\Models\Inventory\Product;
 use App\Models\Inventory\ProductCategory;
 use App\Models\Inventory\ProductLocation;
 use App\Models\Inventory\ProductLocationStock;
+use App\Models\Inventory\ProductVariant;
 use App\Models\Inventory\StockAdjustment;
 use App\Models\Role;
 use App\Models\System\SystemSetting;
@@ -297,6 +298,50 @@ class StockAdjustmentControllerTest extends TestCase
             ->component('StockAdjustments/Create')
             ->has('products')
             ->has('types')
+        );
+    }
+
+    public function test_create_form_sends_barcodes_for_the_product_search(): void
+    {
+        $this->product->update(['barcode' => '0123456789012']);
+        $bundle = Product::create([
+            'organization_id' => $this->organization->id,
+            'sku' => 'BOX-SAMPLER',
+            'name' => 'Sampler Box',
+            'price' => 10,
+            'currency' => 'USD',
+            'stock' => 0,
+            'min_stock' => 0,
+            'is_active' => true,
+            'has_variants' => true,
+            'category_id' => $this->category->id,
+            'location_id' => $this->location->id,
+        ]);
+        $variant = ProductVariant::create([
+            'product_id' => $bundle->id,
+            'organization_id' => $this->organization->id,
+            'sku' => 'BOX-SAMPLER-RED',
+            'barcode' => '9990001112223',
+            'option_values' => ['Colour' => 'Red'],
+            'stock' => 4,
+            'min_stock' => 0,
+            'is_active' => true,
+            'position' => 0,
+        ]);
+
+        $response = $this->actingAs($this->admin)->get(route('stock-adjustments.create'));
+
+        $response->assertInertia(fn ($page) => $page
+            ->component('StockAdjustments/Create')
+            ->where('products', function ($products) use ($bundle, $variant) {
+                $products = collect($products);
+                $plain = $products->firstWhere('id', $this->product->id);
+                $box = $products->firstWhere('id', $bundle->id);
+
+                return $plain['barcode'] === '0123456789012'
+                    && $box['variants'][0]['id'] === $variant->id
+                    && $box['variants'][0]['barcode'] === '9990001112223';
+            })
         );
     }
 
