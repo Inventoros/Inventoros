@@ -6,11 +6,34 @@ Full release notes, with the pull request behind each change, are on [GitHub Rel
 
 ## [Unreleased]
 
-This release adds one migration, which is additive.
+## [2.6.2] - 2026-11-20
+
+This release adds one migration, which is additive. See the [2.6.2 release notes](docs/releases/2.6.2.md).
 
 ### Added
 
 - Preorders by release date (#453). Products have an optional release date (`products.release_date`), set on the product form or as `release_date` over the REST API. Until that date the product is a preorder: while the organization's backorder switch is on it can be ordered past stock even without the product's "Allow backorder" toggle, and the shortfall goes on backorder as usual. An order holding a preorder product cannot ship before the latest release date among its lines, even if stock has arrived: creating a shipment and setting the status to shipped or delivered are refused through the web app, REST, GraphQL and MCP, and an order cannot be created as shipped or delivered. The order page shows the date in a banner and on each preorder line, the shipping panel explains the hold, and the edit form disables the shipped and delivered statuses. Products return `release_date` and `is_preorder`; orders and order lines return `preorder_release_date` when their items and products are loaded.
+
+### Changed
+
+- The stock adjustment form uses the searchable product picker (#456, #458), the same one as orders, purchase orders and stock transfers. Products can be found by name, SKU or barcode, including a variant's title, SKU or barcode, and the barcode scan button sits beside it.
+
+### Fixed
+
+Fixes from an audit of 2.6.1 (#457):
+
+- An order created as `cancelled` (web, REST, GraphQL or MCP) no longer takes stock. Cancel and delete skip a cancelled order, so that stock was lost for good.
+- Receiving a return restocks a product deleted since the sale, and completing a stock audit no longer fails when a counted product was deleted.
+- A product import that leaves a column out keeps that field on existing products instead of blanking it, and a status cell with stray spaces is read correctly.
+- A user's permission list includes permissions from a role's permission sets, matching `hasPermission()`. This feeds the navigation, API token abilities and the check that stops someone managing a user who holds more than they do.
+- The barcode scan buttons check real permission names, so they show.
+- REST and GraphQL order updates are atomic, so a refused cancel no longer leaves a discount or other changes saved. Malformed REST order filters are ignored instead of a 500, and GraphQL returns warehouse-access refusals and missing records as client errors.
+- Stock transfer variant ids are checked against the caller's organization.
+- MCP product tools, the low-stock resource and product webhooks add `total_stock` for products sold by variant.
+- The activity log and webhook delivery prunes delete in batches and never overlap.
+- A purchase order total beyond `decimal(12,2)` is a 422 instead of a 500, and a manual exchange rate like `.5` is a validation error instead of a 500.
+- The stock adjustment value threshold is compared in the organization's currency; without a rate the adjustment is held.
+- Resaving an approved draft purchase order's lines unchanged keeps the approval.
 
 ## [2.6.1] - 2026-11-19
 

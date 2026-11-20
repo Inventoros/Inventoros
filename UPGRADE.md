@@ -1,5 +1,15 @@
 # Upgrade Guide
 
+## Upgrading from v2.6.1 to v2.6.2
+
+Requirements are unchanged. Back up first, then update the same way as for
+2.6.0 below, with the version set to 2.6.2. Docker installs pull the 2.6.2
+image and must not use the in-app updater.
+
+One migration adds a nullable column, `products.release_date`, so existing
+data needs no changes. Products without a release date behave exactly as
+before, and preorders only take orders past stock while backorders are on.
+
 ## Upgrading from v2.6.0 to v2.6.1
 
 Requirements are unchanged. Back up first, then update the same way as for
