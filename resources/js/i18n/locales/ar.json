@@ -655,6 +655,8 @@
       "reorderQuantityHint": "الكمية المطلوب طلبها عندما يصل المخزون إلى نقطة إعادة الطلب",
       "allowBackorder": "السماح بالطلب المؤجل",
       "allowBackorderHint": "قبول طلبات هذا المنتج عند نفاد مخزونه، وتنفيذها عند وصول المخزون.",
+      "releaseDate": "تاريخ الإصدار",
+      "releaseDateHint": "لمنتج لم يصدر بعد. حتى هذا التاريخ يمكن طلبه دون مخزون عند تفعيل الطلبات المؤجلة، ولا يمكن شحن الطلبات التي تتضمنه.",
       "leaveEmptyToDisable": "اتركه فارغاً للتعطيل",
       "inventoryTracking": "تتبع المخزون",
       "inventoryTrackingHint": "اختر طريقة تتبع الوحدات الفردية لهذا المنتج.",
@@ -3486,7 +3488,9 @@
     "show": {
       "heldBanner": "يحتوي هذا الطلب على عناصر مؤجلة، وشحنه معلّق حتى وصول المخزون.",
       "fulfillAction": "تنفيذ الطلب المؤجل",
-      "lineSplit": "{fulfilled} منفذة، {backordered} مؤجلة"
+      "lineSplit": "{fulfilled} منفذة، {backordered} مؤجلة",
+      "preorderBanner": "يتضمن هذا الطلب منتجات بالطلب المسبق ولا يمكن شحنه قبل {date}.",
+      "preorderLine": "طلب مسبق، يصدر في {date}"
     }
   },
   "approvals": {

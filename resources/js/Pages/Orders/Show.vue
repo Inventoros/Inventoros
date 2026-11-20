@@ -21,7 +21,7 @@ import { formatTaxRate } from '@/lib/lineTax';
 import { invoiceState } from '@/lib/invoiceState';
 import { approvalStatusLabel, approvalStatusVariant, orderSourceLabel, orderStatusLabel, orderStatusVariant } from '@/lib/orderLabels';
 import { useI18n } from 'vue-i18n';
-import { ArrowLeft, Pencil, Download, Eye, Undo2, Trash2, X, AlertTriangle, PackageOpen, Mail, Plus, RotateCcw, Wallet, ClipboardList } from '@lucide/vue';
+import { ArrowLeft, Pencil, Download, Eye, Undo2, Trash2, X, AlertTriangle, PackageOpen, Mail, Plus, RotateCcw, Wallet, ClipboardList, CalendarClock } from '@lucide/vue';
 
 const { t, te } = useI18n();
 const statusText = (status) => orderStatusLabel(status, { t, te });
@@ -278,6 +278,11 @@ const formatOrderDate = (date, long = false) =>
             <p class="text-sm text-status-warning">{{ t('orders.approval.blocksShipping') }}</p>
         </div>
 
+        <div v-if="order.preorder_release_date" class="mt-4 flex items-start gap-2 rounded-lg border border-status-info/20 bg-status-info-soft p-3">
+            <CalendarClock :size="16" class="mt-0.5 shrink-0 text-status-info" />
+            <p class="text-sm text-status-info">{{ t('backorders.show.preorderBanner', { date: displayCalendarDate(order.preorder_release_date) }) }}</p>
+        </div>
+
         <div v-if="isBackordered" class="mt-4 flex flex-wrap items-start gap-2 rounded-lg border border-status-warning/20 bg-status-warning-soft p-3">
             <AlertTriangle :size="16" class="mt-0.5 shrink-0 text-status-warning" />
             <p class="flex-1 text-sm text-status-warning">{{ t('backorders.show.heldBanner') }}</p>
@@ -329,6 +334,9 @@ const formatOrderDate = (date, long = false) =>
                                         <p class="font-medium tabular-nums text-text-primary">{{ item.quantity }}</p>
                                         <p v-if="item.quantity_backordered > 0" class="text-xs text-status-warning">
                                             {{ t('backorders.show.lineSplit', { fulfilled: item.quantity_fulfilled, backordered: item.quantity_backordered }) }}
+                                        </p>
+                                        <p v-if="item.preorder_release_date" class="text-xs text-status-info">
+                                            {{ t('backorders.show.preorderLine', { date: displayCalendarDate(item.preorder_release_date) }) }}
                                         </p>
                                     </div>
 

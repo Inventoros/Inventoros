@@ -655,6 +655,8 @@
       "reorderQuantityHint": "在庫が発注点に達したときに発注する数量",
       "allowBackorder": "入荷待ち注文を許可",
       "allowBackorderHint": "在庫切れのときもこの商品の注文を受け付け、在庫が入荷したら引き当てます。",
+      "releaseDate": "発売日",
+      "releaseDateHint": "まだ発売されていない商品に設定します。この日までは、バックオーダーが有効な場合に在庫なしで注文でき、この商品を含む注文は出荷できません。",
       "leaveEmptyToDisable": "空欄の場合は無効",
       "inventoryTracking": "在庫追跡",
       "inventoryTrackingHint": "この商品の個々の単位を追跡する方法を選択してください。",
@@ -3486,7 +3488,9 @@
     "show": {
       "heldBanner": "この注文には入荷待ちの品目があり、在庫が入荷するまで出荷が保留されます。",
       "fulfillAction": "入荷待ちを引き当てる",
-      "lineSplit": "{fulfilled} 件引当済み、{backordered} 件入荷待ち"
+      "lineSplit": "{fulfilled} 件引当済み、{backordered} 件入荷待ち",
+      "preorderBanner": "この注文には予約商品が含まれているため、{date} より前に出荷できません。",
+      "preorderLine": "予約商品、{date} 発売"
     }
   },
   "approvals": {

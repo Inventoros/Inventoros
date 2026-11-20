@@ -655,6 +655,8 @@
       "reorderQuantityHint": "Quantité à commander lorsque le stock atteint le seuil de réapprovisionnement",
       "allowBackorder": "Autoriser les commandes en attente",
       "allowBackorderHint": "Accepter les commandes de ce produit en rupture de stock et les traiter dès que le stock arrive.",
+      "releaseDate": "Date de sortie",
+      "releaseDateHint": "Pour un produit pas encore sorti. Jusqu'à cette date, il peut être commandé sans stock lorsque les commandes en attente sont activées, et les commandes qui le contiennent ne peuvent pas être expédiées.",
       "leaveEmptyToDisable": "Laissez vide pour désactiver",
       "inventoryTracking": "Suivi de l'inventaire",
       "inventoryTrackingHint": "Choisissez comment suivre les unités individuelles de ce produit.",
@@ -3486,7 +3488,9 @@
     "show": {
       "heldBanner": "Cette commande contient des articles en attente et son expédition est bloquée jusqu’à l’arrivée du stock.",
       "fulfillAction": "Traiter les articles en attente",
-      "lineSplit": "{fulfilled} traités, {backordered} en attente"
+      "lineSplit": "{fulfilled} traités, {backordered} en attente",
+      "preorderBanner": "Cette commande contient des articles en précommande et ne peut pas être expédiée avant le {date}.",
+      "preorderLine": "Précommande, sortie le {date}"
     }
   },
   "approvals": {

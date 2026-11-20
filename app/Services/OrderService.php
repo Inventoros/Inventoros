@@ -337,6 +337,13 @@ final class OrderService
             $order->backordered_at = collect($lines)->contains(fn (array $l) => $l['backorderedQty'] > 0)
                 ? $now
                 : null;
+            // A preorder line holds the order from shipping until the
+            // product's release date, so the order cannot start out shipped
+            // or delivered either. The model's hold cannot see the lines yet.
+            if ($adjustStock && in_array($order->status, [OrderStatus::SHIPPED, OrderStatus::DELIVERED], true)
+                && collect($lines)->contains(fn (array $l) => $l['product']->isPreorder())) {
+                throw new InvalidStateException(Order::PREORDER_HOLD_MESSAGE, 'invalid_state_transition');
+            }
             $this->applyTotals($order, $totals);
             $order->save();
 
@@ -1308,6 +1315,9 @@ final class OrderService
             // guard is at ShipmentService::create(); this covers a direct move.
             if (in_array($to, [OrderStatus::SHIPPED, OrderStatus::DELIVERED], true) && $locked->backordered_at !== null) {
                 throw new InvalidStateException(Order::BACKORDER_HOLD_MESSAGE, 'invalid_state_transition');
+            }
+            if (in_array($to, [OrderStatus::SHIPPED, OrderStatus::DELIVERED], true) && $locked->awaitingReleaseUntil() !== null) {
+                throw new InvalidStateException(Order::PREORDER_HOLD_MESSAGE, 'invalid_state_transition');
             }
 
             $error = $locked->transitionErrorTo($to);

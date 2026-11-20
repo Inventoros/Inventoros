@@ -12,6 +12,7 @@ use App\Exceptions\InvalidStateException;
 use App\Models\Auth\Organization;
 use App\Models\Concerns\BelongsToOrganization;
 use App\Models\Customer;
+use App\Models\Inventory\Product;
 use App\Models\User;
 use App\Models\Warehouse;
 use App\Services\ApprovalService;
@@ -473,6 +474,14 @@ class Order extends Model
                 && in_array($order->status, [OrderStatus::SHIPPED, OrderStatus::DELIVERED], true)) {
                 throw new InvalidStateException(self::BACKORDER_HOLD_MESSAGE, 'invalid_state_transition');
             }
+
+            // Street date: an order holding a preorder product never saves as
+            // shipped or delivered before that product's release date.
+            if ($order->exists && $order->isDirty('status')
+                && in_array($order->status, [OrderStatus::SHIPPED, OrderStatus::DELIVERED], true)
+                && $order->awaitingReleaseUntil() !== null) {
+                throw new InvalidStateException(self::PREORDER_HOLD_MESSAGE, 'invalid_state_transition');
+            }
         });
 
         static::updated(function (Order $order) {
@@ -632,6 +641,35 @@ class Order extends Model
     }
 
     /**
+     * The latest release date among this order's preorder products (those
+     * whose release date is still in the future), or null when nothing in the
+     * order is a preorder. The order cannot ship before this date. Uses the
+     * loaded items and products when present, else a query.
+     */
+    public function awaitingReleaseUntil(): ?Carbon
+    {
+        if ($this->relationLoaded('items')
+            && $this->items->every(fn (OrderItem $item) => $item->relationLoaded('product'))) {
+            $date = $this->items
+                ->map(fn (OrderItem $item) => $item->product)
+                ->filter(fn (?Product $product) => $product?->isPreorder())
+                ->map(fn (Product $product) => $product->release_date)
+                ->max();
+
+            return $date !== null ? Carbon::parse($date)->startOfDay() : null;
+        }
+
+        // Deleted products are skipped, matching the loaded-relation path.
+        $date = Product::withoutGlobalScopes()
+            ->whereNull('deleted_at')
+            ->whereIn('id', OrderItem::withoutGlobalScopes()->where('order_id', $this->getKey())->select('product_id'))
+            ->whereDate('release_date', '>', today()->toDateString())
+            ->max('release_date');
+
+        return $date !== null ? Carbon::parse($date)->startOfDay() : null;
+    }
+
+    /**
      * Whether any line still has units on backorder. This is the authoritative
      * test; the backordered_at timestamp is a denormalisation the order service
      * keeps in step with it. Uses the loaded items when present, else a query.
@@ -700,6 +738,8 @@ class Order extends Model
     public const APPROVAL_PENDING_MESSAGE = 'This order is waiting for approval. Approve it before shipping or delivering it.';
 
     public const BACKORDER_HOLD_MESSAGE = 'This order has items on backorder and cannot ship until all stock arrives.';
+
+    public const PREORDER_HOLD_MESSAGE = 'This order has preorder items and cannot ship before their release date.';
 
     /**
      * Whether moving this order to $status is blocked because it is still

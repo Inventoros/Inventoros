@@ -76,6 +76,10 @@ class OrderResource extends JsonResource
             'delivered_at' => $this->delivered_at?->toIso8601String(),
             // Non-null while the order has items on backorder (held from shipping).
             'backordered_at' => $this->backordered_at?->toIso8601String(),
+            // Y-m-d while the order holds preorder items: it cannot ship
+            // before this date (the latest of their release dates).
+            // Only with items loaded, so order lists do not query per order.
+            'preorder_release_date' => $this->whenLoaded('items', fn () => $this->resource->awaitingReleaseUntil()?->toDateString()),
             'notes' => $this->notes,
             'metadata' => $this->metadata,
             // Resolved to plain arrays here: Inertia turns a nested resource

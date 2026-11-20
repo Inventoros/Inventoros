@@ -37,6 +37,12 @@ class OrderItemResource extends JsonResource
             // How this line splits: what left stock vs what is still awaited.
             'quantity_backordered' => (int) $this->quantity_backordered,
             'quantity_fulfilled' => (int) $this->quantity_fulfilled,
+            // Y-m-d when the line's product is a preorder (release date still
+            // ahead), else null. Only when the product relation was loaded.
+            'preorder_release_date' => $this->when(
+                $this->resource->relationLoaded('product'),
+                fn () => $this->product?->isPreorder() ? $this->product->release_date->toDateString() : null,
+            ),
             'unit_price' => $this->unit_price,
             'subtotal' => $this->subtotal,
             'discount_type' => $this->discount_type,

@@ -31,6 +31,15 @@ Reconciliation moves stock the same audited way order creation does: it draws th
 
 Only the fulfilled units ever left stock, so cancelling, rejecting or deleting a backordered order returns only those to inventory and clears the backorder. Editing an order recomputes the split against current stock, so growing a line past what is available backorders the difference, and shrinking it back into stock clears the backorder. If backorders have since been turned off, for the organization or the product, an edit keeps the units already on backorder but cannot add more.
 
+## Preorders
+
+A product that is not out yet can take orders before its release date. Set **Release date** on the product's form, or send `release_date` (`YYYY-MM-DD`) over the REST API. Until that date the product is a preorder:
+
+- While the organization's **Allow backorders** switch is on, it can be ordered past its stock even if **Allow backorder** is not ticked on the product. The shortfall goes on backorder and is fulfilled the same way as any other backorder when stock arrives.
+- An order that includes it cannot ship before the release date, even if the stock has already arrived. Creating a shipment, or setting the status to shipped or delivered by any route, is refused until then. The order page shows the date in a banner and on each preorder line, and the REST order shows it as `preorder_release_date`.
+
+The product is released at the start of its release date, after which it behaves like any other product. Clearing the date releases it straight away. Products return `release_date` and `is_preorder` over the REST API.
+
 ## What is not covered yet
 
-This first release does not draft a supplier purchase order for the shortfall automatically, and does not schedule preorders by a release date. The hold is all or nothing; there is no per-order "ship the available part now" override.
+This release does not draft a supplier purchase order for the shortfall automatically. The hold is all or nothing; there is no per-order "ship the available part now" override.

@@ -655,6 +655,8 @@
       "reorderQuantityHint": "Cantidad a pedir cuando el stock alcanza el punto de reorden",
       "allowBackorder": "Permitir pedidos pendientes",
       "allowBackorderHint": "Aceptar pedidos de este producto cuando no hay existencias y completarlos cuando llegue el stock.",
+      "releaseDate": "Fecha de lanzamiento",
+      "releaseDateHint": "Para un producto que aún no ha salido. Hasta esta fecha se puede pedir sin stock cuando los pedidos pendientes están activados, y los pedidos que lo incluyen no se pueden enviar.",
       "leaveEmptyToDisable": "Déjalo vacío para desactivar",
       "inventoryTracking": "Seguimiento de inventario",
       "inventoryTrackingHint": "Elige cómo hacer el seguimiento de las unidades individuales de este producto.",
@@ -3486,7 +3488,9 @@
     "show": {
       "heldBanner": "Este pedido tiene artículos pendientes y su envío está retenido hasta que llegue el stock.",
       "fulfillAction": "Completar pendientes",
-      "lineSplit": "{fulfilled} completados, {backordered} pendientes"
+      "lineSplit": "{fulfilled} completados, {backordered} pendientes",
+      "preorderBanner": "Este pedido incluye artículos en preventa y no se puede enviar antes del {date}.",
+      "preorderLine": "Preventa, sale el {date}"
     }
   },
   "approvals": {

@@ -52,6 +52,7 @@ final class UpdateProductRequest extends FormRequest
             'location_id' => ['nullable', 'integer', Rule::exists('product_locations', 'id')->where('organization_id', $organizationId), new AccessibleProductLocation($this->user(), $this->route('product') instanceof Product ? $this->route('product') : null)],
             'is_active' => ['nullable', 'boolean'],
             'allow_backorder' => ['sometimes', 'boolean'],
+            'release_date' => ['sometimes', 'nullable', 'date'],
             'tracking_type' => ['nullable', 'string', 'in:none,batch,serial'],
             'metadata' => ['nullable', 'array'],
 
