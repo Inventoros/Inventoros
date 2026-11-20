@@ -64,10 +64,11 @@ final class BackorderSettings
 
     /**
      * Whether a short line for this product may be backordered at creation:
-     * the master switch is on and the product is opted in.
+     * the master switch is on and the product is opted in, either directly
+     * or by being a preorder (a release date still in the future).
      */
     public function allowsBackorderFor(Product $product): bool
     {
-        return $this->enabled && (bool) $product->allow_backorder;
+        return $this->enabled && ((bool) $product->allow_backorder || $product->isPreorder());
     }
 }

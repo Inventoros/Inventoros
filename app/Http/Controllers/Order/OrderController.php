@@ -315,6 +315,8 @@ class OrderController extends Controller
             'orderLevelTax' => $this->orderService->orderLevelTax($order),
             'products' => $products,
             'awaitingApproval' => $order->isPendingApproval(),
+            // Y-m-d while preorder items hold the order from shipping.
+            'awaitingRelease' => $order->awaitingReleaseUntil()?->toDateString(),
         ]);
     }
 

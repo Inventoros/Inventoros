@@ -57,6 +57,7 @@ use Illuminate\Support\Carbon;
  * @property bool $is_active
  * @property bool $has_variants
  * @property bool $allow_backorder
+ * @property Carbon|null $release_date
  * @property array|null $metadata
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
@@ -109,6 +110,7 @@ class Product extends Model
         'reorder_point',
         'reorder_quantity',
         'allow_backorder',
+        'release_date',
         'barcode',
         'barcode_type',
         'notes',
@@ -156,6 +158,7 @@ class Product extends Model
             'reorder_point' => 'integer',
             'reorder_quantity' => 'integer',
             'allow_backorder' => 'boolean',
+            'release_date' => 'date:Y-m-d',
             'is_active' => 'boolean',
             'has_variants' => 'boolean',
             'tracking_type' => TrackingType::class,
@@ -164,6 +167,15 @@ class Product extends Model
             'images' => 'array',
             'image_disks' => 'array',
         ];
+    }
+
+    /**
+     * Whether the product is a preorder: it has a release date that has not
+     * arrived yet. It is released at the start of that day.
+     */
+    public function isPreorder(): bool
+    {
+        return $this->release_date !== null && $this->release_date->isAfter(today());
     }
 
     /**

@@ -106,6 +106,12 @@ final class ShipmentService
                 throw new ShippingException("Order {$locked->order_number} has items on backorder and cannot ship until all stock arrives.");
             }
 
+            // Street date: preorder items cannot ship before their release.
+            $releaseDate = $locked->awaitingReleaseUntil();
+            if ($releaseDate !== null) {
+                throw new ShippingException("Order {$locked->order_number} has preorder items and cannot ship before {$releaseDate->toDateString()}.");
+            }
+
             $lines = $this->resolveLines($locked, $data['items'] ?? []);
             $warehouseId = $this->resolveWarehouse($locked, $data['warehouse_id'] ?? null, $settings);
 

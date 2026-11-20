@@ -54,6 +54,9 @@ class ProductResource extends JsonResource
             'is_active' => $this->is_active,
             'has_variants' => $this->has_variants,
             'allow_backorder' => (bool) $this->allow_backorder,
+            // Y-m-d; a future date makes the product a preorder.
+            'release_date' => $this->release_date?->toDateString(),
+            'is_preorder' => $this->resource->isPreorder(),
             'tracking_type' => $this->tracking_type?->value,
             'metadata' => $this->metadata,
             'is_low_stock' => $this->isLowStock(),

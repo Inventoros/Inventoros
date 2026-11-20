@@ -51,6 +51,7 @@ final class StoreProductRequest extends FormRequest
             'reorder_point' => 'nullable|integer|min:0',
             'reorder_quantity' => 'nullable|integer|min:0',
             'allow_backorder' => 'boolean',
+            'release_date' => 'nullable|date',
             'barcode' => ['nullable', 'string', 'max:255', new BarcodeMatchesType($this->input('barcode_type'))],
             'barcode_type' => ['nullable', Rule::enum(BarcodeType::class)],
             'notes' => 'nullable|string',

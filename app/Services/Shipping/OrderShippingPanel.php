@@ -54,14 +54,18 @@ final class OrderShippingPanel
             ->all();
 
         $warehouseId = $order->warehouse_id ?? $settings->default_warehouse_id;
+        $releaseDate = $order->awaitingReleaseUntil();
 
         return [
             'shipments' => $shipments,
             'shipping' => [
                 // An order waiting for approval cannot ship (ShipmentService
                 // refuses it too); the panel says why instead of offering Ship.
-                'canCreate' => $user->hasPermission('create_shipments') && ! $order->isPendingApproval(),
+                'canCreate' => $user->hasPermission('create_shipments') && ! $order->isPendingApproval() && $releaseDate === null,
                 'awaitingApproval' => $order->isPendingApproval(),
+                // Y-m-d of the latest preorder release date, or null. The
+                // order cannot ship before it (ShipmentService refuses too).
+                'awaitingRelease' => $releaseDate?->toDateString(),
                 'carriers' => $this->carriers->available($organizationId),
                 'lines' => OrderItem::where('order_id', $order->id)->with('variant')->orderBy('id')->get()
                     ->map(fn (OrderItem $item) => [
