@@ -5,6 +5,7 @@ import AppLayout from '@/Layouts/AppLayout.vue';
 import PageHeader from '@/Components/ui/PageHeader.vue';
 import Card from '@/Components/ui/Card.vue';
 import Button from '@/Components/ui/Button.vue';
+import ProductPicker from '@/Components/ui/ProductPicker.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import { defineAsyncComponent, computed, watch, ref, nextTick } from 'vue';
 import { ScanLine, AlertTriangle } from '@lucide/vue';
@@ -142,32 +143,35 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                     <div class="space-y-6 p-5">
                         <!-- Product Selection -->
                         <div>
-                            <label :class="fieldLabel">
+                            <label :for="fieldIdPrefix + '-product'" :class="fieldLabel">
                                 {{ t('common.product') }} <span class="text-status-danger">*</span>
                             </label>
-                            <div class="relative">
-                                <select
-                                    v-model="form.product_id" :aria-label="t('common.product')"
-                                    required
-                                    :class="[fieldInput, 'pe-12', { 'border-status-danger': form.errors.product_id }]"
-                                >
-                                    <option value="">{{ t('stockAdjustments.create.selectProduct') }}</option>
-                                    <option v-for="product in products" :key="product.id" :value="product.id">
-                                        {{ product.name }} ({{ product.sku }}) - {{ t('stockAdjustments.create.currentStockValue', { stock: product.stock }) }}
-                                    </option>
-                                </select>
+                            <div class="flex items-start gap-2">
+                                <div class="min-w-0 flex-1">
+                                    <ProductPicker
+                                        :id="fieldIdPrefix + '-product'"
+                                        v-model="form.product_id"
+                                        :products="products"
+                                        :stock-label="t('components.productPicker.onHand')"
+                                        required
+                                        :invalid="Boolean(form.errors.product_id)"
+                                        :describedby="form.errors.product_id ? fieldIdPrefix + '-product-error' : null"
+                                        @change="form.product_variant_id = null"
+                                    />
+                                </div>
                                 <!-- Scan Icon Button -->
                                 <button
                                     v-if="$page.props.auth.permissions.includes('manage_stock')"
                                     type="button"
                                     @click="openScanner"
-                                    class="absolute end-2 top-1/2 -translate-y-1/2 rounded-md p-1.5 text-text-tertiary transition-colors hover:text-brand"
+                                    class="flex h-11 w-11 shrink-0 items-center justify-center rounded-md border border-border-subtle bg-surface-canvas text-text-tertiary transition-colors hover:text-brand ds-focus-ring"
                                     :title="t('stockAdjustments.create.scanBarcode')"
+                                    :aria-label="t('stockAdjustments.create.scanBarcode')"
                                 >
                                     <ScanLine :size="18" />
                                 </button>
                             </div>
-                            <p v-if="form.errors.product_id" :class="fieldError">
+                            <p v-if="form.errors.product_id" :id="fieldIdPrefix + '-product-error'" :class="fieldError">
                                 {{ form.errors.product_id }}
                             </p>
                         </div>

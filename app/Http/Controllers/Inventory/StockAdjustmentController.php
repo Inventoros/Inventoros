@@ -107,15 +107,17 @@ class StockAdjustmentController extends Controller
 
         // Each product carries its active variants so the page can adjust a
         // variant, picked by hand or resolved from a scanned variant barcode.
+        // Barcodes are included so the product picker can search them.
         $products = Product::forOrganization($organizationId)
             ->active()
             ->with('activeVariants')
             ->orderBy('name')
-            ->get(['id', 'name', 'sku', 'stock', 'has_variants'])
+            ->get(['id', 'name', 'sku', 'barcode', 'stock', 'has_variants'])
             ->map(fn (Product $product) => [
                 'id' => $product->id,
                 'name' => $product->name,
                 'sku' => $product->sku,
+                'barcode' => $product->barcode,
                 'stock' => (int) $product->stock,
                 'has_variants' => (bool) $product->has_variants,
                 'variants' => $product->has_variants
@@ -123,6 +125,7 @@ class StockAdjustmentController extends Controller
                         'id' => $variant->id,
                         'title' => $variant->title,
                         'sku' => $variant->sku,
+                        'barcode' => $variant->barcode,
                         'stock' => (int) $variant->stock,
                     ])->values()->all()
                     : [],
