@@ -12,7 +12,7 @@ import { formatTaxRate, rateValue } from '@/lib/lineTax';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { displayDateTime, toIsoDate } from '@/lib/dates';
+import { displayCalendarDate, displayDateTime, toIsoDate } from '@/lib/dates';
 import { formatMoney } from '@/lib/money';
 import { ArrowLeft, Plus, Trash2, PackageOpen } from '@lucide/vue';
 
@@ -25,6 +25,8 @@ const props = defineProps({
     products: Array,
     // Waiting for approval: it cannot be shipped or delivered yet.
     awaitingApproval: { type: Boolean, default: false },
+    // Y-m-d while preorder items hold the order from shipping.
+    awaitingRelease: { type: String, default: null },
 });
 
 // Status only moves forward (the server enforces it): cancelled and delivered
@@ -385,11 +387,12 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                 <select id="status" v-model="form.status" :class="fieldInput" required>
                                     <option value="pending" :disabled="!canMoveTo('pending')">{{ t('orders.status.pending') }}</option>
                                     <option value="processing" :disabled="!canMoveTo('processing')">{{ t('orders.status.processing') }}</option>
-                                    <option value="shipped" :disabled="awaitingApproval || !canMoveTo('shipped')">{{ t('orders.status.shipped') }}</option>
-                                    <option value="delivered" :disabled="awaitingApproval || !canMoveTo('delivered')">{{ t('orders.status.delivered') }}</option>
+                                    <option value="shipped" :disabled="awaitingApproval || !!awaitingRelease || !canMoveTo('shipped')">{{ t('orders.status.shipped') }}</option>
+                                    <option value="delivered" :disabled="awaitingApproval || !!awaitingRelease || !canMoveTo('delivered')">{{ t('orders.status.delivered') }}</option>
                                     <option value="cancelled" :disabled="!canMoveTo('cancelled')">{{ t('orders.status.cancelled') }}</option>
                                 </select>
                                 <p v-if="awaitingApproval" class="mt-1 text-xs text-text-tertiary">{{ t('orders.approval.statusBlocked') }}</p>
+                                <p v-if="awaitingRelease" class="mt-1 text-xs text-text-tertiary">{{ t('backorders.show.preorderBanner', { date: displayCalendarDate(awaitingRelease) }) }}</p>
                                 <p v-if="form.errors.status" :class="fieldError">{{ form.errors.status }}</p>
                             </div>
 

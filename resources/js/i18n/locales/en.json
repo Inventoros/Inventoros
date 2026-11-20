@@ -526,6 +526,8 @@
       "reorderQuantityHint": "Quantity to order when stock reaches reorder point",
       "allowBackorder": "Allow backorder",
       "allowBackorderHint": "Accept orders for this product when it is out of stock, and fulfil them once stock arrives.",
+      "releaseDate": "Release date",
+      "releaseDateHint": "For a product that isn't out yet. Until this date it can be ordered without stock while backorders are on, and orders that include it can't ship.",
       "leaveEmptyToDisable": "Leave empty to disable",
       "inventoryTracking": "Inventory Tracking",
       "inventoryTrackingHint": "Choose how to track individual units of this product.",
@@ -3357,7 +3359,9 @@
     "show": {
       "heldBanner": "This order has items on backorder and is held from shipping until the stock arrives.",
       "fulfillAction": "Fulfil backorder",
-      "lineSplit": "{fulfilled} fulfilled, {backordered} on backorder"
+      "lineSplit": "{fulfilled} fulfilled, {backordered} on backorder",
+      "preorderBanner": "This order includes preorder items and can't ship before {date}.",
+      "preorderLine": "Preorder, releases {date}"
     }
   },
   "approvals": {

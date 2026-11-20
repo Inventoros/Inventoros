@@ -655,6 +655,8 @@
       "reorderQuantityHint": "재고가 재주문점에 도달했을 때 주문할 수량",
       "allowBackorder": "이월 주문 허용",
       "allowBackorderHint": "재고가 없을 때도 이 제품의 주문을 받고, 재고가 입고되면 처리합니다.",
+      "releaseDate": "출시일",
+      "releaseDateHint": "아직 출시되지 않은 상품에 설정합니다. 이 날짜까지는 이월 주문이 켜져 있으면 재고 없이 주문할 수 있으며, 이 상품이 포함된 주문은 배송할 수 없습니다.",
       "leaveEmptyToDisable": "비활성화하려면 비워 두세요",
       "inventoryTracking": "재고 추적",
       "inventoryTrackingHint": "이 제품의 개별 단위를 추적할 방법을 선택하세요.",
@@ -3486,7 +3488,9 @@
     "show": {
       "heldBanner": "이 주문에는 이월된 품목이 있어 재고가 입고될 때까지 배송이 보류됩니다.",
       "fulfillAction": "이월 주문 처리",
-      "lineSplit": "{fulfilled}개 처리됨, {backordered}개 이월"
+      "lineSplit": "{fulfilled}개 처리됨, {backordered}개 이월",
+      "preorderBanner": "이 주문에는 예약 상품이 포함되어 있어 {date} 이전에는 배송할 수 없습니다.",
+      "preorderLine": "예약 주문, {date} 출시"
     }
   },
   "approvals": {

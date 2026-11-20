@@ -655,6 +655,8 @@
       "reorderQuantityHint": "Te bestellen aantal wanneer de voorraad het bestelpunt bereikt",
       "allowBackorder": "Nabestelling toestaan",
       "allowBackorderHint": "Bestellingen voor dit product aannemen als het niet op voorraad is, en ze uitvoeren zodra er voorraad binnenkomt.",
+      "releaseDate": "Releasedatum",
+      "releaseDateHint": "Voor een product dat nog niet uit is. Tot deze datum kan het zonder voorraad worden besteld als nabestellingen aanstaan, en bestellingen met dit product kunnen niet worden verzonden.",
       "leaveEmptyToDisable": "Laat leeg om uit te schakelen",
       "inventoryTracking": "Voorraadregistratie",
       "inventoryTrackingHint": "Kies hoe afzonderlijke eenheden van dit product worden geregistreerd.",
@@ -3486,7 +3488,9 @@
     "show": {
       "heldBanner": "Deze bestelling bevat nabestelde artikelen en wordt pas verzonden als de voorraad binnen is.",
       "fulfillAction": "Nabestelling uitvoeren",
-      "lineSplit": "{fulfilled} uitgevoerd, {backordered} nabesteld"
+      "lineSplit": "{fulfilled} uitgevoerd, {backordered} nabesteld",
+      "preorderBanner": "Deze bestelling bevat voorbestelde artikelen en kan niet vóór {date} worden verzonden.",
+      "preorderLine": "Voorbestelling, verschijnt op {date}"
     }
   },
   "approvals": {

@@ -655,6 +655,8 @@
       "reorderQuantityHint": "Ilość zamawiana, gdy stan osiągnie punkt ponownego zamówienia",
       "allowBackorder": "Zezwalaj na zamówienia oczekujące",
       "allowBackorderHint": "Przyjmuj zamówienia na ten produkt, gdy go brakuje, i realizuj je po dostawie towaru.",
+      "releaseDate": "Data premiery",
+      "releaseDateHint": "Dla produktu, który jeszcze się nie ukazał. Do tej daty można go zamawiać bez stanu magazynowego, gdy zamówienia oczekujące są włączone, a zamówienia z nim nie mogą zostać wysłane.",
       "leaveEmptyToDisable": "Pozostaw puste, aby wyłączyć",
       "inventoryTracking": "Śledzenie zapasów",
       "inventoryTrackingHint": "Wybierz sposób śledzenia poszczególnych sztuk tego produktu.",
@@ -3486,7 +3488,9 @@
     "show": {
       "heldBanner": "To zamówienie zawiera pozycje oczekujące na dostawę, a jego wysyłka jest wstrzymana do czasu dostawy towaru.",
       "fulfillAction": "Zrealizuj oczekujące",
-      "lineSplit": "zrealizowane: {fulfilled}, oczekujące: {backordered}"
+      "lineSplit": "zrealizowane: {fulfilled}, oczekujące: {backordered}",
+      "preorderBanner": "To zamówienie zawiera produkty w przedsprzedaży i nie może zostać wysłane przed {date}.",
+      "preorderLine": "Przedsprzedaż, premiera {date}"
     }
   },
   "approvals": {

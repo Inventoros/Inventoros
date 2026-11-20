@@ -1,5 +1,5 @@
 <script setup>
-import { displayDate } from '@/lib/dates';
+import { displayCalendarDate, displayDate } from '@/lib/dates';
 import { formatMoney as formatAppMoney } from '@/lib/money';
 import Card from '@/Components/ui/Card.vue';
 import Button from '@/Components/ui/Button.vue';
@@ -76,6 +76,9 @@ const formatMoney = (amount, currency) =>
         <div class="p-5">
             <p v-if="shipping.awaitingApproval" class="mb-3 rounded-md border border-status-warning/20 bg-status-warning-soft px-3 py-2 text-xs text-status-warning">
                 {{ t('orders.approval.blocksShipping') }}
+            </p>
+            <p v-if="shipping.awaitingRelease" class="mb-3 rounded-md border border-status-info/20 bg-status-info-soft px-3 py-2 text-xs text-status-info">
+                {{ t('backorders.show.preorderBanner', { date: displayCalendarDate(shipping.awaitingRelease) }) }}
             </p>
             <div v-if="shipments.length" class="space-y-3">
                 <div

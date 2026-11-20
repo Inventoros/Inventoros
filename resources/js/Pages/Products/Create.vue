@@ -51,6 +51,7 @@ const form = useForm({
     reorder_point: '',
     reorder_quantity: '',
     allow_backorder: props.backorderDefaultAllow,
+    release_date: '',
     category_id: '',
     location_id: '',
     barcode: '',
@@ -485,6 +486,14 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                 <span class="block text-xs text-text-tertiary">{{ t('products.form.allowBackorderHint') }}</span>
                             </span>
                         </label>
+
+                        <!-- Release date: a future date makes the product a preorder. -->
+                        <div class="max-w-xs">
+                            <label for="release_date" :class="fieldLabel">{{ t('products.form.releaseDate') }}</label>
+                            <input id="release_date" v-model="form.release_date" type="date" :class="fieldInput" />
+                            <p class="mt-1 text-xs text-text-tertiary">{{ t('products.form.releaseDateHint') }}</p>
+                            <p v-if="form.errors.release_date" :class="fieldError">{{ form.errors.release_date }}</p>
+                        </div>
 
                         <div class="grid grid-cols-1 gap-4 @sm:grid-cols-2">
                             <!-- Location -->

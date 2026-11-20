@@ -655,6 +655,8 @@
       "reorderQuantityHint": "Quantidade a pedir quando o estoque atingir o ponto de reposição",
       "allowBackorder": "Permitir pedidos em espera",
       "allowBackorderHint": "Aceitar pedidos deste produto quando estiver sem estoque e atendê-los quando o estoque chegar.",
+      "releaseDate": "Data de lançamento",
+      "releaseDateHint": "Para um produto que ainda não foi lançado. Até esta data, ele pode ser pedido sem estoque quando os pedidos pendentes estão ativados, e pedidos que o incluem não podem ser enviados.",
       "leaveEmptyToDisable": "Deixe em branco para desativar",
       "inventoryTracking": "Rastreamento de Estoque",
       "inventoryTrackingHint": "Escolha como rastrear as unidades individuais deste produto.",
@@ -3486,7 +3488,9 @@
     "show": {
       "heldBanner": "Este pedido tem itens em espera e o envio está retido até o estoque chegar.",
       "fulfillAction": "Atender itens em espera",
-      "lineSplit": "{fulfilled} atendidos, {backordered} em espera"
+      "lineSplit": "{fulfilled} atendidos, {backordered} em espera",
+      "preorderBanner": "Este pedido inclui itens em pré-venda e não pode ser enviado antes de {date}.",
+      "preorderLine": "Pré-venda, lançamento em {date}"
     }
   },
   "approvals": {

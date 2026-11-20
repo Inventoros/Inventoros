@@ -6,6 +6,12 @@ Full release notes, with the pull request behind each change, are on [GitHub Rel
 
 ## [Unreleased]
 
+This release adds one migration, which is additive.
+
+### Added
+
+- Preorders by release date (#453). Products have an optional release date (`products.release_date`), set on the product form or as `release_date` over the REST API. Until that date the product is a preorder: while the organization's backorder switch is on it can be ordered past stock even without the product's "Allow backorder" toggle, and the shortfall goes on backorder as usual. An order holding a preorder product cannot ship before the latest release date among its lines, even if stock has arrived: creating a shipment and setting the status to shipped or delivered are refused through the web app, REST, GraphQL and MCP, and an order cannot be created as shipped or delivered. The order page shows the date in a banner and on each preorder line, the shipping panel explains the hold, and the edit form disables the shipped and delivered statuses. Products return `release_date` and `is_preorder`; orders and order lines return `preorder_release_date` when their items and products are loaded.
+
 ## [2.6.1] - 2026-11-19
 
 This release adds three migrations, all additive, and a scheduled command. See the [2.6.1 release notes](docs/releases/2.6.1.md).

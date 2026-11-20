@@ -655,6 +655,8 @@
       "reorderQuantityHint": "Quantità da ordinare quando le scorte raggiungono il punto di riordino",
       "allowBackorder": "Consenti ordini in arretrato",
       "allowBackorderHint": "Accetta ordini per questo prodotto quando è esaurito ed evadili quando arriva la merce.",
+      "releaseDate": "Data di uscita",
+      "releaseDateHint": "Per un prodotto non ancora uscito. Fino a questa data può essere ordinato senza scorte quando gli ordini arretrati sono attivi, e gli ordini che lo includono non possono essere spediti.",
       "leaveEmptyToDisable": "Lascia vuoto per disattivare",
       "inventoryTracking": "Tracciamento inventario",
       "inventoryTrackingHint": "Scegli come tracciare le singole unità di questo prodotto.",
@@ -3486,7 +3488,9 @@
     "show": {
       "heldBanner": "Questo ordine contiene articoli in arretrato e la spedizione è sospesa finché non arriva la merce.",
       "fulfillAction": "Evadi arretrato",
-      "lineSplit": "{fulfilled} evasi, {backordered} in arretrato"
+      "lineSplit": "{fulfilled} evasi, {backordered} in arretrato",
+      "preorderBanner": "Questo ordine include articoli in preordine e non può essere spedito prima del {date}.",
+      "preorderLine": "Preordine, esce il {date}"
     }
   },
   "approvals": {

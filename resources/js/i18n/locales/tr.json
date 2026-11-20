@@ -655,6 +655,8 @@
       "reorderQuantityHint": "Stok yeniden sipariş noktasına ulaştığında sipariş edilecek miktar",
       "allowBackorder": "Bekleyen siparişe izin ver",
       "allowBackorderHint": "Stokta olmadığında bu ürün için sipariş kabul et ve stok geldiğinde karşıla.",
+      "releaseDate": "Çıkış tarihi",
+      "releaseDateHint": "Henüz çıkmamış bir ürün için. Bu tarihe kadar, bekleyen siparişler açıkken stok olmadan sipariş edilebilir ve onu içeren siparişler gönderilemez.",
       "leaveEmptyToDisable": "Devre dışı bırakmak için boş bırakın",
       "inventoryTracking": "Envanter Takibi",
       "inventoryTrackingHint": "Bu ürünün tekil birimlerinin nasıl takip edileceğini seçin.",
@@ -3486,7 +3488,9 @@
     "show": {
       "heldBanner": "Bu siparişte bekleyen ürünler var ve stok gelene kadar sevkiyatı bekletiliyor.",
       "fulfillAction": "Bekleyenleri karşıla",
-      "lineSplit": "{fulfilled} karşılandı, {backordered} bekliyor"
+      "lineSplit": "{fulfilled} karşılandı, {backordered} bekliyor",
+      "preorderBanner": "Bu sipariş ön sipariş ürünleri içeriyor ve {date} tarihinden önce gönderilemez.",
+      "preorderLine": "Ön sipariş, çıkış {date}"
     }
   },
   "approvals": {
