@@ -541,6 +541,7 @@
       "title": "Product bewerken",
       "backToInventory": "Terug naar voorraad",
       "updateProduct": "Product bijwerken",
+      "saveAndView": "Opslaan en bekijken",
       "stockReadOnlyHint": "Voorraad verandert via voorraadcorrecties, zodat elke wijziging wordt vastgelegd.",
       "adjustStockLink": "Voorraad corrigeren",
       "variantStockReadOnlyHint": "Wijzig de voorraad van een opgeslagen variant met een voorraadcorrectie."

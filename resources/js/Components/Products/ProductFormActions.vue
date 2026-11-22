@@ -9,5 +9,7 @@ defineProps({
 </script>
 
 <template>
-    <FormActions class="product-form-actions" :label="label" :cancel-href="cancelHref" :processing="processing" />
+    <FormActions class="product-form-actions" :label="label" :cancel-href="cancelHref" :processing="processing">
+        <template v-if="$slots.actions" #actions><slot name="actions" /></template>
+    </FormActions>
 </template>

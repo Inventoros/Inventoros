@@ -541,6 +541,7 @@
       "title": "Modifica prodotto",
       "backToInventory": "Torna all'inventario",
       "updateProduct": "Aggiorna prodotto",
+      "saveAndView": "Salva e visualizza",
       "stockReadOnlyHint": "Le giacenze cambiano tramite rettifiche di magazzino, così ogni modifica viene registrata.",
       "adjustStockLink": "Rettifica giacenze",
       "variantStockReadOnlyHint": "Modifica le giacenze di una variante salvata con una rettifica di magazzino."
