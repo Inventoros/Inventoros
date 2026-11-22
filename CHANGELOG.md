@@ -6,6 +6,10 @@ Full release notes, with the pull request behind each change, are on [GitHub Rel
 
 ## [Unreleased]
 
+### Added
+
+- **`update_product` MCP tool.** AI agents can now edit an existing product's prices, tax rate, names, reorder levels, barcode, category, location, active flag, backorder setting and release date. Only the fields passed change, which suits bulk price updates one product per call. It needs `edit_products`. Stock stays on `adjust_stock`, and variants, options, images and supplier links stay in the web UI and REST API (#462).
+
 ## [2.6.2] - 2026-11-20
 
 This release adds one migration, which is additive. See the [2.6.2 release notes](docs/releases/2.6.2.md).

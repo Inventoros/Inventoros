@@ -101,7 +101,7 @@ Add an entry to `~/.cursor/mcp.json` (or the workspace-level `.cursor/mcp.json`)
 
 ### Tool catalog
 
-33 tools across 8 surfaces. Tools marked destructive mutate state and should be confirmed before invocation.
+34 tools across 8 surfaces. Tools marked destructive mutate state and should be confirmed before invocation.
 
 Identity:
 
@@ -159,6 +159,7 @@ Manufacturing:
 Catalog (write):
 
 - `create_product` (`create_products`). Create a product. Destructive.
+- `update_product` (`edit_products`). Change an existing product's fields: prices, tax rate, names, reorder levels, barcode, category, location, active flag, backorder and release date. Only the fields passed change, so it suits bulk price updates one product per call. Stock is not editable here (use `adjust_stock`), and variants, options, images and supplier links stay in the web UI and REST API. Destructive.
 
 ## Resources and prompts
 

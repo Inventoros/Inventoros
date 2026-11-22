@@ -112,7 +112,7 @@ Call `who_am_i` first to confirm the token works.
 
 ## Tool catalog
 
-33 tools across 9 groups. Tools marked **destructive** change data; clients should confirm before calling them.
+34 tools across 9 groups. Tools marked **destructive** change data; clients should confirm before calling them.
 
 ### Identity
 
@@ -191,6 +191,7 @@ Call `who_am_i` first to confirm the token works.
 | Tool | Permissions | Purpose |
 |---|---|---|
 | `create_product` | `create_products` | Create a new product. **Destructive**. |
+| `update_product` | `edit_products` | Change fields of an existing product (prices, tax rate, names, reorder levels, barcode, category, location, active flag, backorder, release date). Only the fields passed change. Stock moves through `adjust_stock`; variants, options, images and supplier links stay in the web UI and REST API. **Destructive**. |
 
 Tool names changed in v2.0.0 from the kebab-case class names (`list-orders-tool`) to the snake_case names above. See `UPGRADE.md` for the full mapping.
 

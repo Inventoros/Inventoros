@@ -11,6 +11,7 @@ use App\Mcp\Tools\AdjustStockTool;
 use App\Mcp\Tools\CreateOrderTool;
 use App\Mcp\Tools\RecordPaymentTool;
 use App\Mcp\Tools\CreateProductTool;
+use App\Mcp\Tools\UpdateProductTool;
 use App\Mcp\Tools\CreatePurchaseOrderTool;
 use App\Mcp\Tools\DecideApprovalTool;
 use App\Mcp\Tools\DeleteWorkOrderTool;
@@ -59,8 +60,8 @@ class InventorosServer extends Server
 
         - **Read** products, low-stock items, orders, shipments, suppliers,
           purchase orders, warehouses, locations, categories, and work orders.
-        - **Write** stock adjustments, new products, new orders, new purchase
-          orders, and shipments with manual tracking.
+        - **Write** stock adjustments, new products, product edits, new orders,
+          new purchase orders, and shipments with manual tracking.
         - **Transition** purchase orders (send, receive) and work orders (start).
 
         ## Conventions
@@ -133,6 +134,7 @@ class InventorosServer extends Server
 
         // Catalog writes
         CreateProductTool::class,
+        UpdateProductTool::class,
     ];
 
     /**
