@@ -412,6 +412,7 @@
       "title": "Edit Product",
       "backToInventory": "Back to Inventory",
       "updateProduct": "Update Product",
+      "saveAndView": "Save and view",
       "stockReadOnlyHint": "Stock changes through stock adjustments, so every change is recorded.",
       "adjustStockLink": "Adjust stock",
       "variantStockReadOnlyHint": "Change a saved variant's stock with a stock adjustment."

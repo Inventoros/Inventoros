@@ -541,6 +541,7 @@
       "title": "تعديل المنتج",
       "backToInventory": "العودة إلى المخزون",
       "updateProduct": "تحديث المنتج",
+      "saveAndView": "حفظ وعرض",
       "stockReadOnlyHint": "يتغير المخزون من خلال تعديلات المخزون، لذلك يُسجَّل كل تغيير.",
       "adjustStockLink": "تعديل المخزون",
       "variantStockReadOnlyHint": "غيّر مخزون المتغير المحفوظ من خلال تعديل مخزون."

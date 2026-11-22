@@ -541,6 +541,7 @@
       "title": "商品を編集",
       "backToInventory": "在庫に戻る",
       "updateProduct": "商品を更新",
+      "saveAndView": "保存して表示",
       "stockReadOnlyHint": "在庫は在庫調整によって変更されるため、すべての変更が記録されます。",
       "adjustStockLink": "在庫を調整",
       "variantStockReadOnlyHint": "保存済みバリエーションの在庫は在庫調整で変更してください。"

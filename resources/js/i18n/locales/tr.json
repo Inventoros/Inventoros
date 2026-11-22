@@ -541,6 +541,7 @@
       "title": "Ürün Düzenle",
       "backToInventory": "Envantere Dön",
       "updateProduct": "Ürünü Güncelle",
+      "saveAndView": "Kaydet ve görüntüle",
       "stockReadOnlyHint": "Stok, stok düzeltmeleriyle değişir; böylece her değişiklik kayıt altına alınır.",
       "adjustStockLink": "Stoku düzelt",
       "variantStockReadOnlyHint": "Kayıtlı bir varyantın stokunu stok düzeltmesiyle değiştirin."

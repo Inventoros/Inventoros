@@ -541,6 +541,7 @@
       "title": "Produkt bearbeiten",
       "backToInventory": "Zurück zum Bestand",
       "updateProduct": "Produkt aktualisieren",
+      "saveAndView": "Speichern und anzeigen",
       "stockReadOnlyHint": "Der Bestand ändert sich über Bestandskorrekturen, damit jede Änderung protokolliert wird.",
       "adjustStockLink": "Bestand korrigieren",
       "variantStockReadOnlyHint": "Ändern Sie den Bestand einer gespeicherten Variante über eine Bestandskorrektur."

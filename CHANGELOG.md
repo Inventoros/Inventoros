@@ -6,6 +6,10 @@ Full release notes, with the pull request behind each change, are on [GitHub Rel
 
 ## [Unreleased]
 
+### Added
+
+- **Save and view on the product edit page.** A "Save and view" button saves the product and opens its page, instead of going back to the inventory list (#461).
+
 ## [2.6.2] - 2026-11-20
 
 This release adds one migration, which is additive. See the [2.6.2 release notes](docs/releases/2.6.2.md).
