@@ -541,6 +541,7 @@
       "title": "编辑产品",
       "backToInventory": "返回库存",
       "updateProduct": "更新产品",
+      "saveAndView": "保存并查看",
       "stockReadOnlyHint": "库存通过库存调整变更，因此每次变更都会被记录。",
       "adjustStockLink": "调整库存",
       "variantStockReadOnlyHint": "请通过库存调整来更改已保存变体的库存。"

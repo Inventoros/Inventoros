@@ -465,8 +465,12 @@ class ProductController extends Controller
         // for every surface, once the edit commits).
         do_action('product_after_update', $product, $request);
 
-        return redirect()->route('products.index')
-            ->with('success', __('Product updated successfully.'));
+        // "Save and view" on the edit page returns to the product (#461).
+        $route = $request->input('redirect_to') === 'show'
+            ? redirect()->route('products.show', $product)
+            : redirect()->route('products.index');
+
+        return $route->with('success', __('Product updated successfully.'));
     }
 
     /**

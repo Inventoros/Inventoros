@@ -541,6 +541,7 @@
       "title": "Edytuj produkt",
       "backToInventory": "Wróć do magazynu",
       "updateProduct": "Zaktualizuj produkt",
+      "saveAndView": "Zapisz i wyświetl",
       "stockReadOnlyHint": "Stan magazynowy zmienia się poprzez korekty stanu, dzięki czemu każda zmiana jest rejestrowana.",
       "adjustStockLink": "Skoryguj stan",
       "variantStockReadOnlyHint": "Zmień stan zapisanego wariantu za pomocą korekty stanu."

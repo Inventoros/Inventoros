@@ -596,6 +596,39 @@ class ProductControllerTest extends TestCase
         ]);
     }
 
+    public function test_save_and_view_returns_to_the_product_page(): void
+    {
+        $product = $this->createProduct(['name' => 'Original Name']);
+
+        $response = $this->actingAs($this->admin)
+            ->put(route('products.update', $product), [
+                'sku' => $product->sku,
+                'name' => 'Viewed Name',
+                'price' => 19.99,
+                'min_stock' => 5,
+                'redirect_to' => 'show',
+            ]);
+
+        $response->assertRedirect(route('products.show', $product));
+        $response->assertSessionHas('success', 'Product updated successfully.');
+        $this->assertDatabaseHas('products', ['id' => $product->id, 'name' => 'Viewed Name']);
+    }
+
+    public function test_unknown_redirect_target_falls_back_to_the_product_list(): void
+    {
+        $product = $this->createProduct();
+
+        $this->actingAs($this->admin)
+            ->put(route('products.update', $product), [
+                'sku' => $product->sku,
+                'name' => $product->name,
+                'price' => 10,
+                'min_stock' => 0,
+                'redirect_to' => 'https://example.com',
+            ])
+            ->assertRedirect(route('products.index'));
+    }
+
     public function test_member_can_update_product(): void
     {
         $product = $this->createProduct(['name' => 'Original Name']);

@@ -219,10 +219,14 @@ const createLocation = async () => {
     }
 };
 
-const submit = () => {
-    form.put(route('products.update', props.product.id), {
-        preserveScroll: true,
-    });
+// Save returns to the product list; "Save and view" (#461) opens the
+// product's page instead.
+const submit = (redirectTo = null) => {
+    form
+        .transform((data) => (redirectTo ? { ...data, redirect_to: redirectTo } : data))
+        .put(route('products.update', props.product.id), {
+            preserveScroll: true,
+        });
 };
 
 const fieldLabel = 'mb-1 block text-sm font-medium text-text-secondary';
@@ -264,7 +268,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
         <!-- Plugin Slot: Before Form -->
         <PluginSlot slot="before-form" :components="pluginComponents?.beforeForm" />
 
-        <form @submit.prevent="submit" class="mt-6 [&_:focus]:scroll-mb-28">
+        <form @submit.prevent="submit()" class="mt-6 [&_:focus]:scroll-mb-28">
             <div class="grid grid-cols-1 items-start gap-4 lg:grid-cols-2">
                 <!-- Basic Information -->
                 <Card :padded="false" class="@container">
@@ -619,7 +623,19 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                 :label="t('products.edit.updateProduct')"
                 :cancel-href="route('products.index')"
                 :processing="form.processing"
-            />
+            >
+                <template #actions>
+                    <Button
+                        type="button"
+                        variant="secondary"
+                        :disabled="form.processing"
+                        class="h-auto min-h-11 flex-1 whitespace-normal py-2.5 sm:h-10 sm:min-h-10 sm:flex-none sm:py-0"
+                        @click="submit('show')"
+                    >
+                        {{ t('products.edit.saveAndView') }}
+                    </Button>
+                </template>
+            </ProductFormActions>
         </form>
 
         <!-- Plugin Slot: After Form -->

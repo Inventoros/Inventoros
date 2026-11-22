@@ -541,6 +541,7 @@
       "title": "Editar Produto",
       "backToInventory": "Voltar ao Estoque",
       "updateProduct": "Atualizar Produto",
+      "saveAndView": "Salvar e visualizar",
       "stockReadOnlyHint": "O estoque muda por meio de ajustes de estoque, para que cada alteração seja registrada.",
       "adjustStockLink": "Ajustar estoque",
       "variantStockReadOnlyHint": "Altere o estoque de uma variante salva com um ajuste de estoque."
