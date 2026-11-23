@@ -499,6 +499,28 @@ final class StockReservationService
     }
 
     /**
+     * Active holds on the plain (non-variant) stock of many products at once.
+     *
+     * @param  array<int, int>  $productIds
+     * @return array<int, int> product id => units held
+     */
+    public function reservedTotals(array $productIds): array
+    {
+        if ($productIds === []) {
+            return [];
+        }
+
+        return $this->activeQuery()
+            ->whereIn('product_id', $productIds)
+            ->whereNull('product_variant_id')
+            ->selectRaw('product_id, SUM(quantity) as held')
+            ->groupBy('product_id')
+            ->pluck('held', 'product_id')
+            ->map(fn ($held) => (int) $held)
+            ->all();
+    }
+
+    /**
      * Units held in one location bin of a product.
      */
     public function reservedAtLocation(int $productId, int $locationId, ?int $variantId = null): int

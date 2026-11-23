@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Models\Order;
 
 use App\Enums\DiscountType;
+use App\Models\Inventory\OrderItemKitComponent;
 use App\Models\Inventory\Product;
 use App\Models\Inventory\ProductVariant;
 use App\Support\Money;
@@ -12,6 +13,7 @@ use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 
 /**
@@ -125,6 +127,10 @@ class OrderItem extends Model
      */
     public static function costAtSale(Product $product, ?ProductVariant $variant = null): ?string
     {
+        if ($product->isKit()) {
+            return app(\App\Services\Inventory\KitSaleService::class)->costAtSale($product);
+        }
+
         $cost = $variant?->purchase_price ?? $product->purchase_price;
 
         return $cost === null ? null : (string) $cost;
@@ -148,6 +154,16 @@ class OrderItem extends Model
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);
+    }
+
+    /**
+     * What a kit line drew from each component (empty for plain lines).
+     *
+     * @return HasMany<OrderItemKitComponent, $this>
+     */
+    public function kitComponents(): HasMany
+    {
+        return $this->hasMany(OrderItemKitComponent::class);
     }
 
     /**

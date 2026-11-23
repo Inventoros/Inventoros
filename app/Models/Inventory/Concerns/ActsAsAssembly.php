@@ -76,7 +76,7 @@ trait ActsAsAssembly
      *
      * For kits, stock is not stored directly — it is derived from
      * the minimum number of complete kits that can be assembled
-     * from available component stock.
+     * from component stock net of reservations (0 when the kit is unsellable).
      */
     public function getAvailableKitStock(): int
     {
@@ -84,27 +84,7 @@ trait ActsAsAssembly
             return $this->stock;
         }
 
-        $components = $this->components()->with('componentProduct')->get();
-
-        if ($components->isEmpty()) {
-            return 0;
-        }
-
-        $minKits = PHP_INT_MAX;
-
-        foreach ($components as $component) {
-            $componentStock = $component->componentProduct->stock;
-            $requiredQty = (float) $component->quantity;
-
-            if ($requiredQty <= 0) {
-                continue;
-            }
-
-            $possibleKits = (int) floor($componentStock / $requiredQty);
-            $minKits = min($minKits, $possibleKits);
-        }
-
-        return $minKits === PHP_INT_MAX ? 0 : $minKits;
+        return app(\App\Services\Inventory\KitSaleService::class)->available($this);
     }
 
     /**
