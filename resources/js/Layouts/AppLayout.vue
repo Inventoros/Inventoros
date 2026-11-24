@@ -390,7 +390,7 @@ const searchKeys = isMac ? 'Meta+K' : 'Control+K';
                 <!-- Global search: Cmd/Ctrl+K anywhere, or "/" outside a field. -->
                 <button
                     type="button"
-                    class="workspace-search hidden md:flex"
+                    class="workspace-search"
                     :aria-label="`${t('nav.search')} (${searchShortcut})`"
                     :aria-keyshortcuts="searchKeys"
                     @click="globalSearchRef?.open()"
@@ -402,7 +402,7 @@ const searchKeys = isMac ? 'Meta+K' : 'Control+K';
                 <div class="workspace-global-controls flex items-center gap-1 shrink-0">
                     <button
                         type="button"
-                        class="md:hidden p-1.5 rounded-md text-text-secondary hover:bg-surface-overlay ds-focus-ring"
+                        class="workspace-search-icon p-1.5 rounded-md text-text-secondary hover:bg-surface-overlay ds-focus-ring"
                         :aria-label="t('nav.search')"
                         @click="globalSearchRef?.open()"
                     >

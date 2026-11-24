@@ -1225,7 +1225,7 @@ a.dashboard-metric:hover {
     font-weight: 400;
     text-align: start;
 }
-.dashboard .dashboard-stock-foot .dashboard-primary-action {
+.dashboard .dashboard-stock-foot button {
     height: 36px;
     padding-inline: 16px;
     font-size: 13px;
@@ -1526,7 +1526,7 @@ a.dashboard-metric:hover {
 .dashboard .dashboard-shortfall {
     font-size: 15px;
 }
-.dashboard .dashboard-stock-foot .dashboard-primary-action {
+.dashboard .dashboard-stock-foot button {
     height: 38px;
     padding-inline: 18px;
     border-radius: 8px;
@@ -1674,5 +1674,15 @@ a.dashboard-metric:hover {
     .dashboard .dashboard-metric,
     .dashboard .dashboard-metric + .dashboard-metric {
         padding: 16px 20px 18px;
+    }
+}
+/* With stock movement hidden, Replenishment takes the full row. */
+.dashboard .dashboard-stock-grid.dashboard-one-column {
+    grid-template-columns: minmax(0, 1fr);
+}
+/* Comfortable touch targets on phones. */
+@media (max-width: 650px) {
+    .dashboard .dashboard-stock-foot button {
+        height: 44px;
     }
 }
