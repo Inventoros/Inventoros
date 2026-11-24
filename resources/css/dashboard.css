@@ -1115,6 +1115,7 @@ a.dashboard-metric:hover {
 }
 .dashboard a.dashboard-metric.dashboard-metric-featured:hover {
     background: hsl(var(--dashboard-navy-hover));
+    border-color: transparent;
 }
 .dashboard .dashboard-metric-featured + .dashboard-metric {
     border-color: hsl(var(--border-subtle));
