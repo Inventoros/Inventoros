@@ -80,7 +80,7 @@ const thClass = 'px-4 py-2.5 text-start text-xs font-medium text-text-secondary'
                             <span class="font-medium text-text-primary">{{ user.name }}</span>
                         </td>
                         <td class="px-4 py-3">
-                            <span class="text-text-secondary">{{ user.email }}</span>
+                            <span class="cell-truncate text-text-secondary" :title="user.email">{{ user.email }}</span>
                         </td>
                         <td class="px-4 py-3">
                             <Badge :variant="roleVariant(user.role)" size="sm">{{ t(`admin.users.roles.${user.role}`) }}</Badge>

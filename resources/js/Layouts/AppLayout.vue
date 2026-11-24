@@ -253,8 +253,8 @@ const searchKeys = isMac ? 'Meta+K' : 'Control+K';
 <template>
     <div class="workspace-shell min-h-screen bg-surface-canvas text-text-primary" :class="{ 'app-layout-table': tablePage }">
         <!-- Mobile top bar -->
-        <div class="md:hidden fixed top-0 inset-x-0 z-40 h-12 flex items-center justify-between px-4 bg-surface-base border-b border-border-subtle">
-            <Link :href="route('dashboard')" class="flex items-center gap-2">
+        <div class="app-mobile-bar md:hidden fixed top-0 inset-x-0 z-40 h-12 flex items-center justify-between px-4 bg-surface-base border-b border-border-subtle">
+            <Link :href="route('dashboard')" class="flex min-h-11 items-center gap-2">
                 <img v-if="workspaceLogo" :src="workspaceLogo" :alt="workspaceName" class="h-7 w-7 shrink-0 object-contain" />
                 <span v-else class="h-7 w-7 shrink-0 rounded-md bg-surface-overlay grid place-items-center text-sm font-semibold">{{ workspaceName.charAt(0).toUpperCase() }}</span>
                 <span class="text-sm font-semibold tracking-tight">{{ workspaceName }}</span>

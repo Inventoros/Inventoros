@@ -149,9 +149,9 @@ const thClass =
                         <td class="px-4 py-3 font-medium text-text-primary">
                             {{ audit.audit_number }}
                         </td>
-                        <td class="px-4 py-3">
+                        <td class="cell-wrap px-4 py-3">
                             <div class="font-medium text-text-primary">{{ audit.name }}</div>
-                            <div v-if="audit.description" class="max-w-xs truncate text-xs text-text-tertiary">{{ audit.description }}</div>
+                            <div v-if="audit.description" class="truncate-fluid text-xs text-text-tertiary" :title="audit.description">{{ audit.description }}</div>
                         </td>
                         <td class="px-4 py-3">
                             <Badge :variant="typeVariant(audit.audit_type)" size="sm">

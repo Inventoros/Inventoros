@@ -106,7 +106,7 @@ const thClass = 'px-3 sm:px-4 py-2.5 text-start text-xs font-medium tracking-tig
                                 </thead>
                                 <tbody>
                                     <tr v-for="item in order.items" :key="item.id" class="border-b border-border-subtle last:border-b-0">
-                                        <td class="px-3 py-3 sm:px-4">
+                                        <td class="cell-wrap px-3 py-3 sm:px-4">
                                             <div class="font-medium text-text-primary">{{ item.product_name }}</div>
                                             <div v-if="item.variant_title" class="text-xs text-text-secondary">{{ item.variant_title }}</div>
                                             <div class="text-xs tabular-nums text-text-secondary sm:hidden">{{ t('portal.order.unitPrice') }}: <span class="whitespace-nowrap">{{ money(item.unit_price) }}</span></div>

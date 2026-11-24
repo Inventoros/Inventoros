@@ -259,7 +259,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                         :key="comp.key"
                                         :class="!comp.sufficient && !comp.awaitingVariant ? 'bg-status-danger/10' : ''"
                                     >
-                                        <td class="px-4 py-3 text-sm text-text-primary">
+                                        <td class="cell-wrap px-4 py-3 text-sm text-text-primary">
                                             <div>{{ comp.name }}</div>
                                             <div class="mt-1 flex flex-wrap gap-1">
                                                 <Badge v-if="comp.kit" variant="info" size="sm">{{ t('workOrders.components.fromKit', { name: comp.kit.name }) }}</Badge>

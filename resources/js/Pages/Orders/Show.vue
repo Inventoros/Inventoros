@@ -300,9 +300,9 @@ const formatOrderDate = (date, long = false) =>
 
         <!-- Plugin tabs: none registered renders the core content unchanged -->
         <PluginTabs :components="pluginComponents?.tabs">
-            <div class="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
+            <div class="mt-6 grid grid-cols-1 gap-4 xl:grid-cols-3">
                 <!-- Left Column: Order Items & Details -->
-                <div class="space-y-4 lg:col-span-2">
+                <div class="space-y-4 xl:col-span-2">
                     <!-- Order Items -->
                     <Card :padded="false">
                         <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">{{ t('orders.show.orderItems') }}</h3></div>
@@ -472,7 +472,7 @@ const formatOrderDate = (date, long = false) =>
                                 <div v-if="order.customer_email">
                                     <dt class="text-xs text-text-tertiary">{{ t('common.email') }}</dt>
                                     <dd class="mt-1 text-sm text-text-primary">
-                                        <a :href="`mailto:${order.customer_email}`" class="text-brand hover:underline">
+                                        <a :href="`mailto:${order.customer_email}`" class="truncate-fluid text-brand hover:underline" :title="order.customer_email">
                                             {{ order.customer_email }}
                                         </a>
                                     </dd>

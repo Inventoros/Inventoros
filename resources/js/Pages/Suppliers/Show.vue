@@ -77,9 +77,9 @@ const thClass = 'px-4 py-2.5 text-start text-xs font-medium text-text-secondary'
         <!-- Plugin Slot: Header -->
         <PluginSlot slot="header" :components="pluginComponents?.header" />
 
-        <div class="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
+        <div class="mt-6 grid grid-cols-1 gap-4 xl:grid-cols-3">
             <!-- Main Info -->
-            <div class="space-y-4 lg:col-span-2">
+            <div class="space-y-4 xl:col-span-2">
                 <!-- Contact Information -->
                 <Card :padded="false">
                     <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">{{ t('suppliers.show.contactInfo') }}</h3></div>
@@ -92,7 +92,7 @@ const thClass = 'px-4 py-2.5 text-start text-xs font-medium text-text-secondary'
                             <div>
                                 <dt class="text-xs text-text-tertiary">{{ t('common.email') }}</dt>
                                 <dd class="mt-1 text-sm text-text-primary">
-                                    <a v-if="supplier.email" :href="`mailto:${supplier.email}`" class="text-brand hover:underline">
+                                    <a v-if="supplier.email" :href="`mailto:${supplier.email}`" class="truncate-fluid text-brand hover:underline" :title="supplier.email">
                                         {{ supplier.email }}
                                     </a>
                                     <span v-else>-</span>

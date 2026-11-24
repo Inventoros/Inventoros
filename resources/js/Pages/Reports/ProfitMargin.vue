@@ -158,7 +158,7 @@ const thRightClass = 'px-4 py-2.5 text-end text-xs font-medium tracking-tight te
                                     :key="row.product_id ?? 'deleted'"
                                     class="border-b border-border-subtle transition-colors last:border-b-0 hover:bg-surface-overlay"
                                 >
-                                    <td class="px-4 py-3">
+                                    <td class="cell-wrap px-4 py-3">
                                         <p class="font-medium text-text-primary">
                                             {{ row.name }}
                                             <Badge v-if="row.cost_missing" variant="warning" size="sm" class="ms-1">{{ t('reports.common.costMissing') }}</Badge>

@@ -115,7 +115,7 @@ const thClass =
                         :key="report.id"
                         class="border-b border-border-subtle transition-colors last:border-b-0 hover:bg-surface-overlay"
                     >
-                        <td class="px-4 py-3 text-text-primary">
+                        <td class="cell-wrap px-4 py-3 text-text-primary">
                             <Link :href="route('reports.builder.show', report.id)" class="font-medium text-text-primary transition-colors hover:text-brand">
                                 {{ report.name }}
                             </Link>

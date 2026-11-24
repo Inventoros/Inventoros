@@ -196,7 +196,7 @@ const thClass =
                                 {{ displayTime(adjustment.created_at) }}
                             </span>
                         </td>
-                        <td class="px-4 py-3">
+                        <td class="cell-wrap px-4 py-3">
                             <div class="font-medium text-text-primary">{{ adjustment.product.name }}</div>
                             <div class="text-xs text-text-tertiary">SKU: {{ adjustment.product.sku }}</div>
                         </td>

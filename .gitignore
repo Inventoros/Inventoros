@@ -52,3 +52,6 @@ docs/plans/
 # UI review evidence belongs in PR attachments or external review storage.
 /docs/design/
 /.github/pr-evidence/
+
+# Opt-in UI and responsive audit evidence (e2e/tests/*audit.spec.ts)
+/audit-artifacts/

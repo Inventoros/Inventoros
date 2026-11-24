@@ -376,9 +376,9 @@ const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface
                 </StatTile>
             </section>
 
-            <div class="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-3">
+            <div class="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-3">
                 <!-- Main Info -->
-                <div class="space-y-4 lg:col-span-2">
+                <div class="space-y-4 xl:col-span-2">
                     <!-- Basic Information -->
                     <Card :padded="false">
                         <div class="p-5">

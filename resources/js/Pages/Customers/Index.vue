@@ -113,7 +113,7 @@ const thClass =
                 </thead>
                 <tbody>
                     <tr v-for="customer in customers.data" :key="customer.id" class="border-b border-border-subtle transition-colors last:border-b-0 hover:bg-surface-overlay">
-                        <td class="px-4 py-3 text-text-primary">
+                        <td class="cell-wrap px-4 py-3 text-text-primary">
                             <div class="font-medium text-text-primary">{{ customer.name }}</div>
                             <div v-if="customer.code" class="text-xs text-text-tertiary">{{ customer.code }}</div>
                         </td>
@@ -121,7 +121,7 @@ const thClass =
                             <span class="text-text-secondary">{{ customer.company_name || '-' }}</span>
                         </td>
                         <td class="px-4 py-3 text-text-primary">
-                            <a v-if="customer.email" :href="`mailto:${customer.email}`" class="text-brand hover:underline">{{ customer.email }}</a>
+                            <a v-if="customer.email" :href="`mailto:${customer.email}`" class="cell-truncate text-brand hover:underline" :title="customer.email">{{ customer.email }}</a>
                             <span v-else class="text-text-secondary">-</span>
                         </td>
                         <td class="px-4 py-3 text-text-primary">

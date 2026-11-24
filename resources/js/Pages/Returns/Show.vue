@@ -176,9 +176,9 @@ const thClass = 'px-4 py-2.5 text-xs font-medium tracking-tight text-text-second
         <!-- Plugin Slot: Header -->
         <PluginSlot slot="header" :components="pluginComponents?.header" />
 
-        <div class="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
+        <div class="mt-6 grid grid-cols-1 gap-4 xl:grid-cols-3">
             <!-- Left Column: Items & Details -->
-            <div class="space-y-4 lg:col-span-2">
+            <div class="space-y-4 xl:col-span-2">
                 <!-- Return Items -->
                 <Card :padded="false">
                     <div class="flex items-center justify-between gap-2 px-5 pt-5">
@@ -210,7 +210,7 @@ const thClass = 'px-4 py-2.5 text-xs font-medium tracking-tight text-text-second
                                         :key="item.id"
                                         class="border-b border-border-subtle transition-colors last:border-b-0 hover:bg-surface-overlay"
                                     >
-                                        <td class="min-w-[12rem] px-4 py-3 text-sm font-medium text-text-primary">
+                                        <td class="cell-wrap px-4 py-3 text-sm font-medium text-text-primary">
                                             {{ item.product?.name || item.order_item?.product_name || t('returns.show.unknownProduct') }}
                                             <span v-if="item.variant?.title" class="text-text-secondary"> ({{ item.variant.title }})</span>
                                         </td>

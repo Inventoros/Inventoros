@@ -97,9 +97,9 @@ const thClass = 'px-4 py-2.5 text-start text-xs font-medium text-text-secondary'
                         <td class="px-4 py-3">
                             <span class="font-medium text-text-primary">{{ order.order_number }}</span>
                         </td>
-                        <td class="px-4 py-3">
+                        <td class="cell-wrap px-4 py-3">
                             <div class="text-text-primary">{{ order.customer_name || '-' }}</div>
-                            <div v-if="order.customer_email" class="text-xs text-text-tertiary">{{ order.customer_email }}</div>
+                            <div v-if="order.customer_email" class="truncate-fluid text-xs text-text-tertiary" :title="order.customer_email">{{ order.customer_email }}</div>
                         </td>
                         <td class="hidden px-4 py-3 text-text-secondary sm:table-cell">{{ displayCalendarDate(order.order_date) }}</td>
                         <td class="px-4 py-3">

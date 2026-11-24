@@ -651,7 +651,7 @@ const ordersStatusIcon = (status) => (status === 'delivered' ? Check : status ==
                                                 @change="quickReorder.toggle(row.id)"
                                             />
                                         </td>
-                                        <td class="px-3 py-2">
+                                        <td class="cell-wrap px-3 py-2">
                                             <Link :href="route('products.show', row.id)" class="flex flex-col">
                                                 <span class="font-medium text-text-primary hover:underline">{{ row.name }}</span>
                                                 <span class="text-xs text-text-tertiary"

@@ -233,9 +233,9 @@ const fieldError = 'mt-1 text-xs text-status-danger';
             </template>
         </PageHeader>
 
-        <div class="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
+        <div class="mt-6 grid grid-cols-1 gap-4 xl:grid-cols-3">
             <!-- Main Content -->
-            <div class="space-y-4 lg:col-span-2">
+            <div class="space-y-4 xl:col-span-2">
                 <!-- Webhook Details Card -->
                 <Card :padded="false">
                     <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">{{ t('settings.webhooks.show.title') }}</h3></div>

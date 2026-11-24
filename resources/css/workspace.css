@@ -56,7 +56,9 @@
     /* Search centred; breadcrumbs take the rest; controls keep their width. */
     .workspace-main .workspace-topbar {
         display: grid;
-        grid-template-columns: minmax(0, 1fr) minmax(220px, 440px) minmax(0, 1fr);
+        /* Search gives way first (to 36% of the bar), so the breadcrumb and
+         * controls keep their text at laptop widths. */
+        grid-template-columns: minmax(0, 1fr) minmax(180px, min(440px, 36%)) minmax(0, 1fr);
         gap: 16px;
     }
     .workspace-topbar .workspace-search { width: 100%; margin-inline: 0; }

@@ -253,9 +253,9 @@ const thClass = 'px-4 py-2.5 text-start text-xs font-medium tracking-tight text-
             :submit-url="route('purchase-orders.submit-approval', purchaseOrder.id)"
         />
 
-        <div class="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
+        <div class="mt-6 grid grid-cols-1 gap-4 xl:grid-cols-3">
             <!-- Left Column: Order Details & Items -->
-            <div class="space-y-4 lg:col-span-2">
+            <div class="space-y-4 xl:col-span-2">
                 <!-- Order Details -->
                 <Card :padded="false">
                     <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">{{ t('purchaseOrders.show.orderDetails') }}</h3></div>
@@ -395,7 +395,7 @@ const thClass = 'px-4 py-2.5 text-start text-xs font-medium tracking-tight text-
                                 </thead>
                                 <tbody>
                                     <tr v-for="item in purchaseOrder.items" :key="item.id" class="border-b border-border-subtle transition-colors last:border-b-0 hover:bg-surface-overlay">
-                                        <td class="min-w-[12rem] px-4 py-3 text-sm text-text-primary">
+                                        <td class="cell-wrap px-4 py-3 text-sm text-text-primary">
                                             <span v-if="item.product && !canVisit('products.show')">{{ item.product_name }}</span>
                                             <Link v-else-if="item.product" :href="route('products.show', item.product.id)" class="text-brand hover:underline">
                                                 {{ item.product_name }}

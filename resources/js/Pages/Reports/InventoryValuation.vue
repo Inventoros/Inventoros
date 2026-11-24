@@ -220,7 +220,7 @@ const thRightClass =
                                     :key="product.id"
                                     class="border-b border-border-subtle transition-colors last:border-b-0 hover:bg-surface-overlay"
                                 >
-                                    <td class="px-4 py-3">
+                                    <td class="cell-wrap px-4 py-3">
                                         <p class="font-medium text-text-primary">{{ product.name }}</p>
                                         <p class="font-mono text-xs text-text-tertiary">{{ product.sku }}</p>
                                     </td>

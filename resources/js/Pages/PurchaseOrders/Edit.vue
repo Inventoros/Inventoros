@@ -293,14 +293,14 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                     <h3 class="text-sm font-semibold text-text-primary">{{ t('purchaseOrders.create.addItems') }}</h3>
                 </div>
                 <div class="space-y-4 p-5">
-                    <div class="rounded-lg border border-border-subtle bg-surface-canvas p-4">
-                        <div class="grid grid-cols-1 gap-3" :class="chosenProduct?.has_variants ? 'md:grid-cols-8' : 'md:grid-cols-6'">
-                            <div class="md:col-span-2">
+                    <div class="@container rounded-lg border border-border-subtle bg-surface-canvas p-4">
+                        <div class="grid grid-cols-1 gap-3 @lg:grid-cols-4" :class="chosenProduct?.has_variants ? '@5xl:grid-cols-8' : '@4xl:grid-cols-6'">
+                            <div class="@lg:col-span-4" :class="chosenProduct?.has_variants ? '@5xl:col-span-2' : '@4xl:col-span-2'">
                                 <label for="product" :class="fieldLabel">{{ t('common.product') }}</label>
                                 <ProductPicker id="product" v-model="selectedProductId" :products="products" :stock-label="t('components.productPicker.onHand')" @change="onProductSelected" />
                             </div>
 
-                            <div v-if="chosenProduct?.has_variants" class="md:col-span-2">
+                            <div v-if="chosenProduct?.has_variants" class="@lg:col-span-4 @5xl:col-span-2">
                                 <label for="variant" :class="fieldLabel">{{ t('orders.create.variant') }}</label>
                                 <select id="variant" v-model="selectedVariantId" @change="onVariantSelected" :class="fieldInput">
                                     <option :value="null">{{ t('orders.create.chooseVariant') }}</option>
@@ -347,10 +347,12 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                     <div
                         v-for="(item, index) in form.items"
                         :key="index"
-                        class="rounded-lg border border-border-subtle bg-surface-canvas p-4"
+                        class="@container rounded-lg border border-border-subtle bg-surface-canvas p-4"
                     >
-                        <div class="grid grid-cols-1 gap-3 md:grid-cols-12">
-                            <div class="md:col-span-3">
+                        <!-- The product gets the full card width; the figures below
+                             are laid out by the card's width, not the viewport's. -->
+                        <div class="flex items-start gap-3">
+                            <div class="min-w-0 flex-1">
                                 <p class="text-sm font-medium text-text-primary">{{ item.product_name }}</p>
                                 <p v-if="item.receiving_location" class="text-xs text-text-secondary">{{ t('variantReplenishment.receiveAt', { location: item.receiving_location.name, warehouse: item.receiving_location.warehouse?.name }) }}</p>
                                 <p class="text-xs text-text-tertiary">SKU: {{ item.sku || '-' }}</p>
@@ -367,8 +369,17 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                 <p v-if="form.errors[`items.${index}.product_variant_id`]" :class="fieldError">{{ form.errors[`items.${index}.product_variant_id`] }}</p>
                                 <p v-if="form.errors[`items.${index}.tax_rate`]" :class="fieldError">{{ form.errors[`items.${index}.tax_rate`] }}</p>
                             </div>
-
-                            <div class="md:col-span-2">
+                            <button :aria-label="t('common.delete')"
+                                type="button"
+                                @click="removeItem(index)"
+                                class="shrink-0 rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-surface-sunken hover:text-status-danger"
+                                :title="t('orders.edit.removeItem')"
+                            >
+                                <Trash2 :size="16" />
+                            </button>
+                        </div>
+                        <div class="mt-3 grid grid-cols-2 gap-3 @sm:grid-cols-3 @3xl:grid-cols-6">
+                            <div>
                                 <label :for="`quantity-${index}`" :class="fieldLabel">{{ t('common.quantity') }}</label>
                                 <input
                                     :id="`quantity-${index}`"
@@ -379,8 +390,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                     :class="fieldInput"
                                 />
                             </div>
-
-                            <div class="md:col-span-2">
+                            <div>
                                 <label :for="`cost-${index}`" :class="fieldLabel">{{ t('purchaseOrders.create.unitCost') }}</label>
                                 <input
                                     :id="`cost-${index}`"
@@ -392,8 +402,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                     :class="fieldInput"
                                 />
                             </div>
-
-                            <div class="md:col-span-1">
+                            <div>
                                 <label :for="`tax-rate-${index}`" :class="fieldLabel">{{ t('tax.lineRate') }}</label>
                                 <input
                                     :id="`tax-rate-${index}`"
@@ -405,32 +414,18 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                     :class="fieldInput"
                                 />
                             </div>
-
-                            <div class="grid grid-cols-3 gap-2 text-end md:col-span-3">
-                                <div>
-                                    <p :class="fieldLabel">{{ t('tax.net') }}</p>
-                                    <p class="text-sm tabular-nums text-text-primary">{{ formatCurrency(totals.lineNets[index]) }}</p>
-                                </div>
-                                <div>
-                                    <p :class="fieldLabel">{{ t('tax.lineTax') }}</p>
-                                    <p class="text-sm tabular-nums text-text-secondary">{{ formatCurrency(totals.lineTaxes[index]) }}</p>
-                                </div>
-                                <div>
-                                    <p :class="fieldLabel">{{ t('tax.gross') }}</p>
-                                    <p class="text-sm font-semibold tabular-nums text-text-primary">{{ formatCurrency(totals.lineGross[index]) }}</p>
-                                    <p v-if="effectiveRate" class="text-[11px] tabular-nums text-text-tertiary">{{ converted(totals.lineGross[index]) }}</p>
-                                </div>
+                            <div class="text-end">
+                                <p :class="fieldLabel">{{ t('tax.net') }}</p>
+                                <p class="whitespace-nowrap text-sm tabular-nums text-text-primary">{{ formatCurrency(totals.lineNets[index]) }}</p>
                             </div>
-
-                            <div class="flex items-end md:col-span-1">
-                                <button :aria-label="t('common.delete')"
-                                    type="button"
-                                    @click="removeItem(index)"
-                                    class="rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-surface-sunken hover:text-status-danger"
-                                    :title="t('orders.edit.removeItem')"
-                                >
-                                    <Trash2 :size="16" />
-                                </button>
+                            <div class="text-end">
+                                <p :class="fieldLabel">{{ t('tax.lineTax') }}</p>
+                                <p class="whitespace-nowrap text-sm tabular-nums text-text-secondary">{{ formatCurrency(totals.lineTaxes[index]) }}</p>
+                            </div>
+                            <div class="text-end">
+                                <p :class="fieldLabel">{{ t('tax.gross') }}</p>
+                                <p class="whitespace-nowrap text-sm font-semibold tabular-nums text-text-primary">{{ formatCurrency(totals.lineGross[index]) }}</p>
+                                <p v-if="effectiveRate" class="whitespace-nowrap text-[11px] tabular-nums text-text-tertiary">{{ converted(totals.lineGross[index]) }}</p>
                             </div>
                         </div>
                     </div>

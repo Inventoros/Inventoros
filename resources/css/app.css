@@ -492,10 +492,25 @@
 
 @layer components {
     /*
+     * Phones: icon-only controls in the top bars and in table rows get a
+     * 44px hit area. The icon keeps its size; only the tappable box grows.
+     */
+    @media (max-width: 767.98px) {
+        :is(.app-mobile-bar, .app-topbar, .table-viewport td) :is(a, button):has(> svg:only-child) {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 44px;
+            min-height: 44px;
+        }
+    }
+
+    /*
      * Top-strip breadcrumb (AppLayout wraps every page's #header slot in
      * .app-breadcrumb). Crumbs never wrap; the current page truncates instead
-     * of running under the warehouse/language/theme controls. Below md only
-     * the current page shows: there is no room for the trail on a phone.
+     * of running under the warehouse/language/theme controls. Below lg only
+     * the current page shows: there is no room for the trail beside the
+     * sidebar and search on a tablet, or on a phone.
      */
     .app-breadcrumb > * {
         flex-wrap: nowrap;
@@ -511,8 +526,17 @@
         overflow: hidden;
         text-overflow: ellipsis;
     }
-    @media (max-width: 767.98px) {
+    @media (max-width: 1023.98px) {
         .app-breadcrumb > * > :not(:last-child) {
+            display: none;
+        }
+    }
+    /* Beside the sidebar and centred search there is room for the trail but
+     * not its "Workspace" root, which every page shares; drop it first so the
+     * current page keeps its name. Tablets, with the sidebar open, show only
+     * the current page, like phones. */
+    @media (min-width: 1024px) and (max-width: 1279.98px) {
+        .app-breadcrumb > * > :nth-child(-n + 2):nth-last-child(n + 2) {
             display: none;
         }
     }
