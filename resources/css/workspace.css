@@ -5,8 +5,8 @@
  * alone (768-1279px, or a collapsed panel) or rail and panel (1280px+).
  */
 .workspace-shell {
-    --workspace-rail-width: 60px;
-    --workspace-panel-width: 212px;
+    --workspace-rail-width: 56px;
+    --workspace-panel-width: 184px;
     --workspace-sidebar-width: var(--workspace-rail-width);
     --rail-bg: 220 66% 21%;
     --rail-fg: 0 0% 100%;
@@ -51,14 +51,17 @@
     box-shadow: 0 1px 2px rgb(0 0 0 / 0.18);
 }
 .workspace-rail-logo img { width: 24px; height: 24px; object-fit: contain; }
-.workspace-rail-sections,
-.workspace-rail-foot {
+/* One nav for every section; Admin (is-foot) drops to the rail's foot. */
+.workspace-rail-sections {
     display: flex;
+    flex: 1;
     flex-direction: column;
     align-items: center;
     gap: 8px;
+    min-height: 0;
 }
-.workspace-rail-foot { margin-top: auto; gap: 12px; }
+.workspace-rail-button.is-foot { margin-top: auto; }
+.workspace-rail-foot { display: flex; flex-direction: column; align-items: center; margin-top: 12px; }
 .workspace-rail-button {
     position: relative;
     display: grid;
@@ -127,6 +130,8 @@
     opacity: 1;
     transform: translate(0, -50%);
 }
+/* Escape dismisses a showing tooltip until the pointer or focus moves on. */
+.workspace-rail.is-tooltips-hidden .workspace-rail-tooltip { opacity: 0; }
 /* No hover on touch screens; the drawer shows the panel anyway. */
 @media (hover: none) {
     .workspace-rail-tooltip { display: none; }

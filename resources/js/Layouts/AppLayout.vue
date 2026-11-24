@@ -61,7 +61,7 @@ import GlobalSearch from '@/Components/Layout/GlobalSearch.vue';
 import NotificationDropdown from '@/Components/Layout/NotificationDropdown.vue';
 import ThemeToggle from '@/Components/Layout/ThemeToggle.vue';
 import AccountMenu from '@/Components/Layout/AccountMenu.vue';
-import { lastNavSection } from '@/lib/navSection';
+import { lastNavSection, leavesPage } from '@/lib/navSection';
 import WarehouseSwitcher from '@/Components/WarehouseSwitcher.vue';
 import OrganizationSwitcher from '@/Components/OrganizationSwitcher.vue';
 import LanguageSwitcher from '@/Components/LanguageSwitcher.vue';
@@ -119,17 +119,28 @@ const setCollapsed = async (value) => {
 
 // Close the drawer and the flyout on navigation.
 onMounted(() => {
-    removeNavigationListener = router.on('start', () => {
+    removeNavigationListener = router.on('start', (event) => {
+        if (!leavesPage(event)) return;
+        if (selectedSection.value) lastNavSection.value = selectedSection.value.id;
         mobileOpen.value = false;
         flyoutOpen.value = false;
     });
     const media = window.matchMedia('(max-width: 767px)');
     const wide = window.matchMedia('(min-width: 1280px)');
-    const updateMobile = () => {
+    const updateMobile = async () => {
+        const hadFocus = sidebarRef.value?.contains(document.activeElement);
         isMobile.value = media.matches;
         isWide.value = wide.matches;
         if (!media.matches) mobileOpen.value = false;
         flyoutOpen.value = false;
+        // A breakpoint can hide the focused link (the panel undocks, or the
+        // drawer closes); keep focus on the control that brings it back.
+        if (!hadFocus) return;
+        await nextTick();
+        const active = document.activeElement;
+        if (active && active !== document.body && sidebarRef.value?.contains(active) && active.offsetParent !== null) return;
+        if (isMobile.value) mobileTrigger.value?.focus();
+        else sidebarRef.value?.querySelector('.workspace-rail-button.is-selected')?.focus();
     };
     updateMobile();
     media.addEventListener('change', updateMobile);
@@ -148,10 +159,12 @@ function closeFlyoutOutside(event) {
 
 const closeFlyout = async (returnFocus = false) => {
     if (!flyoutOpen.value) return;
+    // Return focus to the button that opened it, not the page's own section.
+    const openedBy = selectedSection.value?.id;
     flyoutOpen.value = false;
     if (!returnFocus) return;
     await nextTick();
-    sidebarRef.value?.querySelector('.workspace-rail-button.is-selected')?.focus();
+    sidebarRef.value?.querySelector(`.workspace-rail-button[data-section="${openedBy}"]`)?.focus();
 };
 
 const onSidebarFocusOut = (event) => {
@@ -183,8 +196,10 @@ onBeforeUnmount(() => {
 });
 
 // GlobalSearch owns Cmd/Ctrl-K; the shell handles the navigation drawer.
+const tooltipsHidden = ref(false);
 const handleHotkey = (e) => {
     if (e.key !== 'Escape') return;
+    tooltipsHidden.value = true;
     if (flyoutOpen.value) closeFlyout(true);
     mobileOpen.value = false;
 };
@@ -329,6 +344,10 @@ const selectedSection = computed(() => {
     const id = pickedSectionId.value ?? routeSectionId.value ?? lastNavSection.value;
     return visibleSections.value.find((section) => section.id === id) ?? visibleSections.value[0];
 });
+// A flyout closed without navigating leaves the rail showing where the user is.
+watch(flyoutOpen, (open) => {
+    if (!open && railOnly.value) pickedSectionId.value = null;
+});
 const sectionBadge = (section) => section.items.reduce((total, item) => total + (Number(item.badge) || 0), 0);
 const sectionWaiting = (section) => (section.id !== selectedSection.value?.id || !panelVisible.value ? sectionBadge(section) : 0);
 const railLabel = (section) => {
@@ -339,7 +358,6 @@ const railLabel = (section) => {
 const selectSection = async (section, event) => {
     const reselected = selectedSection.value?.id === section.id;
     pickedSectionId.value = section.id;
-    lastNavSection.value = section.id;
     if (!railOnly.value) return;
     flyoutOpen.value = !(reselected && flyoutOpen.value);
     // From the keyboard, move into the panel that just opened.
@@ -406,25 +424,30 @@ const searchKeys = isMac ? 'Meta+K' : 'Control+K';
             @focusout="onSidebarFocusOut"
             :inert="isMobile && !mobileOpen"
             :class="[
-                'workspace-sidebar fixed inset-y-0 start-0 z-50 flex',
+                'workspace-sidebar fixed bottom-0 top-12 md:top-0 start-0 z-50 flex',
                 'transform transition-transform duration-200',
                 { 'is-rail-only': railOnly, 'is-flyout': railOnly && flyoutOpen },
                 mobileOpen ? 'translate-x-0' : '-translate-x-full rtl:translate-x-full md:translate-x-0 rtl:md:translate-x-0',
-                'pt-12 md:pt-0',
             ]"
         >
-            <div class="workspace-rail" @keydown="onRailKeydown">
+            <div
+                :class="['workspace-rail', { 'is-tooltips-hidden': tooltipsHidden }]"
+                @keydown="onRailKeydown"
+                @focusin="tooltipsHidden = false"
+                @pointerleave="tooltipsHidden = false"
+            >
                 <div class="workspace-rail-logo">
                     <img src="/images/brand/inventoros_icon_transparent_512.png" alt="" />
                 </div>
                 <nav class="workspace-rail-sections" :aria-label="t('nav.sectionSwitcher')">
                     <button
-                        v-for="section in railSections"
+                        v-for="section in [...railSections, ...(adminSection ? [adminSection] : [])]"
                         :key="section.id"
+                        :data-section="section.id"
                         type="button"
-                        :class="['workspace-rail-button', { 'is-selected': section.id === selectedSection?.id }]"
+                        :class="['workspace-rail-button', { 'is-selected': section.id === selectedSection?.id, 'is-foot': section.id === 'admin' }]"
                         :aria-label="railLabel(section)"
-                        :aria-pressed="section.id === selectedSection?.id"
+                        :aria-current="section.id === selectedSection?.id ? 'true' : undefined"
                         :aria-expanded="railOnly ? (flyoutOpen && section.id === selectedSection?.id) : undefined"
                         aria-controls="workspace-panel"
                         @click="event => selectSection(section, event)"
@@ -435,19 +458,6 @@ const searchKeys = isMac ? 'Meta+K' : 'Control+K';
                     </button>
                 </nav>
                 <div class="workspace-rail-foot">
-                    <button
-                        v-if="adminSection"
-                        type="button"
-                        :class="['workspace-rail-button', { 'is-selected': adminSection.id === selectedSection?.id }]"
-                        :aria-label="railLabel(adminSection)"
-                        :aria-pressed="adminSection.id === selectedSection?.id"
-                        :aria-expanded="railOnly ? (flyoutOpen && adminSection.id === selectedSection?.id) : undefined"
-                        aria-controls="workspace-panel"
-                        @click="event => selectSection(adminSection, event)"
-                    >
-                        <component :is="railIcons.admin" :size="20" :stroke-width="1.7" />
-                        <span class="workspace-rail-tooltip" aria-hidden="true">{{ adminSection.label }}</span>
-                    </button>
                     <AccountMenu />
                 </div>
             </div>
@@ -508,7 +518,7 @@ const searchKeys = isMac ? 'Meta+K' : 'Control+K';
                                 :stroke-width="1.65"
                                 :class="isActive(item) ? 'text-brand' : 'text-text-tertiary group-hover:text-text-secondary'"
                             />
-                            <span class="truncate flex-1">{{ item.name }}</span>
+                            <span class="truncate flex-1" :title="item.name">{{ item.name }}</span>
                             <span
                                 v-if="item.badge"
                                 class="ms-auto inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-status-warning-soft px-1.5 text-[11px] font-semibold tabular-nums text-status-warning"

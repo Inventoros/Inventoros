@@ -7,6 +7,7 @@
  */
 import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue';
 import { Link, router, usePage } from '@inertiajs/vue3';
+import { leavesPage } from '@/lib/navSection';
 import { useI18n } from 'vue-i18n';
 import { LogOut, UserRound } from '@lucide/vue';
 
@@ -54,7 +55,7 @@ const onPointerDown = (event) => {
 let removeNavigationListener;
 onMounted(() => {
     document.addEventListener('pointerdown', onPointerDown);
-    removeNavigationListener = router.on('start', () => close());
+    removeNavigationListener = router.on('start', (event) => { if (leavesPage(event)) close(); });
 });
 onBeforeUnmount(() => {
     document.removeEventListener('pointerdown', onPointerDown);
@@ -67,14 +68,14 @@ onBeforeUnmount(() => {
         ref="root"
         class="workspace-account"
         @keydown="onKeydown"
-        @focusout="event => { if (open && !root?.contains(event.relatedTarget)) close(); }"
+        @focusout="event => { if (open && event.relatedTarget && !root?.contains(event.relatedTarget)) close(); }"
     >
         <button
             ref="trigger"
             type="button"
             class="workspace-rail-button workspace-rail-avatar"
             data-testid="user-menu"
-            :aria-label="t('nav.accountMenu')"
+            :aria-label="`${t('nav.accountMenu')}, ${user?.name || ''}`"
             :aria-expanded="open"
             aria-controls="workspace-account-panel"
             @click="toggle"

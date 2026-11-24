@@ -23,24 +23,24 @@ test('the panel follows the current page and the rail swaps sections without nav
     await page.goto('/categories', { waitUntil: 'networkidle' });
     await clearCollapsed(page);
 
-    await expect(railButton(page, 'Catalog')).toHaveAttribute('aria-pressed', 'true');
+    await expect(railButton(page, 'Catalog')).toHaveAttribute('aria-current', 'true');
     await expect(panel(page).getByRole('link', { name: 'Categories', exact: true })).toHaveAttribute('aria-current', 'page');
     await expect(panel(page).getByRole('link', { name: 'Dashboard', exact: true })).toHaveCount(0);
 
     await railButton(page, 'Stock').click();
     await expect(page).toHaveURL(/\/categories$/);
-    await expect(railButton(page, 'Stock')).toHaveAttribute('aria-pressed', 'true');
+    await expect(railButton(page, 'Stock')).toHaveAttribute('aria-current', 'true');
     await expect(panel(page).getByRole('navigation', { name: 'Stock' })).toBeVisible();
     await expect(panel(page).getByRole('link', { name: 'Stock Transfers', exact: true })).toBeVisible();
 
     await panel(page).getByRole('link', { name: 'Stock Transfers', exact: true }).click();
     await expect(page).toHaveURL(/\/stock-transfers$/);
-    await expect(railButton(page, 'Stock')).toHaveAttribute('aria-pressed', 'true');
+    await expect(railButton(page, 'Stock')).toHaveAttribute('aria-current', 'true');
 
     // The main column starts where the docked sidebar ends.
     const sidebar = (await page.locator('#workspace-navigation').boundingBox())!;
     const main = (await page.locator('main').boundingBox())!;
-    expect(sidebar.width).toBe(272);
+    expect(sidebar.width).toBe(240);
     expect(main.x).toBeGreaterThanOrEqual(sidebar.x + sidebar.width - 1);
     await expectNoSideScroll(page);
 });
@@ -61,11 +61,16 @@ test('rail buttons have names, tooltips on keyboard focus and arrow-key movement
     await expect(page.getByTestId('user-menu')).toBeFocused();
     await page.keyboard.press('Home');
     await expect(workspace).toBeFocused();
+    // Escape hides a showing tooltip (WCAG 1.4.13) until focus moves on.
+    const workspaceTip = workspace.locator('.workspace-rail-tooltip');
+    await expect.poll(() => workspaceTip.evaluate(el => getComputedStyle(el).opacity)).toBe('1');
+    await page.keyboard.press('Escape');
+    await expect.poll(() => workspaceTip.evaluate(el => getComputedStyle(el).opacity)).toBe('0');
 
     // Enter picks the section; the panel follows.
     await page.keyboard.press('ArrowDown');
     await page.keyboard.press('Enter');
-    await expect(catalog).toHaveAttribute('aria-pressed', 'true');
+    await expect(catalog).toHaveAttribute('aria-current', 'true');
     await expect(panel(page).getByRole('link', { name: 'Warehouses', exact: true })).toBeVisible();
 });
 
@@ -78,7 +83,7 @@ test('the docked panel collapses to the rail, opens as a flyout and remembers th
     await page.getByRole('button', { name: 'Collapse sidebar', exact: true }).click();
     await expect(panel(page)).toBeHidden();
     const width = async () => (await page.locator('#workspace-navigation').boundingBox())!.width;
-    expect(await width()).toBe(60);
+    expect(await width()).toBe(56);
     await expect(railButton(page, 'Workspace')).toBeFocused();
 
     await page.reload({ waitUntil: 'networkidle' });
@@ -88,7 +93,7 @@ test('the docked panel collapses to the rail, opens as a flyout and remembers th
     await railButton(page, 'Stock').click();
     await expect(panel(page)).toBeVisible();
     await expect(railButton(page, 'Stock')).toHaveAttribute('aria-expanded', 'true');
-    expect(await width()).toBe(60);
+    expect(await width()).toBe(56);
     await page.keyboard.press('Escape');
     await expect(panel(page)).toBeHidden();
     await expect(railButton(page, 'Stock')).toBeFocused();
@@ -97,7 +102,7 @@ test('the docked panel collapses to the rail, opens as a flyout and remembers th
     await railButton(page, 'Stock').click();
     await page.getByRole('button', { name: 'Expand sidebar', exact: true }).click();
     await expect(panel(page)).toBeVisible();
-    expect(await width()).toBe(272);
+    expect(await width()).toBe(240);
     await page.reload({ waitUntil: 'networkidle' });
     await expect(panel(page)).toBeVisible();
 });
@@ -109,7 +114,7 @@ test('tablet widths dock only the rail and use a flyout panel', async ({ page })
 
     await expect(panel(page)).toBeHidden();
     const sidebar = (await page.locator('#workspace-navigation').boundingBox())!;
-    expect(sidebar.width).toBe(60);
+    expect(sidebar.width).toBe(56);
     await expect(page.getByRole('button', { name: 'Collapse sidebar' })).toHaveCount(0);
     await expectNoSideScroll(page);
 
@@ -123,6 +128,8 @@ test('tablet widths dock only the rail and use a flyout panel', async ({ page })
     // An empty part of the top bar, clear of the flyout over the page's left edge.
     await page.locator('.workspace-topbar').click({ position: { x: 500, y: 4 } });
     await expect(panel(page)).toBeHidden();
+    await expect(railButton(page, 'Workspace')).toHaveAttribute('aria-current', 'true');
+    await expect(railButton(page, 'Catalog')).not.toHaveAttribute('aria-current', 'true');
 
     // Opened from the keyboard, focus moves into the panel; a link navigates and closes it.
     await railButton(page, 'Workspace').focus();
@@ -159,7 +166,7 @@ test('the account menu shows the user, links to the account and closes with Esca
     await page.goto('/dashboard', { waitUntil: 'networkidle' });
 
     const trigger = page.getByTestId('user-menu');
-    await expect(trigger).toHaveAttribute('aria-label', 'Account menu');
+    await expect(trigger).toHaveAttribute('aria-label', /^Account menu, \S/);
     await trigger.focus();
     await page.keyboard.press('Enter');
     const menu = page.locator('#workspace-account-panel');
@@ -173,5 +180,5 @@ test('the account menu shows the user, links to the account and closes with Esca
     await trigger.click();
     await menu.getByRole('link', { name: 'Account', exact: true }).click();
     await expect(page).toHaveURL(/\/settings\/account/);
-    await expect(railButton(page, 'Admin')).toHaveAttribute('aria-pressed', 'true');
+    await expect(railButton(page, 'Admin')).toHaveAttribute('aria-current', 'true');
 });

@@ -375,7 +375,7 @@ const thClassCenter = 'px-4 py-2.5 text-center text-xs font-medium tracking-tigh
 
 /* One table and one set of inputs. On narrow panels, each row becomes a
    receiving record while its column headers remain available to readers. */
-@container receiving-items (max-width: 52rem) {
+@container receiving-items (max-width: 64rem) {
     .receiving-items :deep(.table-panel) { border: 0; border-radius: 0; }
     .receiving-items :deep(.table-viewport) { max-height: none; overflow: visible; scrollbar-gutter: auto; }
     .receiving-items :deep(.table-expand-button) { display: none; }
