@@ -1,5 +1,7 @@
 @import 'tailwindcss' source(none);
 /* Figtree is bundled with the app; no third-party font requests. */
+/* 300 is for the dashboard's large figures only. */
+@import '@fontsource/figtree/300.css';
 @import '@fontsource/figtree/400.css';
 @import '@fontsource/figtree/500.css';
 @import '@fontsource/figtree/600.css';

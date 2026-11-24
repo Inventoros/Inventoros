@@ -179,7 +179,8 @@ const headlineMetrics = computed(() => {
                 label: t('dashboard.revenueThisMonth'),
                 value: formatCompactCurrency(stats.revenueThisMonth),
                 icon: BarChart3,
-                context: `${t('dashboard.design.monthToDate')} · ${props.currency}`,
+                // The comparison line takes the place of the period note.
+                context: revenueTrend.value ? '' : `${t('dashboard.design.monthToDate')} · ${props.currency}`,
                 detail: formatCurrency(stats.revenueThisMonth),
                 extra: otherCurrencies('revenueThisMonth'),
                 trend: revenueTrend.value,

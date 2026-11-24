@@ -1,6 +1,6 @@
 <script setup>
 import { Link } from '@inertiajs/vue3';
-import { ArrowUpRight, Minus, TrendingDown, TrendingUp } from '@lucide/vue';
+import { ArrowUpRight } from '@lucide/vue';
 
 defineProps({
     label: { type: String, required: true },
@@ -36,12 +36,7 @@ defineProps({
         <p class="dashboard-metric-value">{{ value }}</p>
         <p v-if="context" class="dashboard-metric-context">{{ context }}</p>
         <p v-if="extra" class="dashboard-metric-context">{{ extra }}</p>
-        <p v-if="trend" class="dashboard-metric-trend" :class="`dashboard-metric-trend-${trend.direction}`">
-            <component
-                :is="trend.direction === 'down' ? TrendingDown : trend.direction === 'up' ? TrendingUp : Minus"
-                :size="13"
-                aria-hidden="true"
-            />{{ trend.text }}
-        </p>
+        <!-- The signed percentage carries the direction; colour reinforces it. -->
+        <p v-if="trend" class="dashboard-metric-trend" :class="`dashboard-metric-trend-${trend.direction}`">{{ trend.text }}</p>
     </component>
 </template>

@@ -23,7 +23,7 @@ watch(
 <template>
     <span class="product-thumb" :style="{ width: `${size}px`, height: `${size}px` }" aria-hidden="true">
         <img v-if="src" :src="src" alt="" loading="lazy" decoding="async" @error="failed = true" />
-        <span v-else class="product-thumb-initials">{{ productInitials(product.name) }}</span>
+        <span v-else class="product-thumb-initials" :style="{ fontSize: `${Math.round(size * 0.34)}px` }">{{ productInitials(product.name) }}</span>
     </span>
 </template>
 
