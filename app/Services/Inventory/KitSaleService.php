@@ -10,11 +10,16 @@ use App\Exceptions\InvalidOrderItemException;
 use App\Models\Inventory\OrderItemKitComponent;
 use App\Models\Inventory\Product;
 use App\Models\Inventory\ProductComponent;
+use App\Models\Inventory\StockAdjustment;
 use App\Models\Order\Order;
 use App\Models\Order\OrderItem;
 use App\Models\User;
 use App\Services\OrderService;
+use App\Services\ProductLocationStockService;
 use App\Services\StockReservationService;
+use App\Services\WarehouseAccessService;
+use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 
 /**
@@ -130,6 +135,112 @@ class KitSaleService
                 'quantity_per_kit' => $per,
                 'quantity_taken' => $taken,
             ]);
+        }
+    }
+
+    /**
+     * Give $kits kits' worth of a kit order line's components back to stock.
+     *
+     * Reads the line's snapshot rows (what the sale recorded), never the
+     * current BOM, so a kit edited after the sale gives back exactly what it
+     * took: $kits * quantity_per_kit of each recorded component. The kit's own
+     * stock, serials and batches are never touched.
+     *
+     * Every recorded component row is locked first, in ascending id order,
+     * deleted ones included (their units still come back). Each component then
+     * goes through the same audited pair as a plain line: a ledger row via
+     * StockAdjustment::adjust and its bin booking. A cancellation
+     * ('order_cancellation') books into the primary bin the way
+     * OrderService::restockItem does; a return ('return') names the
+     * component's location on the ledger row and books there, the way
+     * ReturnOrderService::receive does.
+     *
+     * When $viewer is given, it must reach every place a component's units
+     * may come from or go back to, the checks OrderService::restockItem
+     * applies to a plain line's product: its primary location and, for a
+     * restricted viewer, every bin it holds stock in.
+     *
+     * Must run inside the caller's transaction.
+     *
+     * @param  User|null  $actor  ledger attribution
+     * @param  User|null  $viewer  warehouse access scope (null = unrestricted)
+     *
+     * @throws AuthorizationException When $viewer cannot reach a component's stock.
+     * @throws \LogicException When $kits would give back more than the line took.
+     */
+    public function giveBack(
+        OrderItem $kitLine,
+        int $kits,
+        string $type,
+        string $reason,
+        Model $reference,
+        ?User $actor,
+        ?User $viewer,
+        ?string $notes = null,
+    ): void {
+        if ($kits <= 0) {
+            return;
+        }
+
+        $rows = OrderItemKitComponent::withoutGlobalScopes()
+            ->where('order_item_id', $kitLine->id)
+            ->orderBy('component_product_id')
+            ->get();
+        if ($rows->isEmpty()) {
+            return;
+        }
+
+        $components = Product::withoutGlobalScopes()
+            ->whereIn('id', $rows->pluck('component_product_id')->unique()->sort()->values()->all())
+            ->where('organization_id', $rows->first()->organization_id)
+            ->orderBy('id')
+            ->lockForUpdate()
+            ->get()
+            ->keyBy('id');
+
+        foreach ($rows as $row) {
+            if (! $components->has($row->component_product_id)) {
+                throw new \LogicException("Kit component {$row->component_product_id} could not be found.");
+            }
+            if ($kits * $row->quantity_per_kit > $row->quantity_taken) {
+                throw new \LogicException("Cannot give back more of kit component {$row->component_product_id} than the line took.");
+            }
+        }
+
+        $bins = app(ProductLocationStockService::class);
+        if ($viewer !== null) {
+            $access = app(WarehouseAccessService::class);
+            foreach ($components as $component) {
+                $access->authorizeLocation($viewer, $component->location_id);
+                if ($access->isRestricted($viewer)) {
+                    foreach ($bins->breakdown($component) as $bin) {
+                        $access->authorizeLocation($viewer, (int) $bin->location_id);
+                    }
+                }
+            }
+        }
+
+        foreach ($rows as $row) {
+            $component = $components[$row->component_product_id];
+            $quantity = $kits * $row->quantity_per_kit;
+            $locationId = $type === 'return' && $component->location_id !== null ? (int) $component->location_id : null;
+
+            StockAdjustment::adjust(
+                $component,
+                $quantity,
+                $type,
+                $reason,
+                $notes,
+                $reference,
+                actor: $actor,
+                locationId: $locationId,
+                // Booked into the primary bin just below when no location is named.
+                syncBins: false,
+            );
+
+            if ($locationId === null) {
+                $bins->receive($component, $quantity);
+            }
         }
     }
 

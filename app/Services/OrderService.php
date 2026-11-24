@@ -15,6 +15,7 @@ use App\Exceptions\InvalidOrderItemException;
 use App\Exceptions\InvalidStateException;
 use App\Models\ActivityLog;
 use App\Models\Auth\Organization;
+use App\Models\Inventory\OrderItemKitComponent;
 use App\Models\Inventory\Product;
 use App\Models\Inventory\ProductComponent;
 use App\Models\Inventory\ProductVariant;
@@ -212,10 +213,7 @@ final class OrderService
                     // Draw on the locked component rows. A component missing
                     // from the batch (the BOM changed since it was read) is
                     // locked now, before any balance is read.
-                    $products = $this->lockMissingTargets($draws, $products, (int) $orgId);
-                    foreach ($draws as $d => $draw) {
-                        $draws[$d]['target'] = $products[(int) $draw['target']->id];
-                    }
+                    $draws = $this->lockDrawTargets($draws, $products, (int) $orgId);
                     $target = $product;
                     $key = null;
                 } else {
@@ -239,43 +237,17 @@ final class OrderService
                 }
             }
 
-            // Validate availability across ALL lines first. Lines sharing a
-            // target (same product, or same variant) accumulate against one
-            // running balance, which starts at the target's available stock
-            // (on hand less active reservations), read under the row lock. A
-            // kit line draws `per` units of each component per kit from the
-            // same balances, so a component sold both in a kit and on its own
-            // is counted once. A plain line short of the balance is split: the
-            // units the balance covers are fulfilled, and the remainder is
-            // backordered when the org switch is on and the product is opted
-            // in, otherwise refused exactly as before. A short kit line is
-            // always refused: kits are never backordered.
+            // Validate availability across ALL lines first, on one running
+            // balance per stock target (see drawFromBalances). A plain line
+            // short of its balance is split: the units the balance covers are
+            // fulfilled, and the remainder is backordered when the org switch
+            // is on and the product is opted in, otherwise refused exactly as
+            // before. A short kit line is always refused.
             $running = [];
             $available = [];
             foreach ($adjustStock ? array_keys($lines) : [] as $i) {
                 $line = $lines[$i];
-                $fulfillQty = $line['qty'];
-                $scarcest = null;
-                foreach ($line['draws'] as $d) {
-                    $available[$d['key']] ??= (int) $d['target']->stock - $this->reservedFor($reservations, $d['target']);
-                    $balance = $running[$d['key']] ?? $available[$d['key']];
-                    $covers = intdiv(max(0, $balance), $d['per']);
-                    if ($scarcest === null || $covers < $scarcest[1]) {
-                        $scarcest = [$d['target'], $covers];
-                    }
-                    $fulfillQty = min($fulfillQty, $covers);
-                }
-
-                if ($line['isKit'] && $fulfillQty < $line['qty']) {
-                    throw new InsufficientStockException(
-                        "Insufficient stock for kit {$line['product']->name}: component {$scarcest[0]->name} runs out first."
-                        ." Available: {$fulfillQty}, Requested: {$line['qty']}"
-                    );
-                }
-
-                foreach ($line['draws'] as $d) {
-                    $running[$d['key']] = ($running[$d['key']] ?? $available[$d['key']]) - $fulfillQty * $d['per'];
-                }
+                $fulfillQty = $this->drawFromBalances($line, $running, $available, $reservations);
                 $key = $line['key'];
                 $backorderedQty = $line['qty'] - $fulfillQty;
 
@@ -718,8 +690,10 @@ final class OrderService
      * decremented: the variant when the line was sold as one, otherwise the
      * product. Crediting the parent product for a variant line would leave the
      * variant permanently depleted while inflating the parent's on-hand count.
+     * A kit line gives back its components as its snapshot recorded them
+     * (KitSaleService::giveBack), never the kit's own stock.
      *
-     * $quantity is how many units go back. Callers pass the line's figure
+     * $quantity is how many units (kits, for a kit line) go back. Callers pass the line's figure
      * from restockableQuantities(), so a line the order never took out of
      * stock (a historical import) or one already returned restocks nothing.
      * The caller must have loaded the item's `product` (and `variant` for
@@ -728,6 +702,27 @@ final class OrderService
     private function restockItem(OrderItem $item, string $reason, Order $order, int $quantity, ?User $actor = null): void
     {
         if ($quantity <= 0) {
+            return;
+        }
+
+        $viewer = $actor ?? (auth()->user() instanceof User ? auth()->user() : null);
+        $access = app(WarehouseAccessService::class);
+        if ($viewer !== null && $order->warehouse_id !== null) {
+            $access->authorizeWarehouse($viewer, (int) $order->warehouse_id);
+        }
+
+        // A kit line took its components, recorded in its snapshot rows, and
+        // never the kit's own stock: give those back ($quantity is in kits),
+        // with the location checks below applied to each component instead, and
+        // leave the kit's row, serials and batches alone. A kit line with no
+        // snapshot (sold before kits drew on their components) took the
+        // kit's own stock, so it restocks as a plain line.
+        if ($item->kitComponents()->withoutGlobalScopes()->exists()) {
+            app(KitSaleService::class)->giveBack(
+                $item, $quantity, 'order_cancellation', $reason, $order,
+                $this->restockActor($order, $actor), $viewer,
+            );
+
             return;
         }
 
@@ -744,12 +739,7 @@ final class OrderService
             $item->variant?->setRelation('product', $lockedProduct);
         }
 
-        $viewer = $actor ?? (auth()->user() instanceof User ? auth()->user() : null);
         if ($viewer !== null) {
-            $access = app(WarehouseAccessService::class);
-            if ($order->warehouse_id !== null) {
-                $access->authorizeWarehouse($viewer, (int) $order->warehouse_id);
-            }
             $access->authorizeLocation($viewer, $item->product?->location_id);
             // The order does not record its original source bins and returns
             // units to the current primary location. If any possible source
@@ -1059,6 +1049,13 @@ final class OrderService
         $commitsStock = (bool) $order->stock_committed;
         $restockable = $this->restockableQuantities($order);
 
+        // What each kit already on the order took, read from its snapshot
+        // before the release below deletes it. A kit resubmitted by the edit
+        // re-takes this composition, never the current BOM, so a BOM change
+        // after the sale cannot change what the order holds. An order that
+        // never took stock has nothing to re-take.
+        $soldKits = $commitsStock ? $this->soldKitCompositions($order) : [];
+
         // New lines are new terms: an approval decision covered the old ones.
         // The caller's save of the order persists this (see Order).
         $order->requireReapprovalIfDecided($viewer);
@@ -1095,13 +1092,37 @@ final class OrderService
         }
 
         // 2. Lock every product/variant the new lines reference, ordered by id,
-        //    before any bin/stock mutation (product-before-bins ordering).
-        $productIds = collect($items)->pluck('product_id')->filter()->unique()->sort()->values();
-        $products = Product::whereIn('id', $productIds)
+        //    before any bin/stock mutation (product-before-bins ordering). A
+        //    kit line draws on its components, so they join the same sorted
+        //    batch, as in create(): a kit already on the order its snapshot
+        //    components (deleted ones included, since their units were taken
+        //    and still come and go), a kit new to the order its current BOM.
+        $productIds = collect($items)->pluck('product_id')->filter()->map(fn ($id) => (int) $id)->unique()->values()->all();
+        $soldComponentIds = [];
+        foreach (array_intersect_key($soldKits, array_flip($productIds)) as $sold) {
+            $soldComponentIds = array_merge($soldComponentIds, array_keys($sold['composition']));
+        }
+        $lockIds = $commitsStock
+            ? array_unique(array_merge(
+                $productIds,
+                $soldComponentIds,
+                $this->kitComponentIds(array_values(array_diff($productIds, array_keys($soldKits))), (int) $order->organization_id),
+            ))
+            : $productIds;
+        sort($lockIds);
+        $products = Product::whereIn('id', $lockIds)
+            ->when($soldComponentIds !== [], fn ($query) => $query->withTrashed())
             ->where('organization_id', $order->organization_id)
+            ->orderBy('id')
             ->lockForUpdate()
             ->get()
             ->keyBy('id');
+
+        // Kits requested per kit product, across the edit's lines.
+        $requestedKits = [];
+        foreach ($items as $item) {
+            $requestedKits[(int) $item['product_id']] = ($requestedKits[(int) $item['product_id']] ?? 0) + (int) $item['quantity'];
+        }
 
         $variantIds = collect($items)->pluck('product_variant_id')->filter()->unique()->sort()->values();
         $variants = $variantIds->isEmpty()
@@ -1112,17 +1133,20 @@ final class OrderService
                 ->get()
                 ->keyBy('id');
 
-        // 3. Resolve each line's target (variant vs product) and validate
-        //    availability across all lines against a running balance that
-        //    starts at available stock (on hand less active reservations).
+        // 3. Resolve each line's stock draws (its variant, its product, or a
+        //    kit's components; see resolveLineDraws) and validate availability
+        //    across all lines on the running balances create() uses (see
+        //    drawFromBalances).
         $reservations = app(StockReservationService::class);
         $backorderSettings = BackorderSettings::forOrganization((int) $order->organization_id);
         $resolved = [];
         $running = [];
         $available = [];
         foreach (array_values($items) as $index => $item) {
+            // The batch may hold deleted kit components; a deleted product is
+            // never a line of its own.
             $product = $products->get($item['product_id']);
-            if (! $product) {
+            if (! $product || $product->trashed()) {
                 throw new InvalidOrderItemException("Product not found: {$item['product_id']}");
             }
 
@@ -1132,16 +1156,29 @@ final class OrderService
                 if (! $variant || $variant->product_id !== $product->id) {
                     throw new InvalidOrderItemException("Variant {$variantId} does not belong to product {$product->name}.");
                 }
-                $target = $variant;
-                $key = "v{$variantId}";
             } else {
-                if ($product->has_variants) {
-                    throw new InvalidOrderItemException("{$product->name} is sold by variant; each line item needs a product_variant_id.");
-                }
                 $variant = null;
-                $target = $product;
-                $key = "p{$product->id}";
             }
+
+            // A kit on an order that never took stock (a historical import)
+            // takes nothing, so its BOM is not checked, as in create(). A kit
+            // already on the order re-takes its snapshot composition (see
+            // soldKitDraws); a kit new to the order takes its current BOM. A
+            // kit's draws are swapped for the locked component rows; one
+            // missing from the batch (the BOM changed since it was read) is
+            // locked now, before any balance is read.
+            $isKit = $product->isKit();
+            if ($isKit && ! $commitsStock) {
+                $draws = [];
+            } elseif ($isKit && isset($soldKits[$product->id])) {
+                $draws = $this->soldKitDraws($product, $variant, $soldKits[$product->id], $requestedKits[$product->id], $products);
+            } else {
+                $draws = $this->resolveLineDraws($product, $variant);
+            }
+            if ($isKit) {
+                $draws = $this->lockDrawTargets($draws, $products, (int) $order->organization_id);
+            }
+            $key = $isKit ? null : $draws[0]['key'];
 
             $qty = (int) $item['quantity'];
             if ($commitsStock && $viewer !== null) {
@@ -1149,16 +1186,14 @@ final class OrderService
             }
             // Split a short line the same way create() does: fulfil what the
             // running balance covers, backorder the rest when the org switch is
-            // on and the product is opted in, otherwise refuse as before. An
-            // order recorded without stock (import) keeps every unit fulfilled.
+            // on and the product is opted in, otherwise refuse as before. A
+            // short kit line is always refused. An order recorded without
+            // stock (import) keeps every unit fulfilled.
             $fulfillQty = $qty;
             $backorderedQty = 0;
             if ($commitsStock) {
-                $available[$key] ??= (int) $target->stock - $reservations->reservedTotal((int) $product->id, $variant?->id);
-                $balance = $running[$key] ?? $available[$key];
-                $fulfillQty = max(0, min($qty, $balance));
+                $fulfillQty = $this->drawFromBalances(compact('product', 'qty', 'draws', 'isKit'), $running, $available, $reservations);
                 $backorderedQty = $qty - $fulfillQty;
-                $running[$key] = $balance - $fulfillQty;
 
                 if ($backorderedQty > 0 && ! $backorderSettings->allowsBackorderFor($product)) {
                     $carried = $priorBackordered[$key] ?? 0;
@@ -1185,7 +1220,7 @@ final class OrderService
                 'tax' => $item['tax'] ?? null,
             ], $index);
 
-            $resolved[] = compact('item', 'product', 'variant', 'qty', 'fulfillQty', 'backorderedQty', 'unitPrice', 'priced');
+            $resolved[] = compact('item', 'product', 'variant', 'qty', 'fulfillQty', 'backorderedQty', 'unitPrice', 'priced', 'draws', 'isKit');
         }
 
         // 4. Fulfil each line: create the item, then decrement the right target —
@@ -1220,7 +1255,14 @@ final class OrderService
             }
 
             // Only the fulfilled portion leaves stock; a backordered remainder
-            // waits for reconciliation.
+            // waits for reconciliation. A kit line takes its components (the
+            // draws checked above, on the locked rows) and records them in
+            // its snapshot rows; the kit's own stock is never touched.
+            if ($line['isKit']) {
+                app(KitSaleService::class)->take($order, $orderItem, $line['fulfillQty'], $line['draws'], "Order {$order->order_number} edited", $actor, $viewer);
+
+                continue;
+            }
             $this->fulfilLine($order, $product, $variant, $orderItem, $line['fulfillQty'], "Order {$order->order_number} edited", $actor, $viewer);
         }
 
@@ -1932,11 +1974,7 @@ final class OrderService
     private function resolveLineDraws(Product $product, ?ProductVariant $variant): array
     {
         if ($product->isKit()) {
-            if ($variant !== null) {
-                throw new InvalidOrderItemException(
-                    "Kit \"{$product->name}\" cannot be sold by variant."
-                );
-            }
+            $this->refuseKitVariant($product, $variant);
 
             return app(KitSaleService::class)->draws($product);
         }
@@ -1981,15 +2019,115 @@ final class OrderService
     }
 
     /**
-     * Lock any draw target not yet in the locked batch (a component added to
-     * the kit between the BOM read and the lock), in id order, and return the
-     * batch with them added.
+     * @throws InvalidOrderItemException When a kit line names a variant.
+     */
+    private function refuseKitVariant(Product $kit, ?ProductVariant $variant): void
+    {
+        if ($variant !== null) {
+            throw new InvalidOrderItemException(
+                "Kit \"{$kit->name}\" cannot be sold by variant."
+            );
+        }
+    }
+
+    /**
+     * What each kit on the order took, from its lines' snapshot rows, keyed
+     * by kit product id: the composition (component product id => quantity
+     * per kit) and how many of that kit the order held in total. Read before
+     * replaceItems releases the lines, which deletes the snapshot rows.
+     *
+     * The same kit on several lines with different compositions (sold
+     * before and after a BOM change, then merged into one order) is rare;
+     * the composition of its first line, ordered by id, is used. A kit line
+     * with no snapshot rows (sold before kits drew on their components) has
+     * no composition to keep, so that kit takes its current BOM.
+     *
+     * @return array<int, array{composition: array<int, int>, quantity: int}>
+     */
+    private function soldKitCompositions(Order $order): array
+    {
+        $kitLines = $order->items
+            ->filter(fn (OrderItem $item) => $item->product?->isKit() === true)
+            ->sortBy('id');
+        if ($kitLines->isEmpty()) {
+            return [];
+        }
+
+        $rowsByLine = OrderItemKitComponent::withoutGlobalScopes()
+            ->whereIn('order_item_id', $kitLines->pluck('id')->all())
+            ->orderBy('id')
+            ->get()
+            ->groupBy('order_item_id');
+
+        $sold = [];
+        foreach ($kitLines as $line) {
+            $kitId = (int) $line->product_id;
+            $rows = $rowsByLine->get($line->id);
+            if ($rows !== null && ! isset($sold[$kitId])) {
+                $sold[$kitId] = [
+                    'composition' => $rows->mapWithKeys(fn (OrderItemKitComponent $row) => [
+                        (int) $row->component_product_id => (int) $row->quantity_per_kit,
+                    ])->all(),
+                    'quantity' => 0,
+                ];
+            }
+        }
+        foreach ($kitLines as $line) {
+            if (isset($sold[(int) $line->product_id])) {
+                $sold[(int) $line->product_id]['quantity'] += (int) $line->quantity;
+            }
+        }
+
+        return $sold;
+    }
+
+    /**
+     * The draws of a kit already on the order: its snapshot composition (see
+     * soldKitCompositions), on the locked component rows, instead of the
+     * current BOM. The kit's sellability rules are not re-applied to what it
+     * already took, but a component deleted since the sale cannot go into
+     * more kits than the order held: up to $sold['quantity'] kits in all may
+     * be re-taken; $requested beyond that is refused.
+     *
+     * @param  array{composition: array<int, int>, quantity: int}  $sold
+     * @param  Collection<int, Product>  $products  the locked batch, deleted components included
+     * @return array<int, array{target: Product, key: string, per: int}>
+     *
+     * @throws InvalidOrderItemException
+     */
+    private function soldKitDraws(Product $kit, ?ProductVariant $variant, array $sold, int $requested, Collection $products): array
+    {
+        $this->refuseKitVariant($kit, $variant);
+
+        $draws = [];
+        foreach ($sold['composition'] as $componentId => $per) {
+            $component = $products->get($componentId);
+            if ($component === null) {
+                throw new InvalidOrderItemException('A kit component could not be found.');
+            }
+            if ($component->trashed() && $requested > $sold['quantity']) {
+                throw new InvalidOrderItemException(
+                    "Kit \"{$kit->name}\" contains component \"{$component->name}\", which has been deleted,"
+                    ." so this order cannot have more than {$sold['quantity']} of the kit."
+                );
+            }
+            $draws[] = ['target' => $component, 'key' => 'p'.$componentId, 'per' => $per];
+        }
+
+        return $draws;
+    }
+
+    /**
+     * Swap each kit draw's target for its locked row and return the draws.
+     * A target not yet in the locked batch (a component added to the kit
+     * between the BOM read and the lock) is locked now, in id order, and
+     * added to $products. Shared by create() and replaceItems().
      *
      * @param  array<int, array{target: Product, key: string, per: int}>  $draws
      * @param  Collection<int, Product>  $products
-     * @return Collection<int, Product>
+     * @return array<int, array{target: Product, key: string, per: int}>
      */
-    private function lockMissingTargets(array $draws, Collection $products, int $organizationId): Collection
+    private function lockDrawTargets(array $draws, Collection &$products, int $organizationId): array
     {
         $missing = collect($draws)
             ->map(fn (array $d) => (int) $d['target']->id)
@@ -1998,22 +2136,72 @@ final class OrderService
             ->sort()
             ->values();
 
-        if ($missing->isEmpty()) {
-            return $products;
+        if ($missing->isNotEmpty()) {
+            $locked = Product::whereIn('id', $missing->all())
+                ->where('organization_id', $organizationId)
+                ->orderBy('id')
+                ->lockForUpdate()
+                ->get()
+                ->keyBy('id');
+
+            if ($locked->count() !== $missing->count()) {
+                throw new InvalidOrderItemException('A kit component could not be found.');
+            }
+
+            $products = $products->union($locked);
         }
 
-        $locked = Product::whereIn('id', $missing->all())
-            ->where('organization_id', $organizationId)
-            ->orderBy('id')
-            ->lockForUpdate()
-            ->get()
-            ->keyBy('id');
-
-        if ($locked->count() !== $missing->count()) {
-            throw new InvalidOrderItemException('A kit component could not be found.');
+        foreach ($draws as $d => $draw) {
+            $draws[$d]['target'] = $products[(int) $draw['target']->id];
         }
 
-        return $products->union($locked);
+        return $draws;
+    }
+
+    /**
+     * Draw one order line on the running balances of its stock draws (see
+     * resolveLineDraws) and return how many units, or kits for a kit line,
+     * they cover. Lines sharing a draw key (the same product or variant, or a
+     * component sold both in a kit and on its own) meet on one balance, which
+     * starts at the target's available stock (on hand less active
+     * reservations) read under the row lock. A kit line draws `per` units of
+     * each component per kit. The covered units come off every balance the
+     * line draws on. A kit line the balances cannot cover in full is refused,
+     * since kits are never backordered; what happens to a short plain line is
+     * the caller's backorder rule. Shared by create() and replaceItems().
+     *
+     * @param  array{product: Product, qty: int, draws: array<int, array{target: Product|ProductVariant, key: string, per: int}>, isKit: bool}  $line
+     * @param  array<string, int>  $running  balance left per draw key
+     * @param  array<string, int>  $available  starting balance per draw key
+     *
+     * @throws InsufficientStockException When a kit line is short.
+     */
+    private function drawFromBalances(array $line, array &$running, array &$available, StockReservationService $reservations): int
+    {
+        $fulfillQty = $line['qty'];
+        $scarcest = null;
+        foreach ($line['draws'] as $d) {
+            $available[$d['key']] ??= (int) $d['target']->stock - $this->reservedFor($reservations, $d['target']);
+            $balance = $running[$d['key']] ?? $available[$d['key']];
+            $covers = intdiv(max(0, $balance), $d['per']);
+            if ($scarcest === null || $covers < $scarcest[1]) {
+                $scarcest = [$d['target'], $covers];
+            }
+            $fulfillQty = min($fulfillQty, $covers);
+        }
+
+        if ($line['isKit'] && $fulfillQty < $line['qty']) {
+            throw new InsufficientStockException(
+                "Insufficient stock for kit {$line['product']->name}: component {$scarcest[0]->name} runs out first."
+                ." Available: {$fulfillQty}, Requested: {$line['qty']}"
+            );
+        }
+
+        foreach ($line['draws'] as $d) {
+            $running[$d['key']] = ($running[$d['key']] ?? $available[$d['key']]) - $fulfillQty * $d['per'];
+        }
+
+        return $fulfillQty;
     }
 
     /**
