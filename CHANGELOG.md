@@ -6,16 +6,26 @@ Full release notes, with the pull request behind each change, are on [GitHub Rel
 
 ## [Unreleased]
 
+## [2.7.0] - 2026-11-24
+
+This release adds one migration, which is additive. See the [2.7.0 release notes](docs/releases/2.7.0.md).
+
 ### Added
 
+- **Sellable kits (#472).** A kit (a product with a component list) can be sold on an order as one priced line, while stock comes out of its components. What each line took is recorded, so cancelling, rejecting, deleting, editing or returning the order gives back exactly that, even if the kit's components change later. How many kits can be sold is the scarcest component's free stock (on hand less reservations) divided by its quantity per kit, shared with plain lines for the same products on the order. Kits with fractional quantities, variants, or tracked, kit or assembly components are refused with the reason. Pick lists list each kit's contents.
 - **Kits on the order form and product pages.** Kits show how many can be made from their components ("Can make N") in the order product picker, the product list and the product page, which also says why a kit cannot be sold. An order's kit line lists the components it took.
-- **Dashboard refresh.** A lighter layout with Inventory value as the one highlighted figure. Replenishment shares its row with a 30-day stock movement chart (units in and out per day from the stock ledger; location transfers, kit assembly and opening balances are left out), shown to users with `manage_stock`. Low-stock and recent products show their photo, or initials when there is none. The stock bar turns red when a product is out or under a quarter of its minimum, and Revenue this month compares month to date with the same days of last month (#471).
+- **Dashboard redesign (#471).** A lighter layout with Inventory value as the one highlighted figure. Replenishment sits beside a 30-day stock movement chart (units in and out per day from the stock ledger; location transfers, kit assembly and opening balances are left out), shown to users with `manage_stock`. Each low-stock product shows on hand over minimum above a meter whose hatched part is the shortfall. Revenue this month compares month to date with the same days of last month, and only when last month had sales.
+- **Product photos in lists (#471, #473).** The product list, the dashboard's low-stock and recent products show each product's photo, or its initials when it has none.
+- **Search in the top bar (#471, #473).** Search moves from the sidebar to the top bar. Cmd/Ctrl+K opens it anywhere and "/" opens it when focus is not in a field.
 - **Save and view on the product edit page.** A "Save and view" button saves the product and opens its page, instead of going back to the inventory list (#461).
 - **`update_product` MCP tool.** AI agents can now edit an existing product's prices, tax rate, names, reorder levels, barcode, category, location, active flag, backorder setting and release date. Only the fields passed change, which suits bulk price updates one product per call. It needs `edit_products`. Stock stays on `adjust_stock`, and variants, options, images and supplier links stay in the web UI and REST API (#462).
 
 ### Changed
 
+- **Colours (#471).** In the light theme, primary actions, links and selection use a deep blue, and every page sits on a soft grey behind white panels. In the dark theme, primary buttons and other filled controls are a solid blue with white text, and the page sits a step below its panels.
+- **Plugins:** filled surfaces (primary buttons, checked controls, the active page) now use the `bg-brand-solid`, `hover:bg-brand-solid-hover` and `text-brand-solid-foreground` classes. Plugin UIs that fill with `bg-brand` still work, but should switch to match core in dark mode (#471).
 - **Plugins:** the dashboard's `stockMovements` prop now covers 30 days, one entry per day (zero-filled), with `in`, `out` and `total` (net). It used to cover 7 days, only days with movement, and every adjustment type (#471).
+- **Reservations:** a kit cannot be reserved; reserve its components instead (#472).
 
 ## [2.6.2] - 2026-11-20
 
@@ -408,7 +418,9 @@ Before upgrading: take a database backup you have checked, run `php artisan opti
 
 Releases 1.0.0 to 1.0.8 are described on [GitHub Releases](https://github.com/Inventoros/Inventoros/releases?q=v1.0).
 
-[Unreleased]: https://github.com/Inventoros/Inventoros/compare/v2.6.1...HEAD
+[Unreleased]: https://github.com/Inventoros/Inventoros/compare/v2.7.0...HEAD
+[2.7.0]: https://github.com/Inventoros/Inventoros/compare/v2.6.2...v2.7.0
+[2.6.2]: https://github.com/Inventoros/Inventoros/compare/v2.6.1...v2.6.2
 [2.6.1]: https://github.com/Inventoros/Inventoros/compare/v2.6.0...v2.6.1
 [2.6.0]: https://github.com/Inventoros/Inventoros/compare/v2.5.0...v2.6.0
 [2.5.0]: https://github.com/Inventoros/Inventoros/compare/v2.4.0...v2.5.0
