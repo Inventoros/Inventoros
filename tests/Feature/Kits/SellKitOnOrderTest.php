@@ -5,11 +5,13 @@ declare(strict_types=1);
 namespace Tests\Feature\Kits;
 
 use App\Exceptions\InsufficientStockException;
+use App\Exceptions\InvalidOrderItemException;
 use App\Models\Auth\Organization;
 use App\Models\Inventory\Product;
 use App\Models\Inventory\ProductComponent;
 use App\Models\Inventory\ProductLocation;
 use App\Models\Inventory\ProductLocationStock;
+use App\Models\Inventory\ProductVariant;
 use App\Models\Order\Order;
 use App\Models\User;
 use App\Models\Warehouse;
@@ -342,5 +344,67 @@ final class SellKitOnOrderTest extends TestCase
             (int) $a->fresh()->stock,
             (int) ProductLocationStock::where('product_id', $a->id)->sum('quantity'),
         );
+    }
+
+    public function test_an_unsellable_kit_on_a_non_stock_order_falls_back_to_its_own_purchase_price(): void
+    {
+        // No components, so the kit cannot be sold and has no component cost.
+        $kit = $this->makeKit([], ['name' => 'Empty Kit', 'purchase_price' => 40.00]);
+        $this->assertNull(app(KitSaleService::class)->costAtSale($kit));
+
+        $cancelled = $this->createOrder([['product_id' => $kit->id, 'quantity' => 1, 'unit_price' => 30.00]], ['status' => 'cancelled']);
+        $imported = app(OrderService::class)->create([
+            'customer_name' => 'Acme',
+            'status' => 'pending',
+            'order_date' => now()->toDateString(),
+            'items' => [['product_id' => $kit->id, 'quantity' => 1, 'unit_price' => 30.00]],
+        ], $this->admin, 'import', false);
+
+        $this->assertSame('40.00', (string) $cancelled->items()->first()->unit_cost);
+        $this->assertSame('40.00', (string) $imported->items()->first()->unit_cost);
+    }
+
+    public function test_a_kit_line_with_a_variant_is_refused_on_non_stock_orders(): void
+    {
+        $a = $this->makeProduct($this->org, ['name' => 'Part A', 'stock' => 10]);
+        $kit = $this->makeKit([[$a, 1]]);
+        $variant = ProductVariant::create([
+            'organization_id' => $this->org->id, 'product_id' => $kit->id, 'sku' => 'KIT-RED',
+            'option_values' => ['Color' => 'Red'], 'stock' => 0, 'is_active' => true,
+        ]);
+        $line = ['product_id' => $kit->id, 'product_variant_id' => $variant->id, 'quantity' => 1, 'unit_price' => 30.00];
+
+        foreach ([
+            'created cancelled' => fn () => $this->createOrder([$line], ['status' => 'cancelled']),
+            'imported' => fn () => app(OrderService::class)->create([
+                'customer_name' => 'Acme', 'status' => 'pending', 'order_date' => now()->toDateString(), 'items' => [$line],
+            ], $this->admin, 'import', false),
+        ] as $case => $create) {
+            try {
+                $create();
+                $this->fail("A kit line with a variant must be refused ({$case}).");
+            } catch (InvalidOrderItemException $e) {
+                $this->assertSame('Kit "Starter Kit" cannot be sold by variant.', $e->getMessage(), $case);
+            }
+        }
+        $this->assertSame(0, Order::withoutGlobalScopes()->count());
+
+        // Editing an imported order (which never took stock) is refused too.
+        $order = app(OrderService::class)->create([
+            'customer_name' => 'Acme', 'status' => 'pending', 'order_date' => now()->toDateString(),
+            'items' => [['product_id' => $kit->id, 'quantity' => 1, 'unit_price' => 30.00]],
+        ], $this->admin, 'import', false);
+
+        try {
+            DB::transaction(fn () => app(OrderService::class)->replaceItems($order->fresh(), [
+                $line,
+                ['product_id' => $a->id, 'quantity' => 1, 'unit_price' => 5.00],
+            ]));
+            $this->fail('An edit adding a kit line with a variant must be refused.');
+        } catch (InvalidOrderItemException $e) {
+            $this->assertSame('Kit "Starter Kit" cannot be sold by variant.', $e->getMessage());
+        }
+        $this->assertSame([null], $order->items()->pluck('product_variant_id')->all());
+        $this->assertSame(10, (int) $a->fresh()->stock);
     }
 }

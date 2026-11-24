@@ -9,6 +9,7 @@ use App\Enums\OrderApprovalStatus;
 use App\Enums\OrderStatus;
 use App\Enums\PaymentStatus;
 use App\Enums\ShipmentStatus;
+use App\Enums\TrackingType;
 use App\Exceptions\BusinessRuleException;
 use App\Exceptions\InsufficientStockException;
 use App\Exceptions\InvalidOrderItemException;
@@ -205,8 +206,12 @@ final class OrderService
 
                 // A kit recorded without touching stock (a historical import,
                 // an order created cancelled) takes nothing, so its BOM is not
-                // checked; the line is recorded as sold.
+                // checked; the line is recorded as sold. A kit is never sold
+                // by variant, stock or not.
                 $isKit = $product->isKit();
+                if ($isKit) {
+                    $this->refuseKitVariant($product, $variant);
+                }
                 $draws = $isKit && ! $adjustStock ? [] : $this->resolveLineDraws($product, $variant);
 
                 if ($isKit) {
@@ -1169,6 +1174,7 @@ final class OrderService
             // locked now, before any balance is read.
             $isKit = $product->isKit();
             if ($isKit && ! $commitsStock) {
+                $this->refuseKitVariant($product, $variant);
                 $draws = [];
             } elseif ($isKit && isset($soldKits[$product->id])) {
                 $draws = $this->soldKitDraws($product, $variant, $soldKits[$product->id], $requestedKits[$product->id], $products);
@@ -2087,7 +2093,9 @@ final class OrderService
      * current BOM. The kit's sellability rules are not re-applied to what it
      * already took, but a component deleted since the sale cannot go into
      * more kits than the order held: up to $sold['quantity'] kits in all may
-     * be re-taken; $requested beyond that is refused.
+     * be re-taken; $requested beyond that is refused. A component that has
+     * become serial or batch tracked since the sale is refused outright; the
+     * caller's transaction rolls back the release that ran before this.
      *
      * @param  array{composition: array<int, int>, quantity: int}  $sold
      * @param  Collection<int, Product>  $products  the locked batch, deleted components included
@@ -2104,6 +2112,14 @@ final class OrderService
             $component = $products->get($componentId);
             if ($component === null) {
                 throw new InvalidOrderItemException('A kit component could not be found.');
+            }
+            // Re-taking a tracked component would allocate serials or batch
+            // units to the kit line, which giveBack never releases.
+            if ($component->tracking_type !== TrackingType::NONE) {
+                throw new InvalidOrderItemException(
+                    "Kit \"{$kit->name}\" contains \"{$component->name}\", which is now tracked by serial or batch;"
+                    .' remove the kit line and add it again.'
+                );
             }
             if ($component->trashed() && $requested > $sold['quantity']) {
                 throw new InvalidOrderItemException(

@@ -20,7 +20,8 @@ return new class extends Migration
             $table->id();
             $table->foreignId('organization_id')->constrained()->cascadeOnDelete();
             $table->foreignId('order_item_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('component_product_id')->constrained('products')->restrictOnDelete();
+            // Products are soft-deleted; a hard-deleted one takes its rows with it.
+            $table->foreignId('component_product_id')->constrained('products')->cascadeOnDelete();
             $table->unsignedInteger('quantity_per_kit');
             $table->unsignedInteger('quantity_taken');
             $table->timestamps();

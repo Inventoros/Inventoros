@@ -155,10 +155,16 @@ class KitSaleService
      * component's location on the ledger row and books there, the way
      * ReturnOrderService::receive does.
      *
-     * When $viewer is given, it must reach every place a component's units
-     * may come from or go back to, the checks OrderService::restockItem
-     * applies to a plain line's product: its primary location and, for a
-     * restricted viewer, every bin it holds stock in.
+     * When $viewer is given, a cancellation needs it to reach every place a
+     * component's units may come from or go back to, the checks
+     * OrderService::restockItem applies to a plain line's product: its
+     * primary location and, for a restricted viewer, every bin it holds
+     * stock in. A return needs only the location the units are booked
+     * into, the component's own, as ReturnOrderService::receive checks for
+     * a plain line.
+     *
+     * A snapshot row whose component was hard-deleted goes with it (the
+     * foreign key cascades), so nothing is given back for that component.
      *
      * Must run inside the caller's transaction.
      *
@@ -212,7 +218,10 @@ class KitSaleService
             $access = app(WarehouseAccessService::class);
             foreach ($components as $component) {
                 $access->authorizeLocation($viewer, $component->location_id);
-                if ($access->isRestricted($viewer)) {
+                // A return books the units into the component's location and
+                // nowhere else, so only that location is checked, as for a
+                // plain line in ReturnOrderService::receive.
+                if ($type !== 'return' && $access->isRestricted($viewer)) {
                     foreach ($bins->breakdown($component) as $bin) {
                         $access->authorizeLocation($viewer, (int) $bin->location_id);
                     }

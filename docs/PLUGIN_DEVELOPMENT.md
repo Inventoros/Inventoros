@@ -1036,6 +1036,7 @@ $reservations->reserved($shirt, $large);           // held on a variant
 
 - The owner is your plugin slug; holds are released when your plugin is uninstalled (`release_reason` `uninstalled`). `core` is reserved for core.
 - The reference is yours (a booking id, a wave id). One reference may hold several products: call `reserve()` once per product, variant, bin, serial or batch, then release or consume them together.
+- A kit cannot be reserved (`InvalidStateException`, `unsupported_kit`): selling a kit takes its components, so reserve those instead.
 - A retried `reserve()` with the same owner, reference and target returns the existing hold instead of holding twice. A different quantity under the same reference is refused (`InvalidStateException`, `reservation_conflict`): release it first. A released or expired reference can be reserved again; a consumed one cannot.
 - An expired hold stops counting the moment `expires_at` passes. The scheduled `reservations:release-expired` command (every five minutes) records the release and fires `stock_reservation_released`.
 - Outside a request (queued jobs, commands) no organization is active: pass `$organizationId` to `release()`, `consume()` and `holds()`.

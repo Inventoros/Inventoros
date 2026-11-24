@@ -72,7 +72,8 @@ final class StockReservationService
      * @param  ProductBatch|null  $batch  hold units of one batch
      *
      * @throws InsufficientStockException when not enough is available
-     * @throws InvalidStateException when the reference was already consumed, or holds a different quantity
+     * @throws InvalidStateException when the reference was already consumed, or holds a different quantity,
+     *                               or the product is a kit (kits are not reserved; their components are)
      * @throws InvalidArgumentException on an invalid target
      *
      * @api
@@ -125,6 +126,12 @@ final class StockReservationService
 
             if ($locked === null) {
                 throw new InvalidArgumentException('The product to reserve does not exist.');
+            }
+
+            // A kit sale takes the kit's components, never the kit's own
+            // stock, so a hold on the kit would protect nothing.
+            if ($locked->isKit()) {
+                throw new InvalidStateException('Kits cannot be reserved; reserve their components.', 'unsupported_kit');
             }
 
             $organizationId = (int) $locked->organization_id;

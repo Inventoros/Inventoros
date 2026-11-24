@@ -122,13 +122,17 @@ class OrderItem extends Model
 
     /**
      * The unit cost to record on a line sold now: the variant's own purchase
-     * price when it has one, otherwise the product's. Null when neither is
-     * known, so reports can tell "unknown" from "free".
+     * price when it has one, otherwise the product's. A kit costs the sum of
+     * its components (KitSaleService::costAtSale), or its own purchase price
+     * when that cannot be computed. Null when nothing is known, so reports
+     * can tell "unknown" from "free".
      */
     public static function costAtSale(Product $product, ?ProductVariant $variant = null): ?string
     {
         if ($product->isKit()) {
-            return app(\App\Services\Inventory\KitSaleService::class)->costAtSale($product);
+            $cost = app(\App\Services\Inventory\KitSaleService::class)->costAtSale($product) ?? $product->purchase_price;
+
+            return $cost === null ? null : (string) $cost;
         }
 
         $cost = $variant?->purchase_price ?? $product->purchase_price;

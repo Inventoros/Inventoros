@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Kits;
 
+use App\Enums\TrackingType;
 use App\Exceptions\InsufficientStockException;
 use App\Exceptions\InvalidOrderItemException;
 use App\Models\Auth\Organization;
@@ -712,5 +713,97 @@ final class KitRestockTest extends TestCase
         $this->assertSame(8, (int) $b->fresh()->stock);
         $this->assertNotSame('cancelled', $order->fresh()->status->value);
         $this->assertKitUntouched($kit);
+    }
+
+    public function test_a_receiver_restricted_to_one_warehouse_gets_kit_components_back_when_one_also_has_stock_elsewhere(): void
+    {
+        $east = Warehouse::create(['organization_id' => $this->org->id, 'name' => 'East', 'code' => 'EAST', 'priority' => 0, 'is_active' => true]);
+        $west = Warehouse::create(['organization_id' => $this->org->id, 'name' => 'West', 'code' => 'WEST', 'priority' => 0, 'is_active' => true]);
+        $eastShelf = ProductLocation::create(['organization_id' => $this->org->id, 'name' => 'E-1', 'code' => 'E-1', 'warehouse_id' => $east->id, 'is_active' => true]);
+        $westShelf = ProductLocation::create(['organization_id' => $this->org->id, 'name' => 'W-1', 'code' => 'W-1', 'warehouse_id' => $west->id, 'is_active' => true]);
+
+        // A lives in East but also holds 5 units in a West bin.
+        $a = $this->part('Part A', 10, ['location_id' => $eastShelf->id]);
+        ProductLocationStock::create([
+            'organization_id' => $this->org->id, 'product_id' => $a->id, 'location_id' => $westShelf->id, 'quantity' => 5,
+        ]);
+        $a->update(['stock' => 15]);
+        $b = $this->part('Part B', 10, ['location_id' => $eastShelf->id]);
+        $kit = $this->makeKit([[$a, 2], [$b, 1]], ['location_id' => $eastShelf->id]);
+
+        $order = $this->sellKits($kit, 1, ['status' => 'delivered']);
+        $this->assertSame(13, (int) $a->fresh()->stock);
+        $this->assertSame(9, (int) $b->fresh()->stock);
+        $this->assertGreaterThan(0, (int) ProductLocationStock::withoutGlobalScopes()
+            ->where('product_id', $a->id)->where('location_id', $westShelf->id)->value('quantity'));
+
+        $clerk = $this->makeMember($this->org);
+        $clerk->warehouses()->attach($east->id);
+
+        $returns = app(ReturnOrderService::class);
+        $return = $returns->create($this->org->id, $this->admin, [
+            'order_id' => $order->id,
+            'type' => 'return',
+            'reason' => 'Unwanted',
+            'items' => [[
+                'order_item_id' => $order->items->first()->id, 'quantity' => 1, 'condition' => 'new', 'restock' => true,
+            ]],
+        ]);
+        $returns->approve($return, $this->admin);
+
+        // Like a plain return, only the location the units are booked into
+        // (each component's own, in East) is checked, not every bin.
+        $returns->receive($return->fresh(), $clerk);
+
+        $this->assertSame('received', $return->fresh()->status);
+        $this->assertSame(15, (int) $a->fresh()->stock);
+        $this->assertSame(10, (int) $b->fresh()->stock);
+        $this->assertSame([$a->id => 2, $b->id => 1], $this->ledger($return, 'return'));
+        $this->assertKitUntouched($kit);
+        $this->assertBinsMatchStock($a, $b);
+    }
+
+    public function test_an_edit_that_re_takes_a_kit_whose_component_became_serial_tracked_is_refused(): void
+    {
+        $a = $this->part('Part A', 10);
+        $b = $this->part('Part B', 10);
+        $kit = $this->makeKit([[$a, 2]]);
+
+        $order = $this->sellKits($kit, 1);
+        $this->assertSame(8, (int) $a->fresh()->stock);
+
+        // A is switched to serial tracking after the sale.
+        Product::whereKey($a->id)->update(['tracking_type' => TrackingType::SERIAL->value]);
+
+        $itemIds = $order->items()->pluck('id')->all();
+        $ledgerRows = DB::table('stock_adjustments')->count();
+        $snapshot = $this->snapshotOf($order);
+        $bins = ProductLocationStock::withoutGlobalScopes()->orderBy('id')->pluck('quantity', 'id')->all();
+
+        try {
+            $this->editOrder($order, [
+                ['product_id' => $kit->id, 'quantity' => 1, 'unit_price' => 30.00],
+                ['product_id' => $b->id, 'quantity' => 1, 'unit_price' => 10.00],
+            ]);
+            $this->fail('Re-taking a kit whose component is now tracked must be refused.');
+        } catch (InvalidOrderItemException $e) {
+            $this->assertSame(
+                'Kit "Starter Kit" contains "Part A", which is now tracked by serial or batch; remove the kit line and add it again.',
+                $e->getMessage(),
+            );
+        }
+
+        $this->assertSame(8, (int) $a->fresh()->stock);
+        $this->assertSame(10, (int) $b->fresh()->stock);
+        $this->assertSame($itemIds, $order->items()->pluck('id')->all());
+        $this->assertSame($snapshot, $this->snapshotOf($order));
+        $this->assertSame($ledgerRows, DB::table('stock_adjustments')->count());
+        $this->assertSame($bins, ProductLocationStock::withoutGlobalScopes()->orderBy('id')->pluck('quantity', 'id')->all());
+        $this->assertKitUntouched($kit);
+
+        // A header-only edit (the lines resubmitted unchanged) still works.
+        $this->editOrder($order, [['product_id' => $kit->id, 'quantity' => 1, 'unit_price' => 30.00]]);
+        $this->assertSame($itemIds, $order->items()->pluck('id')->all());
+        $this->assertSame(8, (int) $a->fresh()->stock);
     }
 }
