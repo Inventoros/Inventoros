@@ -166,5 +166,6 @@
     "Some exchange rates could not be refreshed. See the synchronization status for details.": "Some exchange rates could not be refreshed. See the synchronization status for details.",
     "Exchange rates could not be refreshed. See the synchronization status for details.": "Exchange rates could not be refreshed. See the synchronization status for details.",
     "Manual exchange rate saved.": "Manual exchange rate saved.",
-    "Manual exchange rate deleted.": "Manual exchange rate deleted."
+    "Manual exchange rate deleted.": "Manual exchange rate deleted.",
+    "Contains": "Contains"
 }

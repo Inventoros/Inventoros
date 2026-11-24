@@ -18,6 +18,7 @@ use App\Models\Inventory\Supplier;
 use App\Models\Inventory\SupplierPriceHistory;
 use App\Models\Inventory\VariantLocationStock;
 use App\Services\ExchangeRates\OrganizationCurrencyConverter;
+use App\Services\Inventory\KitSaleService;
 use App\Services\ProductLocationStockService;
 use App\Services\ProductService;
 use App\Services\StockReservationService;
@@ -115,9 +116,13 @@ class ProductController extends Controller
             ->active()
             ->get(['id', 'name']);
 
+        // How many of each kit on this page can be made (one batched lookup).
+        $kitsOnPage = $products->getCollection()->where('type', 'kit')->values();
+
         $data = [
             'canResetStock' => $request->user()->isAdmin() && $request->user()->hasPermission('manage_stock'),
             'products' => $products,
+            'kitAvailable' => (object) ($kitsOnPage->isEmpty() ? [] : app(KitSaleService::class)->availableFor($kitsOnPage)),
             'filters' => $request->only(['search', 'category', 'location', 'low_stock', 'per_page']),
             'categories' => $categories,
             'locations' => $locations,
@@ -303,6 +308,10 @@ class ProductController extends Controller
             'warehouseStockLevels' => app(WarehouseStockLevelService::class)->levelsForProduct($product, auth()->user()),
             // On hand / reserved / available, for the product and each variant.
             'stockAvailability' => $this->stockAvailability($product),
+            // For a kit: how many can be made from its components, and why it
+            // cannot be sold when it cannot (null for a kit that can be).
+            'kitAvailable' => $product->type === 'kit' ? app(KitSaleService::class)->available($product) : null,
+            'kitProblem' => $product->type === 'kit' ? app(KitSaleService::class)->problem($product) : null,
             'pluginComponents' => [
                 'header' => get_page_components('products.show', 'header'),
                 'actions' => get_page_components('products.show', 'actions'),

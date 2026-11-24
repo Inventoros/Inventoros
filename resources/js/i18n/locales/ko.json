@@ -495,6 +495,10 @@
     }
   },
   "products": {
+    "kit": {
+      "canMake": "{count}개 구성 가능",
+      "notSellable": "판매할 수 없음"
+    },
     "title": "재고",
     "addProduct": "제품 추가",
     "searchProducts": "제품 검색",
@@ -765,6 +769,7 @@
       "addAtLeastOneProduct": "주문에 제품을 하나 이상 추가해 주세요."
     },
     "show": {
+      "kitContains": "구성품",
       "orderNumber": "주문 #{number}",
       "createdOn": "{date}에 생성됨",
       "editOrder": "주문 편집",

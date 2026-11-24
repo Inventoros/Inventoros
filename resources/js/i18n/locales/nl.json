@@ -495,6 +495,10 @@
     }
   },
   "products": {
+    "kit": {
+      "canMake": "{count} te maken",
+      "notSellable": "Niet verkoopbaar"
+    },
     "title": "Voorraad",
     "addProduct": "Product toevoegen",
     "searchProducts": "Producten zoeken",
@@ -765,6 +769,7 @@
       "addAtLeastOneProduct": "Voeg ten minste één product toe aan de bestelling."
     },
     "show": {
+      "kitContains": "Bevat",
       "orderNumber": "Bestelling #{number}",
       "createdOn": "Aangemaakt op {date}",
       "editOrder": "Bestelling bewerken",

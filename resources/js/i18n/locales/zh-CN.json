@@ -495,6 +495,10 @@
     }
   },
   "products": {
+    "kit": {
+      "canMake": "可组装 {count} 套",
+      "notSellable": "无法销售"
+    },
     "title": "库存",
     "addProduct": "添加产品",
     "searchProducts": "搜索产品",
@@ -765,6 +769,7 @@
       "addAtLeastOneProduct": "请至少向订单添加一个产品。"
     },
     "show": {
+      "kitContains": "包含",
       "orderNumber": "订单 #{number}",
       "createdOn": "创建于 {date}",
       "editOrder": "编辑订单",

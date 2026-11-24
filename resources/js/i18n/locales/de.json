@@ -495,6 +495,10 @@
     }
   },
   "products": {
+    "kit": {
+      "canMake": "{count} herstellbar",
+      "notSellable": "Nicht verkäuflich"
+    },
     "title": "Bestand",
     "addProduct": "Produkt hinzufügen",
     "searchProducts": "Produkte suchen",
@@ -765,6 +769,7 @@
       "addAtLeastOneProduct": "Bitte fügen Sie der Bestellung mindestens ein Produkt hinzu."
     },
     "show": {
+      "kitContains": "Enthält",
       "orderNumber": "Bestellung Nr. {number}",
       "createdOn": "Erstellt am {date}",
       "editOrder": "Bestellung bearbeiten",

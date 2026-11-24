@@ -495,6 +495,10 @@
     }
   },
   "products": {
+    "kit": {
+      "canMake": "Można skompletować: {count}",
+      "notSellable": "Nie można sprzedać"
+    },
     "title": "Magazyn",
     "addProduct": "Dodaj produkt",
     "searchProducts": "Szukaj produktów",
@@ -765,6 +769,7 @@
       "addAtLeastOneProduct": "Dodaj do zamówienia co najmniej jeden produkt."
     },
     "show": {
+      "kitContains": "Zawiera",
       "orderNumber": "Zamówienie #{number}",
       "createdOn": "Utworzono {date}",
       "editOrder": "Edytuj zamówienie",

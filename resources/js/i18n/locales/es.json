@@ -495,6 +495,10 @@
     }
   },
   "products": {
+    "kit": {
+      "canMake": "Se pueden armar {count}",
+      "notSellable": "No se puede vender"
+    },
     "title": "Inventario",
     "addProduct": "Agregar producto",
     "searchProducts": "Buscar productos",
@@ -765,6 +769,7 @@
       "addAtLeastOneProduct": "Agrega al menos un producto al pedido."
     },
     "show": {
+      "kitContains": "Contiene",
       "orderNumber": "Pedido #{number}",
       "createdOn": "Creado el {date}",
       "editOrder": "Editar pedido",

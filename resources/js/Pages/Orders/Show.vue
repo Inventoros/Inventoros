@@ -317,6 +317,16 @@ const formatOrderDate = (date, long = false) =>
                                         <p class="font-medium text-text-primary">{{ item.product_name }}</p>
                                         <p v-if="item.variant_title" class="text-xs text-text-secondary">{{ t('orders.create.variant') }}: {{ item.variant_title }}</p>
                                         <p class="text-xs text-text-tertiary">SKU: {{ item.sku }}</p>
+                                        <div v-if="item.kit_components?.length" class="mt-2 text-xs text-text-secondary">
+                                            <p class="font-medium">{{ t('orders.show.kitContains') }}</p>
+                                            <ul class="mt-1 space-y-0.5">
+                                                <li v-for="component in item.kit_components" :key="component.product_id" class="flex flex-wrap gap-x-2">
+                                                    <span class="tabular-nums">{{ component.quantity_taken }} &times;</span>
+                                                    <span>{{ component.name }}</span>
+                                                    <span v-if="component.sku" class="text-text-tertiary">{{ component.sku }}</span>
+                                                </li>
+                                            </ul>
+                                        </div>
                                         <p v-if="parseFloat(item.discount_amount) > 0" class="text-xs text-text-secondary">
                                             {{ t('discounts.discount') }}<template v-if="item.discount_type === 'percent'"> ({{ parseFloat(item.discount_value) }}%)</template>: -{{ money(item.discount_amount) }}
                                         </p>

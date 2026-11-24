@@ -50,7 +50,8 @@ const optionId = index => `${listId}-${index}`;
 const stock = product => props.stockByProduct ? props.stockByProduct[product.id] : product.stock;
 const resultContext = product => product.has_variants
     ? t('components.productPicker.chooseVariant')
-    : props.stockLabel && stock(product) != null ? `${props.stockLabel}: ${stock(product)}` : '';
+    : product.is_kit ? t('products.kit.canMake', { count: stock(product) ?? 0 })
+        : props.stockLabel && stock(product) != null ? `${props.stockLabel}: ${stock(product)}` : '';
 const variantMatch = product => {
     const term = normalize(query.value);
     if (!term) return '';

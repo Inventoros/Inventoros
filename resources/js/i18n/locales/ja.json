@@ -495,6 +495,10 @@
     }
   },
   "products": {
+    "kit": {
+      "canMake": "{count} 個作成可能",
+      "notSellable": "販売できません"
+    },
     "title": "在庫",
     "addProduct": "商品を追加",
     "searchProducts": "商品を検索",
@@ -765,6 +769,7 @@
       "addAtLeastOneProduct": "注文に商品を1つ以上追加してください。"
     },
     "show": {
+      "kitContains": "内容",
       "orderNumber": "注文 #{number}",
       "createdOn": "{date}に作成",
       "editOrder": "注文を編集",

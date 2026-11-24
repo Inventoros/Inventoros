@@ -495,6 +495,10 @@
     }
   },
   "products": {
+    "kit": {
+      "canMake": "{count} adet hazırlanabilir",
+      "notSellable": "Satılamaz"
+    },
     "title": "Envanter",
     "addProduct": "Ürün Ekle",
     "searchProducts": "Ürün Ara",
@@ -765,6 +769,7 @@
       "addAtLeastOneProduct": "Lütfen siparişe en az bir ürün ekleyin."
     },
     "show": {
+      "kitContains": "İçeriği",
       "orderNumber": "Sipariş #{number}",
       "createdOn": "{date} tarihinde oluşturuldu",
       "editOrder": "Siparişi Düzenle",

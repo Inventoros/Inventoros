@@ -7,6 +7,7 @@ namespace App\Services\Documents;
 use App\Enums\OrderApprovalStatus;
 use App\Enums\OrderStatus;
 use App\Enums\ShipmentStatus;
+use App\Models\Inventory\OrderItemKitComponent;
 use App\Models\Order\Order;
 use App\Models\Order\OrderItem;
 use App\Models\Shipping\Shipment;
@@ -51,14 +52,37 @@ final class FulfillmentDocumentService
             ->groupBy('order_item_id')
             ->pluck('shipped_quantity', 'order_item_id');
 
-        $lines = $order->items()->orderBy('id')->get()
-            ->map(fn (OrderItem $item) => [
-                'name' => $item->product_name,
-                'sku' => $item->sku,
-                // Units still on backorder never left stock, so they are not
-                // on the shelf to pick yet.
-                'quantity' => max(0, $item->quantity_fulfilled - (int) ($shipped[$item->id] ?? 0)),
+        // A kit line is picked as its components: what the sale took, from
+        // the line's snapshot (deleted components included), never the
+        // current BOM.
+        $lines = $order->items()->orderBy('id')
+            ->with([
+                'kitComponents' => fn ($query) => $query->orderBy('id'),
+                'kitComponents.componentProduct' => fn ($query) => $query->withTrashed(),
             ])
+            ->get()
+            ->map(function (OrderItem $item) use ($shipped) {
+                $line = [
+                    'name' => $item->product_name,
+                    'sku' => $item->sku,
+                    // Units still on backorder never left stock, so they are not
+                    // on the shelf to pick yet.
+                    'quantity' => max(0, $item->quantity_fulfilled - (int) ($shipped[$item->id] ?? 0)),
+                ];
+                // Only kit lines carry `components`: each one's quantity for
+                // the kits still to pick on this document.
+                if ($item->kitComponents->isNotEmpty()) {
+                    $line['components'] = $item->kitComponents
+                        ->map(fn (OrderItemKitComponent $row) => [
+                            'name' => $row->componentProduct?->name,
+                            'sku' => $row->componentProduct?->sku,
+                            'quantity' => (int) $row->quantity_per_kit * $line['quantity'],
+                        ])
+                        ->values()->all();
+                }
+
+                return $line;
+            })
             ->filter(fn (array $line) => $line['quantity'] > 0)
             ->values()->all();
 

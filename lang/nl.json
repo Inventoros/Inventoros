@@ -166,5 +166,6 @@
     "Some exchange rates could not be refreshed. See the synchronization status for details.": "Sommige wisselkoersen konden niet worden vernieuwd. Zie de synchronisatiestatus voor details.",
     "Exchange rates could not be refreshed. See the synchronization status for details.": "De wisselkoersen konden niet worden vernieuwd. Zie de synchronisatiestatus voor details.",
     "Manual exchange rate saved.": "Handmatige wisselkoers opgeslagen.",
-    "Manual exchange rate deleted.": "Handmatige wisselkoers verwijderd."
+    "Manual exchange rate deleted.": "Handmatige wisselkoers verwijderd.",
+    "Contains": "Bevat"
 }

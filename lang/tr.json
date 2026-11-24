@@ -166,5 +166,6 @@
     "Some exchange rates could not be refreshed. See the synchronization status for details.": "Bazı döviz kurları yenilenemedi. Ayrıntılar için eşitleme durumuna bakın.",
     "Exchange rates could not be refreshed. See the synchronization status for details.": "Döviz kurları yenilenemedi. Ayrıntılar için eşitleme durumuna bakın.",
     "Manual exchange rate saved.": "Elle girilen kur kaydedildi.",
-    "Manual exchange rate deleted.": "Elle girilen kur silindi."
+    "Manual exchange rate deleted.": "Elle girilen kur silindi.",
+    "Contains": "İçerir"
 }
