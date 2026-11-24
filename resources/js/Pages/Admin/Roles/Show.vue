@@ -123,7 +123,7 @@ const deleteRole = () => {
                                         :key="user.id"
                                         class="flex items-center gap-3 rounded-lg border border-border-subtle bg-surface-canvas p-3"
                                     >
-                                        <div class="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-brand text-sm font-semibold text-brand-foreground">
+                                        <div class="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-brand-solid text-sm font-semibold text-brand-solid-foreground">
                                             {{ user.name.charAt(0).toUpperCase() }}
                                         </div>
                                         <div class="min-w-0">

@@ -286,7 +286,7 @@ const currentFilterMatches = (filter) => props.currentFilter === filter;
                             :class="[
                                 'inline-flex h-8 min-w-8 items-center justify-center rounded-md border px-2.5 text-xs font-medium transition-colors',
                                 link.active
-                                    ? 'border-brand bg-brand text-brand-foreground'
+                                    ? 'border-brand bg-brand-solid text-brand-solid-foreground'
                                     : 'border-border-subtle bg-surface-canvas text-text-secondary hover:bg-surface-overlay',
                             ]"
                             v-html="link.label"

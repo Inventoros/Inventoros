@@ -131,7 +131,7 @@ const thClass = 'px-4 py-2.5 text-start text-xs font-medium tracking-tight text-
                     <p class="text-[11px] font-medium uppercase tracking-wider text-text-tertiary">{{ bucketLabel(bucket.key) }}</p>
                     <p :class="['mt-1 text-lg font-semibold tabular-nums', parseFloat(bucket.amount) > 0 ? bucketTone(bucket.key) : 'text-text-tertiary']">{{ formatCurrency(bucket.amount) }}</p>
                     <div class="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-surface-sunken" aria-hidden="true">
-                        <div class="h-full rounded-full bg-brand" :style="{ width: `${share(bucket.amount)}%` }"></div>
+                        <div class="h-full rounded-full bg-brand-solid" :style="{ width: `${share(bucket.amount)}%` }"></div>
                     </div>
                     <p class="mt-1 text-xs text-text-tertiary">{{ t('payments.ordersCount', bucket.count) }}</p>
                 </div>

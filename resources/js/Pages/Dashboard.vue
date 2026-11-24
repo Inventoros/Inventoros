@@ -7,8 +7,10 @@ import AppLayout from '@/Layouts/AppLayout.vue';
 import PluginSlot from '@/Components/PluginSlot.vue';
 import PluginWidgets from '@/Components/PluginWidgets.vue';
 import StockReview from '@/Components/Dashboard/StockReview.vue';
-import StockPosition from '@/Components/Dashboard/StockPosition.vue';
+import StockMeter from '@/Components/Dashboard/StockMeter.vue';
 import MetricCard from '@/Components/Dashboard/MetricCard.vue';
+import ProductThumb from '@/Components/Dashboard/ProductThumb.vue';
+import StockMovement from '@/Components/Dashboard/StockMovement.vue';
 import Modal from '@/Components/Modal.vue';
 import Card from '@/Components/ui/Card.vue';
 import CardHeader from '@/Components/ui/CardHeader.vue';
@@ -21,7 +23,7 @@ import { usePermissions } from '@/composables/usePermissions';
 import { useI18n } from 'vue-i18n';
 import { displayCalendarDate, displayDateTime } from '@/lib/dates';
 import { formatCompactMoney, formatMoney, formatNumber as formatPlainNumber } from '@/lib/money';
-import { categoryBreakdown, stockLevel } from '@/lib/dashboard';
+import { categoryBreakdown, periodChange, stockLevel, stockUrgency } from '@/lib/dashboard';
 import { orderStatusLabel } from '@/lib/orderLabels';
 import axios from 'axios';
 import {
@@ -56,6 +58,7 @@ const props = defineProps({
     reorderSuggestions: { type: Array, default: () => [] },
     recentOrders: { type: Array, default: () => [] },
     stockByCategory: { type: Array, default: () => [] },
+    stockMovements: { type: Array, default: () => [] },
     widgetPreferences: { type: Object, default: () => ({}) },
     pluginComponents: { type: Object, default: () => ({}) },
     pluginWidgets: { type: Array, default: () => [] },
@@ -74,6 +77,7 @@ const widgetLabels = computed(() => ({
     stats_overview: t('dashboard.widgets.statsOverview'),
     revenue_chart: t('dashboard.widgets.revenueChart'),
     low_stock_alerts: t('dashboard.widgets.lowStockAlerts'),
+    stock_movements: t('dashboard.widgets.stockMovements'),
     recent_orders: t('dashboard.recentOrders'),
     recent_products: t('dashboard.recentProducts'),
     stock_by_category: t('dashboard.widgets.stockByCategory'),
@@ -108,6 +112,25 @@ const plusOthers = (values) => {
 };
 const otherCurrencies = (key) => plusOthers(props.stats.byCurrency?.[key]);
 const optionalRoute = (name, parameters) => (canVisit(name) ? route(name, parameters) : null);
+// Revenue up to today against the same days of last month, in the
+// organization's currency. No trend line when last month had nothing to
+// compare with, or when this month's sales are all in other currencies
+// (the comparison would read -100% beside a tile listing them).
+const revenueTrend = computed(() => {
+    const change = periodChange(props.stats.revenueMonthToDate, props.stats.revenueSamePeriodLastMonth);
+    if (change === null) return null;
+    if (Number(props.stats.revenueMonthToDate) === 0 && otherCurrencies('revenueMonthToDate')) return null;
+    const rounded = Math.round(change);
+    return {
+        direction: rounded < 0 ? 'down' : rounded > 0 ? 'up' : 'flat',
+        text: t('dashboard.design.vsLastMonth', {
+            change: n(rounded / 100, { style: 'percent', maximumFractionDigits: 0, signDisplay: 'exceptZero' }),
+        }),
+    };
+});
+// The controller only enables this widget for users who may see the stock
+// adjustments ledger it summarises.
+const showMovement = computed(() => widgets.stock_movements);
 const headlineMetrics = computed(() => {
     const stats = props.stats;
     const counts = [
@@ -116,17 +139,8 @@ const headlineMetrics = computed(() => {
     ]
         .filter(Boolean)
         .join(' · ');
+    // Inventory value leads, as the one highlighted figure.
     return [
-        widgets.stats_overview &&
-            stats.totalProducts !== undefined && {
-                key: 'products',
-                label: t('dashboard.totalProducts'),
-                value: formatNumber(stats.totalProducts),
-                icon: Boxes,
-                context: counts,
-                detail: formatPlainNumber(stats.totalProducts),
-                href: optionalRoute('products.index'),
-            },
         widgets.stats_overview &&
             stats.totalValue !== undefined && {
                 key: 'value',
@@ -137,6 +151,17 @@ const headlineMetrics = computed(() => {
                 detail: formatCurrency(stats.totalValue),
                 extra: otherCurrencies('totalValue'),
                 href: optionalRoute('reports.inventory-valuation'),
+                featured: true,
+            },
+        widgets.stats_overview &&
+            stats.totalProducts !== undefined && {
+                key: 'products',
+                label: t('dashboard.totalProducts'),
+                value: formatNumber(stats.totalProducts),
+                icon: Boxes,
+                context: counts,
+                detail: formatPlainNumber(stats.totalProducts),
+                href: optionalRoute('products.index'),
             },
         widgets.revenue_chart &&
             stats.pendingOrders !== undefined && {
@@ -154,9 +179,11 @@ const headlineMetrics = computed(() => {
                 label: t('dashboard.revenueThisMonth'),
                 value: formatCompactCurrency(stats.revenueThisMonth),
                 icon: BarChart3,
-                context: `${t('dashboard.design.monthToDate')} · ${props.currency}`,
+                // The comparison line takes the place of the period note.
+                context: revenueTrend.value ? '' : `${t('dashboard.design.monthToDate')} · ${props.currency}`,
                 detail: formatCurrency(stats.revenueThisMonth),
                 extra: otherCurrencies('revenueThisMonth'),
+                trend: revenueTrend.value,
                 href: optionalRoute('reports.sales-analysis'),
             },
     ].filter(Boolean);
@@ -259,7 +286,7 @@ const ordersStatusIcon = (status) => (status === 'delivered' ? Check : status ==
                             t('dashboard.customize')
                         }}</span></Button
                     >
-                    <Button v-if="canVisit('orders.create')" size="sm" as="Link" :href="route('orders.create')"
+                    <Button v-if="canVisit('orders.create')" size="sm" as="Link" :href="route('orders.create')" class="dashboard-primary-action"
                         ><Plus :size="14" />{{ t('dashboard.newOrder') }}</Button
                     >
                 </div>
@@ -291,6 +318,16 @@ const ordersStatusIcon = (status) => (status === 'delivered' ? Check : status ==
             <PluginSlot slot="after-stats" :components="pluginComponents.afterStats" />
             <PluginSlot slot="before-content" :components="pluginComponents.beforeContent" />
 
+            <div
+                v-if="widgets.low_stock_alerts || showMovement"
+                class="dashboard-stock-grid"
+                :class="{ 'dashboard-one-column': !widgets.low_stock_alerts || !showMovement }"
+            >
+            <StockMovement
+                v-if="showMovement"
+                :series="stockMovements"
+                :href="optionalRoute('stock-adjustments.index')"
+            />
             <section
                 v-if="widgets.low_stock_alerts"
                 class="dashboard-panel dashboard-replenishment"
@@ -299,7 +336,6 @@ const ordersStatusIcon = (status) => (status === 'delivered' ? Check : status ==
             >
                 <div class="dashboard-panel-heading">
                     <div class="dashboard-panel-title">
-                        <span class="dashboard-section-marker" aria-hidden="true"></span>
                         <h2 id="replenishment-title">{{ t('dashboard.design.replenishment') }}</h2>
                         <span v-if="stats.lowStockProducts" class="dashboard-warning-badge"
                             >{{ formatNumber(stats.lowStockProducts) }} {{ t('dashboard.lowStock') }}</span
@@ -326,6 +362,7 @@ const ordersStatusIcon = (status) => (status === 'delivered' ? Check : status ==
                 <ul v-else class="dashboard-replenishment-list">
                     <li v-for="product in lowStockProducts" :key="product.id" class="dashboard-stock-row">
                         <div class="dashboard-product">
+                            <ProductThumb :product="product" :size="44" />
                             <div>
                                 <p v-if="product.sku" class="dashboard-stock-code">{{ product.sku }}</p>
                                 <Link :href="route('products.show', product.id)" class="dashboard-product-name ds-focus-ring"
@@ -337,17 +374,39 @@ const ordersStatusIcon = (status) => (status === 'delivered' ? Check : status ==
                                 </p>
                             </div>
                         </div>
-                        <StockPosition :product="product" />
-                        <p class="dashboard-shortfall">
-                            {{ t('dashboard.design.shortfall', { count: formatPlainNumber(stockLevel(product).shortfall) }) }}
-                        </p>
-                        <button type="button" class="dashboard-review ds-focus-ring" @click="reviewStock(product)">
-                            {{ t('dashboard.design.reviewStock')
-                            }}<ArrowRight :size="14" aria-hidden="true" />
-                        </button>
+                        <div class="dashboard-stock-level">
+                            <p class="dashboard-stock-figures">
+                                <strong
+                                    class="dashboard-stock-on-hand"
+                                    :class="{ 'dashboard-stock-critical': stockUrgency(stockLevel(product)) === 'critical' }"
+                                    >{{ formatPlainNumber(stockLevel(product).stock) }}</strong
+                                ><span class="dashboard-stock-minimum">/ {{ formatPlainNumber(stockLevel(product).minimum) }}</span>
+                            </p>
+                            <p class="dashboard-stock-labels" aria-hidden="true">
+                                <span>{{ t('warehouses.stockLevels.onHand') }}</span><span>{{ t('dashboard.design.minimum') }}</span>
+                            </p>
+                            <StockMeter
+                                :level="stockLevel(product)"
+                                :label="
+                                    t('dashboard.design.stockLevel', {
+                                        stock: formatPlainNumber(stockLevel(product).stock),
+                                        minimum: formatPlainNumber(stockLevel(product).minimum),
+                                    })
+                                "
+                            />
+                        </div>
+                        <div class="dashboard-stock-foot">
+                            <p class="dashboard-shortfall">
+                                {{ t('dashboard.design.shortfall', { count: formatPlainNumber(stockLevel(product).shortfall) }) }}
+                            </p>
+                            <Button size="sm" class="dashboard-primary-action" @click="reviewStock(product)"
+                                >{{ t('dashboard.design.reviewStock') }}<ArrowRight :size="14" aria-hidden="true"
+                            /></Button>
+                        </div>
                     </li>
                 </ul>
             </section>
+            </div>
 
             <div
                 v-if="widgets.recent_orders || widgets.stock_by_category || financialStats.length || quickActions.length"
@@ -519,9 +578,12 @@ const ordersStatusIcon = (status) => (status === 'delivered' ? Check : status ==
                 </div>
                 <ul v-else class="dashboard-product-list">
                     <li v-for="product in recentProducts" :key="product.id">
-                        <div>
+                        <div class="dashboard-recent-product">
+                            <ProductThumb :product="product" :size="32" />
+                            <div>
                             <Link :href="route('products.show', product.id)" class="dashboard-product-name">{{ product.name }}</Link>
                             <p class="dashboard-product-meta">{{ product.category?.name || t('products.show.uncategorized') }}</p>
+                            </div>
                         </div>
                         <div class="text-end">
                             <strong>{{ formatCurrency(product.price, product.currency) }}</strong>

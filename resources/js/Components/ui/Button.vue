@@ -35,7 +35,7 @@ const button = cva(
         variants: {
             variant: {
                 default:
-                    'bg-brand text-brand-foreground hover:bg-brand-hover ' +
+                    'bg-brand-solid text-brand-solid-foreground hover:bg-brand-solid-hover ' +
                     'shadow-none',
                 secondary:
                     'bg-surface-raised text-text-primary hover:bg-surface-overlay ' +

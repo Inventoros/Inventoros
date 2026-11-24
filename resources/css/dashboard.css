@@ -237,21 +237,64 @@ a.dashboard-metric:hover {
     align-items: center;
     justify-content: center;
     gap: 7px;
-    min-height: 40px;
-    padding: 8px 10px;
-    border-radius: 4px;
-    color: hsl(var(--text-primary));
-    border: 1px solid hsl(var(--border-subtle));
-    background: hsl(var(--surface-raised));
+    min-height: 36px;
+    padding: 7px 11px;
+    border-radius: 5px;
+    color: hsl(var(--accent));
+    border: 1px solid hsl(var(--accent) / 0.4);
+    background: hsl(var(--accent) / 0.08);
     font-size: 12px;
-    font-weight: 500;
+    font-weight: 600;
+    white-space: nowrap;
 }
 .dashboard-review:hover {
-    background: hsl(var(--surface-overlay));
-    border-color: hsl(var(--border-strong));
+    background: hsl(var(--accent) / 0.16);
+    border-color: hsl(var(--accent) / 0.7);
 }
 .dashboard-review svg {
     flex-shrink: 0;
+}
+/* Replenishment takes the wider column; stock movement sits beside it. */
+.dashboard-stock-grid {
+    display: grid;
+    min-width: 0;
+    grid-template-columns: minmax(0, 1.6fr) minmax(300px, 1fr);
+    gap: var(--dashboard-gap);
+    align-items: stretch;
+    margin-bottom: var(--dashboard-gap);
+}
+.dashboard-stock-grid.dashboard-one-column {
+    grid-template-columns: minmax(0, 1fr);
+}
+.dashboard-stock-grid > .dashboard-replenishment {
+    margin-bottom: 0;
+}
+.dashboard-recent-product {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    min-width: 0;
+}
+.dashboard-recent-product > div {
+    min-width: 0;
+}
+.dashboard-metric-trend {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    margin-top: 8px;
+    font-size: 11px;
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+}
+.dashboard-metric-trend-up {
+    color: hsl(var(--status-success));
+}
+.dashboard-metric-trend-down {
+    color: hsl(var(--status-danger));
+}
+.dashboard-metric-trend-flat {
+    color: hsl(var(--text-tertiary));
 }
 .dashboard-main-grid {
     display: grid;
@@ -444,7 +487,7 @@ a.dashboard-metric:hover {
     font-variant-numeric: tabular-nums;
 }
 .dashboard-share-track {
-    height: 3px;
+    height: 6px;
     margin-top: 10px;
     overflow: hidden;
     background: hsl(var(--surface-overlay));
@@ -453,7 +496,7 @@ a.dashboard-metric:hover {
 .dashboard-share-track > span {
     display: block;
     height: 100%;
-    background: hsl(var(--accent) / 0.6);
+    background: hsl(var(--accent) / 0.7);
     border-radius: 2px;
 }
 .dashboard-category-row:hover .dashboard-share-track > span,
@@ -642,6 +685,7 @@ a.dashboard-metric:hover {
     }
 }
 @media (max-width: 1023px) {
+    .dashboard-stock-grid,
     .dashboard-main-grid,
     .dashboard-bottom-grid {
         grid-template-columns: minmax(0, 1fr);
@@ -934,4 +978,701 @@ a.dashboard-metric:hover {
     .dashboard-shortfall { max-width: 82px; text-align: end; }
     .dashboard-review { grid-column: 1 / -1; min-height: 44px; justify-content: space-between; max-width: none; }
     .dashboard-review > svg:last-child { display: block; }
+}
+
+/* ------------------------------------------------------------------ */
+/* Visual refresh: separate light panels on a soft grey page, one dark */
+/* highlighted figure, lighter type. Scoped to the dashboard.          */
+/* ------------------------------------------------------------------ */
+.dashboard {
+    --dashboard-gap: 18px;
+    --dashboard-radius: 12px;
+    --dashboard-navy: 218 64% 23%;
+    --dashboard-navy-hover: 218 64% 29%;
+    --dashboard-navy-text: 214 60% 96%;
+    --dashboard-panel-shadow: 0 1px 2px hsl(240 10% 10% / 0.04);
+}
+.dark .dashboard {
+    --dashboard-navy: 219 52% 25%;
+    --dashboard-navy-hover: 219 52% 30%;
+    --dashboard-panel-shadow: none;
+}
+
+.dashboard h1 {
+    font-size: 32px;
+    line-height: 40px;
+    font-weight: 400;
+    letter-spacing: -0.03em;
+}
+.dashboard h2 {
+    font-size: 17px;
+    line-height: 24px;
+    font-weight: 500;
+    letter-spacing: -0.015em;
+}
+.dashboard-date {
+    font-size: 13px;
+    color: hsl(var(--text-secondary));
+}
+
+/* Panels */
+.dashboard .dashboard-panel,
+.dashboard .dashboard-replenishment {
+    border: 1px solid hsl(var(--border-subtle));
+    border-radius: var(--dashboard-radius);
+    box-shadow: var(--dashboard-panel-shadow);
+}
+.dashboard .dashboard-panel-heading {
+    min-height: 0;
+    margin: 0 20px;
+    padding: 18px 0 14px;
+}
+.dashboard .dashboard-replenishment .dashboard-panel-heading {
+    padding-block: 18px 14px;
+}
+.dashboard .dashboard-replenishment h2 {
+    font-size: 17px;
+    font-weight: 500;
+}
+.dashboard .dashboard-text-link {
+    font-size: 13px;
+    color: hsl(var(--text-secondary));
+}
+.dashboard .dashboard-text-link:hover {
+    color: hsl(var(--accent));
+}
+
+/* Summary row: four separate cards, inventory value highlighted. */
+.dashboard .dashboard-metrics {
+    gap: var(--dashboard-gap);
+    overflow: visible;
+    border: 0;
+    border-radius: 0;
+    background: none;
+}
+.dashboard .dashboard-metric,
+.dashboard .dashboard-metric + .dashboard-metric {
+    position: relative;
+    padding: 20px 24px 22px;
+    border: 1px solid hsl(var(--border-subtle));
+    border-radius: var(--dashboard-radius);
+    background: hsl(var(--surface-raised));
+    box-shadow: var(--dashboard-panel-shadow);
+}
+.dashboard a.dashboard-metric:hover {
+    background: hsl(var(--surface-raised));
+    border-color: hsl(var(--border-strong));
+}
+.dashboard .dashboard-metric-label {
+    font-size: 15px;
+    line-height: 22px;
+    color: hsl(var(--text-secondary));
+}
+.dashboard .dashboard-metric-value {
+    margin: 6px 0 2px;
+    font-size: 44px;
+    line-height: 52px;
+    font-weight: 400;
+    letter-spacing: -0.035em;
+    color: hsl(var(--text-primary));
+}
+.dashboard .dashboard-metric-context {
+    font-size: 14px;
+    line-height: 20px;
+    color: hsl(var(--text-secondary));
+}
+.dashboard .dashboard-metric-trend {
+    display: flex;
+    align-items: flex-start;
+    margin-top: 2px;
+    font-size: 14px;
+    line-height: 20px;
+    font-weight: 400;
+}
+.dashboard .dashboard-metric-trend > svg {
+    flex-shrink: 0;
+    margin-top: 4px;
+}
+.dashboard .dashboard-metric-featured,
+.dashboard .dashboard-metric-featured + .dashboard-metric,
+.dashboard .dashboard-metric.dashboard-metric-featured {
+    border-color: transparent;
+}
+.dashboard .dashboard-metric.dashboard-metric-featured,
+.dashboard a.dashboard-metric.dashboard-metric-featured:hover {
+    background: hsl(var(--dashboard-navy));
+}
+.dashboard a.dashboard-metric.dashboard-metric-featured:hover {
+    background: hsl(var(--dashboard-navy-hover));
+    border-color: transparent;
+}
+.dashboard .dashboard-metric-featured + .dashboard-metric {
+    border-color: hsl(var(--border-subtle));
+}
+.dashboard .dashboard-metric-featured .dashboard-metric-label,
+.dashboard .dashboard-metric-featured .dashboard-metric-value {
+    color: hsl(var(--dashboard-navy-text));
+}
+.dashboard .dashboard-metric-featured .dashboard-metric-context {
+    color: hsl(var(--dashboard-navy-text) / 0.8);
+}
+.dashboard .dashboard-metric-featured .dashboard-metric-link {
+    display: grid;
+    place-items: center;
+    width: 38px;
+    height: 38px;
+    margin-block: -6px;
+    border: 1px solid hsl(var(--dashboard-navy-text) / 0.55);
+    border-radius: 50%;
+    color: hsl(var(--dashboard-navy-text));
+    opacity: 1;
+}
+.dashboard .dashboard-metric-featured:focus-visible {
+    outline-offset: 3px;
+}
+
+/* Stock row: the movement chart is the wider panel. */
+.dashboard .dashboard-stock-grid {
+    grid-template-columns: minmax(0, 1.5fr) minmax(320px, 1fr);
+}
+.dashboard .stock-movement-totals dd {
+    font-size: 28px;
+    line-height: 34px;
+    font-weight: 400;
+}
+.dashboard .stock-movement-totals dt {
+    font-size: 13px;
+}
+.dashboard .stock-movement-axis {
+    font-size: 12px;
+}
+
+/* Replenishment: one compact record per product. */
+.dashboard .dashboard-replenishment-list,
+.dashboard .dashboard-replenishment-list > .dashboard-stock-row {
+    display: block;
+    background: none;
+}
+.dashboard .dashboard-stock-row,
+.dashboard .dashboard-stock-row + .dashboard-stock-row {
+    padding: 16px 20px 18px;
+    border: 0;
+}
+.dashboard .dashboard-stock-row + .dashboard-stock-row {
+    border-top: 1px solid hsl(var(--border-subtle));
+}
+.dashboard .dashboard-product-name {
+    font-size: 17px;
+    font-weight: 500;
+}
+.dashboard .dashboard-stock-code {
+    margin-bottom: 2px;
+    font-family: inherit;
+    font-size: 12px;
+    color: hsl(var(--text-secondary));
+}
+.dashboard .dashboard-product-meta {
+    margin-top: 2px;
+    font-size: 12px;
+}
+.dashboard-stock-level {
+    margin-top: 16px;
+}
+.dashboard-stock-figures {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    font-variant-numeric: tabular-nums;
+}
+.dashboard-stock-on-hand {
+    font-size: 44px;
+    line-height: 48px;
+    font-weight: 400;
+    letter-spacing: -0.03em;
+    color: hsl(var(--text-primary));
+}
+.dashboard-stock-on-hand.dashboard-stock-critical {
+    color: hsl(var(--status-danger));
+}
+.dashboard-stock-minimum {
+    font-size: 28px;
+    line-height: 34px;
+    font-weight: 400;
+    color: hsl(var(--text-secondary));
+}
+.dashboard-stock-labels {
+    display: flex;
+    margin: 4px 0 12px;
+    font-size: 12px;
+    color: hsl(var(--text-secondary));
+}
+.dashboard-stock-labels > span + span {
+    margin-inline-start: 12px;
+    padding-inline-start: 12px;
+    border-inline-start: 1px solid hsl(var(--border-strong));
+}
+.dashboard-stock-foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px 16px;
+    margin-top: 16px;
+}
+.dashboard .dashboard-shortfall {
+    max-width: none;
+    font-size: 14px;
+    font-weight: 400;
+    text-align: start;
+}
+.dashboard .dashboard-stock-foot .dashboard-primary-action {
+    height: 36px;
+    padding-inline: 16px;
+    font-size: 13px;
+}
+
+/* Lower row: orders widest, then categories, then the narrow column. */
+.dashboard .dashboard-order-table th {
+    font-size: 13px;
+    font-weight: 400;
+    color: hsl(var(--text-secondary));
+}
+.dashboard .dashboard-order-number {
+    font-size: 13px;
+    font-weight: 500;
+}
+.dashboard .dashboard-order-table td {
+    height: 46px;
+    padding-block: 7px;
+}
+.dashboard .dashboard-customer {
+    margin-top: 1px;
+    font-size: 12px;
+    color: hsl(var(--text-secondary));
+}
+.dashboard .dashboard-category-facts {
+    font-size: 13px;
+}
+.dashboard .dashboard-bottom-grid {
+    gap: var(--dashboard-gap);
+    overflow: visible;
+    border: 0;
+    border-radius: 0;
+    background: none;
+}
+.dashboard .dashboard-bottom-grid > .dashboard-panel,
+.dashboard .dashboard-bottom-grid > .dashboard-panel + .dashboard-panel {
+    border: 1px solid hsl(var(--border-subtle));
+    border-radius: var(--dashboard-radius);
+}
+.dashboard .dashboard-financial-item > strong {
+    font-size: 32px;
+    line-height: 40px;
+    font-weight: 400;
+}
+
+/* Three columns only where the orders table keeps its width. */
+@media (min-width: 96rem) {
+    .dashboard .dashboard-content-grid {
+        grid-template-columns: minmax(0, 2.6fr) minmax(300px, 1fr);
+        align-items: start;
+    }
+    .dashboard .dashboard-content-single {
+        grid-template-columns: minmax(0, 1fr);
+    }
+    .dashboard .dashboard-main-grid {
+        grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+    }
+    .dashboard .dashboard-content-grid:not(.dashboard-content-single) > .dashboard-bottom-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+@media (max-width: 1279px) {
+    .dashboard .dashboard-metrics {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+@media (max-width: 1023px) {
+    .dashboard .dashboard-stock-grid,
+    .dashboard .dashboard-main-grid,
+    .dashboard .dashboard-bottom-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+@media (max-width: 650px) {
+    .dashboard .dashboard-metrics {
+        grid-template-columns: minmax(0, 1fr);
+    }
+    .dashboard .dashboard-metric-value {
+        font-size: 36px;
+        line-height: 44px;
+    }
+    .dashboard h1 {
+        font-size: 26px;
+    }
+    .dashboard .dashboard-panel-heading {
+        margin-inline: 15px;
+    }
+    .dashboard .dashboard-stock-row,
+    .dashboard .dashboard-stock-row + .dashboard-stock-row {
+        padding-inline: 15px;
+    }
+}
+
+/* ------------------------------------------------------------------ */
+/* Polish pass, matched against the reference at 1672px.               */
+/* ------------------------------------------------------------------ */
+.dashboard {
+    --dashboard-radius: 14px;
+    --dashboard-chart-in: 219 100% 51%;
+    --dashboard-panel-edge: 0 0 0 1px hsl(240 6% 10% / 0.045);
+    --dashboard-panel-shadow: 0 1px 2px hsl(240 6% 10% / 0.04), 0 4px 14px -6px hsl(240 6% 10% / 0.06);
+}
+.dark .dashboard {
+    --dashboard-chart-in: 219 100% 68%;
+    --dashboard-panel-edge: 0 0 0 1px hsl(var(--border-subtle));
+    --dashboard-panel-shadow: none;
+}
+
+/* Panels float on a soft edge and shadow instead of a drawn border. */
+.dashboard .dashboard-panel,
+.dashboard .dashboard-replenishment,
+.dashboard .dashboard-bottom-grid > .dashboard-panel,
+.dashboard .dashboard-bottom-grid > .dashboard-panel + .dashboard-panel,
+.dashboard .dashboard-metric,
+.dashboard .dashboard-metric + .dashboard-metric {
+    border-color: transparent;
+    box-shadow: var(--dashboard-panel-edge), var(--dashboard-panel-shadow);
+}
+.dashboard a.dashboard-metric:hover {
+    border-color: transparent;
+    box-shadow: 0 0 0 1px hsl(var(--border-strong)), var(--dashboard-panel-shadow);
+}
+.dashboard h2 {
+    font-size: 19px;
+    line-height: 26px;
+    font-weight: 500;
+    letter-spacing: -0.02em;
+}
+.dashboard .dashboard-replenishment h2 {
+    font-size: 19px;
+}
+.dashboard .dashboard-panel-heading {
+    margin: 0 22px;
+    padding: 18px 0 12px;
+}
+.dashboard .dashboard-text-link {
+    font-size: 14px;
+}
+
+/* Summary row: the highlighted card is wider, and every card is shorter. */
+@media (min-width: 96rem) {
+    .dashboard .dashboard-metrics:has(> .dashboard-metric-featured) {
+        grid-template-columns: minmax(0, 1.24fr);
+        grid-auto-columns: minmax(0, 1fr);
+        grid-auto-flow: column;
+    }
+}
+.dashboard .dashboard-metric,
+.dashboard .dashboard-metric + .dashboard-metric {
+    padding: 18px 26px 20px 28px;
+}
+.dashboard .dashboard-metric-label {
+    font-size: 16px;
+    line-height: 22px;
+    color: hsl(var(--text-primary));
+}
+.dashboard .dashboard-metric-value {
+    margin: 4px 0 2px;
+    font-size: 50px;
+    line-height: 56px;
+    font-weight: 300;
+    letter-spacing: -0.035em;
+}
+.dashboard .dashboard-metric-context,
+.dashboard .dashboard-metric-trend {
+    font-size: 15px;
+    line-height: 22px;
+}
+.dashboard .dashboard-metric-context::first-letter {
+    text-transform: uppercase;
+}
+.dashboard .dashboard-metric-trend {
+    display: block;
+    margin-top: 0;
+}
+.dashboard .dashboard-metric.dashboard-metric-featured,
+.dashboard a.dashboard-metric.dashboard-metric-featured:hover {
+    box-shadow: none;
+    background:
+        linear-gradient(150deg, hsl(214 62% 31% / 0.9), hsl(var(--dashboard-navy)) 60%),
+        hsl(var(--dashboard-navy));
+}
+.dashboard a.dashboard-metric.dashboard-metric-featured:hover {
+    background: hsl(var(--dashboard-navy-hover));
+}
+.dashboard .dashboard-metric-featured .dashboard-metric-label {
+    font-size: 17px;
+}
+.dashboard .dashboard-metric-featured .dashboard-metric-context {
+    font-size: 16px;
+    color: hsl(var(--dashboard-navy-text) / 0.85);
+}
+.dashboard .dashboard-metric-featured .dashboard-metric-link {
+    width: 40px;
+    height: 40px;
+    margin-block: -2px -12px;
+}
+
+/* Stock movement */
+.dashboard .stock-movement-period {
+    font-size: 15px;
+    color: hsl(var(--text-secondary));
+}
+.dashboard .stock-movement-body {
+    gap: 10px;
+    padding: 14px 22px 16px;
+}
+.dashboard .stock-movement-totals {
+    gap: 44px;
+}
+.dashboard .stock-movement-totals dt {
+    font-size: 14px;
+    color: hsl(var(--text-primary));
+}
+.dashboard .stock-movement-totals dd {
+    font-size: 30px;
+    line-height: 36px;
+    font-weight: 300;
+}
+.dashboard .stock-movement-key {
+    width: 10px;
+    height: 10px;
+}
+.dashboard .stock-movement-key-in,
+.dashboard .stock-movement-in {
+    background: hsl(var(--dashboard-chart-in));
+    fill: hsl(var(--dashboard-chart-in));
+}
+.dashboard .stock-movement-chart {
+    max-height: 150px;
+}
+.dashboard .stock-movement-axis {
+    font-size: 14px;
+    color: hsl(var(--text-secondary));
+}
+
+/* Replenishment */
+.dashboard .dashboard-warning-badge {
+    padding: 2px 10px;
+    border-radius: 999px;
+    font-size: 13px;
+    line-height: 20px;
+}
+.dashboard .dashboard-stock-row,
+.dashboard .dashboard-stock-row + .dashboard-stock-row {
+    padding: 12px 22px 18px;
+}
+.dashboard .dashboard-stock-code {
+    font-size: 13px;
+    color: hsl(var(--text-primary));
+}
+.dashboard .dashboard-product-name {
+    font-size: 19px;
+}
+.dashboard .dashboard-product-meta {
+    font-size: 13px;
+}
+.dashboard .dashboard-stock-level {
+    margin-top: 12px;
+}
+.dashboard .dashboard-stock-on-hand {
+    font-size: 54px;
+    line-height: 56px;
+    font-weight: 300;
+}
+.dashboard .dashboard-stock-minimum {
+    font-size: 32px;
+    line-height: 38px;
+    font-weight: 300;
+    color: hsl(var(--text-primary));
+}
+.dashboard .dashboard-stock-labels {
+    margin: 2px 0 12px;
+    font-size: 13px;
+}
+.dashboard .stock-meter {
+    height: 14px;
+}
+.dashboard .stock-meter-short {
+    background-image: repeating-linear-gradient(
+        135deg,
+        hsl(var(--text-tertiary) / 0.45) 0 1.5px,
+        transparent 1.5px 6px
+    );
+}
+.dashboard .stock-meter-fill {
+    background: hsl(36 88% 36%);
+}
+.dark .dashboard .stock-meter-fill {
+    background: hsl(var(--status-warning));
+}
+.dashboard .stock-meter-critical .stock-meter-fill {
+    background: hsl(var(--status-danger));
+}
+.dashboard .dashboard-stock-foot {
+    margin-top: 14px;
+}
+.dashboard .dashboard-shortfall {
+    font-size: 15px;
+}
+.dashboard .dashboard-stock-foot .dashboard-primary-action {
+    height: 38px;
+    padding-inline: 18px;
+    border-radius: 8px;
+    font-size: 14px;
+}
+
+/* Recent orders: a quiet table without column rules. */
+.dashboard .dashboard-order-table th,
+.dashboard .dashboard-order-table td {
+    border-inline: 0;
+}
+.dashboard .dashboard-order-table thead th {
+    border-top: 0;
+    background: none;
+    font-size: 14px;
+}
+.dashboard .dashboard-order-table td {
+    height: 42px;
+    padding-block: 6px;
+    font-size: 14px;
+}
+.dashboard .dashboard-order-number {
+    font-size: 14px;
+    font-weight: 600;
+}
+.dashboard .dashboard-customer {
+    font-size: 13px;
+}
+.dashboard .dashboard-order-status {
+    padding: 3px 8px;
+    border-radius: 6px;
+    font-size: 13px;
+}
+.dashboard .dashboard-amount {
+    font-size: 14px;
+    font-weight: 600;
+}
+.dashboard .dashboard-count {
+    min-width: 24px;
+    height: 24px;
+    border-radius: 7px;
+    font-size: 13px;
+}
+.dashboard .dashboard-panel-footer {
+    font-size: 13px;
+}
+
+/* Stock value by category */
+.dashboard .dashboard-category-caption {
+    padding-block: 2px 0;
+    font-size: 12px;
+}
+.dashboard .dashboard-category-row {
+    padding: 9px 0 8px;
+}
+.dashboard .dashboard-category-facts {
+    font-size: 14px;
+}
+.dashboard .dashboard-category-facts strong {
+    font-weight: 600;
+}
+.dashboard .dashboard-share-track {
+    height: 6px;
+    margin-top: 8px;
+    border-radius: 999px;
+}
+.dashboard .dashboard-share-track > span {
+    border-radius: 999px;
+    background: hsl(var(--dashboard-chart-in));
+}
+.dashboard .dashboard-categories .dashboard-panel-footer {
+    font-size: 15px;
+    color: hsl(var(--text-secondary));
+}
+.dashboard .dashboard-categories .dashboard-panel-footer strong {
+    font-size: 17px;
+    font-weight: 600;
+    color: hsl(var(--text-primary));
+}
+
+/* Financial watch and quick actions */
+.dashboard .dashboard-financial-item > span {
+    font-size: 14px;
+}
+.dashboard .dashboard-financial-item > strong {
+    font-size: 36px;
+    line-height: 42px;
+    font-weight: 300;
+}
+.dashboard .dashboard-financial-item > small {
+    font-size: 13px;
+}
+.dashboard .dashboard-shortcuts a {
+    font-size: 14px;
+}
+
+/* Second polish pass: density to match the reference. */
+.dashboard .stock-movement-chart {
+    max-height: 112px;
+}
+.dashboard .dashboard-stock-row,
+.dashboard .dashboard-stock-row + .dashboard-stock-row {
+    padding-top: 6px;
+}
+.dashboard .dashboard-stock-level {
+    margin-top: 6px;
+}
+.dashboard .dashboard-stock-foot {
+    margin-top: 12px;
+}
+.dashboard .dashboard-order-table td {
+    height: 40px;
+    padding-block: 4px;
+}
+.dashboard .dashboard-order-number {
+    line-height: 18px;
+}
+.dashboard .dashboard-customer {
+    margin-top: 0;
+    line-height: 16px;
+}
+.dashboard .dashboard-category-caption {
+    display: none;
+}
+.dashboard .dashboard-category-row {
+    padding: 7px 0 6px;
+}
+.dashboard .dashboard-financial-item > span {
+    font-size: 13px;
+}
+.dashboard .dashboard-shortcuts a {
+    font-size: 13px;
+}
+@media (min-width: 96rem) {
+    .dashboard .dashboard-content-grid {
+        grid-template-columns: minmax(0, 2.5fr) minmax(360px, 1fr);
+    }
+}
+@media (max-width: 650px) {
+    .dashboard .dashboard-metric-value,
+    .dashboard .dashboard-stock-on-hand {
+        font-size: 40px;
+        line-height: 46px;
+    }
+    .dashboard .dashboard-metric,
+    .dashboard .dashboard-metric + .dashboard-metric {
+        padding: 16px 20px 18px;
+    }
 }

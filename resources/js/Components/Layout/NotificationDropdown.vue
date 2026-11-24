@@ -314,7 +314,7 @@ defineExpose({ closeDropdown });
                     </div>
                     <div class="shrink-0 mt-1.5">
                         <span v-if="pendingAction === notification.id" class="block h-3 w-3 animate-spin rounded-full border-2 border-brand border-t-transparent" aria-hidden="true"></span>
-                        <div v-else class="w-2 h-2 bg-brand rounded-full"></div>
+                        <div v-else class="w-2 h-2 bg-brand-solid rounded-full"></div>
                     </div>
                 </button>
             </div>

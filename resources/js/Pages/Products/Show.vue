@@ -926,7 +926,7 @@ const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface
                                     :aria-checked="qrMode === option.value"
                                     :class="[
                                         'rounded px-2 py-1 text-xs font-medium transition-colors ds-focus-ring',
-                                        qrMode === option.value ? 'bg-brand text-brand-foreground' : 'text-text-secondary hover:bg-surface-overlay',
+                                        qrMode === option.value ? 'bg-brand-solid text-brand-solid-foreground' : 'text-text-secondary hover:bg-surface-overlay',
                                     ]"
                                     @click="qrMode = option.value"
                                 >

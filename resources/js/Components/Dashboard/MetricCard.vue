@@ -9,7 +9,12 @@ defineProps({
     detail: { type: String, default: '' },
     extra: { type: String, default: '' },
     href: { type: String, default: null },
-    icon: { type: [Object, Function], required: true },
+    // Kept for callers and plugins; the tiles read by label, not icon.
+    icon: { type: [Object, Function], default: null },
+    // { text, direction: 'up' | 'down' | 'flat' }, only from a real comparison.
+    trend: { type: Object, default: null },
+    // The one highlighted figure on the dashboard.
+    featured: { type: Boolean, default: false },
 });
 </script>
 
@@ -18,16 +23,20 @@ defineProps({
         :is="href ? Link : 'article'"
         :href="href || undefined"
         class="dashboard-metric ds-focus-ring"
+        :class="{ 'dashboard-metric-featured': featured }"
         :title="detail || undefined"
         :tabindex="href ? undefined : 0"
     >
         <div class="dashboard-metric-label">
-            <component :is="icon" :size="15" :stroke-width="1.6" class="dashboard-metric-icon" aria-hidden="true" />
             <span>{{ label }}</span>
-            <ArrowUpRight v-if="href" :size="13" class="dashboard-metric-link" aria-hidden="true" />
+            <span v-if="href" class="dashboard-metric-link" aria-hidden="true"
+                ><ArrowUpRight :size="featured ? 18 : 14" :stroke-width="1.6"
+            /></span>
         </div>
         <p class="dashboard-metric-value">{{ value }}</p>
         <p v-if="context" class="dashboard-metric-context">{{ context }}</p>
         <p v-if="extra" class="dashboard-metric-context">{{ extra }}</p>
+        <!-- The signed percentage carries the direction; colour reinforces it. -->
+        <p v-if="trend" class="dashboard-metric-trend" :class="`dashboard-metric-trend-${trend.direction}`">{{ trend.text }}</p>
     </component>
 </template>

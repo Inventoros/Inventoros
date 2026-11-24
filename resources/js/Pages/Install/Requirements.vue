@@ -111,7 +111,7 @@ const props = defineProps({
                     <Link
                         v-if="allMet"
                         :href="route('install.database')"
-                        class="inline-flex items-center px-6 py-2 bg-brand text-brand-foreground font-semibold rounded-lg hover:bg-brand-hover transition"
+                        class="inline-flex items-center px-6 py-2 bg-brand-solid text-brand-solid-foreground font-semibold rounded-lg hover:bg-brand-solid-hover transition"
                     >
                         {{ t('install.requirements.continue') }}
                         <svg class="w-5 h-5 ms-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -279,7 +279,7 @@ const fieldArea = 'w-full rounded-md border border-border-subtle bg-surface-canv
                             <div
                                 class="flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold transition-colors"
                                 :class="isStepCompleted(step.key)
-                                    ? 'bg-brand text-brand-foreground'
+                                    ? 'bg-brand-solid text-brand-solid-foreground'
                                     : 'bg-surface-overlay text-text-tertiary'"
                             >
                                 <Check v-if="isStepCompleted(step.key) && !isStepCurrent(step.key)" :size="16" />
@@ -295,7 +295,7 @@ const fieldArea = 'w-full rounded-md border border-border-subtle bg-surface-canv
                         <div
                             v-if="index < statusSteps.length - 1"
                             class="mx-4 h-0.5 flex-1"
-                            :class="isStepCompleted(statusSteps[index + 1].key) ? 'bg-brand' : 'bg-border-subtle'"
+                            :class="isStepCompleted(statusSteps[index + 1].key) ? 'bg-brand-solid' : 'bg-border-subtle'"
                         ></div>
                     </template>
                 </div>

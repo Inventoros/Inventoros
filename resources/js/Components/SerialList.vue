@@ -114,7 +114,7 @@ const statusBadgeClass = (status) => {
             </h3>
             <button
                 @click="showForm = !showForm"
-                class="inline-flex items-center px-3 py-1.5 bg-brand text-brand-foreground text-sm font-medium rounded-md hover:bg-brand-hover transition"
+                class="inline-flex items-center px-3 py-1.5 bg-brand-solid text-brand-solid-foreground text-sm font-medium rounded-md hover:bg-brand-solid-hover transition"
             >
                 <svg v-if="!showForm" class="w-4 h-4 me-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
@@ -191,7 +191,7 @@ const statusBadgeClass = (status) => {
             <button
                 @click="createSerial"
                 :disabled="loading || !form.serial_number"
-                class="px-4 py-2 bg-brand text-brand-foreground text-sm font-medium rounded-md hover:bg-brand-hover transition disabled:opacity-50"
+                class="px-4 py-2 bg-brand-solid text-brand-solid-foreground text-sm font-medium rounded-md hover:bg-brand-solid-hover transition disabled:opacity-50"
             >
                 {{ loading ? t('common.creating') : t('components.serialList.createSerial') }}
             </button>

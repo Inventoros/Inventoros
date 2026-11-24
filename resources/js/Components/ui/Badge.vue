@@ -39,7 +39,7 @@ const badge = cva(
 
 const dotColor = computed(() => ({
     neutral: 'bg-text-tertiary',
-    brand: 'bg-brand',
+    brand: 'bg-brand-solid',
     success: 'bg-status-success',
     warning: 'bg-status-warning',
     danger: 'bg-status-danger',

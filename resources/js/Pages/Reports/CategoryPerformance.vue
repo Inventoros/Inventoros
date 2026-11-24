@@ -124,7 +124,7 @@ const thClass = 'px-4 py-2.5 text-start text-xs font-medium tracking-tight text-
                 <!-- Value bar visual -->
                 <div class="mt-3 h-2 w-full overflow-hidden rounded-full bg-surface-sunken">
                     <div
-                        class="h-full rounded-full bg-brand"
+                        class="h-full rounded-full bg-brand-solid"
                         :style="{ width: barWidth(category.total_value) }"
                     />
                 </div>

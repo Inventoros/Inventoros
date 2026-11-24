@@ -484,7 +484,14 @@
       "reviewSystem": "Revisar sistema",
       "saveError": "No se pudieron guardar las preferencias. Inténtelo de nuevo.",
       "shortfallHelp": "El faltante es la diferencia respecto al stock mínimo. Revise el proveedor y la configuración de reposición antes de comprar.",
-      "viewProduct": "Ver producto"
+      "viewProduct": "Ver producto",
+      "stockMovement": "Movimiento de stock",
+      "last30Days": "Últimos 30 días",
+      "unitsIn": "Entradas",
+      "unitsOut": "Salidas",
+      "movementSummary": "{in} unidades de entrada y {out} de salida en los últimos 30 días",
+      "noMovement": "No hubo movimientos de stock en los últimos 30 días.",
+      "vsLastMonth": "{change} frente a los mismos días del mes pasado"
     }
   },
   "products": {

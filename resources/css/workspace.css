@@ -3,17 +3,71 @@
 .workspace-sidebar { width: var(--workspace-sidebar-width); }
 .workspace-brand { height: 48px; letter-spacing: -0.035em; }
 .workspace-context { border-bottom: 1px solid hsl(var(--border-subtle)); padding-block-end: 8px; }
-.workspace-search kbd { border: 0; background: hsl(var(--surface-raised)); }
 .workspace-section-label { letter-spacing: 0; padding-block: 2px; }
 .workspace-nav > div { margin-bottom: 15px; }
 .workspace-nav-item { border: 1px solid transparent; font-weight: 450; }
+.workspace-nav-item { position: relative; }
+/* Selected: a subtle tint and a narrow blue marker at the start edge. */
 .workspace-nav-item.is-active {
-    background: hsl(var(--surface-raised));
-    border-color: hsl(var(--border-subtle));
-    box-shadow: 0 1px 2px hsl(var(--text-primary) / 0.03);
-    font-weight: 550;
+    background: hsl(var(--accent-soft));
+    border-color: transparent;
+    font-weight: 500;
+}
+.workspace-nav-item.is-active::before {
+    content: "";
+    position: absolute;
+    inset-block: 6px;
+    inset-inline-start: -12px;
+    width: 3px;
+    border-radius: 0 3px 3px 0;
+    background: hsl(var(--accent));
+}
+[dir="rtl"] .workspace-nav-item.is-active::before { border-radius: 3px 0 0 3px; }
+@media (forced-colors: active) {
+    .workspace-nav-item.is-active::before { background: Highlight; }
 }
 .workspace-topbar { height: 48px; }
+/* Every page sits on the same soft grey, with panels in white. */
+.workspace-main { background-color: hsl(var(--surface-page)); }
+.workspace-main .workspace-topbar { background-color: hsl(var(--surface-raised)); }
+/* Global search, centred in the top bar. */
+.workspace-search {
+    flex: 0 1 420px;
+    align-items: center;
+    gap: 9px;
+    height: 34px;
+    margin-inline: 16px;
+    padding-inline: 12px 6px;
+    border: 1px solid hsl(var(--border-subtle));
+    border-radius: 9px;
+    background: hsl(var(--surface-page));
+    color: hsl(var(--text-tertiary));
+    font-size: 13px;
+    transition: border-color 120ms ease, background-color 120ms ease;
+}
+.workspace-search:hover { border-color: hsl(var(--border-strong)); }
+/* From tablet up the bar is three columns, so search sits in the centre. */
+@media (min-width: 768px) {
+    .workspace-main .workspace-topbar {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(240px, 440px) minmax(0, 1fr);
+    }
+    .workspace-topbar .workspace-search { width: 100%; margin-inline: 0; }
+    .workspace-topbar .workspace-global-controls { justify-self: end; }
+}
+.workspace-search:focus-visible { outline: 2px solid hsl(var(--ring)); outline-offset: 2px; }
+.workspace-search-placeholder { flex: 1; min-width: 0; overflow: hidden; text-align: start; text-overflow: ellipsis; white-space: nowrap; }
+.workspace-search kbd {
+    flex-shrink: 0;
+    padding: 2px 6px;
+    border: 1px solid hsl(var(--border-subtle));
+    border-radius: 5px;
+    background: hsl(var(--surface-raised));
+    color: hsl(var(--text-secondary));
+    font-family: inherit;
+    font-size: 11px;
+    line-height: 16px;
+}
 .workspace-topbar .app-breadcrumb { font-size: 12px; }
 .workspace-global-controls { gap: 4px; }
 .workspace-main > main:not(.app-table-page) { padding-block: 28px; }

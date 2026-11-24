@@ -484,7 +484,14 @@
       "reviewSystem": "System prüfen",
       "saveError": "Einstellungen konnten nicht gespeichert werden. Erneut versuchen.",
       "shortfallHelp": "Die Fehlmenge ist die Differenz zum Mindestbestand. Vor dem Einkauf Lieferant und Nachbestelleinstellungen prüfen.",
-      "viewProduct": "Produkt ansehen"
+      "viewProduct": "Produkt ansehen",
+      "stockMovement": "Lagerbewegung",
+      "last30Days": "Letzte 30 Tage",
+      "unitsIn": "Zugang",
+      "unitsOut": "Abgang",
+      "movementSummary": "{in} Einheiten Zugang und {out} Einheiten Abgang in den letzten 30 Tagen",
+      "noMovement": "In den letzten 30 Tagen wurde kein Bestand bewegt.",
+      "vsLastMonth": "{change} ggü. denselben Tagen im Vormonat"
     }
   },
   "products": {

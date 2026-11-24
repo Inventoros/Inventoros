@@ -484,7 +484,14 @@
       "reviewSystem": "시스템 검토",
       "saveError": "환경설정을 저장하지 못했습니다. 다시 시도하세요.",
       "shortfallHelp": "부족 수량은 최소 재고와의 차이입니다. 구매 전에 공급업체와 재주문 설정을 확인하세요.",
-      "viewProduct": "제품 보기"
+      "viewProduct": "제품 보기",
+      "stockMovement": "재고 이동",
+      "last30Days": "최근 30일",
+      "unitsIn": "입고",
+      "unitsOut": "출고",
+      "movementSummary": "최근 30일간 입고 {in}개, 출고 {out}개",
+      "noMovement": "최근 30일간 재고 이동이 없습니다.",
+      "vsLastMonth": "지난달 같은 기간 대비 {change}"
     }
   },
   "products": {

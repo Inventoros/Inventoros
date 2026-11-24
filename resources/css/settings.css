@@ -206,7 +206,7 @@ select.settings-field-input:dir(rtl) { background-position: left 0.75rem center;
     background: hsl(var(--surface-sunken));
     transition: background-color 120ms, border-color 120ms;
 }
-.settings-toggle.is-on { border-color: hsl(var(--accent)); background: hsl(var(--accent)); }
+.settings-toggle.is-on { border-color: hsl(var(--accent-solid)); background: hsl(var(--accent-solid)); }
 .settings-toggle-thumb {
     position: absolute;
     inset-block-start: 3px;

@@ -484,7 +484,14 @@
       "reviewSystem": "Systeem controleren",
       "saveError": "Voorkeuren konden niet worden opgeslagen. Probeer opnieuw.",
       "shortfallHelp": "Het tekort is het verschil met de minimumvoorraad. Controleer de leverancier en bestelinstellingen voordat u inkoopt.",
-      "viewProduct": "Product bekijken"
+      "viewProduct": "Product bekijken",
+      "stockMovement": "Voorraadbeweging",
+      "last30Days": "Afgelopen 30 dagen",
+      "unitsIn": "In",
+      "unitsOut": "Uit",
+      "movementSummary": "{in} eenheden in en {out} uit in de afgelopen 30 dagen",
+      "noMovement": "Geen voorraadbeweging in de afgelopen 30 dagen.",
+      "vsLastMonth": "{change} t.o.v. dezelfde dagen vorige maand"
     }
   },
   "products": {

@@ -191,7 +191,7 @@ const close = () => {
                 type="button"
                 @click="applySKU"
                 :disabled="!skuPreview || skuPreview === t('components.skuGenerator.previewError')"
-                class="px-4 py-2 bg-brand text-brand-foreground rounded-md hover:bg-brand-hover disabled:opacity-50"
+                class="px-4 py-2 bg-brand-solid text-brand-solid-foreground rounded-md hover:bg-brand-solid-hover disabled:opacity-50"
             >
                 {{ t('components.skuGenerator.applySku') }}
             </button>

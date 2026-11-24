@@ -61,6 +61,7 @@ jobs:
           php artisan migrate --force
           php artisan db:seed --class=ScreenshotSeeder --force
           php artisan db:seed --class=ScreenshotBrandingSeeder --force
+          php artisan db:seed --class=ScreenshotHistorySeeder --force
           # One scheduler pass records the heartbeat, so the dashboard doesn't
           # show the "background tasks need attention" banner in screenshots.
           php artisan schedule:run

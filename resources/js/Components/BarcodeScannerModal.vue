@@ -155,7 +155,7 @@ const selectProduct = () => {
                                 :class="[
                                     'px-4 py-2 text-sm rounded-md transition-colors',
                                     scannerMode === 'camera'
-                                        ? 'bg-brand text-white'
+                                        ? 'bg-brand-solid text-white'
                                         : 'bg-gray-100 dark:bg-surface-canvas text-gray-700 dark:text-gray-300'
                                 ]"
                             >
@@ -170,7 +170,7 @@ const selectProduct = () => {
                                 :class="[
                                     'px-4 py-2 text-sm rounded-md transition-colors',
                                     scannerMode === 'manual'
-                                        ? 'bg-brand text-white'
+                                        ? 'bg-brand-solid text-white'
                                         : 'bg-gray-100 dark:bg-surface-canvas text-gray-700 dark:text-gray-300'
                                 ]"
                             >
@@ -207,7 +207,7 @@ const selectProduct = () => {
                             <button
                                 @click="submitManualCode"
                                 :disabled="!manualCode.trim() || isLoading"
-                                class="w-full inline-flex justify-center items-center px-4 py-2 bg-brand border border-transparent rounded-md font-semibold text-xs text-brand-foreground uppercase tracking-widest hover:bg-brand-hover disabled:opacity-50"
+                                class="w-full inline-flex justify-center items-center px-4 py-2 bg-brand-solid border border-transparent rounded-md font-semibold text-xs text-brand-solid-foreground uppercase tracking-widest hover:bg-brand-solid-hover disabled:opacity-50"
                             >
                                 <svg v-if="isLoading" class="animate-spin -ms-1 me-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
                                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -271,7 +271,7 @@ const selectProduct = () => {
                             <p class="mt-1 text-xs text-text-secondary">{{ t('components.barcodeScanner.productsHere', { count: foundLocation.product_count }, foundLocation.product_count) }}</p>
                             <a
                                 :href="foundLocation.products_url"
-                                class="mt-3 inline-flex w-full items-center justify-center rounded-md bg-brand px-4 py-2 text-xs font-semibold text-brand-foreground hover:bg-brand-hover ds-focus-ring"
+                                class="mt-3 inline-flex w-full items-center justify-center rounded-md bg-brand-solid px-4 py-2 text-xs font-semibold text-brand-solid-foreground hover:bg-brand-solid-hover ds-focus-ring"
                             >
                                 {{ t('components.barcodeScanner.viewProductsHere') }}
                             </a>

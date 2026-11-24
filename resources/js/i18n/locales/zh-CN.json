@@ -484,7 +484,14 @@
       "reviewSystem": "检查系统",
       "saveError": "无法保存偏好设置。请重试。",
       "shortfallHelp": "缺口是当前库存与最低库存的差额。采购前请检查供应商和补货设置。",
-      "viewProduct": "查看产品"
+      "viewProduct": "查看产品",
+      "stockMovement": "库存变动",
+      "last30Days": "最近 30 天",
+      "unitsIn": "入库",
+      "unitsOut": "出库",
+      "movementSummary": "最近 30 天入库 {in} 件，出库 {out} 件",
+      "noMovement": "最近 30 天没有库存变动。",
+      "vsLastMonth": "较上月同期 {change}"
     }
   },
   "products": {

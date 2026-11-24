@@ -484,7 +484,14 @@
       "reviewSystem": "Vérifier le système",
       "saveError": "Impossible d’enregistrer les préférences. Réessayez.",
       "shortfallHelp": "Le manque correspond à l’écart au stock minimum. Vérifiez le fournisseur et les paramètres de réapprovisionnement avant tout achat.",
-      "viewProduct": "Voir le produit"
+      "viewProduct": "Voir le produit",
+      "stockMovement": "Mouvements de stock",
+      "last30Days": "30 derniers jours",
+      "unitsIn": "Entrées",
+      "unitsOut": "Sorties",
+      "movementSummary": "{in} unités entrées et {out} sorties sur les 30 derniers jours",
+      "noMovement": "Aucun mouvement de stock sur les 30 derniers jours.",
+      "vsLastMonth": "{change} par rapport aux mêmes jours du mois dernier"
     }
   },
   "products": {

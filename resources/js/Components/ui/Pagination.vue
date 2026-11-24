@@ -11,7 +11,7 @@ const { t } = useI18n();
         <nav class="inline-flex flex-wrap items-center gap-1" :aria-label="t('common.pagination')">
             <template v-for="link in paginator.links" :key="link.label">
                 <Link v-if="link.url" :href="link.url" preserve-scroll :aria-current="link.active ? 'page' : undefined"
-                    :class="['inline-flex h-8 min-w-8 items-center justify-center rounded-md border px-2.5 text-xs font-medium transition-colors ds-focus-ring', link.active ? 'border-brand bg-brand text-brand-foreground' : 'border-border-subtle bg-surface-canvas text-text-secondary hover:bg-surface-overlay']"
+                    :class="['inline-flex h-8 min-w-8 items-center justify-center rounded-md border px-2.5 text-xs font-medium transition-colors ds-focus-ring', link.active ? 'border-brand bg-brand-solid text-brand-solid-foreground' : 'border-border-subtle bg-surface-canvas text-text-secondary hover:bg-surface-overlay']"
                     v-html="link.label" />
                 <span v-else role="link" aria-disabled="true" class="inline-flex h-8 min-w-8 cursor-not-allowed items-center justify-center rounded-md border border-border-subtle px-2.5 text-xs text-text-tertiary" v-html="link.label" />
             </template>

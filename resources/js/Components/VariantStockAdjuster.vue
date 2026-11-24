@@ -232,7 +232,7 @@ const adjustStock = async () => {
                             type="button"
                             @click="adjustStock"
                             :disabled="loading"
-                            class="flex-1 px-3 py-1.5 text-sm bg-brand text-brand-foreground rounded-md hover:bg-brand-hover disabled:opacity-50"
+                            class="flex-1 px-3 py-1.5 text-sm bg-brand-solid text-brand-solid-foreground rounded-md hover:bg-brand-solid-hover disabled:opacity-50"
                         >
                             <span v-if="loading">...</span>
                             <span v-else>{{ t('components.stockAdjuster.apply') }}</span>

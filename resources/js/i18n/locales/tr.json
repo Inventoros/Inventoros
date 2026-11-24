@@ -484,7 +484,14 @@
       "reviewSystem": "Sistemi incele",
       "saveError": "Tercihler kaydedilemedi. Tekrar deneyin.",
       "shortfallHelp": "Eksik miktar, minimum stokla aradaki farktır. Satın almadan önce tedarikçiyi ve yeniden sipariş ayarlarını kontrol edin.",
-      "viewProduct": "Ürünü görüntüle"
+      "viewProduct": "Ürünü görüntüle",
+      "stockMovement": "Stok hareketi",
+      "last30Days": "Son 30 gün",
+      "unitsIn": "Giriş",
+      "unitsOut": "Çıkış",
+      "movementSummary": "Son 30 günde {in} birim giriş ve {out} birim çıkış",
+      "noMovement": "Son 30 günde stok hareketi olmadı.",
+      "vsLastMonth": "Geçen ayın aynı günlerine göre {change}"
     }
   },
   "products": {
