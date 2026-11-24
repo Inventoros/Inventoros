@@ -1,5 +1,6 @@
 <script setup>
 import PluginSlot from '@/Components/PluginSlot.vue';
+import { IconStockTransfers } from '@/icons';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import TableFilters from '@/Components/ui/TableFilters.vue';
 import TableViewport from '@/Components/ui/TableViewport.vue';
@@ -10,7 +11,7 @@ import Badge from '@/Components/ui/Badge.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { Plus, Search, Eye, ArrowLeftRight } from '@lucide/vue';
+import { Plus, Search, Eye } from '@lucide/vue';
 import { displayDate } from '@/lib/dates';
 
 const { t } = useI18n();
@@ -190,7 +191,7 @@ const thClass =
             </template>
             <template #empty>
                 <EmptyState
-                    :icon="ArrowLeftRight"
+                    :icon="IconStockTransfers"
                     :title="t('stockTransfers.index.empty')"
                     :description="t('stockTransfers.index.emptyHint')"
                     :filtered="Boolean(filters?.search || filters?.status)"

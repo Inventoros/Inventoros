@@ -1,5 +1,6 @@
 <script setup>
 import AppLayout from '@/Layouts/AppLayout.vue';
+import { IconSuppliers } from '@/icons';
 import TableFilters from '@/Components/ui/TableFilters.vue';
 import TableViewport from '@/Components/ui/TableViewport.vue';
 import PluginSlot from '@/Components/PluginSlot.vue';
@@ -11,7 +12,7 @@ import SupplierRating from '@/Components/SupplierRating.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { Plus, Search, Eye, Pencil, Trash2, Truck } from '@lucide/vue';
+import { Plus, Search, Eye, Pencil, Trash2 } from '@lucide/vue';
 import { usePermissions } from '@/composables/usePermissions';
 
 const { hasPermission, canVisit } = usePermissions();
@@ -171,7 +172,7 @@ const thClass =
             </template>
             <template #empty>
                 <EmptyState
-                    :icon="Truck"
+                    :icon="IconSuppliers"
                     :title="t('suppliers.noSuppliersFound')"
                     :description="canVisit('suppliers.create') ? t('suppliers.getStarted') : null"
                     :filtered="Boolean(filters?.search)"

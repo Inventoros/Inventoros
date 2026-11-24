@@ -1,5 +1,6 @@
 <script setup>
 import DialogSurface from '@/Components/DialogSurface.vue';
+import { IconOrders } from '@/icons';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import TableFilters from '@/Components/ui/TableFilters.vue';
 import PluginSlot from '@/Components/PluginSlot.vue';
@@ -14,7 +15,7 @@ import { useI18n } from 'vue-i18n';
 import { displayCalendarDate, todayIsoDate } from '@/lib/dates';
 import { formatMoney } from '@/lib/money';
 import { orderSourceLabel, orderStatusLabel, orderStatusVariant } from '@/lib/orderLabels';
-import { Plus, Search, Eye, Pencil, Trash2, ShoppingCart, CheckCheck, X } from '@lucide/vue';
+import { Plus, Search, Eye, Pencil, Trash2, CheckCheck, X } from '@lucide/vue';
 import { usePermissions } from '@/composables/usePermissions';
 
 const { hasPermission, canVisit } = usePermissions();
@@ -117,7 +118,7 @@ const selectClass =
 
         <PluginSlot slot="header" :components="pluginComponents?.header" />
 
-        <PageHeader :title="t('orders.title')" :description="t('orders.index.description')" :icon="ShoppingCart" :count="orders.total">
+        <PageHeader :title="t('orders.title')" :description="t('orders.index.description')" :icon="IconOrders" :count="orders.total">
             <template #actions>
                 <Button
                     v-if="canRecordPayments && untrackedOrderCount > 0"
@@ -228,7 +229,7 @@ const selectClass =
                 </template>
                 <template #empty>
                     <EmptyState
-                        :icon="ShoppingCart"
+                        :icon="IconOrders"
                         :title="t('orders.noOrdersFound')"
                         :filtered="Boolean(filters?.search || filters?.status || filters?.source || filters?.payment_status)"
                         @clear="clearFilters"

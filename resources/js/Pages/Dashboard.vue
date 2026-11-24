@@ -21,6 +21,7 @@ import { ref, reactive, computed } from 'vue';
 import { useQuickReorder } from '@/composables/useQuickReorder';
 import { usePermissions } from '@/composables/usePermissions';
 import { useI18n } from 'vue-i18n';
+import { IconImportExport, IconStockAdjustments, IconStockTransfers } from '@/icons';
 import { displayCalendarDate, displayDateTime } from '@/lib/dates';
 import { formatCompactMoney, formatMoney, formatNumber as formatPlainNumber } from '@/lib/money';
 import { categoryBreakdown, periodChange, stockLevel, stockUrgency } from '@/lib/dashboard';
@@ -40,8 +41,6 @@ import {
     ArrowUpRight,
     ArrowRight,
     ChevronRight,
-    ArrowLeftRight,
-    FileSpreadsheet,
     Clock3,
     CircleDot,
     Check,
@@ -218,9 +217,9 @@ const formatShare = (share) =>
 const quickActions = computed(() =>
     [
         { route: 'products.create', label: t('dashboard.addProduct'), icon: Plus },
-        { route: 'stock-adjustments.create', label: t('nav.stockAdjustments'), icon: SlidersHorizontal },
-        { route: 'stock-transfers.create', label: t('nav.stockTransfers'), icon: ArrowLeftRight },
-        { route: 'import-export.index', label: t('nav.importExport'), icon: FileSpreadsheet },
+        { route: 'stock-adjustments.create', label: t('nav.stockAdjustments'), icon: IconStockAdjustments },
+        { route: 'stock-transfers.create', label: t('nav.stockTransfers'), icon: IconStockTransfers },
+        { route: 'import-export.index', label: t('nav.importExport'), icon: IconImportExport },
     ].filter((action) => canVisit(action.route)),
 );
 const systemWarningMessage = (warning) => {
