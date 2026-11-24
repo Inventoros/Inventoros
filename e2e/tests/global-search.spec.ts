@@ -80,8 +80,10 @@ test('"/" opens search on a plain page but not while typing or over an open dial
     const search = page.getByPlaceholder('Search products, orders, customers...');
     await page.goto('/categories', { waitUntil: 'networkidle' });
 
-    // A plain page: focus on the body, "/" opens the palette.
-    await page.locator('body').click({ position: { x: 1, y: 1 } });
+    // A plain page: focus on the body, "/" opens the palette. Blur rather than
+    // click, since any point on the page may be a link (at 1920px, (1, 1) is
+    // the sidebar logo, which navigates to the dashboard).
+    await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
     await page.keyboard.press('/');
     await expect(search).toBeVisible();
     await page.keyboard.press('Escape');
