@@ -486,7 +486,7 @@ const searchKeys = isMac ? 'Meta+K' : 'Control+K';
                     >
                         <img v-if="workspaceLogo" :src="workspaceLogo" :alt="workspaceName" class="h-6 w-6 shrink-0 object-contain" />
                         <span v-else class="h-6 w-6 shrink-0 rounded-md border border-border-subtle bg-surface-raised grid place-items-center text-xs font-semibold">{{ workspaceName.charAt(0).toUpperCase() }}</span>
-                        <span class="text-xs font-semibold tracking-tight truncate flex-1 text-start">
+                        <span class="text-xs font-semibold tracking-tight leading-snug line-clamp-2 break-words flex-1 min-w-0 text-start">
                             {{ workspaceName }}
                         </span>
                     </Link>
