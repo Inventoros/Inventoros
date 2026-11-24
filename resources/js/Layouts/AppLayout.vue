@@ -21,7 +21,6 @@ import { Link, router, usePage } from '@inertiajs/vue3';
 import { useI18n } from 'vue-i18n';
 import {
     PackageSearch,
-    Lock,
     Search,
     Menu,
     LogOut,

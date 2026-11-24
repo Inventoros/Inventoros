@@ -561,7 +561,7 @@ const ordersStatusIcon = (status) => (status === 'delivered' ? Check : status ==
                         </div>
                         <div class="dashboard-shortcuts">
                             <Link v-for="action in quickActions" :key="action.route" :href="route(action.route)" class="ds-focus-ring"
-                                ><component :is="action.icon" :size="15" aria-hidden="true" /><span>{{ action.label }}</span
+                                ><component :is="action.icon" :size="15" :stroke-width="1.75" aria-hidden="true" /><span>{{ action.label }}</span
                                 ><ArrowUpRight :size="13" aria-hidden="true"
                             /></Link>
                         </div>

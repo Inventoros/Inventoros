@@ -8,6 +8,7 @@ import { Head, Link } from '@inertiajs/vue3';
 import { useI18n } from 'vue-i18n';
 import { roleDescription, roleName } from '@/lib/permissionLabels';
 import { Plus, Users, ShieldCheck } from '@lucide/vue';
+import { IconRoles } from '@/icons';
 import { usePermissions } from '@/composables/usePermissions';
 
 const { canVisit } = usePermissions();
@@ -95,7 +96,7 @@ const i18n = { t, te };
             <div v-if="!roles || !roles.data || roles.data.length === 0" class="col-span-full">
                 <Card>
                     <div class="flex flex-col items-center gap-3 py-10 text-center">
-                        <ShieldCheck :size="22" class="text-text-tertiary" />
+                        <IconRoles :size="22" class="text-text-tertiary" />
                         <p class="text-sm text-text-tertiary">{{ t('admin.roles.noRolesFound') }}</p>
                         <Button v-if="canVisit('roles.create')" variant="default" size="sm" as="Link" :href="route('roles.create')">
                             <Plus :size="14" />

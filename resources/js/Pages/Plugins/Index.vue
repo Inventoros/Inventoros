@@ -10,6 +10,7 @@ import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { formatMoney } from '@/lib/money';
 import { UploadCloud, Loader2, Puzzle, ExternalLink, ShieldCheck, Store } from '@lucide/vue';
+import { IconPlugins } from '@/icons';
 import { usePermissions } from '@/composables/usePermissions';
 
 const props = defineProps({
@@ -409,7 +410,7 @@ const deletePlugin = (slug, name) => {
             <!-- Empty State -->
             <Card v-if="plugins.length === 0">
                 <div class="flex flex-col items-center gap-3 py-12 text-center">
-                    <Puzzle :size="28" class="text-text-tertiary" />
+                    <IconPlugins :size="28" class="text-text-tertiary" />
                     <h3 class="text-sm font-medium text-text-primary">{{ t('plugins.noPlugins') }}</h3>
                     <p class="text-sm text-text-tertiary">
                         {{ t('plugins.getStarted') }}

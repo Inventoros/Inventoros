@@ -11,7 +11,8 @@ import { Head, Link, router } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { displayDate } from '@/lib/dates';
-import { Plus, Search, Eye, Settings } from '@lucide/vue';
+import { Plus, Search, Eye } from '@lucide/vue';
+import { IconWorkOrders } from '@/icons';
 
 const { t } = useI18n();
 
@@ -207,7 +208,7 @@ const thClass =
             </template>
             <template #empty>
                 <EmptyState
-                    :icon="Settings"
+                    :icon="IconWorkOrders"
                     :title="t('workOrders.noWorkOrders')"
                     :description="t('workOrders.noWorkOrdersHint')"
                     :filtered="Boolean(filters?.search || filters?.status)"

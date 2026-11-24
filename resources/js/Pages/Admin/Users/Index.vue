@@ -6,7 +6,8 @@ import Button from '@/Components/ui/Button.vue';
 import Badge from '@/Components/ui/Badge.vue';
 import { Head, Link } from '@inertiajs/vue3';
 import { useI18n } from 'vue-i18n';
-import { Plus, Eye, Pencil, Users } from '@lucide/vue';
+import { Plus, Eye, Pencil } from '@lucide/vue';
+import { IconUsers } from '@/icons';
 import { usePermissions } from '@/composables/usePermissions';
 
 const { canVisit } = usePermissions();
@@ -61,7 +62,7 @@ const thClass = 'px-4 py-2.5 text-start text-xs font-medium text-text-secondary'
                     <tr v-if="!users || !users.data || users.data.length === 0">
                         <td colspan="4" class="px-4 py-12 text-center">
                             <div class="flex flex-col items-center gap-3">
-                                <Users :size="22" class="text-text-tertiary" />
+                                <IconUsers :size="22" class="text-text-tertiary" />
                                 <p class="text-sm font-medium text-text-primary">{{ t('admin.users.noUsersTitle') }}</p>
                                 <p class="text-sm text-text-tertiary">{{ t('admin.users.noUsersHint') }}</p>
                                 <Button v-if="canVisit('users.create')" variant="default" size="sm" as="Link" :href="route('users.create')">
