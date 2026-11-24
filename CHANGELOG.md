@@ -6,6 +6,19 @@ Full release notes, with the pull request behind each change, are on [GitHub Rel
 
 ## [Unreleased]
 
+## [2.7.1] - 2026-11-24
+
+A fix release for 2.7.0. No migrations. See the [2.7.1 release notes](docs/releases/2.7.1.md).
+
+### Fixed
+
+- **"/" over dialogs.** Pressing "/" while a dialog is open no longer opens global search behind it (#477).
+- **Product photos load once.** Photo URLs carry a version, so browsers now cache each photo privately instead of downloading it on every page (#477).
+- **Focus rings in the top bar.** Breadcrumb links no longer have their keyboard focus ring clipped (#477).
+- **Table text.** Field errors and notes inside table rows wrap instead of running out of the cell, and product names, stock audit and warehouse descriptions get their width back, truncating with the full text on hover (#477).
+- **Breadcrumbs at laptop widths.** Between 1024 and 1279px only the shared "Workspace" crumb is hidden, never a page's own first crumb (#477).
+- **Icons.** The last generic icons in empty states (Returns, Work Orders, Users, Roles, Plugins) use the Inventoros set, and an icon with a label is no longer hidden from screen readers (#477).
+
 ## [2.7.0] - 2026-11-24
 
 This release adds one migration, which is additive. See the [2.7.0 release notes](docs/releases/2.7.0.md).

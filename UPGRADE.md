@@ -1,5 +1,11 @@
 # Upgrade Guide
 
+## Upgrading from v2.7.0 to v2.7.1
+
+Requirements are unchanged and there are no migrations. Back up first, then
+update the same way as for 2.6.0 below, with the version set to 2.7.1. Docker
+installs pull the 2.7.1 image and must not use the in-app updater.
+
 ## Upgrading from v2.6.2 to v2.7.0
 
 Requirements are unchanged. Back up first, then update the same way as for
