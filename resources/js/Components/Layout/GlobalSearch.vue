@@ -177,7 +177,7 @@ function handleGlobalKeydown(e) {
         !isOpen.value &&
         !isTypingTarget(e.target) &&
         // Not over another open dialog.
-        !document.querySelector('[role="dialog"][aria-modal="true"]')
+        !document.querySelector('dialog[open], [aria-modal="true"]')
     ) {
         e.preventDefault();
         open();

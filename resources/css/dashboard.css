@@ -1680,6 +1680,11 @@ a.dashboard-metric:hover {
 .dashboard .dashboard-stock-grid.dashboard-one-column {
     grid-template-columns: minmax(0, 1fr);
 }
+/* With recent orders or stock by category hidden, the other takes the full
+ * row, wide screens included. */
+.dashboard .dashboard-main-grid.dashboard-one-column {
+    grid-template-columns: minmax(0, 1fr);
+}
 /* Comfortable touch targets on phones. */
 @media (max-width: 650px) {
     .dashboard .dashboard-stock-foot button {

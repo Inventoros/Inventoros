@@ -207,6 +207,45 @@ class ExternalStorageTest extends TestCase
         $this->actingAs($other)->get($product->image_urls[0])->assertNotFound();
     }
 
+    public function test_versioned_image_requests_are_cached_privately_and_unversioned_ones_are_not(): void
+    {
+        $product = Product::factory()->create(['organization_id' => $this->admin->organization_id, 'images' => ['products/cached.png']]);
+        Storage::disk('public')->put('products/cached.png', base64_decode(explode(',', self::PNG)[1]));
+        $versioned = $product->image_urls[0];
+        $this->assertStringContainsString('v='.sha1('products/cached.png'), $versioned);
+
+        $cacheControl = $this->get($versioned)->assertOk()->headers->get('Cache-Control');
+        $this->assertStringContainsString('private', $cacheControl);
+        $this->assertStringContainsString('max-age=31536000', $cacheControl);
+        $this->assertStringContainsString('immutable', $cacheControl);
+        $this->assertStringNotContainsString('public', $cacheControl);
+
+        foreach ([
+            route('products.images.show', [$product, 0]),
+            route('products.images.show', [$product, 0, 'v' => sha1('products/other.png')]),
+        ] as $url) {
+            $cacheControl = $this->get($url)->assertOk()->headers->get('Cache-Control');
+            $this->assertStringContainsString('no-store', $cacheControl);
+            $this->assertStringContainsString('private', $cacheControl);
+            $this->assertStringNotContainsString('max-age=31536000', $cacheControl);
+        }
+    }
+
+    public function test_products_index_sends_versioned_image_urls_for_each_row(): void
+    {
+        $withImage = Product::factory()->create(['organization_id' => $this->admin->organization_id, 'images' => ['products/listed.png']]);
+        Product::factory()->create(['organization_id' => $this->admin->organization_id, 'images' => null]);
+
+        $this->get(route('products.index'))->assertOk()->assertInertia(fn (Assert $page) => $page
+            ->component('Products/Index')
+            ->has('products.data', 2)
+            ->has('products.data.0.image_urls')
+            ->has('products.data.1.image_urls')
+            ->where('products.data', fn ($rows) => collect($rows)->firstWhere('id', $withImage->id)['image_urls'] === [
+                route('products.images.show', ['product' => $withImage->id, 'index' => 0, 'v' => sha1('products/listed.png')], absolute: false),
+            ]));
+    }
+
     public function test_api_clients_can_read_and_retain_private_images_without_public_bucket_urls(): void
     {
         config(['filesystems.uploads_disk' => 's3']);

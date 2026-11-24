@@ -54,13 +54,20 @@ class ScreenshotProductImagesSeeder extends Seeder
 
         foreach (glob(self::ASSET_DIR.'/*.jpg') ?: [] as $file) {
             $sku = pathinfo($file, PATHINFO_FILENAME);
-            $product = Product::withoutGlobalScopes()->where('organization_id', $orgId)->where('sku', $sku)->first();
+            // withoutGlobalScopes() also lifts the soft-delete scope, so
+            // exclude trashed products by hand.
+            $product = Product::withoutGlobalScopes()->where('organization_id', $orgId)->where('sku', $sku)
+                ->whereNull((new Product)->getQualifiedDeletedAtColumn())->first();
             if ($product === null) {
                 continue;
             }
 
             $path = 'products/demo-'.strtolower($sku).'.jpg';
-            Storage::disk($disk)->put($path, (string) file_get_contents($file));
+            if (! Storage::disk($disk)->put($path, (string) file_get_contents($file))) {
+                $this->command?->warn("Could not store the screenshot photo for {$sku}; skipped.");
+
+                continue;
+            }
             $product->forceFill([
                 'images' => [$path],
                 'image_disks' => [$path => $disk],

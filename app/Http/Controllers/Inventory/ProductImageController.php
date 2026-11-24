@@ -20,8 +20,16 @@ final class ProductImageController extends Controller
         $disk = Storage::disk($product->image_disks[$path] ?? 'public');
         abort_unless($disk->exists($path), 404);
 
+        // Image URLs carry v=sha1(path), so a matching version names one exact
+        // file and can be cached for good. Images stay org-scoped and behind
+        // auth, so the cache is always private to the signed-in browser.
+        $version = $request->query('v');
+        $cacheControl = is_string($version) && hash_equals(sha1($path), $version)
+            ? 'private, max-age=31536000, immutable'
+            : 'private, no-store';
+
         return $disk->response($path, null, [
-            'Cache-Control' => 'private, no-store',
+            'Cache-Control' => $cacheControl,
             'X-Content-Type-Options' => 'nosniff',
         ]);
     }
