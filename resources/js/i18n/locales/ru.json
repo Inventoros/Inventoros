@@ -394,7 +394,11 @@
       "navigate": "перейти",
       "open": "открыть",
       "close": "закрыть"
-    }
+    },
+    "sectionSwitcher": "Разделы",
+    "accountMenu": "Меню аккаунта",
+    "collapseSidebar": "Свернуть боковую панель",
+    "expandSidebar": "Развернуть боковую панель"
   },
   "dashboard": {
     "atSellingPrice": "по цене продажи",

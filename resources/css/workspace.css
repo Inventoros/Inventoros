@@ -1,30 +1,187 @@
 /* Shared presentation for a quiet, record-focused workspace. */
-.workspace-shell { --workspace-sidebar-width: 232px; }
-.workspace-sidebar { width: var(--workspace-sidebar-width); }
+/*
+ * Two-level sidebar: a navy section rail and a light panel with the selected
+ * section's pages. The main column is offset by whatever is docked: the rail
+ * alone (768-1279px, or a collapsed panel) or rail and panel (1280px+).
+ */
+.workspace-shell {
+    --workspace-rail-width: 60px;
+    --workspace-panel-width: 212px;
+    --workspace-sidebar-width: var(--workspace-rail-width);
+    --rail-bg: 220 66% 21%;
+    --rail-fg: 0 0% 100%;
+    --rail-muted: 218 45% 82%;
+    --rail-hover: 220 52% 30%;
+    --rail-selected: 219 70% 47%;
+    --rail-focus: 38 95% 58%;
+    --rail-logo-bg: 0 0% 100%;
+}
+.dark .workspace-shell {
+    --rail-bg: 228 18% 7%;
+    --rail-muted: 220 10% 62%;
+    --rail-hover: 225 12% 15%;
+    --rail-selected: 221 83% 53%;
+    --rail-logo-bg: 225 12% 15%;
+}
+.workspace-shell.is-panel-docked { --workspace-sidebar-width: calc(var(--workspace-rail-width) + var(--workspace-panel-width)); }
+.workspace-sidebar { width: calc(var(--workspace-rail-width) + var(--workspace-panel-width)); }
+.workspace-sidebar.is-rail-only { width: var(--workspace-rail-width); }
+
+.workspace-rail {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex: none;
+    flex-direction: column;
+    align-items: center;
+    width: var(--workspace-rail-width);
+    padding-block: 12px 14px;
+    background: hsl(var(--rail-bg));
+    color: hsl(var(--rail-fg));
+}
+.dark .workspace-rail { border-inline-end: 1px solid hsl(var(--border-subtle)); }
+.workspace-rail-logo {
+    display: grid;
+    place-items: center;
+    width: 38px;
+    height: 38px;
+    margin-bottom: 18px;
+    border-radius: 11px;
+    background: hsl(var(--rail-logo-bg));
+    box-shadow: 0 1px 2px rgb(0 0 0 / 0.18);
+}
+.workspace-rail-logo img { width: 24px; height: 24px; object-fit: contain; }
+.workspace-rail-sections,
+.workspace-rail-foot {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+.workspace-rail-foot { margin-top: auto; gap: 12px; }
+.workspace-rail-button {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    color: hsl(var(--rail-muted));
+    transition: background-color 120ms ease, color 120ms ease;
+}
+.workspace-rail-button:hover { background: hsl(var(--rail-hover)); color: hsl(var(--rail-fg)); }
+.workspace-rail-button.is-selected {
+    background: hsl(var(--rail-selected));
+    color: hsl(var(--rail-fg));
+    box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.12);
+}
+/* Amber reads on the navy rail where the usual blue ring would not. */
+.workspace-rail-button:focus-visible {
+    outline: 2px solid hsl(var(--rail-focus));
+    outline-offset: 2px;
+}
+.workspace-rail-avatar {
+    width: 34px;
+    height: 34px;
+    border-radius: 999px;
+    background: hsl(0 0% 100%);
+    color: hsl(var(--rail-bg));
+    font-size: 13px;
+    font-weight: 600;
+}
+.dark .workspace-rail-avatar { background: hsl(var(--rail-hover)); color: hsl(var(--rail-fg)); }
+.workspace-rail-avatar:hover { background: hsl(0 0% 92%); color: hsl(var(--rail-bg)); }
+.dark .workspace-rail-avatar:hover { background: hsl(var(--rail-selected)); color: hsl(var(--rail-fg)); }
+.workspace-rail-dot {
+    position: absolute;
+    top: 7px;
+    inset-inline-end: 7px;
+    width: 8px;
+    height: 8px;
+    border-radius: 999px;
+    background: hsl(var(--rail-focus));
+    box-shadow: 0 0 0 2px hsl(var(--rail-bg));
+}
+.workspace-rail-tooltip {
+    position: absolute;
+    top: 50%;
+    inset-inline-start: calc(100% + 10px);
+    z-index: 70;
+    padding: 4px 8px;
+    border-radius: 6px;
+    background: hsl(222 22% 13%);
+    color: hsl(0 0% 100%);
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 16px;
+    white-space: nowrap;
+    pointer-events: none;
+    opacity: 0;
+    transform: translate(-4px, -50%);
+    transition: opacity 120ms ease, transform 120ms ease;
+}
+[dir="rtl"] .workspace-rail-tooltip { transform: translate(4px, -50%); }
+.dark .workspace-rail-tooltip { background: hsl(0 0% 96%); color: hsl(222 22% 13%); }
+.workspace-rail-button:hover .workspace-rail-tooltip,
+.workspace-rail-button:focus-visible .workspace-rail-tooltip {
+    opacity: 1;
+    transform: translate(0, -50%);
+}
+/* No hover on touch screens; the drawer shows the panel anyway. */
+@media (hover: none) {
+    .workspace-rail-tooltip { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .workspace-rail-tooltip { transition: none; }
+}
+
+.workspace-panel {
+    display: flex;
+    flex-direction: column;
+    width: var(--workspace-panel-width);
+    min-width: 0;
+    background: hsl(var(--surface-base));
+    border-inline-end: 1px solid hsl(var(--border-subtle));
+}
+/* Rail only: the panel opens over the page beside the rail. */
+.workspace-sidebar.is-rail-only .workspace-panel {
+    position: absolute;
+    inset-block: 0;
+    inset-inline-start: var(--workspace-rail-width);
+    box-shadow: 12px 0 32px -12px rgb(15 23 42 / 0.28);
+}
+[dir="rtl"] .workspace-sidebar.is-rail-only .workspace-panel { box-shadow: -12px 0 32px -12px rgb(15 23 42 / 0.28); }
+
+.workspace-account { position: relative; }
+.workspace-account-panel {
+    position: absolute;
+    bottom: 0;
+    inset-inline-start: calc(100% + 12px);
+    z-index: 80;
+    width: 232px;
+    border: 1px solid hsl(var(--border-subtle));
+    border-radius: 10px;
+    background: hsl(var(--surface-raised));
+    color: hsl(var(--text-primary));
+    box-shadow: 0 16px 40px -12px rgb(15 23 42 / 0.3);
+}
+@media (forced-colors: active) {
+    .workspace-rail-button.is-selected { outline: 2px solid Highlight; }
+}
 .workspace-brand { height: 48px; letter-spacing: -0.035em; }
 .workspace-context { border-bottom: 1px solid hsl(var(--border-subtle)); padding-block-end: 8px; }
 .workspace-section-label { letter-spacing: 0; padding-block: 2px; }
 .workspace-nav > div { margin-bottom: 15px; }
 .workspace-nav-item { border: 1px solid transparent; font-weight: 450; }
 .workspace-nav-item { position: relative; }
-/* Selected: a subtle tint and a narrow blue marker at the start edge. */
+/* Selected: a subtle tint; the rail already marks the section. */
 .workspace-nav-item.is-active {
     background: hsl(var(--accent-soft));
     border-color: transparent;
     font-weight: 500;
 }
-.workspace-nav-item.is-active::before {
-    content: "";
-    position: absolute;
-    inset-block: 6px;
-    inset-inline-start: -12px;
-    width: 3px;
-    border-radius: 0 3px 3px 0;
-    background: hsl(var(--accent));
-}
-[dir="rtl"] .workspace-nav-item.is-active::before { border-radius: 3px 0 0 3px; }
 @media (forced-colors: active) {
-    .workspace-nav-item.is-active::before { background: Highlight; }
+    .workspace-nav-item.is-active { border-color: Highlight; }
 }
 .workspace-topbar { height: 48px; }
 /* Every page sits on the same soft grey, with panels in white. */

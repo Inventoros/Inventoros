@@ -6,11 +6,13 @@
  * and wrap your page content in it; the default slot is the page body.
  *
  * Design notes:
- *   - Light, single-surface sidebar (matches the workspace, not a dark slab)
- *   - Lucide icons (no inline SVG paths)
- *   - 232px fixed width — no collapse rail; mobile drawer instead
- *   - Section labels (UPPERCASE, tracking-wider) group related nav items
- *   - Workspace badge at top, user pill at bottom
+ *   - Two-level sidebar: a navy rail with one icon per section (settings
+ *     and the account menu at its foot) and a light panel listing the
+ *     selected section's pages. The panel follows the current page.
+ *   - 1280px and up: rail and panel docked; the panel can be collapsed.
+ *     768-1279px: rail only, the panel opens as a flyout. Phones: a drawer
+ *     holding both.
+ *   - Inventoros icon set (resources/js/icons)
  *   - Branded header, workspace card, quiet selected navigation
  *   - Top strip keeps real organization, warehouse and account controls
  *   - Density: 8px nav rows, 13px font, hover = subtle surface change
@@ -20,10 +22,10 @@ import { containTabFocus } from '@/lib/focus';
 import { Link, router, usePage } from '@inertiajs/vue3';
 import { useI18n } from 'vue-i18n';
 import {
-    PackageSearch,
+    PanelLeftClose,
+    PanelLeftOpen,
     Search,
     Menu,
-    LogOut,
     X,
 } from '@lucide/vue';
 import {
@@ -58,6 +60,8 @@ import FlashMessages from '@/Components/Layout/FlashMessages.vue';
 import GlobalSearch from '@/Components/Layout/GlobalSearch.vue';
 import NotificationDropdown from '@/Components/Layout/NotificationDropdown.vue';
 import ThemeToggle from '@/Components/Layout/ThemeToggle.vue';
+import AccountMenu from '@/Components/Layout/AccountMenu.vue';
+import { lastNavSection } from '@/lib/navSection';
 import WarehouseSwitcher from '@/Components/WarehouseSwitcher.vue';
 import OrganizationSwitcher from '@/Components/OrganizationSwitcher.vue';
 import LanguageSwitcher from '@/Components/LanguageSwitcher.vue';
@@ -75,24 +79,84 @@ const isMobile = ref(false);
 const globalSearchRef = ref(null);
 const mobileTrigger = ref(null);
 const sidebarRef = ref(null);
+const panelRef = ref(null);
 let removeNavigationListener;
 let removeMediaListener;
 let releaseDrawerScroll;
 
-// Close mobile drawer on navigation
+/*
+ * Sidebar modes. Phones (<768px) get a drawer with the rail and panel. From
+ * 768px the rail is docked; from 1280px the panel docks beside it unless the
+ * user collapsed it, which is remembered in this browser. When only the rail
+ * is docked, picking a section opens its panel as a flyout.
+ */
+const COLLAPSED_KEY = 'inventoros.sidebar.collapsed';
+const readCollapsed = () => {
+    try {
+        return window.localStorage.getItem(COLLAPSED_KEY) === '1';
+    } catch {
+        return false;
+    }
+};
+const isWide = ref(true);
+const collapsed = ref(typeof window !== 'undefined' && readCollapsed());
+const flyoutOpen = ref(false);
+const panelDocked = computed(() => !isMobile.value && isWide.value && !collapsed.value);
+const railOnly = computed(() => !isMobile.value && !panelDocked.value);
+const panelVisible = computed(() => isMobile.value || panelDocked.value || flyoutOpen.value);
+
+const setCollapsed = async (value) => {
+    collapsed.value = value;
+    flyoutOpen.value = false;
+    try {
+        window.localStorage.setItem(COLLAPSED_KEY, value ? '1' : '0');
+    } catch {
+        // Private windows may refuse storage; the choice then lasts this page.
+    }
+    await nextTick();
+    sidebarRef.value?.querySelector(value ? '.workspace-rail-button.is-selected' : '.workspace-panel-toggle')?.focus();
+};
+
+// Close the drawer and the flyout on navigation.
 onMounted(() => {
     removeNavigationListener = router.on('start', () => {
         mobileOpen.value = false;
+        flyoutOpen.value = false;
     });
     const media = window.matchMedia('(max-width: 767px)');
+    const wide = window.matchMedia('(min-width: 1280px)');
     const updateMobile = () => {
         isMobile.value = media.matches;
+        isWide.value = wide.matches;
         if (!media.matches) mobileOpen.value = false;
+        flyoutOpen.value = false;
     };
     updateMobile();
     media.addEventListener('change', updateMobile);
-    removeMediaListener = () => media.removeEventListener('change', updateMobile);
+    wide.addEventListener('change', updateMobile);
+    document.addEventListener('pointerdown', closeFlyoutOutside);
+    removeMediaListener = () => {
+        media.removeEventListener('change', updateMobile);
+        wide.removeEventListener('change', updateMobile);
+        document.removeEventListener('pointerdown', closeFlyoutOutside);
+    };
 });
+
+function closeFlyoutOutside(event) {
+    if (flyoutOpen.value && sidebarRef.value && !sidebarRef.value.contains(event.target)) flyoutOpen.value = false;
+}
+
+const closeFlyout = async (returnFocus = false) => {
+    if (!flyoutOpen.value) return;
+    flyoutOpen.value = false;
+    if (!returnFocus) return;
+    await nextTick();
+    sidebarRef.value?.querySelector('.workspace-rail-button.is-selected')?.focus();
+};
+
+const onSidebarFocusOut = (event) => {
+    if (flyoutOpen.value && event.relatedTarget && !sidebarRef.value?.contains(event.relatedTarget)) flyoutOpen.value = false;
+};
 
 /**
  * Lock the page behind the mobile drawer.
@@ -120,11 +184,12 @@ onBeforeUnmount(() => {
 
 // GlobalSearch owns Cmd/Ctrl-K; the shell handles the navigation drawer.
 const handleHotkey = (e) => {
-    if (e.key === 'Escape') mobileOpen.value = false;
+    if (e.key !== 'Escape') return;
+    if (flyoutOpen.value) closeFlyout(true);
+    mobileOpen.value = false;
 };
 onMounted(() => window.addEventListener('keydown', handleHotkey));
 
-const user = computed(() => page.props.auth?.user);
 // Requests waiting for this user's decision, shown on the Approvals item.
 const pendingApprovalsCount = computed(() => Number(page.props.pendingApprovalsCount || 0));
 const workspaceName = computed(() => page.props.auth?.organization?.name || 'Inventoros');
@@ -242,6 +307,60 @@ const visibleSections = computed(() =>
 );
 
 const isActive = (item) => item.active.some((pattern) => route().current(pattern));
+
+/*
+ * The rail: one button per visible section, Admin at its foot beside the
+ * account menu. The panel shows the selected section: the one picked on
+ * this page, else the one holding the current page, else the last picked.
+ */
+const railIcons = {
+    workspace: IconDashboard,
+    catalog: IconCategories,
+    stock: IconStockByWarehouse,
+    insights: IconReports,
+    plugins: IconPlugins,
+    admin: IconSettings,
+};
+const railSections = computed(() => visibleSections.value.filter((section) => section.id !== 'admin'));
+const adminSection = computed(() => visibleSections.value.find((section) => section.id === 'admin'));
+const routeSectionId = computed(() => visibleSections.value.find((section) => section.items.some(isActive))?.id);
+const pickedSectionId = ref(null);
+const selectedSection = computed(() => {
+    const id = pickedSectionId.value ?? routeSectionId.value ?? lastNavSection.value;
+    return visibleSections.value.find((section) => section.id === id) ?? visibleSections.value[0];
+});
+const sectionBadge = (section) => section.items.reduce((total, item) => total + (Number(item.badge) || 0), 0);
+const sectionWaiting = (section) => (section.id !== selectedSection.value?.id || !panelVisible.value ? sectionBadge(section) : 0);
+const railLabel = (section) => {
+    const waiting = sectionWaiting(section);
+    return waiting ? `${section.label}, ${t('nav.waitingCount', { count: waiting })}` : section.label;
+};
+
+const selectSection = async (section, event) => {
+    const reselected = selectedSection.value?.id === section.id;
+    pickedSectionId.value = section.id;
+    lastNavSection.value = section.id;
+    if (!railOnly.value) return;
+    flyoutOpen.value = !(reselected && flyoutOpen.value);
+    // From the keyboard, move into the panel that just opened.
+    if (flyoutOpen.value && event?.detail === 0) {
+        await nextTick();
+        panelRef.value?.querySelector('.workspace-nav a[href]')?.focus();
+    }
+};
+
+// Arrow keys, Home and End move between the rail's buttons.
+const onRailKeydown = (event) => {
+    if (!['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key)) return;
+    const buttons = [...event.currentTarget.querySelectorAll('.workspace-rail-button')];
+    const current = buttons.indexOf(document.activeElement);
+    if (current === -1) return;
+    event.preventDefault();
+    const next = event.key === 'Home' ? 0
+        : event.key === 'End' ? buttons.length - 1
+        : (current + (event.key === 'ArrowUp' ? -1 : 1) + buttons.length) % buttons.length;
+    buttons[next]?.focus();
+};
 // Shown on the search trigger so the shortcut matches the keyboard in use.
 const isMac = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.userAgentData?.platform || navigator.platform || '');
 const searchShortcut = isMac ? '⌘K' : 'Ctrl K';
@@ -250,7 +369,7 @@ const searchKeys = isMac ? 'Meta+K' : 'Control+K';
 </script>
 
 <template>
-    <div class="workspace-shell min-h-screen bg-surface-canvas text-text-primary" :class="{ 'app-layout-table': tablePage }">
+    <div class="workspace-shell min-h-screen bg-surface-canvas text-text-primary" :class="{ 'app-layout-table': tablePage, 'is-panel-docked': panelDocked }">
         <!-- Mobile top bar -->
         <div class="app-mobile-bar md:hidden fixed top-0 inset-x-0 z-40 h-12 flex items-center justify-between px-4 bg-surface-base border-b border-border-subtle">
             <Link :href="route('dashboard')" class="flex min-h-11 items-center gap-2">
@@ -279,52 +398,102 @@ const searchKeys = isMac ? 'Meta+K' : 'Control+K';
             aria-hidden="true"
         />
 
-        <!-- Sidebar -->
+        <!-- Sidebar: section rail + section panel -->
         <aside
             ref="sidebarRef"
             id="workspace-navigation"
             @keydown="event => { if (isMobile && mobileOpen) containTabFocus(event, sidebarRef); }"
+            @focusout="onSidebarFocusOut"
             :inert="isMobile && !mobileOpen"
             :class="[
-                'workspace-sidebar fixed md:fixed inset-y-0 start-0 z-50 w-60 flex flex-col',
-                'bg-surface-base border-e border-border-subtle',
+                'workspace-sidebar fixed inset-y-0 start-0 z-50 flex',
                 'transform transition-transform duration-200',
+                { 'is-rail-only': railOnly, 'is-flyout': railOnly && flyoutOpen },
                 mobileOpen ? 'translate-x-0' : '-translate-x-full rtl:translate-x-full md:translate-x-0 rtl:md:translate-x-0',
                 'pt-12 md:pt-0',
             ]"
         >
-            <Link :href="route('dashboard')" class="workspace-brand flex h-14 shrink-0 items-center gap-2 px-5 text-lg font-semibold tracking-tight ds-focus-ring">
-                <img src="/images/brand/inventoros_icon_transparent_512.png" alt="" class="h-6 w-6 object-contain" />
-                <span>Inventoros</span>
-            </Link>
-            <!-- Workspace context retains the organization's custom logo. -->
-            <div class="workspace-context mx-3 mb-2 flex shrink-0 items-center rounded-md">
-                <Link
-                    :href="route('dashboard')"
-                    :title="workspaceName"
-                    class="flex items-center gap-2.5 w-full px-2 py-2 rounded-md hover:bg-surface-overlay transition-colors ds-focus-ring"
-                >
-                    <img v-if="workspaceLogo" :src="workspaceLogo" :alt="workspaceName" class="h-6 w-6 shrink-0 object-contain" />
-                    <span v-else class="h-6 w-6 shrink-0 rounded-md border border-border-subtle bg-surface-raised grid place-items-center text-xs font-semibold">{{ workspaceName.charAt(0).toUpperCase() }}</span>
-                    <span class="text-xs font-semibold tracking-tight truncate flex-1 text-start">
-                        {{ workspaceName }}
-                    </span>
-                    <PackageSearch :size="14" :stroke-width="1.6" class="text-text-tertiary" />
-                </Link>
+            <div class="workspace-rail" @keydown="onRailKeydown">
+                <div class="workspace-rail-logo">
+                    <img src="/images/brand/inventoros_icon_transparent_512.png" alt="" />
+                </div>
+                <nav class="workspace-rail-sections" :aria-label="t('nav.sectionSwitcher')">
+                    <button
+                        v-for="section in railSections"
+                        :key="section.id"
+                        type="button"
+                        :class="['workspace-rail-button', { 'is-selected': section.id === selectedSection?.id }]"
+                        :aria-label="railLabel(section)"
+                        :aria-pressed="section.id === selectedSection?.id"
+                        :aria-expanded="railOnly ? (flyoutOpen && section.id === selectedSection?.id) : undefined"
+                        aria-controls="workspace-panel"
+                        @click="event => selectSection(section, event)"
+                    >
+                        <component :is="railIcons[section.id] || IconPlugins" :size="20" :stroke-width="1.7" />
+                        <span v-if="sectionWaiting(section)" class="workspace-rail-dot" aria-hidden="true" />
+                        <span class="workspace-rail-tooltip" aria-hidden="true">{{ section.label }}</span>
+                    </button>
+                </nav>
+                <div class="workspace-rail-foot">
+                    <button
+                        v-if="adminSection"
+                        type="button"
+                        :class="['workspace-rail-button', { 'is-selected': adminSection.id === selectedSection?.id }]"
+                        :aria-label="railLabel(adminSection)"
+                        :aria-pressed="adminSection.id === selectedSection?.id"
+                        :aria-expanded="railOnly ? (flyoutOpen && adminSection.id === selectedSection?.id) : undefined"
+                        aria-controls="workspace-panel"
+                        @click="event => selectSection(adminSection, event)"
+                    >
+                        <component :is="railIcons.admin" :size="20" :stroke-width="1.7" />
+                        <span class="workspace-rail-tooltip" aria-hidden="true">{{ adminSection.label }}</span>
+                    </button>
+                    <AccountMenu />
+                </div>
             </div>
 
-            <!-- Nav -->
-            <nav class="workspace-nav flex-1 mt-4 overflow-y-auto ds-scroll px-3 pb-4">
-                <div v-for="section in visibleSections" :key="section.id" class="mb-4">
+            <div v-show="panelVisible" id="workspace-panel" ref="panelRef" class="workspace-panel">
+                <div class="workspace-brand flex shrink-0 items-center gap-1 ps-5 pe-2">
+                    <Link :href="route('dashboard')" class="flex-1 min-w-0 truncate text-lg font-semibold tracking-tight rounded-md ds-focus-ring">Inventoros</Link>
+                    <button
+                        v-if="!isMobile && isWide"
+                        type="button"
+                        class="workspace-panel-toggle p-1.5 rounded-md text-text-tertiary hover:text-text-primary hover:bg-surface-overlay ds-focus-ring"
+                        :aria-label="panelDocked ? t('nav.collapseSidebar') : t('nav.expandSidebar')"
+                        :title="panelDocked ? t('nav.collapseSidebar') : t('nav.expandSidebar')"
+                        @click="setCollapsed(panelDocked)"
+                    >
+                        <PanelLeftClose v-if="panelDocked" :size="16" :stroke-width="1.7" class="rtl:-scale-x-100" aria-hidden="true" />
+                        <PanelLeftOpen v-else :size="16" :stroke-width="1.7" class="rtl:-scale-x-100" aria-hidden="true" />
+                    </button>
+                </div>
+                <!-- Workspace context retains the organization's custom logo. -->
+                <div class="workspace-context mx-3 mb-2 flex shrink-0 items-center rounded-md">
+                    <Link
+                        :href="route('dashboard')"
+                        :title="workspaceName"
+                        class="flex items-center gap-2.5 w-full px-2 py-2 rounded-md hover:bg-surface-overlay transition-colors ds-focus-ring"
+                    >
+                        <img v-if="workspaceLogo" :src="workspaceLogo" :alt="workspaceName" class="h-6 w-6 shrink-0 object-contain" />
+                        <span v-else class="h-6 w-6 shrink-0 rounded-md border border-border-subtle bg-surface-raised grid place-items-center text-xs font-semibold">{{ workspaceName.charAt(0).toUpperCase() }}</span>
+                        <span class="text-xs font-semibold tracking-tight truncate flex-1 text-start">
+                            {{ workspaceName }}
+                        </span>
+                    </Link>
+                </div>
+
+                <!-- The selected section's pages -->
+                <nav v-if="selectedSection" class="workspace-nav flex-1 mt-3 overflow-y-auto ds-scroll px-3 pb-4" :aria-label="selectedSection.label">
                     <p class="workspace-section-label px-2 mb-1 text-[11px] font-medium text-text-tertiary">
-                        {{ section.label }}
+                        {{ selectedSection.label }}
                     </p>
                     <div class="space-y-px">
                         <component
                             :is="item.external ? 'a' : Link"
-                            v-for="item in section.items"
+                            v-for="item in selectedSection.items"
                             :key="item.name"
                             :href="item.href"
+                            :aria-current="isActive(item) ? 'page' : undefined"
                             :class="[
                                 'workspace-nav-item group flex items-center gap-2.5 h-8 px-2.5 rounded-md text-[13px]',
                                 'transition-colors ds-focus-ring',
@@ -349,34 +518,7 @@ const searchKeys = isMac ? 'Meta+K' : 'Control+K';
                             </span>
                         </component>
                     </div>
-                </div>
-            </nav>
-
-            <!-- User pill -->
-            <div class="px-3 py-3 border-t border-border-subtle shrink-0">
-                <Link
-                    :href="route('settings.account.index')"
-                    data-testid="user-menu"
-                    class="flex items-center gap-2.5 w-full px-2 py-1.5 rounded-md hover:bg-surface-overlay transition-colors ds-focus-ring"
-                >
-                    <span class="h-7 w-7 rounded-full bg-surface-overlay grid place-items-center text-[11px] font-semibold text-text-primary shrink-0">
-                        {{ (user?.name || '?').charAt(0).toUpperCase() }}
-                    </span>
-                    <div class="min-w-0 flex-1 text-start">
-                        <p class="text-[13px] font-medium text-text-primary truncate">{{ user?.name }}</p>
-                        <p class="text-[11px] text-text-tertiary truncate">{{ user?.email }}</p>
-                    </div>
-                </Link>
-                <Link
-                    :href="route('logout')"
-                    method="post"
-                    as="button"
-                    data-testid="logout"
-                    class="flex items-center gap-2.5 w-full px-2 py-2 rounded-md text-sm text-text-secondary hover:bg-surface-overlay ds-focus-ring"
-                >
-                    <LogOut :size="16" />
-                    {{ t('nav.logOut') }}
-                </Link>
+                </nav>
             </div>
         </aside>
 

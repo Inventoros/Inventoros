@@ -191,9 +191,10 @@ test('mobile navigation contains keyboard focus and returns it after Escape', as
     const toggle = page.getByRole('button', { name: 'Toggle navigation' });
     await toggle.click();
     const nav = page.locator('#workspace-navigation');
-    await expect(nav.locator('a').first()).toBeFocused();
+    // Focus lands on the first rail button; Shift+Tab wraps to the panel's last page link.
+    await expect(nav.locator('.workspace-rail-button').first()).toBeFocused();
     await page.keyboard.press('Shift+Tab');
-    await expect(nav.getByRole('button', { name: 'Log Out', exact: true })).toBeFocused();
+    await expect(nav.locator('#workspace-panel a[href]').last()).toBeFocused();
     await page.keyboard.press('Escape');
     await expect(toggle).toBeFocused();
     await expect(nav).toHaveAttribute('inert', '');

@@ -447,6 +447,8 @@ register_menu_item([
 ]);
 ```
 
+Menu items appear in the sidebar's **Plugins** section: the plug icon on the sidebar rail opens it, and it opens on its own while the user is on one of the items' pages (set `active_routes` to the route names that should count). The section is hidden when no item is visible to the user.
+
 Items whose route does not exist are dropped. Submenu entries (`'submenu' => [[...], ...]`) are filtered by their own `permission` the same way, and take a `label_key` too.
 
 `label_key` translates the item: the browser shows the key from your bundle's messages (`plugin.i18n.addMessages('en', { nav: { title: 'My Plugin' } })`, see [Translations](#translations)) in the user's language, falling back to English, and shows `label` until your bundle has loaded or when the key is missing. The key must sit under `plugins.{your-slug}.`; any other key is ignored (and logged), so a plugin cannot borrow or spoof a core string. Plain `label` strings keep working on their own. On cores without this, `label_key` is ignored and `label` is shown.

@@ -46,7 +46,7 @@
 
 ### Approval Workflows
 - Optional approval for purchase orders, manual stock adjustments and stock transfers, with thresholds
-- A Pending approvals page with a sidebar count; all workflows are off by default
+- A Pending approvals page with a count in the sidebar (and a dot on the Workspace rail icon when that section is closed); all workflows are off by default
 
 ### Reports & Analytics
 - Valuation, stock movement, sales analysis, low stock, dead stock, inventory turnover, profit margin, sales by location and ABC analysis

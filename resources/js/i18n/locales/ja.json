@@ -394,7 +394,11 @@
       "navigate": "移動",
       "open": "開く",
       "close": "閉じる"
-    }
+    },
+    "sectionSwitcher": "セクション",
+    "accountMenu": "アカウントメニュー",
+    "collapseSidebar": "サイドバーを折りたたむ",
+    "expandSidebar": "サイドバーを展開"
   },
   "dashboard": {
     "atSellingPrice": "販売価格ベース",
