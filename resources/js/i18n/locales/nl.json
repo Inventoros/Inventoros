@@ -394,7 +394,11 @@
       "navigate": "navigeren",
       "open": "openen",
       "close": "sluiten"
-    }
+    },
+    "sectionSwitcher": "Secties",
+    "accountMenu": "Accountmenu",
+    "collapseSidebar": "Zijbalk inklappen",
+    "expandSidebar": "Zijbalk uitklappen"
   },
   "dashboard": {
     "atSellingPrice": "tegen verkoopprijs",

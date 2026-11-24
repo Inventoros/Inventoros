@@ -394,7 +394,11 @@
       "navigate": "gezin",
       "open": "aç",
       "close": "kapat"
-    }
+    },
+    "sectionSwitcher": "Bölümler",
+    "accountMenu": "Hesap menüsü",
+    "collapseSidebar": "Kenar çubuğunu daralt",
+    "expandSidebar": "Kenar çubuğunu genişlet"
   },
   "dashboard": {
     "atSellingPrice": "satış fiyatıyla",

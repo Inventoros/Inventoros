@@ -394,7 +394,11 @@
       "navigate": "naviga",
       "open": "apri",
       "close": "chiudi"
-    }
+    },
+    "sectionSwitcher": "Sezioni",
+    "accountMenu": "Menu account",
+    "collapseSidebar": "Comprimi barra laterale",
+    "expandSidebar": "Espandi barra laterale"
   },
   "dashboard": {
     "atSellingPrice": "al prezzo di vendita",

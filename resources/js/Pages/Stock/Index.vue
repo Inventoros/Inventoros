@@ -126,7 +126,7 @@ const field = 'h-9 rounded-md border border-border-subtle bg-surface-canvas px-3
 
 /* Keep the same rows, values and sort state; narrow panels expose the stock
    quantities as records instead of asking a phone user to scroll nine columns. */
-@container stock-balances (max-width: 52rem) {
+@container stock-balances (max-width: 64rem) {
     .stock-compact-sort { display: flex; gap: 12px; padding: 12px; border-bottom: 1px solid hsl(var(--border-subtle)); }
     .stock-sort-field { min-width: 0; flex: 1; }
     .stock-sort-field label { display: block; margin-bottom: 4px; color: hsl(var(--text-secondary)); font-size: 12px; }

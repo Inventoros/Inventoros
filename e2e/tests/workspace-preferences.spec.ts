@@ -18,6 +18,8 @@ for (const mobile of [false, true]) {
         await page.setViewportSize(mobile ? { width: 390, height: 844 } : { width: 1280, height: 800 });
         await signIn(page, { ...E2E_TEST_USER, ...E2E_STAFF_USER });
         if (mobile) await page.getByRole('button', { name: 'Toggle navigation' }).click();
+        // Log Out sits in the account menu at the foot of the sidebar rail.
+        await page.getByTestId('user-menu').click();
         await page.getByTestId('logout').click();
         await page.waitForURL((url) => !url.pathname.includes('/dashboard'));
         await page.goto('/dashboard');
@@ -38,6 +40,8 @@ test('saved organization currency follows navigation into new forms', async ({ p
 
     try {
         // Use Inertia navigation after saving; a full reload must not be needed.
+        // Settings pages show the Admin section; pick Workspace from the rail.
+        await page.locator('aside').getByRole('button', { name: /^Workspace/ }).click();
         await page.locator('aside a[href$="/customers"]').click();
         await page.locator('a[href$="/customers/create"]').first().click();
         await expect(page.locator('#currency')).toHaveValue('JPY');

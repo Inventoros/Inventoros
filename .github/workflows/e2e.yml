@@ -76,6 +76,7 @@ jobs:
             e2e/tests/feature-empty-states.spec.ts \
             e2e/tests/feature-section-tabs.spec.ts \
             e2e/tests/ui-foundations.spec.ts \
+            e2e/tests/dual-sidebar.spec.ts \
             e2e/tests/account-navigation.spec.ts \
             e2e/tests/action-feedback.spec.ts \
             e2e/tests/notification-feedback.spec.ts \

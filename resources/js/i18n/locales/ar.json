@@ -394,7 +394,11 @@
       "navigate": "تنقل",
       "open": "فتح",
       "close": "إغلاق"
-    }
+    },
+    "sectionSwitcher": "الأقسام",
+    "accountMenu": "قائمة الحساب",
+    "collapseSidebar": "طي الشريط الجانبي",
+    "expandSidebar": "توسيع الشريط الجانبي"
   },
   "dashboard": {
     "atSellingPrice": "بسعر البيع",

@@ -394,7 +394,11 @@
       "navigate": "이동",
       "open": "열기",
       "close": "닫기"
-    }
+    },
+    "sectionSwitcher": "섹션",
+    "accountMenu": "계정 메뉴",
+    "collapseSidebar": "사이드바 접기",
+    "expandSidebar": "사이드바 펼치기"
   },
   "dashboard": {
     "atSellingPrice": "판매가 기준",
