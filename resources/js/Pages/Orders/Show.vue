@@ -500,7 +500,7 @@ const formatOrderDate = (date, long = false) =>
                                 </div>
 
                                 <div v-if="order.shipped_at" class="flex items-start gap-3">
-                                    <div class="mt-2 h-2 w-2 shrink-0 rounded-full bg-brand"></div>
+                                    <div class="mt-2 h-2 w-2 shrink-0 rounded-full bg-brand-solid"></div>
                                     <div class="flex-1">
                                         <p class="text-sm font-medium text-text-primary">{{ t('orders.show.orderShipped') }}</p>
                                         <p class="text-xs text-text-tertiary">{{ formatDate(order.shipped_at) }}</p>

@@ -110,7 +110,7 @@ const field = 'h-9 rounded-md border border-border-subtle bg-surface-canvas px-3
                 <template #footer>
                     <nav class="flex flex-wrap gap-2 table-pagination" :aria-label="t('common.pagination')">
                         <template v-for="link in balances.links" :key="link.label">
-                            <Link v-if="link.url" :href="link.url" class="rounded-md border border-border-subtle px-3 py-2 text-sm ds-focus-ring" :class="link.active ? 'bg-brand text-brand-foreground' : 'bg-surface-canvas'" v-html="link.label" />
+                            <Link v-if="link.url" :href="link.url" class="rounded-md border border-border-subtle px-3 py-2 text-sm ds-focus-ring" :class="link.active ? 'bg-brand-solid text-brand-solid-foreground' : 'bg-surface-canvas'" v-html="link.label" />
                             <span v-else class="rounded-md border border-border-subtle px-3 py-2 text-sm text-text-tertiary" v-html="link.label" />
                         </template>
                     </nav>

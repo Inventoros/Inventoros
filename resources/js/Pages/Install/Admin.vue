@@ -191,7 +191,7 @@ const createAdmin = async () => {
                         <button
                             type="submit"
                             :disabled="creating"
-                            class="inline-flex items-center px-6 py-2 bg-brand text-brand-foreground font-semibold rounded-lg hover:bg-brand-hover transition disabled:opacity-50 disabled:cursor-not-allowed"
+                            class="inline-flex items-center px-6 py-2 bg-brand-solid text-brand-solid-foreground font-semibold rounded-lg hover:bg-brand-solid-hover transition disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             <span v-if="creating">{{ t('install.admin.creatingAccount') }}</span>
                             <span v-else>{{ t('install.admin.completeInstallation') }}</span>

@@ -418,6 +418,12 @@
     --color-brand-hover: hsl(var(--accent-hover));
     --color-brand-soft: hsl(var(--accent-soft));
     --color-brand-foreground: hsl(var(--accent-foreground));
+    /* Filled surfaces (primary buttons, checked controls, active page).
+       Separate from --accent so dark mode can fill with a solid blue that
+       carries white text while links stay a lighter, readable blue. */
+    --color-brand-solid: hsl(var(--accent-solid));
+    --color-brand-solid-hover: hsl(var(--accent-solid-hover));
+    --color-brand-solid-foreground: hsl(var(--accent-solid-foreground));
 
     --color-status-success: hsl(var(--status-success));
     --color-status-success-soft: hsl(var(--status-success-soft));

@@ -152,7 +152,14 @@ function handleKeydown(e) {
     }
 }
 
-// Global keyboard shortcut
+// Typing in a field must never be taken over by a shortcut.
+function isTypingTarget(target) {
+    if (!(target instanceof HTMLElement)) return false;
+    return target.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName);
+}
+
+// Global keyboard shortcuts: Cmd/Ctrl+K toggles search anywhere, and "/"
+// opens it when focus is not in a field (as in most web apps).
 function handleGlobalKeydown(e) {
     if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
         e.preventDefault();
@@ -161,6 +168,11 @@ function handleGlobalKeydown(e) {
         } else {
             open();
         }
+        return;
+    }
+    if (e.key === '/' && !e.metaKey && !e.ctrlKey && !e.altKey && !isOpen.value && !isTypingTarget(e.target)) {
+        e.preventDefault();
+        open();
     }
 }
 

@@ -993,13 +993,9 @@ a.dashboard-metric:hover {
     --dashboard-panel-shadow: 0 1px 2px hsl(240 10% 10% / 0.04);
 }
 .dark .dashboard {
-    --dashboard-navy: 218 48% 24%;
-    --dashboard-navy-hover: 218 48% 30%;
+    --dashboard-navy: 219 52% 25%;
+    --dashboard-navy-hover: 219 52% 30%;
     --dashboard-panel-shadow: none;
-}
-/* The soft grey page sits behind the dashboard only. */
-:root:not(.dark) .workspace-main:has(> main > .dashboard) {
-    background: hsl(240 6% 95.5%);
 }
 
 .dashboard h1 {
@@ -1017,13 +1013,6 @@ a.dashboard-metric:hover {
 .dashboard-date {
     font-size: 13px;
     color: hsl(var(--text-secondary));
-}
-.dashboard .dashboard-primary-action {
-    background: hsl(var(--dashboard-navy));
-    color: hsl(var(--dashboard-navy-text));
-}
-.dashboard .dashboard-primary-action:hover {
-    background: hsl(var(--dashboard-navy-hover));
 }
 
 /* Panels */
@@ -1343,9 +1332,6 @@ a.dashboard-metric:hover {
     --dashboard-chart-in: 219 100% 68%;
     --dashboard-panel-edge: 0 0 0 1px hsl(var(--border-subtle));
     --dashboard-panel-shadow: none;
-}
-:root:not(.dark) .workspace-main:has(> main > .dashboard) {
-    background: hsl(40 6% 95%);
 }
 
 /* Panels float on a soft edge and shadow instead of a drawn border. */

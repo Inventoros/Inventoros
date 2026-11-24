@@ -296,7 +296,7 @@ const thClass = 'px-4 py-2.5 text-start text-xs font-medium tracking-tight text-
                             <span class="text-sm text-text-secondary">{{ t('admin.update.updatingApp') }}</span>
                         </div>
                         <div class="h-1.5 w-full overflow-hidden rounded-full bg-surface-sunken">
-                            <div class="h-full w-1/3 animate-pulse rounded-full bg-brand"></div>
+                            <div class="h-full w-1/3 animate-pulse rounded-full bg-brand-solid"></div>
                         </div>
                     </div>
 

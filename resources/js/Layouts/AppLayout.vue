@@ -240,6 +240,11 @@ const visibleSections = computed(() =>
 );
 
 const isActive = (item) => item.active.some((pattern) => route().current(pattern));
+// Shown on the search trigger so the shortcut matches the keyboard in use.
+const isMac = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.userAgentData?.platform || navigator.platform || '');
+const searchShortcut = isMac ? '⌘K' : 'Ctrl K';
+// The same shortcut in the form aria-keyshortcuts expects.
+const searchKeys = isMac ? 'Meta+K' : 'Control+K';
 </script>
 
 <template>
@@ -304,22 +309,6 @@ const isActive = (item) => item.active.some((pattern) => route().current(pattern
                     </span>
                     <PackageSearch :size="14" :stroke-width="1.6" class="text-text-tertiary" />
                 </Link>
-            </div>
-
-            <!-- Cmd-K search trigger -->
-            <div class="px-3 shrink-0">
-                <button
-                    @click="globalSearchRef?.open()"
-                    class="workspace-search w-full flex items-center gap-2 h-8 px-2.5 rounded-md text-xs text-text-secondary
-                           bg-surface-overlay border border-transparent hover:border-border-strong
-                           transition-colors ds-focus-ring"
-                >
-                    <Search :size="13" />
-                    <span class="flex-1 text-start">{{ t('nav.search') }}</span>
-                    <kbd class="hidden md:inline px-1.5 py-0.5 rounded bg-surface-overlay text-[10px] font-mono text-text-secondary border border-border-subtle">
-                        ⌘K
-                    </kbd>
-                </button>
             </div>
 
             <!-- Nav -->
@@ -398,7 +387,27 @@ const isActive = (item) => item.active.some((pattern) => route().current(pattern
                         <span class="text-xs text-text-tertiary">{{ workspaceName }}</span>
                     </slot>
                 </div>
+                <!-- Global search: Cmd/Ctrl+K anywhere, or "/" outside a field. -->
+                <button
+                    type="button"
+                    class="workspace-search hidden md:flex"
+                    :aria-label="`${t('nav.search')} (${searchShortcut})`"
+                    :aria-keyshortcuts="searchKeys"
+                    @click="globalSearchRef?.open()"
+                >
+                    <Search :size="15" :stroke-width="1.7" aria-hidden="true" />
+                    <span class="workspace-search-placeholder">{{ t('nav.globalSearch.placeholder') }}</span>
+                    <kbd aria-hidden="true">{{ searchShortcut }}</kbd>
+                </button>
                 <div class="workspace-global-controls flex items-center gap-1 shrink-0">
+                    <button
+                        type="button"
+                        class="md:hidden p-1.5 rounded-md text-text-secondary hover:bg-surface-overlay ds-focus-ring"
+                        :aria-label="t('nav.search')"
+                        @click="globalSearchRef?.open()"
+                    >
+                        <Search :size="18" aria-hidden="true" />
+                    </button>
                     <OrganizationSwitcher />
                     <WarehouseSwitcher />
                     <LanguageSwitcher />

@@ -85,7 +85,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', handleKeydown));
             </button>
 
             <!-- Primary Badge -->
-            <div v-if="currentIndex === 0" class="absolute top-4 start-4 px-3 py-1 bg-brand text-brand-foreground text-sm font-semibold rounded shadow-lg">
+            <div v-if="currentIndex === 0" class="absolute top-4 start-4 px-3 py-1 bg-brand-solid text-brand-solid-foreground text-sm font-semibold rounded shadow-lg">
                 {{ t('common.primary') }}
             </div>
 
@@ -143,7 +143,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', handleKeydown));
                 />
 
                 <!-- Primary indicator on thumbnail -->
-                <div v-if="index === 0" class="absolute top-1 start-1 px-1.5 py-0.5 bg-brand text-brand-foreground text-xs font-semibold rounded">
+                <div v-if="index === 0" class="absolute top-1 start-1 px-1.5 py-0.5 bg-brand-solid text-brand-solid-foreground text-xs font-semibold rounded">
                     1°
                 </div>
             </button>

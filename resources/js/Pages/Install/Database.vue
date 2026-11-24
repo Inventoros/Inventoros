@@ -273,7 +273,7 @@ const install = async (reset = false) => {
                             type="button"
                             @click="testConnection"
                             :disabled="testing"
-                            class="w-full px-4 py-2 bg-brand text-brand-foreground font-semibold rounded-lg hover:bg-brand-hover transition disabled:opacity-50"
+                            class="w-full px-4 py-2 bg-brand-solid text-brand-solid-foreground font-semibold rounded-lg hover:bg-brand-solid-hover transition disabled:opacity-50"
                         >
                             <span v-if="testing">{{ t('install.database.testing') }}</span>
                             <span v-else>{{ t('install.database.testConnection') }}</span>
@@ -309,7 +309,7 @@ const install = async (reset = false) => {
                         <button
                             type="submit"
                             :disabled="installing || !testResult?.success"
-                            class="inline-flex items-center px-6 py-2 bg-brand text-brand-foreground font-semibold rounded-lg hover:bg-brand-hover transition disabled:opacity-50 disabled:cursor-not-allowed"
+                            class="inline-flex items-center px-6 py-2 bg-brand-solid text-brand-solid-foreground font-semibold rounded-lg hover:bg-brand-solid-hover transition disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             <span v-if="installing">{{ t('install.database.installing') }}</span>
                             <span v-else>{{ t('install.database.installDatabase') }}</span>

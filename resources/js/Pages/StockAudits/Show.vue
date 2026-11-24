@@ -562,7 +562,7 @@ const thClass = 'px-6 py-3 text-start text-xs font-medium uppercase tracking-wid
                 <p class="mt-2 text-2xl font-semibold tabular-nums tracking-tight text-text-primary">{{ summary.progress }}%</p>
                 <div class="mt-2 h-2 w-full rounded-full bg-surface-sunken">
                     <div
-                        class="h-2 rounded-full bg-brand transition-all duration-300"
+                        class="h-2 rounded-full bg-brand-solid transition-all duration-300"
                         :style="{ width: summary.progress + '%' }"
                     ></div>
                 </div>

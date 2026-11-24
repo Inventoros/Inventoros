@@ -188,7 +188,7 @@ const unlock = async () => {
                 <div v-else class="flex justify-end">
                     <Link
                         :href="route('install.requirements')"
-                        class="inline-flex items-center px-6 py-3 bg-brand text-brand-foreground font-semibold rounded-lg hover:bg-brand-hover transition"
+                        class="inline-flex items-center px-6 py-3 bg-brand-solid text-brand-solid-foreground font-semibold rounded-lg hover:bg-brand-solid-hover transition"
                     >
                         {{ t('install.welcome.startInstallation') }}
                         <svg class="w-5 h-5 ms-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">

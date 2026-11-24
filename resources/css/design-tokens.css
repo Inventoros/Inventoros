@@ -13,7 +13,8 @@
 @layer base {
     :root {
         /* Quiet page, white panels, and a light navigation surface. */
-        --surface-canvas: 240 5% 97.5%;        /* page background */
+        --surface-canvas: 240 5% 97.5%;        /* inputs, outline buttons */
+        --surface-page: 40 6% 95%;          /* soft grey behind the panels */
         --surface-base: 240 5% 96.5%;        /* sidebar, header */
         --surface-raised: 0.00 0.00% 100.00%;      /* white panels, popovers */
         --surface-overlay: 240 4% 94.5%;     /* hover, active row */
@@ -32,10 +33,15 @@
         /* Accent — brighter blue (matches the marketing site + app primary).
            The blue accent is dark enough that text-brand meets
            WCAG AA for normal text; blue-500 was only 3.68:1. */
-        --accent: 221.59 69.29% 50.20%;
-        --accent-hover: 226 71% 48%;        /* blue-700 #1d4ed8 */
+        /* Primary actions, links and selection use a deep blue; bright blue
+           stays for chart data and the focus ring. */
+        --accent: 219 62% 30%;
+        --accent-hover: 219 62% 24%;
         --accent-foreground: 0 0% 100%;
         --accent-soft: 214 95% 96%;         /* selected row, badge bg */
+        --accent-solid: 219 62% 30%;
+        --accent-solid-hover: 219 62% 24%;
+        --accent-solid-foreground: 0 0% 100%;
 
         /* Status — semantic, also muted */
         --status-success: 156.38 67.14% 27.45%;
@@ -60,6 +66,7 @@
 
     .dark {
         --surface-canvas: 240 6% 7.5%;       /* neutral graphite */
+        --surface-page: 240 7% 5.5%;        /* a step below the panels */
         --surface-base: 240 6% 9.5%;
         --surface-raised: 240 5% 11%;
         --surface-overlay: 240 4% 15%;
@@ -77,6 +84,9 @@
         --accent-hover: 213 94% 74%;
         --accent-foreground: 222 47% 11%;
         --accent-soft: 217 45% 18%;
+        --accent-solid: 221 83% 53%;
+        --accent-solid-hover: 221 83% 47%;
+        --accent-solid-foreground: 0 0% 100%;
 
         --status-success: 148.80 49.02% 70.00%;
         --status-success-soft: 142 30% 16%;

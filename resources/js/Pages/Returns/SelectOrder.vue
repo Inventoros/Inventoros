@@ -127,7 +127,7 @@ const thClass = 'px-4 py-2.5 text-start text-xs font-medium text-text-secondary'
                         :class="[
                             'inline-flex h-8 min-w-8 items-center justify-center rounded-md border px-2.5 text-xs font-medium transition-colors',
                             link.active
-                                ? 'border-brand bg-brand text-brand-foreground'
+                                ? 'border-brand bg-brand-solid text-brand-solid-foreground'
                                 : 'border-border-subtle bg-surface-canvas text-text-secondary hover:bg-surface-overlay',
                         ]"
                         v-html="link.label"
