@@ -1,7 +1,9 @@
 <script setup>
 import { useId as useFieldId } from 'vue';
+import { IconInventory } from '@/icons';
 const fieldIdPrefix = useFieldId();
 import DialogSurface from '@/Components/DialogSurface.vue';
+import ProductThumb from '@/Components/ui/ProductThumb.vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import TableFilters from '@/Components/ui/TableFilters.vue';
 import TableViewport from '@/Components/ui/TableViewport.vue';
@@ -11,10 +13,7 @@ import Button from '@/Components/ui/Button.vue';
 import EmptyState from '@/Components/ui/EmptyState.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { defineAsyncComponent, ref, onMounted, onUnmounted, watch, computed } from 'vue';
-import {
-    Plus, Search, Eye, Pencil, Trash2, Copy, Barcode, ScanLine,
-    AlertTriangle, Boxes, X, QrCode,
-} from '@lucide/vue';
+import { Plus, Search, Eye, Pencil, Trash2, Copy, Barcode, ScanLine, AlertTriangle, X, QrCode } from '@lucide/vue';
 
 // Defer the modal (which transitively imports html5-qrcode, ~200 KB)
 // until the user actually opens the scanner.
@@ -235,7 +234,7 @@ const thClass =
 
         <PluginSlot slot="header" :components="pluginComponents?.header" />
 
-        <PageHeader :title="t('products.title')" :description="t('products.subtitle')" :icon="Boxes" :count="products.total">
+        <PageHeader :title="t('products.title')" :description="t('products.subtitle')" :icon="IconInventory" :count="products.total">
             <template #actions>
                 <Button v-if="canVisit('variant-replenishment.index')" variant="secondary" size="sm" as="Link" :href="route('variant-replenishment.index')">{{ t('variantReplenishment.title') }}</Button>
                 <Button v-if="canResetStock" variant="secondary" size="sm" as="Link" :href="route('products.stock-reset.preview')">{{ t('stockReset.title') }}</Button>
@@ -321,8 +320,13 @@ const thClass =
                             <input type="checkbox" :aria-label="product.display_name ?? product.name" :checked="isSelected(product.id)" @change="toggleSelect(product.id)" class="rounded border-border-strong bg-surface-canvas text-brand focus:ring-brand" />
                         </td>
                         <td class="cell-wrap px-4 py-3">
-                            <Link :href="route('products.show', product.id)" class="font-medium text-text-primary hover:text-brand"><bdi>{{ product.display_name ?? product.name }}</bdi></Link>
-                            <p v-if="product.description" class="record-secondary truncate-fluid text-xs text-text-tertiary" :title="product.description">{{ product.description }}</p>
+                            <div class="flex items-center gap-3">
+                                <ProductThumb :product="product" :size="36" />
+                                <div class="min-w-0">
+                                    <Link :href="route('products.show', product.id)" class="font-medium text-text-primary hover:text-brand"><bdi>{{ product.display_name ?? product.name }}</bdi></Link>
+                                    <p v-if="product.description" class="record-secondary truncate-fluid text-xs text-text-tertiary" :title="product.description">{{ product.description }}</p>
+                                </div>
+                            </div>
                         </td>
                         <td class="px-4 py-3">
                             <p class="font-mono text-xs text-text-secondary">{{ product.sku }}</p>
@@ -383,7 +387,7 @@ const thClass =
             </template>
             <template #empty>
                 <EmptyState
-                    :icon="Boxes"
+                    :icon="IconInventory"
                     :title="t('products.noProductsFound')"
                     :filtered="Boolean(filters?.search || filters?.category || filters?.location || [true, 1, '1', 'true'].includes(filters?.low_stock))"
                     @clear="clearFilters"

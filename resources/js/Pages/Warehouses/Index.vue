@@ -1,5 +1,6 @@
 <script setup>
 import PluginSlot from '@/Components/PluginSlot.vue';
+import { IconWarehouses } from '@/icons';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import TableFilters from '@/Components/ui/TableFilters.vue';
 import TableViewport from '@/Components/ui/TableViewport.vue';
@@ -11,7 +12,7 @@ import { Head, Link, router } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { usePermissions } from '@/composables/usePermissions';
-import { Plus, Eye, Pencil, Trash2, Warehouse, Star } from '@lucide/vue';
+import { Plus, Eye, Pencil, Trash2, Star } from '@lucide/vue';
 
 const { t } = useI18n();
 const { hasPermission } = usePermissions();
@@ -202,7 +203,7 @@ const thClass =
             </template>
             <template #empty>
                 <EmptyState
-                    :icon="Warehouse"
+                    :icon="IconWarehouses"
                     :title="t('warehouses.noWarehouses')"
                     :description="hasPermission('create_warehouses') ? t('warehouses.noWarehousesHint') : null"
                     :filtered="Boolean(filters?.search)"

@@ -9,7 +9,7 @@ import PluginWidgets from '@/Components/PluginWidgets.vue';
 import StockReview from '@/Components/Dashboard/StockReview.vue';
 import StockMeter from '@/Components/Dashboard/StockMeter.vue';
 import MetricCard from '@/Components/Dashboard/MetricCard.vue';
-import ProductThumb from '@/Components/Dashboard/ProductThumb.vue';
+import ProductThumb from '@/Components/ui/ProductThumb.vue';
 import StockMovement from '@/Components/Dashboard/StockMovement.vue';
 import Modal from '@/Components/Modal.vue';
 import Card from '@/Components/ui/Card.vue';
@@ -21,6 +21,7 @@ import { ref, reactive, computed } from 'vue';
 import { useQuickReorder } from '@/composables/useQuickReorder';
 import { usePermissions } from '@/composables/usePermissions';
 import { useI18n } from 'vue-i18n';
+import { IconImportExport, IconStockAdjustments, IconStockTransfers } from '@/icons';
 import { displayCalendarDate, displayDateTime } from '@/lib/dates';
 import { formatCompactMoney, formatMoney, formatNumber as formatPlainNumber } from '@/lib/money';
 import { categoryBreakdown, periodChange, stockLevel, stockUrgency } from '@/lib/dashboard';
@@ -40,8 +41,6 @@ import {
     ArrowUpRight,
     ArrowRight,
     ChevronRight,
-    ArrowLeftRight,
-    FileSpreadsheet,
     Clock3,
     CircleDot,
     Check,
@@ -218,9 +217,9 @@ const formatShare = (share) =>
 const quickActions = computed(() =>
     [
         { route: 'products.create', label: t('dashboard.addProduct'), icon: Plus },
-        { route: 'stock-adjustments.create', label: t('nav.stockAdjustments'), icon: SlidersHorizontal },
-        { route: 'stock-transfers.create', label: t('nav.stockTransfers'), icon: ArrowLeftRight },
-        { route: 'import-export.index', label: t('nav.importExport'), icon: FileSpreadsheet },
+        { route: 'stock-adjustments.create', label: t('nav.stockAdjustments'), icon: IconStockAdjustments },
+        { route: 'stock-transfers.create', label: t('nav.stockTransfers'), icon: IconStockTransfers },
+        { route: 'import-export.index', label: t('nav.importExport'), icon: IconImportExport },
     ].filter((action) => canVisit(action.route)),
 );
 const systemWarningMessage = (warning) => {
@@ -286,7 +285,7 @@ const ordersStatusIcon = (status) => (status === 'delivered' ? Check : status ==
                             t('dashboard.customize')
                         }}</span></Button
                     >
-                    <Button v-if="canVisit('orders.create')" size="sm" as="Link" :href="route('orders.create')" class="dashboard-primary-action"
+                    <Button v-if="canVisit('orders.create')" size="sm" as="Link" :href="route('orders.create')"
                         ><Plus :size="14" />{{ t('dashboard.newOrder') }}</Button
                     >
                 </div>
@@ -399,7 +398,7 @@ const ordersStatusIcon = (status) => (status === 'delivered' ? Check : status ==
                             <p class="dashboard-shortfall">
                                 {{ t('dashboard.design.shortfall', { count: formatPlainNumber(stockLevel(product).shortfall) }) }}
                             </p>
-                            <Button size="sm" class="dashboard-primary-action" @click="reviewStock(product)"
+                            <Button size="sm" @click="reviewStock(product)"
                                 >{{ t('dashboard.design.reviewStock') }}<ArrowRight :size="14" aria-hidden="true"
                             /></Button>
                         </div>

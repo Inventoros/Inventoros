@@ -170,7 +170,15 @@ function handleGlobalKeydown(e) {
         }
         return;
     }
-    if (e.key === '/' && !e.metaKey && !e.ctrlKey && !e.altKey && !isOpen.value && !isTypingTarget(e.target)) {
+    if (
+        e.key === '/' &&
+        !e.metaKey && !e.ctrlKey && !e.altKey &&
+        !e.repeat && !e.isComposing && !e.defaultPrevented &&
+        !isOpen.value &&
+        !isTypingTarget(e.target) &&
+        // Not over another open dialog.
+        !document.querySelector('[role="dialog"][aria-modal="true"]')
+    ) {
         e.preventDefault();
         open();
     }

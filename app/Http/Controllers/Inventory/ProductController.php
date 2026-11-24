@@ -104,6 +104,8 @@ class ProductController extends Controller
 
         // Display values run the product_display_name / product_price_display filters.
         $products->getCollection()->each->withDisplayValues();
+        // The list shows each product's first photo beside its name.
+        $products->getCollection()->each->append('image_urls');
 
         // Hook: Modify products collection before rendering
         $products = apply_filters('product_list_data', $products, $request);

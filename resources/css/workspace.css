@@ -46,16 +46,23 @@
     transition: border-color 120ms ease, background-color 120ms ease;
 }
 .workspace-search:hover { border-color: hsl(var(--border-strong)); }
-/* From tablet up the bar is three columns, so search sits in the centre. */
-@media (min-width: 768px) {
+/* The full search box needs room; below 1100px an icon opens search. */
+.workspace-search { display: none; }
+.workspace-search-icon { display: inline-flex; }
+.workspace-topbar .app-breadcrumb { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@media (min-width: 1100px) {
+    .workspace-search { display: flex; }
+    .workspace-search-icon { display: none; }
+    /* Search centred; breadcrumbs take the rest; controls keep their width. */
     .workspace-main .workspace-topbar {
         display: grid;
         /* Search gives way first (to 36% of the bar), so the breadcrumb and
          * controls keep their text at laptop widths. */
         grid-template-columns: minmax(0, 1fr) minmax(180px, min(440px, 36%)) minmax(0, 1fr);
+        gap: 16px;
     }
     .workspace-topbar .workspace-search { width: 100%; margin-inline: 0; }
-    .workspace-topbar .workspace-global-controls { justify-self: end; }
+    .workspace-topbar .workspace-global-controls { justify-self: end; min-width: max-content; }
 }
 .workspace-search:focus-visible { outline: 2px solid hsl(var(--ring)); outline-offset: 2px; }
 .workspace-search-placeholder { flex: 1; min-width: 0; overflow: hidden; text-align: start; text-overflow: ellipsis; white-space: nowrap; }
