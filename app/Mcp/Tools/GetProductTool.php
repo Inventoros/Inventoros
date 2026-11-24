@@ -8,6 +8,7 @@ use App\Mcp\Concerns\AuthenticatesMcpRequest;
 use App\Mcp\Support\UntrustedText;
 use App\Models\Inventory\Product;
 use App\Models\Inventory\ProductSupplier;
+use App\Services\Inventory\KitSaleService;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Laravel\Mcp\Request;
@@ -22,7 +23,7 @@ class GetProductTool extends Tool
 
     protected string $name = 'get_product';
 
-    protected string $description = 'Fetch a single product by id with category, location, suppliers, options, and active variants. Returns 404-style error if the product is not in the caller\'s organization.';
+    protected string $description = 'Fetch a single product by id with category, location, suppliers, options, and active variants; for a kit, how many can be sold and which component holds it back. Returns 404-style error if the product is not in the caller\'s organization.';
 
     public function schema(JsonSchema $schema): array
     {
@@ -68,6 +69,8 @@ class GetProductTool extends Tool
             'is_active' => (bool) $product->is_active,
             'has_variants' => (bool) $product->has_variants,
             'tracking_type' => $product->tracking_type?->value ?? 'none',
+            // Kits: how many can be sold and which component holds them back.
+            'kit' => $product->isKit() ? app(KitSaleService::class)->breakdown($product) : null,
             'category' => $product->category?->only(['id', 'name']),
             'location' => $product->location?->only(['id', 'name', 'warehouse_id']),
             'suppliers' => $product->suppliers->map(fn ($s) => [

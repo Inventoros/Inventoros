@@ -5,7 +5,7 @@
 ### Inventory & Product Management
 - Full product CRUD with SKU, pricing, stock levels, categories, locations, and barcodes
 - **Product variants** with options (size, color, material) and variant-specific SKUs, pricing, and stock
-- **Kitting & bundling** -- create virtual kit products with auto-calculated stock from components
+- **Kitting & bundling** -- create virtual kit products with auto-calculated stock from components, and see which component limits each kit and how many more units one more kit needs
 - **Assembly & work orders** -- production workflow that consumes components and produces finished goods
 - **Batch tracking** with lot numbers, expiry dates, and manufacturing dates
 - **Serial number tracking** with individual status management

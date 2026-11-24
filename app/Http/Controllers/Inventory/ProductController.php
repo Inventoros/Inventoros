@@ -118,13 +118,16 @@ class ProductController extends Controller
             ->active()
             ->get(['id', 'name']);
 
-        // How many of each kit on this page can be made (one batched lookup).
+        // How many of each kit on this page can be made, and which component
+        // runs out first (one batched lookup).
         $kitsOnPage = $products->getCollection()->where('type', 'kit')->values();
+        $kitBreakdown = $kitsOnPage->isEmpty() ? [] : app(KitSaleService::class)->breakdownFor($kitsOnPage);
 
         $data = [
             'canResetStock' => $request->user()->isAdmin() && $request->user()->hasPermission('manage_stock'),
             'products' => $products,
-            'kitAvailable' => (object) ($kitsOnPage->isEmpty() ? [] : app(KitSaleService::class)->availableFor($kitsOnPage)),
+            'kitAvailable' => (object) array_map(fn (array $kit) => $kit['available'], $kitBreakdown),
+            'kitLimitedBy' => (object) array_filter(array_map(fn (array $kit) => self::limitedBy($kit), $kitBreakdown)),
             'filters' => $request->only(['search', 'category', 'location', 'low_stock', 'per_page']),
             'categories' => $categories,
             'locations' => $locations,
@@ -292,6 +295,8 @@ class ProductController extends Controller
             ->get()
             ->map(fn (SupplierPriceHistory $entry) => $this->priceHistoryRow($entry, $converter, $organizationId));
 
+        $kit = $product->type === 'kit' ? app(KitSaleService::class)->breakdown($product) : null;
+
         $data = [
             'product' => $product,
             'activities' => $activities,
@@ -310,10 +315,12 @@ class ProductController extends Controller
             'warehouseStockLevels' => app(WarehouseStockLevelService::class)->levelsForProduct($product, auth()->user()),
             // On hand / reserved / available, for the product and each variant.
             'stockAvailability' => $this->stockAvailability($product),
-            // For a kit: how many can be made from its components, and why it
-            // cannot be sold when it cannot (null for a kit that can be).
-            'kitAvailable' => $product->type === 'kit' ? app(KitSaleService::class)->available($product) : null,
-            'kitProblem' => $product->type === 'kit' ? app(KitSaleService::class)->problem($product) : null,
+            // For a kit: how many can be made from its components, why it
+            // cannot be sold when it cannot (null for a kit that can be), and
+            // per component what it allows and whether it holds the kit back.
+            'kitAvailable' => $kit['available'] ?? null,
+            'kitProblem' => $kit['problem'] ?? null,
+            'kitComponents' => $kit['components'] ?? [],
             'pluginComponents' => [
                 'header' => get_page_components('products.show', 'header'),
                 'actions' => get_page_components('products.show', 'actions'),
@@ -578,5 +585,19 @@ class ProductController extends Controller
             ->active()
             ->orderBy('name')
             ->get(['id', 'name', 'code', 'currency']);
+    }
+
+    /**
+     * The first component holding a kit back, and how many others tie with
+     * it, for the product list. Null for an unsellable kit.
+     *
+     * @param  array{available: int, problem: ?string, components: list<array{name: string, limiting: bool}>}  $kit
+     * @return array{name: string, others: int}|null
+     */
+    private static function limitedBy(array $kit): ?array
+    {
+        $limiting = array_values(array_filter($kit['components'], fn (array $component) => $component['limiting']));
+
+        return $limiting === [] ? null : ['name' => $limiting[0]['name'], 'others' => count($limiting) - 1];
     }
 }

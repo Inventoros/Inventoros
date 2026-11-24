@@ -372,6 +372,8 @@
   "products": {
     "kit": {
       "canMake": "Can make {count}",
+      "limitedBy": "Limited by {name}",
+      "limitedByMany": "Limited by {name} and {count} more",
       "notSellable": "Cannot be sold"
     },
     "title": "Inventory",
@@ -499,7 +501,12 @@
         "addFailed": "Failed to add component",
         "updateQuantityFailed": "Failed to update quantity",
         "confirmRemove": "Remove this component from the bill of materials?",
-        "removeFailed": "Failed to remove component"
+        "removeFailed": "Failed to remove component",
+        "allowsKits": "Allows kits",
+        "limiting": "Limiting",
+        "limitedBy": "Limited by {names}.",
+        "nextKitNeeds": "One more kit needs {list}.",
+        "moreOf": "{count} more {name}"
       }
     },
     "quickAddCategory": {

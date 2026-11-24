@@ -501,6 +501,8 @@
   "products": {
     "kit": {
       "canMake": "Можно собрать: {count}",
+      "limitedBy": "Ограничивает: {name}",
+      "limitedByMany": "Ограничивает: {name} и ещё {count}",
       "notSellable": "Нельзя продать"
     },
     "title": "Склад",
@@ -628,7 +630,12 @@
         "addFailed": "Не удалось добавить компонент",
         "updateQuantityFailed": "Не удалось обновить количество",
         "confirmRemove": "Удалить этот компонент из спецификации?",
-        "removeFailed": "Не удалось удалить компонент"
+        "removeFailed": "Не удалось удалить компонент",
+        "allowsKits": "Хватит на наборов",
+        "limiting": "Ограничивает",
+        "limitedBy": "Ограничивает: {names}.",
+        "nextKitNeeds": "Для ещё одного набора нужно: {list}.",
+        "moreOf": "{count} × {name}"
       }
     },
     "quickAddCategory": {

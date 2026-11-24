@@ -501,6 +501,8 @@
   "products": {
     "kit": {
       "canMake": "{count} adet hazırlanabilir",
+      "limitedBy": "Sınırlayan: {name}",
+      "limitedByMany": "Sınırlayan: {name} ve {count} diğer",
       "notSellable": "Satılamaz"
     },
     "title": "Envanter",
@@ -628,7 +630,12 @@
         "addFailed": "Bileşen eklenemedi",
         "updateQuantityFailed": "Miktar güncellenemedi",
         "confirmRemove": "Bu bileşen ürün ağacından kaldırılsın mı?",
-        "removeFailed": "Bileşen kaldırılamadı"
+        "removeFailed": "Bileşen kaldırılamadı",
+        "allowsKits": "Yetecek kit",
+        "limiting": "Sınırlayan",
+        "limitedBy": "Sınırlayan: {names}.",
+        "nextKitNeeds": "Bir kit daha için gereken: {list}.",
+        "moreOf": "{count} adet {name}"
       }
     },
     "quickAddCategory": {

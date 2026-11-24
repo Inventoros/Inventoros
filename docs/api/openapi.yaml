@@ -606,6 +606,15 @@ paths:
     get:
       tags: [Product Components]
       summary: List components for a kit/assembly product
+      description: >-
+        For a kit, `meta.kit` reports how many kits can be sold now
+        (`available`), why the kit cannot be sold (`problem`, null when it
+        can), and per component in BOM order: `product_id`, `name`, `sku`,
+        `free` (on hand less reservations, never below 0), `per_kit`,
+        `allows` (kits that component alone covers), `limiting` (it decides
+        `available`; ties all limit) and `needed_for_next` (more units needed
+        for one more kit). Unsellable kits have no components there.
+        Assemblies have no `meta`.
       responses:
         '200': { description: Components }
         '422':

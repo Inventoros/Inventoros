@@ -501,6 +501,8 @@
   "products": {
     "kit": {
       "canMake": "{count} te maken",
+      "limitedBy": "Beperkt door {name}",
+      "limitedByMany": "Beperkt door {name} en {count} andere",
       "notSellable": "Niet verkoopbaar"
     },
     "title": "Voorraad",
@@ -628,7 +630,12 @@
         "addFailed": "Component toevoegen mislukt",
         "updateQuantityFailed": "Aantal bijwerken mislukt",
         "confirmRemove": "Dit component uit de stuklijst verwijderen?",
-        "removeFailed": "Component verwijderen mislukt"
+        "removeFailed": "Component verwijderen mislukt",
+        "allowsKits": "Mogelijke kits",
+        "limiting": "Beperkend",
+        "limitedBy": "Beperkt door {names}.",
+        "nextKitNeeds": "Voor nog één kit nodig: {list}.",
+        "moreOf": "nog {count} {name}"
       }
     },
     "quickAddCategory": {

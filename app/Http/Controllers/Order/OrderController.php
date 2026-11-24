@@ -30,6 +30,7 @@ use App\Services\WarehouseAccessService;
 use App\Support\ApprovalSettings;
 use App\Support\PaymentVisibility;
 use App\Support\Search;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -524,7 +525,7 @@ class OrderController extends Controller
             // e.g. the stock sits in bins the order's warehouse cannot draw
             // from, or a reservation took it: flash rather than 500.
             return redirect()->back()->with('error', $e->getMessage());
-        } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
+        } catch (AuthorizationException $e) {
             // The stock is in bins this user's warehouse access does not
             // cover; someone with access to them can fulfil it.
             return redirect()->back()->with('error', $e->getMessage());
@@ -584,7 +585,7 @@ class OrderController extends Controller
         // A kit's own stock is never sold: it offers how many can be made from
         // its components (0 when it cannot be sold), worked out once for all kits.
         $kits = $products->where('type', 'kit');
-        $makeable = $kits->isEmpty() ? [] : app(KitSaleService::class)->availableFor($kits->values());
+        $makeable = $kits->isEmpty() ? [] : app(KitSaleService::class)->breakdownFor($kits->values());
 
         return $products
             ->map(fn (Product $product) => [
@@ -599,8 +600,12 @@ class OrderController extends Controller
                 'prices' => (object) array_change_key_case(array_filter((array) ($product->price_in_currencies ?? []), 'is_numeric'), CASE_UPPER),
                 // Pre-fills a new line's tax rate (variants share it).
                 'tax_rate' => $product->tax_rate,
-                'stock' => $product->type === 'kit' ? (int) ($makeable[$product->id] ?? 0) : (int) $product->stock,
+                'stock' => $product->type === 'kit' ? (int) ($makeable[$product->id]['available'] ?? 0) : (int) $product->stock,
                 'is_kit' => $product->type === 'kit',
+                // The component that runs out first, so a short kit says why.
+                'limited_by' => $product->type === 'kit'
+                    ? collect($makeable[$product->id]['components'] ?? [])->firstWhere('limiting', true)['name'] ?? null
+                    : null,
                 'has_variants' => (bool) $product->has_variants,
                 'variants' => $product->has_variants
                     ? $product->variants->map(fn (ProductVariant $variant) => [

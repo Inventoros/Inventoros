@@ -501,6 +501,8 @@
   "products": {
     "kit": {
       "canMake": "يمكن تجهيز {count}",
+      "limitedBy": "يحدّه {name}",
+      "limitedByMany": "يحدّه {name} و{count} غيره",
       "notSellable": "لا يمكن بيعها"
     },
     "title": "المخزون",
@@ -628,7 +630,12 @@
         "addFailed": "تعذّرت إضافة المكوّن",
         "updateQuantityFailed": "تعذّر تحديث الكمية",
         "confirmRemove": "هل تريد إزالة هذا المكوّن من قائمة المواد؟",
-        "removeFailed": "تعذّرت إزالة المكوّن"
+        "removeFailed": "تعذّرت إزالة المكوّن",
+        "allowsKits": "يكفي لأطقم",
+        "limiting": "مُقيِّد",
+        "limitedBy": "يحدّه {names}.",
+        "nextKitNeeds": "لتجهيز طقم إضافي يلزم: {list}.",
+        "moreOf": "{count} من {name}"
       }
     },
     "quickAddCategory": {

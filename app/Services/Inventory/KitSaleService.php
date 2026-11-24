@@ -269,6 +269,35 @@ class KitSaleService
      */
     public function availableFor(Collection $kits): array
     {
+        return array_map(fn (array $kit) => $kit['available'], $this->breakdownFor($kits));
+    }
+
+    /**
+     * What holds one kit back: see breakdownFor().
+     *
+     * @return array{available: int, problem: ?string, components: list<array{product_id: int, name: string, sku: ?string, free: int, per_kit: int, allows: int, limiting: bool, needed_for_next: int}>}
+     */
+    public function breakdown(Product $kit): array
+    {
+        return $this->breakdownFor(collect([$kit]))[$kit->id];
+    }
+
+    /**
+     * How many of each kit can be sold, and which components decide it, in
+     * a constant number of queries.
+     *
+     * For each component, in BOM order: its free stock (on hand less
+     * reservations, never below 0), units per kit, how many kits that alone
+     * would allow, whether it is limiting (it allows no more than the kit's
+     * availability; ties all limit), and how many more units it needs for
+     * one more kit (0 when it already covers one more). An unsellable kit
+     * has 0 available, the reason in problem, and no components.
+     *
+     * @param  Collection<int, Product>  $kits
+     * @return array<int, array{available: int, problem: ?string, components: list<array{product_id: int, name: string, sku: ?string, free: int, per_kit: int, allows: int, limiting: bool, needed_for_next: int}>}>
+     */
+    public function breakdownFor(Collection $kits): array
+    {
         $kits = $kits->unique('id');
         $rowsByKit = $this->loadRows($kits);
 
@@ -283,19 +312,34 @@ class KitSaleService
         $result = [];
         foreach ($kits as $kit) {
             $rows = $rowsByKit[$kit->id] ?? collect();
-            if ($this->inspect($kit, $rows) !== null) {
-                $result[$kit->id] = 0;
+            $problem = $this->inspect($kit, $rows);
+            if ($problem !== null) {
+                $result[$kit->id] = ['available' => 0, 'problem' => $problem, 'components' => []];
 
                 continue;
             }
 
-            $min = PHP_INT_MAX;
+            $components = [];
             foreach ($rows as $row) {
                 $per = self::perKit($row);
-                $free = (int) $row->componentProduct->stock - ($reserved[(int) $row->component_product_id] ?? 0);
-                $min = min($min, intdiv(max(0, $free), $per));
+                $free = max(0, (int) $row->componentProduct->stock - ($reserved[(int) $row->component_product_id] ?? 0));
+                $components[] = [
+                    'product_id' => (int) $row->component_product_id,
+                    'name' => (string) $row->componentProduct->name,
+                    'sku' => $row->componentProduct->sku,
+                    'free' => $free,
+                    'per_kit' => $per,
+                    'allows' => intdiv($free, $per),
+                ];
             }
-            $result[$kit->id] = $min === PHP_INT_MAX ? 0 : $min;
+
+            $available = min(array_column($components, 'allows'));
+            foreach ($components as $i => $component) {
+                $components[$i]['limiting'] = $component['allows'] === $available;
+                $components[$i]['needed_for_next'] = max(0, ($available + 1) * $component['per_kit'] - $component['free']);
+            }
+
+            $result[$kit->id] = ['available' => $available, 'problem' => null, 'components' => $components];
         }
 
         return $result;

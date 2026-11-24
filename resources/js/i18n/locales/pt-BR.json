@@ -501,6 +501,8 @@
   "products": {
     "kit": {
       "canMake": "Dá para montar {count}",
+      "limitedBy": "Limitado por {name}",
+      "limitedByMany": "Limitado por {name} e mais {count}",
       "notSellable": "Não pode ser vendido"
     },
     "title": "Estoque",
@@ -628,7 +630,12 @@
         "addFailed": "Falha ao adicionar o componente",
         "updateQuantityFailed": "Falha ao atualizar a quantidade",
         "confirmRemove": "Remover este componente da lista de materiais?",
-        "removeFailed": "Falha ao remover o componente"
+        "removeFailed": "Falha ao remover o componente",
+        "allowsKits": "Kits possíveis",
+        "limiting": "Limitante",
+        "limitedBy": "Limitado por {names}.",
+        "nextKitNeeds": "Para mais um kit faltam: {list}.",
+        "moreOf": "{count} de {name}"
       }
     },
     "quickAddCategory": {

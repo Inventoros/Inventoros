@@ -65,6 +65,9 @@ const props = defineProps({
     // cannot be sold when it cannot (null when it can).
     kitAvailable: { type: Number, default: null },
     kitProblem: { type: String, default: null },
+    // Kits only: per component its free stock, how many kits it allows,
+    // whether it holds the kit back and how many more one more kit needs.
+    kitComponents: { type: Array, default: () => [] },
     pluginComponents: Object,
 });
 
@@ -219,10 +222,14 @@ const selectedComponent = ref(null);
 const editingComponentId = ref(null);
 const editingComponentQty = ref(1);
 
+const kitComponentById = computed(() => Object.fromEntries(props.kitComponents.map(c => [c.product_id, c])));
+const kitLimiting = computed(() => props.kitComponents.filter(c => c.limiting));
+const kitRefreshProps = ['product', 'kitAvailable', 'kitProblem', 'kitComponents'];
+
 const availableKitStock = computed(() => {
     if (props.product.type !== 'kit' || components.value.length === 0) return 0;
     if (props.kitAvailable !== null) return props.kitAvailable;
-    return Math.min(...components.value.map(c => Math.floor((c.component?.stock || 0) / c.quantity)));
+    return Math.min(...components.value.map(c => Math.floor((c.component_product?.stock || 0) / c.quantity)));
 });
 
 const searchComponents = async () => {
@@ -261,7 +268,7 @@ const addComponent = async () => {
             component_product_id: selectedComponent.value.id,
             quantity: newComponentQty.value,
         });
-        router.reload({ only: ['product'] });
+        router.reload({ only: kitRefreshProps });
         showAddComponent.value = false;
         componentSearch.value = '';
         selectedComponent.value = null;
@@ -281,7 +288,7 @@ const saveComponentQty = async (component) => {
         await axios.put(route('products.components.update', [props.product.id, component.id]), {
             quantity: editingComponentQty.value,
         });
-        router.reload({ only: ['product'] });
+        router.reload({ only: kitRefreshProps });
         editingComponentId.value = null;
     } catch (error) {
         alert(t('products.show.bom.updateQuantityFailed'));
@@ -292,7 +299,7 @@ const removeComponent = async (component) => {
     if (!confirm(t('products.show.bom.confirmRemove'))) return;
     try {
         await axios.delete(route('products.components.destroy', [props.product.id, component.id]));
-        router.reload({ only: ['product'] });
+        router.reload({ only: kitRefreshProps });
     } catch (error) {
         alert(t('products.show.bom.removeFailed'));
     }
@@ -706,6 +713,10 @@ const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface
                                 </span>
                                 <span class="text-lg font-bold text-status-info">{{ availableKitStock }}</span>
                             </div>
+                            <p v-if="product.type === 'kit' && !kitProblem && kitLimiting.length" class="-mt-2 mb-4 text-sm text-text-secondary" data-testid="kit-limited-by">
+                                <span class="font-medium text-text-primary">{{ t('products.show.bom.limitedBy', { names: kitLimiting.map(c => c.name).join(', ') }) }}</span>
+                                {{ t('products.show.bom.nextKitNeeds', { list: kitLimiting.map(c => t('products.show.bom.moreOf', { count: c.needed_for_next, name: c.name })).join(', ') }) }}
+                            </p>
                             <p v-if="product.type === 'kit' && kitProblem" class="mb-4 rounded-lg border border-status-warning/20 bg-status-warning-soft p-3 text-sm text-status-warning">
                                 <span class="font-medium">{{ t('products.kit.notSellable') }}:</span> {{ kitProblem }}
                             </p>
@@ -776,18 +787,19 @@ const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface
                                             <th :class="thClass">{{ t('products.show.sku') }}</th>
                                             <th :class="[thClass, 'text-center']">{{ t('products.show.bom.qtyRequired') }}</th>
                                             <th :class="[thClass, 'text-center']">{{ t('products.show.bom.availableStock') }}</th>
+                                            <th v-if="product.type === 'kit' && kitComponents.length" :class="[thClass, 'text-center']">{{ t('products.show.bom.allowsKits') }}</th>
                                             <th :class="[thClass, 'text-end']">{{ t('common.actions') }}</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         <tr v-for="comp in components" :key="comp.id" class="border-b border-border-subtle transition-colors last:border-b-0 hover:bg-surface-overlay">
                                             <td class="px-4 py-3">
-                                                <Link :href="route('products.show', comp.component?.id || comp.component_product_id)" class="text-sm font-medium text-brand hover:underline">
-                                                    {{ comp.component?.name || t('products.show.bom.unknown') }}
+                                                <Link :href="route('products.show', comp.component_product_id)" class="text-sm font-medium text-brand hover:underline">
+                                                    {{ comp.component_product?.name || t('products.show.bom.unknown') }}
                                                 </Link>
                                             </td>
                                             <td class="px-4 py-3 text-sm text-text-tertiary">
-                                                {{ comp.component?.sku || '-' }}
+                                                {{ comp.component_product?.sku || '-' }}
                                             </td>
                                             <td class="px-4 py-3 text-center">
                                                 <template v-if="editingComponentId === comp.id">
@@ -805,10 +817,17 @@ const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface
                                             <td class="px-4 py-3 text-center">
                                                 <span
                                                     class="text-sm font-medium tabular-nums"
-                                                    :class="(comp.component?.stock || 0) >= comp.quantity ? 'text-status-success' : 'text-status-danger'"
+                                                    :class="(comp.component_product?.stock || 0) >= comp.quantity ? 'text-status-success' : 'text-status-danger'"
                                                 >
-                                                    {{ comp.component?.stock || 0 }}
+                                                    {{ comp.component_product?.stock || 0 }}
                                                 </span>
+                                            </td>
+                                            <td v-if="product.type === 'kit' && kitComponents.length" class="px-4 py-3 text-center">
+                                                <template v-if="kitComponentById[comp.component_product_id]">
+                                                    <span class="text-sm font-medium tabular-nums text-text-primary">{{ kitComponentById[comp.component_product_id].allows }}</span>
+                                                    <Badge v-if="kitComponentById[comp.component_product_id].limiting" variant="warning" size="sm" class="ms-2">{{ t('products.show.bom.limiting') }}</Badge>
+                                                </template>
+                                                <span v-else class="text-sm text-text-tertiary">-</span>
                                             </td>
                                             <td class="px-4 py-3 text-end">
                                                 <div class="flex justify-end gap-2">

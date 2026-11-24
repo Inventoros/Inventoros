@@ -214,4 +214,69 @@ final class KitSaleServiceTest extends TestCase
         $this->assertSame([3, 3, 3], array_values($result));
         $this->assertSame($kits->pluck('id')->all(), array_keys($result));
     }
+
+    public function test_breakdown_names_the_limiting_component_and_what_one_more_kit_needs(): void
+    {
+        $a = $this->makeProduct($this->org, ['name' => 'Part A', 'sku' => 'PA', 'stock' => 7]);
+        $b = $this->makeProduct($this->org, ['name' => 'Part B', 'sku' => 'PB', 'stock' => 20]);
+        $kit = $this->makeKit([[$a, 2], [$b, 1]]);
+
+        $breakdown = $this->service()->breakdown($kit);
+
+        $this->assertSame(3, $breakdown['available']);
+        $this->assertNull($breakdown['problem']);
+        $this->assertSame([
+            ['product_id' => $a->id, 'name' => 'Part A', 'sku' => 'PA', 'free' => 7, 'per_kit' => 2, 'allows' => 3, 'limiting' => true, 'needed_for_next' => 1],
+            ['product_id' => $b->id, 'name' => 'Part B', 'sku' => 'PB', 'free' => 20, 'per_kit' => 1, 'allows' => 20, 'limiting' => false, 'needed_for_next' => 0],
+        ], $breakdown['components']);
+    }
+
+    public function test_breakdown_marks_every_tied_component_as_limiting(): void
+    {
+        $a = $this->makeProduct($this->org, ['name' => 'Part A', 'stock' => 4]);
+        $b = $this->makeProduct($this->org, ['name' => 'Part B', 'stock' => 6]);
+        $c = $this->makeProduct($this->org, ['name' => 'Part C', 'stock' => 50]);
+        $kit = $this->makeKit([[$a, 2], [$b, 3], [$c, 1]]);
+
+        $components = collect($this->service()->breakdown($kit)['components'])->keyBy('product_id');
+
+        $this->assertTrue($components[$a->id]['limiting']);
+        $this->assertTrue($components[$b->id]['limiting']);
+        $this->assertFalse($components[$c->id]['limiting']);
+        $this->assertSame(2, $components[$a->id]['needed_for_next']);
+        $this->assertSame(3, $components[$b->id]['needed_for_next']);
+    }
+
+    public function test_breakdown_counts_reserved_and_negative_stock_as_not_free(): void
+    {
+        $a = $this->makeProduct($this->org, ['name' => 'Part A', 'stock' => 10]);
+        $b = $this->makeProduct($this->org, ['name' => 'Part B', 'stock' => -3]);
+        $kit = $this->makeKit([[$a, 1], [$b, 2]]);
+        app(StockReservationService::class)->reserve($a, null, 4, 'shop', 'CART-1');
+
+        $breakdown = $this->service()->breakdown($kit);
+        $components = collect($breakdown['components'])->keyBy('product_id');
+
+        $this->assertSame(0, $breakdown['available']);
+        $this->assertSame(6, $components[$a->id]['free']);
+        $this->assertSame(0, $components[$b->id]['free']);
+        $this->assertTrue($components[$b->id]['limiting']);
+        $this->assertFalse($components[$a->id]['limiting']);
+        $this->assertSame(2, $components[$b->id]['needed_for_next']);
+    }
+
+    public function test_breakdown_of_an_unsellable_kit_gives_the_reason_and_no_components(): void
+    {
+        $a = $this->makeProduct($this->org, ['name' => 'Part A', 'stock' => 10]);
+        $kit = $this->makeKit([[$a, '1.5']]);
+        $empty = $this->makeKit([], 'Empty Kit');
+
+        $result = $this->service()->breakdownFor(collect([$kit, $empty]));
+
+        $this->assertSame(0, $result[$kit->id]['available']);
+        $this->assertSame([], $result[$kit->id]['components']);
+        $this->assertStringContainsString('fractional', (string) $result[$kit->id]['problem']);
+        $this->assertSame(0, $result[$empty->id]['available']);
+        $this->assertStringContainsString('no components', (string) $result[$empty->id]['problem']);
+    }
 }

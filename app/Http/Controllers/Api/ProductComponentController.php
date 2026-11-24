@@ -9,6 +9,7 @@ use App\Http\Requests\Api\ProductComponent\StoreProductComponentRequest;
 use App\Http\Requests\Api\ProductComponent\UpdateProductComponentRequest;
 use App\Models\Inventory\Product;
 use App\Models\Inventory\ProductComponent;
+use App\Services\Inventory\KitSaleService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -44,9 +45,14 @@ class ProductComponentController extends Controller
             ->ordered()
             ->get();
 
-        return response()->json([
-            'data' => $components,
-        ]);
+        $response = ['data' => $components];
+        if ($product->isKit()) {
+            // How many kits can be sold, and per component what it allows
+            // and whether it holds the kit back (see KitSaleService::breakdown).
+            $response['meta'] = ['kit' => app(KitSaleService::class)->breakdown($product)];
+        }
+
+        return response()->json($response);
     }
 
     /**

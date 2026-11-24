@@ -27,10 +27,20 @@ const { hasPermission, canVisit } = usePermissions();
 
 const { t } = useI18n();
 
+const kitLimitedByLabel = (id) => {
+    const limit = props.kitLimitedBy?.[id];
+    if (!limit) return '';
+    return limit.others > 0
+        ? t('products.kit.limitedByMany', { name: limit.name, count: limit.others })
+        : t('products.kit.limitedBy', { name: limit.name });
+};
+
 const props = defineProps({
     products: Object,
     // Kit id => how many can be made from its components (kits on this page).
     kitAvailable: { type: Object, default: () => ({}) },
+    // Kit id => { name, others }: the component that runs out first.
+    kitLimitedBy: { type: Object, default: () => ({}) },
     canResetStock: { type: Boolean, default: false },
     filters: Object,
     categories: Array,
@@ -335,7 +345,10 @@ const thClass =
                         <td class="px-4 py-3"><span class="record-relation">{{ product.category?.name || t('common.na') }}</span></td>
                         <td class="px-4 py-3"><span class="record-relation">{{ product.location?.name || t('common.na') }}</span></td>
                         <td class="px-4 py-3 text-end">
-                            <p v-if="product.type === 'kit'" class="whitespace-nowrap text-xs font-medium tabular-nums text-text-primary">{{ t('products.kit.canMake', { count: kitAvailable?.[product.id] ?? 0 }) }}</p>
+                            <template v-if="product.type === 'kit'">
+                            <p class="whitespace-nowrap text-xs font-medium tabular-nums text-text-primary">{{ t('products.kit.canMake', { count: kitAvailable?.[product.id] ?? 0 }) }}</p>
+                            <p v-if="kitLimitedBy?.[product.id]" class="ms-auto max-w-40 truncate text-[11px] text-text-tertiary" :title="kitLimitedByLabel(product.id)" data-testid="kit-limited-by">{{ kitLimitedByLabel(product.id) }}</p>
+                            </template>
                             <template v-else>
                             <div class="flex items-center justify-end gap-1">
                                 <span :class="['font-medium tabular-nums', isLowStock(product) ? 'text-status-danger' : 'text-text-primary']">{{ onHand(product) }}</span>
