@@ -6,6 +6,18 @@ Full release notes, with the pull request behind each change, are on [GitHub Rel
 
 ## [Unreleased]
 
+## [2.8.0] - 2026-11-24
+
+No migrations. See the [2.8.0 release notes](docs/releases/2.8.0.md).
+
+### Changed
+
+- **Two-level sidebar (#479).** The single long menu becomes a navy rail with one icon per section (Workspace, Catalog, Stock, Insights, Plugins; Admin at its foot) and a panel listing only the selected section's pages. The panel follows the current page, and picking a rail icon swaps it without leaving the page. Hovering or focusing an icon shows its name; arrow keys move between icons.
+- **Responsive menu.** From 1280px the rail and panel are docked (240px), and the panel can be collapsed to the rail, remembered per browser. From 768 to 1279px only the 56px rail is docked, giving pages 176px more room, and a section opens over the page. Phones get one drawer with both.
+- **Account menu.** Your initials at the foot of the rail open your account link and Log Out, which used to sit at the bottom of the sidebar.
+- **Approvals dot.** With requests waiting and the Workspace panel closed, the Workspace icon shows a dot and its name says how many are waiting.
+- **Stock by warehouse and Receive** switch to their card layout below 64rem of page width (was 52rem), so tablets keep cards with the wider page.
+
 ## [2.7.1] - 2026-11-24
 
 A fix release for 2.7.0. No migrations. See the [2.7.1 release notes](docs/releases/2.7.1.md).

@@ -1,5 +1,16 @@
 # Upgrade Guide
 
+## Upgrading from v2.7.1 to v2.8.0
+
+Requirements are unchanged and there are no migrations. Back up first, then
+update the same way as for 2.6.0 below, with the version set to 2.8.0. Docker
+installs pull the 2.8.0 image and must not use the in-app updater.
+
+The sidebar now shows one section at a time. Browser tests or scripts that
+click sidebar links must pick the section on the rail first, and Log Out is
+inside the account menu (`[data-testid="user-menu"]`, then
+`[data-testid="logout"]`). See the [2.8.0 release notes](docs/releases/2.8.0.md).
+
 ## Upgrading from v2.7.0 to v2.7.1
 
 Requirements are unchanged and there are no migrations. Back up first, then
