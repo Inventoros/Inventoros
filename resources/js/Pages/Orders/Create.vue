@@ -315,9 +315,9 @@ const fieldError = 'mt-1 text-xs text-status-danger';
 
         <form @submit.prevent="submit" class="mt-6">
             <FormErrorSummary ref="errorSummary" :errors="form.errors" :targets="errorTargets" />
-            <div class="grid grid-cols-1 gap-4 lg:grid-cols-3">
+            <div class="grid grid-cols-1 gap-4 xl:grid-cols-3">
                 <!-- Left column -->
-                <div class="space-y-4 lg:col-span-2">
+                <div class="space-y-4 xl:col-span-2">
                     <!-- Customer info -->
                     <Card :padded="false">
                         <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">{{ t('orders.create.customerInfo') }}</h3></div>
@@ -369,16 +369,16 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                         </div>
                         <div class="p-5">
                             <!-- Add item -->
-                            <div class="mb-5 rounded-lg border border-border-subtle bg-surface-canvas p-4">
-                                <div class="grid grid-cols-1 gap-3 md:grid-cols-12">
-                                    <div :class="chosenProduct?.has_variants ? 'md:col-span-4' : 'md:col-span-7'">
+                            <div class="@container mb-5 rounded-lg border border-border-subtle bg-surface-canvas p-4">
+                                <div class="grid grid-cols-1 gap-3 @lg:grid-cols-12">
+                                    <div :class="chosenProduct?.has_variants ? '@lg:col-span-4' : '@lg:col-span-7'">
                                         <label for="add_product" :class="fieldLabel">{{ t('orders.create.selectProduct') }}</label>
                                         <ProductPicker id="add_product" v-model="selectedProduct" :products="availableProducts" :stock-label="t('components.productPicker.onHand')" @change="onProductChange">
                                             <template #details="{ product }"><span v-if="!product.has_variants" class="block text-xs text-text-secondary">{{ formatMoney(product.price, product.currency) }}</span></template>
                                         </ProductPicker>
                                         <p v-if="chosenProduct && !chosenProduct.has_variants" class="mt-1 text-xs text-text-secondary">{{ formatMoney(chosenProduct.price, chosenProduct.currency) }}</p>
                                     </div>
-                                    <div v-if="chosenProduct?.has_variants" class="md:col-span-3">
+                                    <div v-if="chosenProduct?.has_variants" class="@lg:col-span-3">
                                         <label for="add_variant" :class="fieldLabel">{{ t('orders.create.variant') }}</label>
                                         <select id="add_variant" v-model="selectedVariant" :class="fieldInput" @change="variantError = ''">
                                             <option :value="null">{{ t('orders.create.chooseVariant') }}</option>
@@ -388,11 +388,11 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                         </select>
                                         <p v-if="variantError" :class="fieldError">{{ variantError }}</p>
                                     </div>
-                                    <div class="md:col-span-3">
+                                    <div class="@lg:col-span-3">
                                         <label :for="fieldIdPrefix + '-1'" :class="fieldLabel">{{ t('common.quantity') }}</label>
                                         <input :id="fieldIdPrefix + '-1'" v-model.number="quantity" type="number" min="1" :class="fieldInput" />
                                     </div>
-                                    <div class="flex items-end md:col-span-2">
+                                    <div class="flex items-end @lg:col-span-2">
                                         <Button type="button" variant="default" class="w-full" @click="addItem">
                                             <Plus :size="14" />{{ t('orders.create.add') }}
                                         </Button>
@@ -402,44 +402,48 @@ const fieldError = 'mt-1 text-xs text-status-danger';
 
                             <!-- Items list -->
                             <div v-if="form.items.length > 0" class="space-y-3">
-                                <div v-for="(item, index) in form.items" :key="index" class="rounded-lg border border-border-subtle bg-surface-canvas p-4">
-                                <div class="flex flex-wrap items-center gap-4">
-                                    <div class="min-w-0 flex-1 basis-full sm:basis-0">
+                                <div v-for="(item, index) in form.items" :key="index" class="@container rounded-lg border border-border-subtle bg-surface-canvas p-4">
+                                <!-- The product gets the full card width; the figures below
+                                     are laid out by the card's width, not the viewport's. -->
+                                <div class="flex items-start gap-3">
+                                    <div class="min-w-0 flex-1">
                                         <p class="font-medium text-text-primary">{{ item.product_name }}</p>
                                         <p v-if="item.variant_title" class="text-xs text-text-secondary">{{ t('orders.create.variant') }}: {{ item.variant_title }}</p>
-                                        <p class="text-xs text-text-tertiary">SKU: {{ item.sku }}</p>
+                                        <p class="whitespace-nowrap text-xs text-text-tertiary">SKU: {{ item.sku }}</p>
                                         <p v-if="form.errors[`items.${index}.product_variant_id`]" :class="fieldError" :id="errorId(`items.${index}.product_variant_id`)">{{ form.errors[`items.${index}.product_variant_id`] }}</p>
                                         <p v-if="form.errors[`items.${index}.unit_price`]" :class="fieldError" :id="errorId(`items.${index}.unit_price`)">{{ form.errors[`items.${index}.unit_price`] }}</p>
                                         <p v-if="form.errors[`items.${index}.tax_rate`]" :class="fieldError" :id="errorId(`items.${index}.tax_rate`)">{{ form.errors[`items.${index}.tax_rate`] }}</p>
                                     </div>
-                                    <div class="w-20">
+                                    <button :aria-label="t('common.delete')" type="button" @click="removeItem(index)" class="shrink-0 rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-surface-sunken hover:text-status-danger"><Trash2 :size="16" /></button>
+                                </div>
+                                <div class="mt-3 grid grid-cols-2 gap-3 @sm:grid-cols-3 @3xl:grid-cols-6">
+                                    <div>
                                         <label :for="fieldIdPrefix + '-repeat-1-' + index" class="mb-1 block text-[11px] text-text-tertiary">{{ t('orders.edit.qty') }}</label>
                                         <input :id="fieldIdPrefix + '-repeat-1-' + index" :value="item.quantity" @input="updateItemQuantity(index, parseInt($event.target.value))" type="number" min="1" :class="fieldInput" v-bind="fieldErrorAttrs(`items.${index}.quantity`)" />
                                 <p v-if="form.errors[`items.${index}.quantity`]" :id="errorId(`items.${index}.quantity`)" :class="fieldError">{{ form.errors[`items.${index}.quantity`] }}</p>
                                     </div>
-                                    <div class="w-28">
+                                    <div>
                                         <label :for="fieldIdPrefix + '-repeat-2-' + index" class="mb-1 block text-[11px] text-text-tertiary">{{ t('orders.show.unitPrice') }}</label>
                                         <input :id="fieldIdPrefix + '-repeat-2-' + index" :value="item.unit_price" @input="updateItemPrice(index, $event.target.value)" type="number" step="0.01" min="0" :class="fieldInput" v-bind="fieldErrorAttrs(`items.${index}.unit_price`)" />
                                     </div>
-                                    <div class="w-20">
+                                    <div>
                                         <label :for="fieldIdPrefix + '-repeat-3-' + index" class="mb-1 block text-[11px] text-text-tertiary">{{ t('tax.lineRate') }}</label>
                                         <input :id="fieldIdPrefix + '-repeat-3-' + index" v-model="item.tax_rate" type="number" step="0.001" min="0" max="100" :class="fieldInput" v-bind="fieldErrorAttrs(`items.${index}.tax_rate`)" />
                                     </div>
-                                    <div class="w-24 text-end">
+                                    <div class="text-end">
                                         <p class="mb-1 text-[11px] text-text-tertiary">{{ t('tax.net') }}</p>
-                                        <p class="font-semibold tabular-nums text-text-primary">{{ money(lineNetCents(item) / 100) }}</p>
+                                        <p class="whitespace-nowrap font-semibold tabular-nums text-text-primary">{{ money(lineNetCents(item) / 100) }}</p>
                                     </div>
-                                    <div class="w-20 text-end">
+                                    <div class="text-end">
                                         <p class="mb-1 text-[11px] text-text-tertiary">{{ t('tax.lineTax') }}</p>
-                                        <p class="tabular-nums text-text-secondary">{{ money(totals.lineTaxes[index]) }}</p>
+                                        <p class="whitespace-nowrap tabular-nums text-text-secondary">{{ money(totals.lineTaxes[index]) }}</p>
                                     </div>
-                                    <div class="w-24 text-end">
+                                    <div class="text-end">
                                         <p class="mb-1 text-[11px] text-text-tertiary">{{ t('tax.gross') }}</p>
-                                        <p class="font-semibold tabular-nums text-text-primary">{{ money(lineNetCents(item) / 100 + totals.lineTaxes[index]) }}</p>
+                                        <p class="whitespace-nowrap font-semibold tabular-nums text-text-primary">{{ money(lineNetCents(item) / 100 + totals.lineTaxes[index]) }}</p>
                                     </div>
-                                    <button :aria-label="t('common.delete')" type="button" @click="removeItem(index)" class="mt-4 rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-surface-sunken hover:text-status-danger"><Trash2 :size="16" /></button>
                                 </div>
-                                <div class="mt-3 md:w-1/2">
+                                <div class="mt-3 @xl:w-1/2">
                                     <DiscountInput
                                         :id="`item_${index}_discount`"
                                         v-model:type="item.discount_type"

@@ -96,7 +96,7 @@ const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface
         >
             <div class="flex min-w-0 items-center gap-2">
                 <UserRound :size="16" class="shrink-0 text-text-tertiary" />
-                <p class="truncate text-sm text-text-primary">{{ t('orders.create.linkedCustomer', { name: props.selected.name }) }}</p>
+                <p class="truncate text-sm text-text-primary" :title="t('orders.create.linkedCustomer', { name: props.selected.name })">{{ t('orders.create.linkedCustomer', { name: props.selected.name }) }}</p>
             </div>
             <button
                 type="button"

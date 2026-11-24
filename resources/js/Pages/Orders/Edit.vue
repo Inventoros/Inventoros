@@ -182,9 +182,9 @@ const fieldError = 'mt-1 text-xs text-status-danger';
         </PageHeader>
 
         <form @submit.prevent="submit" class="mt-6">
-            <div class="grid grid-cols-1 gap-4 lg:grid-cols-3">
+            <div class="grid grid-cols-1 gap-4 xl:grid-cols-3">
                 <!-- Left column -->
-                <div class="space-y-4 lg:col-span-2">
+                <div class="space-y-4 xl:col-span-2">
                     <!-- Customer info -->
                     <Card :padded="false">
                         <div class="px-5 pt-5"><h3 class="text-sm font-semibold text-text-primary">{{ t('orders.create.customerInfo') }}</h3></div>
@@ -232,11 +232,13 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                 <div
                                     v-for="(item, index) in form.items"
                                     :key="index"
-                                    class="rounded-lg border border-border-subtle bg-surface-canvas p-4"
+                                    class="@container rounded-lg border border-border-subtle bg-surface-canvas p-4"
                                 >
-                                    <div class="grid grid-cols-1 gap-3 md:grid-cols-12">
+                                    <!-- Laid out by the card's width: the sidebar columns and
+                                         app navigation leave far less room than the viewport. -->
+                                    <div class="grid grid-cols-2 gap-3 @lg:grid-cols-[repeat(3,minmax(0,1fr))_auto] @3xl:grid-cols-12">
                                         <!-- Product selection -->
-                                        <div class="md:col-span-5">
+                                        <div class="col-span-full @3xl:col-span-5">
                                             <label :for="`product-${index}`" :class="fieldLabel">{{ t('common.product') }}</label>
                                             <ProductPicker
                                                 :id="`product-${index}`"
@@ -273,7 +275,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                         </div>
 
                                         <!-- Quantity -->
-                                        <div class="md:col-span-2">
+                                        <div class="@3xl:col-span-2">
                                             <label :for="`quantity-${index}`" :class="fieldLabel">{{ t('orders.edit.qty') }}</label>
                                             <input
                                                 :id="`quantity-${index}`"
@@ -290,7 +292,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                         </div>
 
                                         <!-- Unit price -->
-                                        <div class="md:col-span-2">
+                                        <div class="@3xl:col-span-2">
                                             <label :for="`price-${index}`" :class="fieldLabel">{{ t('orders.edit.unitPrice') }}</label>
                                             <input
                                                 :id="`price-${index}`"
@@ -307,17 +309,17 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                         </div>
 
                                         <!-- Net -->
-                                        <div class="md:col-span-2">
+                                        <div class="@3xl:col-span-2">
                                             <p :class="fieldLabel">{{ t('tax.net') }}</p>
                                             <div class="flex h-9 items-center rounded-md border border-border-subtle bg-surface-sunken px-3">
-                                                <span class="text-sm font-semibold tabular-nums text-text-primary">
+                                                <span class="whitespace-nowrap text-sm font-semibold tabular-nums text-text-primary">
                                                     {{ formatMoney(lineNetCents(item) / 100, order.currency) }}
                                                 </span>
                                             </div>
                                         </div>
 
                                         <!-- Remove button -->
-                                        <div class="flex items-end md:col-span-1">
+                                        <div class="flex items-end @3xl:col-span-1">
                                             <button :aria-label="t('common.delete')"
                                                 type="button"
                                                 @click="removeItem(index)"
@@ -328,8 +330,8 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                             </button>
                                         </div>
                                     </div>
-                                    <div class="mt-3 grid grid-cols-1 gap-3 md:grid-cols-12">
-                                        <div class="md:col-span-6">
+                                    <div class="mt-3 grid grid-cols-2 gap-3 @sm:grid-cols-3 @3xl:grid-cols-12">
+                                        <div class="col-span-full @3xl:col-span-6">
                                             <DiscountInput
                                                 :id="`item_${index}_discount`"
                                                 v-model:type="item.discount_type"
@@ -340,7 +342,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                             />
                                         </div>
                                         <!-- Line tax -->
-                                        <div class="md:col-span-2">
+                                        <div class="@3xl:col-span-2">
                                             <label :for="`tax-rate-${index}`" class="mb-1 block text-[11px] text-text-tertiary">{{ t('tax.lineRate') }}</label>
                                             <input
                                                 :id="`tax-rate-${index}`"
@@ -355,14 +357,14 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                                 {{ form.errors[`items.${index}.tax_rate`] }}
                                             </p>
                                         </div>
-                                        <div class="text-end md:col-span-2">
+                                        <div class="text-end @3xl:col-span-2">
                                             <p class="mb-1 text-[11px] text-text-tertiary">{{ t('tax.lineTax') }}</p>
-                                            <p class="tabular-nums text-text-secondary">{{ formatMoney(totals.lineTaxes[index], order.currency) }}</p>
+                                            <p class="whitespace-nowrap tabular-nums text-text-secondary">{{ formatMoney(totals.lineTaxes[index], order.currency) }}</p>
                                             <p v-if="rateValue(item.tax_rate) === null && item.tax > 0" class="text-[11px] text-text-tertiary">{{ t('tax.enteredAmount') }}</p>
                                         </div>
-                                        <div class="text-end md:col-span-2">
+                                        <div class="text-end @3xl:col-span-2">
                                             <p class="mb-1 text-[11px] text-text-tertiary">{{ t('tax.gross') }}</p>
-                                            <p class="font-semibold tabular-nums text-text-primary">{{ formatMoney(lineNetCents(item) / 100 + totals.lineTaxes[index], order.currency) }}</p>
+                                            <p class="whitespace-nowrap font-semibold tabular-nums text-text-primary">{{ formatMoney(lineNetCents(item) / 100 + totals.lineTaxes[index], order.currency) }}</p>
                                         </div>
                                     </div>
                                 </div>

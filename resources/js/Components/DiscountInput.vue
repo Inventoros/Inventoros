@@ -29,8 +29,9 @@ const control = 'h-9 rounded-md border border-border-subtle bg-surface-canvas px
 <template>
     <div>
         <label v-if="label" :for="`${id}_type`" :class="compact ? 'mb-1 block text-[11px] text-text-tertiary' : 'mb-1 block text-sm text-text-secondary'">{{ label }}</label>
-        <div class="flex gap-2">
-            <select :id="`${id}_type`" :value="type ?? ''" :class="[control, 'min-w-0 flex-1']" :aria-label="label || t('discounts.discount')" @change="onTypeChange">
+        <!-- The value drops below the type when the column is too narrow for both. -->
+        <div class="flex flex-wrap gap-2">
+            <select :id="`${id}_type`" :value="type ?? ''" :class="[control, 'min-w-32 flex-1']" :aria-label="label || t('discounts.discount')" @change="onTypeChange">
                 <option value="">{{ t('discounts.none') }}</option>
                 <option value="percent">{{ t('discounts.percent') }}</option>
                 <option value="fixed">{{ t('discounts.fixed') }}</option>
@@ -44,7 +45,7 @@ const control = 'h-9 rounded-md border border-border-subtle bg-surface-canvas px
                 :max="type === 'percent' ? 100 : undefined"
                 :disabled="!type"
                 :aria-label="t('discounts.value')"
-                :class="[control, 'w-24 disabled:opacity-50']"
+                :class="[control, 'w-30 shrink-0 grow-0 disabled:opacity-50']"
             />
         </div>
         <p v-if="error" class="mt-1 text-xs text-status-danger">{{ error }}</p>
