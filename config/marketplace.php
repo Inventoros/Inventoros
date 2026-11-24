@@ -36,15 +36,15 @@ return [
     | (MARKETPLACE_SIGNING_SECRET_KEY on inventoros.com). The key is minted
     | with `php artisan marketplace:keygen` on the site.
     |
-    | MAINTAINERS: once the production key exists, replace the '' default
-    | below with its PUBLIC key and commit it (public keys are safe to
-    | publish). Until then marketplace installs are refused unless
-    | INVENTOROS_MARKETPLACE_PUBLIC_KEY is set. The app never trusts the key
-    | the marketplace advertises at /api/v1/marketplace/public-key.
+    | The default below is inventoros.com's production public key (minted
+    | 2026-11-24; public keys are safe to publish). Set
+    | INVENTOROS_MARKETPLACE_PUBLIC_KEY only to point an install at another
+    | marketplace. The app never trusts the key the marketplace advertises at
+    | /api/v1/marketplace/public-key.
     |
     */
 
-    'public_key' => (string) env('INVENTOROS_MARKETPLACE_PUBLIC_KEY', ''),
+    'public_key' => (string) env('INVENTOROS_MARKETPLACE_PUBLIC_KEY', '84esZerqRR+vlERs4M7cOblGa/d95Ojq1BnYczuqdHI='),
 
     /*
     |--------------------------------------------------------------------------

@@ -1,5 +1,20 @@
 # Upgrade Guide
 
+## Upgrading from v2.6.2 to v2.7.0
+
+Requirements are unchanged. Back up first, then update the same way as for
+2.6.0 below, with the version set to 2.7.0. Docker installs pull the 2.7.0
+image and must not use the in-app updater.
+
+One migration adds a table, `order_item_kit_components`, which records what
+each kit order line took from its components. Existing data needs no
+changes. Orders placed before 2.7.0 with a kit on them keep their old
+behaviour: cancelling or returning them puts the units back on the kit
+itself, exactly as they were taken.
+
+Plugin authors: filled controls in core now use `bg-brand-solid`; see the
+[2.7.0 release notes](docs/releases/2.7.0.md).
+
 ## Upgrading from v2.6.1 to v2.6.2
 
 Requirements are unchanged. Back up first, then update the same way as for
