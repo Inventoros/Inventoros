@@ -109,7 +109,7 @@ const thClass = 'px-4 py-2.5 text-xs font-medium tracking-tight text-text-second
     <AppLayout>
         <template #header>
             <div class="flex items-center gap-2 text-xs">
-                <Link :href="route('returns.index')" class="text-text-tertiary hover:text-text-primary">{{ t('nav.sections.workspace') }}</Link>
+                <Link data-crumb-root :href="route('returns.index')" class="text-text-tertiary hover:text-text-primary">{{ t('nav.sections.workspace') }}</Link>
                 <span class="text-text-tertiary">/</span>
                 <Link :href="route('returns.index')" class="text-text-tertiary hover:text-text-primary">{{ t('nav.returns') }}</Link>
                 <span class="text-text-tertiary">/</span>
@@ -210,7 +210,7 @@ const thClass = 'px-4 py-2.5 text-xs font-medium tracking-tight text-text-second
                                         :key="item.id"
                                         class="border-b border-border-subtle transition-colors last:border-b-0 hover:bg-surface-overlay"
                                     >
-                                        <td class="cell-wrap px-4 py-3 text-sm font-medium text-text-primary">
+                                        <td class="cell-wrap min-w-[12rem] px-4 py-3 text-sm font-medium text-text-primary">
                                             {{ item.product?.name || item.order_item?.product_name || t('returns.show.unknownProduct') }}
                                             <span v-if="item.variant?.title" class="text-text-secondary"> ({{ item.variant.title }})</span>
                                         </td>

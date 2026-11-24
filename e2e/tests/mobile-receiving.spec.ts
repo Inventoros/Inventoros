@@ -162,3 +162,29 @@ test('narrow records retain table semantics, exact large counts, RTL, dark and h
     await expect(quantity).toBeFocused();
     expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBe(0);
 });
+
+test('a long validation error in a receive row wraps instead of widening the table at 1440px', async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 1000 });
+    const data = await render(page);
+    const quantityError = 'The quantity to receive for this line must be a whole number no greater than the quantity still outstanding on the purchase order, and it cannot be negative or left blank when the line is selected.';
+    const locationError = 'Choose a receiving bin that belongs to the warehouse this purchase order is being delivered to, or leave the destination empty to keep the existing location for this product.';
+    await page.route(`**/purchase-orders/${id()}/receive`, async route => {
+        if (route.request().method() !== 'POST') return route.fallback();
+        const page = structuredClone(data);
+        page.props.errors = { 'items.0.quantity_to_receive': quantityError, 'items.0.receiving_location_id': locationError };
+        await route.fulfill({ status: 200, headers: { 'X-Inertia': 'true', Vary: 'X-Inertia' }, contentType: 'application/json', body: JSON.stringify(page) });
+    });
+    await page.getByRole('spinbutton').first().fill('2');
+    await page.locator('form button[type="submit"]').click();
+
+    const row = page.locator('.receiving-table tbody tr').first();
+    for (const message of [quantityError, locationError]) {
+        const error = row.getByText(message, { exact: true });
+        await expect(error).toBeVisible();
+        const lines = await error.evaluate(element => Math.round(element.getBoundingClientRect().height / parseFloat(getComputedStyle(element).lineHeight)));
+        expect(lines).toBeGreaterThan(1);
+    }
+    const viewport = page.locator('.table-viewport').filter({ has: page.locator('.receiving-table') });
+    expect(await viewport.evaluate(element => element.scrollWidth - element.clientWidth)).toBeLessThanOrEqual(0);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBe(0);
+});

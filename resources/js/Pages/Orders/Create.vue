@@ -296,7 +296,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
     <AppLayout>
         <template #header>
             <div class="flex items-center gap-2 text-xs">
-                <Link :href="route('orders.index')" class="text-text-tertiary hover:text-text-primary">{{ t('nav.sections.workspace') }}</Link>
+                <Link data-crumb-root :href="route('orders.index')" class="text-text-tertiary hover:text-text-primary">{{ t('nav.sections.workspace') }}</Link>
                 <span class="text-text-tertiary">/</span>
                 <Link :href="route('orders.index')" class="text-text-tertiary hover:text-text-primary">{{ t('orders.title') }}</Link>
                 <span class="text-text-tertiary">/</span>
@@ -409,7 +409,7 @@ const fieldError = 'mt-1 text-xs text-status-danger';
                                     <div class="min-w-0 flex-1">
                                         <p class="font-medium text-text-primary">{{ item.product_name }}</p>
                                         <p v-if="item.variant_title" class="text-xs text-text-secondary">{{ t('orders.create.variant') }}: {{ item.variant_title }}</p>
-                                        <p class="whitespace-nowrap text-xs text-text-tertiary">SKU: {{ item.sku }}</p>
+                                        <p class="truncate text-xs text-text-tertiary" :title="`SKU: ${item.sku}`">SKU: {{ item.sku }}</p>
                                         <p v-if="form.errors[`items.${index}.product_variant_id`]" :class="fieldError" :id="errorId(`items.${index}.product_variant_id`)">{{ form.errors[`items.${index}.product_variant_id`] }}</p>
                                         <p v-if="form.errors[`items.${index}.unit_price`]" :class="fieldError" :id="errorId(`items.${index}.unit_price`)">{{ form.errors[`items.${index}.unit_price`] }}</p>
                                         <p v-if="form.errors[`items.${index}.tax_rate`]" :class="fieldError" :id="errorId(`items.${index}.tax_rate`)">{{ form.errors[`items.${index}.tax_rate`] }}</p>
