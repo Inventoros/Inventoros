@@ -166,5 +166,6 @@
     "Some exchange rates could not be refreshed. See the synchronization status for details.": "Einige Wechselkurse konnten nicht aktualisiert werden. Details finden Sie im Synchronisierungsstatus.",
     "Exchange rates could not be refreshed. See the synchronization status for details.": "Die Wechselkurse konnten nicht aktualisiert werden. Details finden Sie im Synchronisierungsstatus.",
     "Manual exchange rate saved.": "Manueller Wechselkurs gespeichert.",
-    "Manual exchange rate deleted.": "Manueller Wechselkurs gelöscht."
+    "Manual exchange rate deleted.": "Manueller Wechselkurs gelöscht.",
+    "Contains": "Enthält"
 }

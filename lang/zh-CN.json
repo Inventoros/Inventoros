@@ -166,5 +166,6 @@
     "Some exchange rates could not be refreshed. See the synchronization status for details.": "部分汇率无法刷新。详情请查看同步状态。",
     "Exchange rates could not be refreshed. See the synchronization status for details.": "无法刷新汇率。详情请查看同步状态。",
     "Manual exchange rate saved.": "已保存手动汇率。",
-    "Manual exchange rate deleted.": "已删除手动汇率。"
+    "Manual exchange rate deleted.": "已删除手动汇率。",
+    "Contains": "包含"
 }

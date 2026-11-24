@@ -61,6 +61,10 @@ const props = defineProps({
     supplierCosts: { type: Object, default: () => ({}) },
     // On hand / reserved / available (stock reservations), with a per-variant map.
     stockAvailability: { type: Object, default: null },
+    // Kits only: how many can be made from the components, and why the kit
+    // cannot be sold when it cannot (null when it can).
+    kitAvailable: { type: Number, default: null },
+    kitProblem: { type: String, default: null },
     pluginComponents: Object,
 });
 
@@ -217,6 +221,7 @@ const editingComponentQty = ref(1);
 
 const availableKitStock = computed(() => {
     if (props.product.type !== 'kit' || components.value.length === 0) return 0;
+    if (props.kitAvailable !== null) return props.kitAvailable;
     return Math.min(...components.value.map(c => Math.floor((c.component?.stock || 0) / c.quantity)));
 });
 
@@ -701,6 +706,9 @@ const fieldInput = 'h-9 w-full rounded-md border border-border-subtle bg-surface
                                 </span>
                                 <span class="text-lg font-bold text-status-info">{{ availableKitStock }}</span>
                             </div>
+                            <p v-if="product.type === 'kit' && kitProblem" class="mb-4 rounded-lg border border-status-warning/20 bg-status-warning-soft p-3 text-sm text-status-warning">
+                                <span class="font-medium">{{ t('products.kit.notSellable') }}:</span> {{ kitProblem }}
+                            </p>
 
                             <!-- Assembly: Create Work Order button -->
                             <div v-if="product.type === 'assembly' && components.length > 0" class="mb-4">

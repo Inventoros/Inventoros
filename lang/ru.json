@@ -166,5 +166,6 @@
     "Some exchange rates could not be refreshed. See the synchronization status for details.": "Некоторые курсы не удалось обновить. Подробности смотрите в статусе синхронизации.",
     "Exchange rates could not be refreshed. See the synchronization status for details.": "Не удалось обновить обменные курсы. Подробности смотрите в статусе синхронизации.",
     "Manual exchange rate saved.": "Ручной курс сохранен.",
-    "Manual exchange rate deleted.": "Ручной курс удален."
+    "Manual exchange rate deleted.": "Ручной курс удален.",
+    "Contains": "Содержит"
 }

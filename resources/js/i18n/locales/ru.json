@@ -488,6 +488,10 @@
     }
   },
   "products": {
+    "kit": {
+      "canMake": "Можно собрать: {count}",
+      "notSellable": "Нельзя продать"
+    },
     "title": "Склад",
     "addProduct": "Добавить товар",
     "searchProducts": "Поиск товаров",
@@ -758,6 +762,7 @@
       "addAtLeastOneProduct": "Добавьте в заказ хотя бы один товар."
     },
     "show": {
+      "kitContains": "Содержит",
       "orderNumber": "Заказ #{number}",
       "createdOn": "Создан {date}",
       "editOrder": "Редактировать заказ",
