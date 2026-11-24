@@ -112,19 +112,25 @@ const plusOthers = (values) => {
 };
 const otherCurrencies = (key) => plusOthers(props.stats.byCurrency?.[key]);
 const optionalRoute = (name, parameters) => (canVisit(name) ? route(name, parameters) : null);
-// Revenue against the same days of last month, in the organization's
-// currency. No comparison (and no trend line) when last month had none.
+// Revenue up to today against the same days of last month, in the
+// organization's currency. No trend line when last month had nothing to
+// compare with, or when this month's sales are all in other currencies
+// (the comparison would read -100% beside a tile listing them).
 const revenueTrend = computed(() => {
-    const change = periodChange(props.stats.revenueThisMonth, props.stats.revenueSamePeriodLastMonth);
+    const change = periodChange(props.stats.revenueMonthToDate, props.stats.revenueSamePeriodLastMonth);
     if (change === null) return null;
+    if (Number(props.stats.revenueMonthToDate) === 0 && otherCurrencies('revenueMonthToDate')) return null;
+    const rounded = Math.round(change);
     return {
-        direction: change < 0 ? 'down' : 'up',
+        direction: rounded < 0 ? 'down' : rounded > 0 ? 'up' : 'flat',
         text: t('dashboard.design.vsLastMonth', {
-            change: n(change / 100, { style: 'percent', maximumFractionDigits: 0, signDisplay: 'exceptZero' }),
+            change: n(rounded / 100, { style: 'percent', maximumFractionDigits: 0, signDisplay: 'exceptZero' }),
         }),
     };
 });
-const showMovement = computed(() => widgets.stock_movements && props.can.viewProducts);
+// The controller only enables this widget for users who may see the stock
+// adjustments ledger it summarises.
+const showMovement = computed(() => widgets.stock_movements);
 const headlineMetrics = computed(() => {
     const stats = props.stats;
     const counts = [

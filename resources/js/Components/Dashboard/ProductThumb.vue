@@ -11,8 +11,9 @@ const props = defineProps({
 
 const failed = ref(false);
 const src = computed(() => (failed.value ? null : props.product.image_urls?.[0] || null));
+// A new photo (or another product) gets a fresh attempt.
 watch(
-    () => props.product.id,
+    () => props.product.image_urls?.[0],
     () => {
         failed.value = false;
     },

@@ -35,6 +35,10 @@ class ScreenshotHistorySeeder extends Seeder
             return;
         }
 
+        // Re-running it (to retake screenshots) replaces the history rather
+        // than doubling it; orders below are keyed by number already.
+        StockAdjustment::where('organization_id', $orgId)->where('reason', 'Screenshot history')->delete();
+
         // A deliveries-and-sales rhythm: a supplier delivery about once a
         // week, and a few sales on most days, quieter at weekends.
         for ($daysAgo = 29; $daysAgo >= 1; $daysAgo--) {
@@ -106,7 +110,7 @@ class ScreenshotHistorySeeder extends Seeder
             'user_id' => $userId,
             'type' => $type,
             'quantity_before' => (int) $product->stock,
-            'quantity_after' => (int) $product->stock,
+            'quantity_after' => (int) $product->stock + $quantity,
             'adjustment_quantity' => $quantity,
             'reason' => 'Screenshot history',
         ]);

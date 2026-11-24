@@ -293,6 +293,9 @@ a.dashboard-metric:hover {
 .dashboard-metric-trend-down {
     color: hsl(var(--status-danger));
 }
+.dashboard-metric-trend-flat {
+    color: hsl(var(--text-tertiary));
+}
 .dashboard-main-grid {
     display: grid;
     min-width: 0;
