@@ -142,7 +142,7 @@ Because every package is signed, marketplace installs work even when manual ZIP 
 
 ```bash
 INVENTOROS_MARKETPLACE_URL=https://inventoros.com   # must be a bare https origin
-INVENTOROS_MARKETPLACE_PUBLIC_KEY=base64-ed25519-public-key
+INVENTOROS_MARKETPLACE_PUBLIC_KEY=base64-ed25519-public-key   # defaults to inventoros.com's key
 INVENTOROS_MARKETPLACE_CACHE_SECONDS=300
 INVENTOROS_MARKETPLACE_MAX_DOWNLOAD_BYTES=52428800
 ```
