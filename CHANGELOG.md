@@ -8,6 +8,7 @@ Full release notes, with the pull request behind each change, are on [GitHub Rel
 
 ### Added
 
+- **Kits on the order form and product pages.** Kits show how many can be made from their components ("Can make N") in the order product picker, the product list and the product page, which also says why a kit cannot be sold. An order's kit line lists the components it took.
 - **Save and view on the product edit page.** A "Save and view" button saves the product and opens its page, instead of going back to the inventory list (#461).
 - **`update_product` MCP tool.** AI agents can now edit an existing product's prices, tax rate, names, reorder levels, barcode, category, location, active flag, backorder setting and release date. Only the fields passed change, which suits bulk price updates one product per call. It needs `edit_products`. Stock stays on `adjust_stock`, and variants, options, images and supplier links stay in the web UI and REST API (#462).
 

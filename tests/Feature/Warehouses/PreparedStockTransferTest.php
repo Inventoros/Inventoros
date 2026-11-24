@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Feature\Warehouses;
 
 use App\Models\Inventory\ProductVariant;
+use App\Models\Inventory\StockReservation;
 use App\Models\Inventory\StockTransfer;
 use App\Services\ProductLocationStockService;
 use App\Services\StockReservationService;
@@ -138,4 +139,41 @@ final class PreparedStockTransferTest extends TestCase
         $this->assertSame(85, app(StockReservationService::class)->available($this->productA));
     }
 
+    private function kitTransfer(): StockTransfer
+    {
+        $kit = $this->makeProduct('Starter Kit', 'KIT-1', $this->locationA, 10);
+        $kit->update(['type' => 'kit']);
+
+        return app(StockTransferService::class)->create($this->organization->id, $this->restricted, [
+            'from_location_id' => $this->locationA->id, 'to_location_id' => $this->locationB->id,
+            'items' => [['product_id' => $kit->id, 'quantity' => 2]],
+        ]);
+    }
+
+    public function test_rest_preparing_a_transfer_with_a_kit_line_is_refused_with_a_422(): void
+    {
+        $transfer = $this->kitTransfer();
+        Sanctum::actingAs($this->restricted);
+
+        $this->postJson('/api/v1/stock-transfers/'.$transfer->id.'/prepare')
+            ->assertStatus(422)
+            ->assertJsonPath('error', 'unsupported_kit')
+            ->assertJsonPath('message', 'Kits cannot be reserved; reserve their components.');
+
+        $this->assertSame('pending', $transfer->fresh()->status);
+        $this->assertSame(0, StockReservation::withoutGlobalScopes()->count());
+    }
+
+    public function test_web_preparing_a_transfer_with_a_kit_line_flashes_the_refusal(): void
+    {
+        $transfer = $this->kitTransfer();
+
+        $this->actingAs($this->restricted)
+            ->post(route('stock-transfers.prepare', $transfer))
+            ->assertRedirect(route('stock-transfers.show', $transfer))
+            ->assertSessionHas('error', 'Kits cannot be reserved; reserve their components.');
+
+        $this->assertSame('pending', $transfer->fresh()->status);
+        $this->assertSame(0, StockReservation::withoutGlobalScopes()->count());
+    }
 }

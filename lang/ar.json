@@ -166,5 +166,6 @@
     "Some exchange rates could not be refreshed. See the synchronization status for details.": "تعذّر تحديث بعض أسعار الصرف. راجع حالة المزامنة للتفاصيل.",
     "Exchange rates could not be refreshed. See the synchronization status for details.": "تعذّر تحديث أسعار الصرف. راجع حالة المزامنة للتفاصيل.",
     "Manual exchange rate saved.": "حُفظ سعر الصرف اليدوي.",
-    "Manual exchange rate deleted.": "حُذف سعر الصرف اليدوي."
+    "Manual exchange rate deleted.": "حُذف سعر الصرف اليدوي.",
+    "Contains": "يحتوي على"
 }

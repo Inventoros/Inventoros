@@ -359,6 +359,10 @@
     }
   },
   "products": {
+    "kit": {
+      "canMake": "Can make {count}",
+      "notSellable": "Cannot be sold"
+    },
     "title": "Inventory",
     "addProduct": "Add Product",
     "searchProducts": "Search Products",
@@ -629,6 +633,7 @@
       "addAtLeastOneProduct": "Please add at least one product to the order."
     },
     "show": {
+      "kitContains": "Contains",
       "orderNumber": "Order #{number}",
       "createdOn": "Created on {date}",
       "editOrder": "Edit Order",

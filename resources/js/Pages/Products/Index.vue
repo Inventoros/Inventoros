@@ -30,6 +30,8 @@ const { t } = useI18n();
 
 const props = defineProps({
     products: Object,
+    // Kit id => how many can be made from its components (kits on this page).
+    kitAvailable: { type: Object, default: () => ({}) },
     canResetStock: { type: Boolean, default: false },
     filters: Object,
     categories: Array,
@@ -329,11 +331,14 @@ const thClass =
                         <td class="px-4 py-3"><span class="record-relation">{{ product.category?.name || t('common.na') }}</span></td>
                         <td class="px-4 py-3"><span class="record-relation">{{ product.location?.name || t('common.na') }}</span></td>
                         <td class="px-4 py-3 text-end">
+                            <p v-if="product.type === 'kit'" class="whitespace-nowrap text-xs font-medium tabular-nums text-text-primary">{{ t('products.kit.canMake', { count: kitAvailable?.[product.id] ?? 0 }) }}</p>
+                            <template v-else>
                             <div class="flex items-center justify-end gap-1">
                                 <span :class="['font-medium tabular-nums', isLowStock(product) ? 'text-status-danger' : 'text-text-primary']">{{ onHand(product) }}</span>
                                 <AlertTriangle v-if="isLowStock(product)" :size="14" class="text-status-danger" />
                             </div>
                             <p class="whitespace-nowrap text-[11px] text-text-tertiary">{{ t('products.min', { count: product.min_stock }) }}</p>
+                            </template>
                         </td>
                         <td class="px-4 py-3 text-end font-medium tabular-nums text-text-primary">{{ formatCurrency(product.display_price ?? product.price, product.currency) }}</td>
                         <td class="px-4 py-3">

@@ -166,5 +166,6 @@
     "Some exchange rates could not be refreshed. See the synchronization status for details.": "一部の為替レートを更新できませんでした。詳細は同期状況を確認してください。",
     "Exchange rates could not be refreshed. See the synchronization status for details.": "為替レートを更新できませんでした。詳細は同期状況を確認してください。",
     "Manual exchange rate saved.": "手動の為替レートを保存しました。",
-    "Manual exchange rate deleted.": "手動の為替レートを削除しました。"
+    "Manual exchange rate deleted.": "手動の為替レートを削除しました。",
+    "Contains": "含む"
 }

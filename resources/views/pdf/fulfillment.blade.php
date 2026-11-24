@@ -22,6 +22,8 @@
         .items .quantity { text-align: right; }
         .items .check { text-align: center; }
         .items .sku { font-size: 10px; }
+        .items .component td { padding-top: 5px; padding-bottom: 5px; }
+        .items .component .component-name { padding-left: 24px; }
         .box { display: inline-block; width: 12px; height: 12px; border: 1px solid #59636e; }
         .summary { page-break-inside: avoid; }
         .note { margin-top: 18px; color: #59636e; font-size: 10px; }
@@ -82,6 +84,14 @@
                     <td class="quantity">{{ $line['quantity'] }}</td>
                     @if($isPickList)<td class="check"><span class="box"></span></td>@endif
                 </tr>
+                @foreach($line['components'] ?? [] as $component)
+                    <tr class="component">
+                        <td class="sku">{{ $component['sku'] }}</td>
+                        <td class="component-name">@if($loop->first)<div class="label">{{ __('Contains') }}</div>@endif{{ $component['name'] }}</td>
+                        <td class="quantity">{{ $component['quantity'] }}</td>
+                        @if($isPickList)<td class="check"><span class="box"></span></td>@endif
+                    </tr>
+                @endforeach
             @endforeach
         </tbody>
     </table>

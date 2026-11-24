@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Models\Order;
 
 use App\Enums\DiscountType;
+use App\Models\Inventory\OrderItemKitComponent;
 use App\Models\Inventory\Product;
 use App\Models\Inventory\ProductVariant;
 use App\Support\Money;
@@ -12,6 +13,7 @@ use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 
 /**
@@ -120,11 +122,19 @@ class OrderItem extends Model
 
     /**
      * The unit cost to record on a line sold now: the variant's own purchase
-     * price when it has one, otherwise the product's. Null when neither is
-     * known, so reports can tell "unknown" from "free".
+     * price when it has one, otherwise the product's. A kit costs the sum of
+     * its components (KitSaleService::costAtSale), or its own purchase price
+     * when that cannot be computed. Null when nothing is known, so reports
+     * can tell "unknown" from "free".
      */
     public static function costAtSale(Product $product, ?ProductVariant $variant = null): ?string
     {
+        if ($product->isKit()) {
+            $cost = app(\App\Services\Inventory\KitSaleService::class)->costAtSale($product) ?? $product->purchase_price;
+
+            return $cost === null ? null : (string) $cost;
+        }
+
         $cost = $variant?->purchase_price ?? $product->purchase_price;
 
         return $cost === null ? null : (string) $cost;
@@ -148,6 +158,16 @@ class OrderItem extends Model
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);
+    }
+
+    /**
+     * What a kit line drew from each component (empty for plain lines).
+     *
+     * @return HasMany<OrderItemKitComponent, $this>
+     */
+    public function kitComponents(): HasMany
+    {
+        return $this->hasMany(OrderItemKitComponent::class);
     }
 
     /**

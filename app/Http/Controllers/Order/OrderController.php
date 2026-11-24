@@ -23,6 +23,7 @@ use App\Models\Order\Order;
 use App\Models\Warehouse;
 use App\Services\BackorderService;
 use App\Services\Documents\FulfillmentDocumentService;
+use App\Services\Inventory\KitSaleService;
 use App\Services\OrderService;
 use App\Services\Shipping\OrderShippingPanel;
 use App\Services\WarehouseAccessService;
@@ -237,7 +238,7 @@ class OrderController extends Controller
      */
     public function show(Order $order): Response
     {
-        $order->load(['items.product', 'items.variant', 'organization', 'creator', 'approver']);
+        $order->load(['items.product', 'items.variant', 'items.kitComponents.componentProduct' => fn ($query) => $query->withTrashed(), 'organization', 'creator', 'approver']);
 
         // Ensure user can only view orders from their organization
         if ($order->organization_id !== auth()->user()->organization_id) {
@@ -255,7 +256,7 @@ class OrderController extends Controller
         return Inertia::render('Orders/Show', [
             // Canonical API resource shape, so the detail page and the REST
             // endpoint expose the same order shape (P2-15).
-            'order' => (new OrderResource($order))->resolve(request()),
+            'order' => $this->withKitComponents($order, (new OrderResource($order))->resolve(request())),
             'canApprove' => $canApprove,
             // False when the order never needed approval (the organization
             // does not require it): the page hides the approval card.
@@ -569,7 +570,7 @@ class OrderController extends Controller
      */
     private function formProducts(int $organizationId, array $keepVariantIds = []): array
     {
-        return Product::forOrganization($organizationId)
+        $products = Product::forOrganization($organizationId)
             ->active()
             ->with(['variants' => fn ($query) => $query->where(function ($q) use ($keepVariantIds) {
                 $q->where('is_active', true);
@@ -578,7 +579,14 @@ class OrderController extends Controller
                 }
             })])
             ->orderBy('name')
-            ->get(['id', 'name', 'sku', 'barcode', 'price', 'currency', 'price_in_currencies', 'tax_rate', 'stock', 'has_variants', 'category_id', 'location_id'])
+            ->get(['id', 'organization_id', 'name', 'sku', 'barcode', 'type', 'price', 'currency', 'price_in_currencies', 'tax_rate', 'stock', 'has_variants', 'category_id', 'location_id']);
+
+        // A kit's own stock is never sold: it offers how many can be made from
+        // its components (0 when it cannot be sold), worked out once for all kits.
+        $kits = $products->where('type', 'kit');
+        $makeable = $kits->isEmpty() ? [] : app(KitSaleService::class)->availableFor($kits->values());
+
+        return $products
             ->map(fn (Product $product) => [
                 'id' => $product->id,
                 'name' => $product->name,
@@ -591,7 +599,8 @@ class OrderController extends Controller
                 'prices' => (object) array_change_key_case(array_filter((array) ($product->price_in_currencies ?? []), 'is_numeric'), CASE_UPPER),
                 // Pre-fills a new line's tax rate (variants share it).
                 'tax_rate' => $product->tax_rate,
-                'stock' => (int) $product->stock,
+                'stock' => $product->type === 'kit' ? (int) ($makeable[$product->id] ?? 0) : (int) $product->stock,
+                'is_kit' => $product->type === 'kit',
                 'has_variants' => (bool) $product->has_variants,
                 'variants' => $product->has_variants
                     ? $product->variants->map(fn (ProductVariant $variant) => [
@@ -610,5 +619,35 @@ class OrderController extends Controller
             ])
             ->values()
             ->all();
+    }
+
+    /**
+     * Adds each kit line's snapshot components (what the sale took) to the
+     * order's resolved item rows, as `kit_components`.
+     *
+     * @param  array<string, mixed>  $data  the resolved OrderResource
+     * @return array<string, mixed>
+     */
+    private function withKitComponents(Order $order, array $data): array
+    {
+        $byItem = $order->items->mapWithKeys(fn ($item) => [
+            $item->id => $item->kitComponents
+                ->map(fn ($row) => [
+                    'product_id' => $row->component_product_id,
+                    'name' => $row->componentProduct?->name,
+                    'sku' => $row->componentProduct?->sku,
+                    'quantity_per_kit' => $row->quantity_per_kit,
+                    'quantity_taken' => $row->quantity_taken,
+                ])
+                ->values()
+                ->all(),
+        ]);
+
+        $data['items'] = array_map(
+            fn (array $row) => $row + ['kit_components' => $byItem[$row['id']] ?? []],
+            $data['items'] ?? [],
+        );
+
+        return $data;
     }
 }

@@ -488,6 +488,10 @@
     }
   },
   "products": {
+    "kit": {
+      "canMake": "Dá para montar {count}",
+      "notSellable": "Não pode ser vendido"
+    },
     "title": "Estoque",
     "addProduct": "Adicionar Produto",
     "searchProducts": "Pesquisar Produtos",
@@ -758,6 +762,7 @@
       "addAtLeastOneProduct": "Adicione pelo menos um produto ao pedido."
     },
     "show": {
+      "kitContains": "Contém",
       "orderNumber": "Pedido #{number}",
       "createdOn": "Criado em {date}",
       "editOrder": "Editar Pedido",

@@ -409,4 +409,22 @@ final class StockReservationServiceTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
         $this->reservations()->reserve($this->product, null, 1, '', 'X');
     }
+
+    public function test_a_kit_cannot_be_reserved(): void
+    {
+        // A kit sale takes its components, never the kit's own stock, so a
+        // hold on the kit would protect nothing.
+        $kit = $this->makeProduct('KIT', 5, [$this->binA->id => 5], ['type' => 'kit']);
+
+        try {
+            $this->hold(1, 'BOOKING-1', null, $kit);
+            $this->fail('Reserving a kit must be refused.');
+        } catch (InvalidStateException $e) {
+            $this->assertSame('Kits cannot be reserved; reserve their components.', $e->getMessage());
+            $this->assertSame('unsupported_kit', $e->errorCode);
+        }
+
+        $this->assertSame(0, StockReservation::withoutGlobalScopes()->count());
+        $this->assertArrayNotHasKey('stock_reserved', $this->fired);
+    }
 }

@@ -15,6 +15,7 @@ use App\Models\Order\ReturnOrderItem;
 use App\Models\Shipping\Shipment;
 use App\Models\Shipping\ShipmentItem;
 use App\Models\User;
+use App\Services\Inventory\KitSaleService;
 use App\Support\Money;
 use App\Support\Search;
 use App\Support\SequenceNumberRetry;
@@ -47,6 +48,7 @@ final class ReturnOrderService
     public function __construct(
         private readonly TrackedStockAllocationService $trackedStock,
         private readonly WarehouseAccessService $warehouseAccess,
+        private readonly KitSaleService $kitSales,
     ) {}
 
     /**
@@ -597,7 +599,22 @@ final class ReturnOrderService
                 // Its primary bin receives the returned units with the total.
                 $variant = $item->variant ?? $item->orderItem?->variant;
 
-                if ($item->restock && $item->product && $variant !== null) {
+                // A kit line took its components, never the kit's own stock:
+                // give back the returned kits' worth of each component as the
+                // sale's snapshot recorded it ($item->quantity is in kits).
+                if ($item->restock && $item->orderItem !== null
+                    && $item->orderItem->kitComponents()->withoutGlobalScopes()->exists()) {
+                    $this->kitSales->giveBack(
+                        $item->orderItem,
+                        (int) $item->quantity,
+                        'return',
+                        'Return restock',
+                        $locked,
+                        $ledgerActor,
+                        $actor,
+                        "Restocked from return {$locked->return_number}",
+                    );
+                } elseif ($item->restock && $item->product && $variant !== null) {
                     StockAdjustment::adjustVariant(
                         $variant,
                         $item->quantity,
