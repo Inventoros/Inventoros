@@ -146,7 +146,7 @@ const tabs = computed(() => [
     <AppLayout>
         <template #header>
             <div class="flex items-center gap-2 text-xs">
-                <Link :href="route('settings.account.index')" class="text-text-tertiary hover:text-text-primary">{{ t('nav.sections.workspace') }}</Link>
+                <Link data-crumb-root :href="route('settings.account.index')" class="text-text-tertiary hover:text-text-primary">{{ t('nav.sections.workspace') }}</Link>
                 <span class="text-text-tertiary">/</span>
                 <Link :href="route('settings.index')" class="text-text-tertiary hover:text-text-primary">{{ t('nav.settings') }}</Link>
                 <span class="text-text-tertiary">/</span>

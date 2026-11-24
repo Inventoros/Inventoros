@@ -95,8 +95,8 @@ const field = 'h-9 rounded-md border border-border-subtle bg-surface-canvas px-3
                     <tbody role="rowgroup">
                         <tr v-for="row in balances.data" :key="rowKey(row)" role="row" class="stock-record border-b border-border-subtle last:border-0">
                             <td role="cell" class="stock-cell stock-sku whitespace-nowrap px-4 py-3 font-mono text-xs"><Link :href="route('products.show', row.product_id)" class="text-brand hover:underline ds-focus-ring">{{ row.sku }}</Link></td>
-                            <td role="cell" class="stock-cell stock-product px-4 py-3">{{ row.product_name }}</td>
-                            <td role="cell" class="stock-cell stock-variant px-4 py-3" :class="{ 'stock-no-variant': !row.variant_title }">{{ row.variant_title || t('common.na') }}</td>
+                            <td role="cell" class="stock-cell stock-product cell-wrap px-4 py-3">{{ row.product_name }}</td>
+                            <td role="cell" class="stock-cell stock-variant cell-wrap px-4 py-3" :class="{ 'stock-no-variant': !row.variant_title }">{{ row.variant_title || t('common.na') }}</td>
                             <td role="cell" class="stock-cell stock-warehouse px-4 py-3"><span class="stock-record-label" aria-hidden="true">{{ t('locations.warehouse') }}</span>{{ row.warehouse_name || t('locations.noWarehouse') }}</td>
                             <td role="cell" class="stock-cell stock-location px-4 py-3"><span class="stock-record-label" aria-hidden="true">{{ t('products.location') }}</span>{{ row.location_name || t('common.na') }}</td>
                             <td v-for="key in ['on_hand', 'reserved', 'available', 'in_transit']" :key="key" role="cell" class="stock-cell stock-quantity px-4 py-3 text-end tabular-nums" :class="[`stock-${key}`, key === 'available' && row.available === 0 ? 'font-semibold text-status-danger' : '']">

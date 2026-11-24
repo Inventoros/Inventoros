@@ -40,7 +40,7 @@ const thClass = 'px-4 py-2.5 text-start text-xs font-medium text-text-secondary'
     <AppLayout>
         <template #header>
             <div class="flex items-center gap-2 text-xs">
-                <span class="text-text-tertiary">{{ t('nav.sections.workspace') }}</span>
+                <span data-crumb-root class="text-text-tertiary">{{ t('nav.sections.workspace') }}</span>
                 <span class="text-text-tertiary">/</span>
                 <Link :href="route('returns.index')" class="text-text-tertiary hover:text-text-primary">{{ t('nav.returns') }}</Link>
                 <span class="text-text-tertiary">/</span>

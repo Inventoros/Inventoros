@@ -11,7 +11,8 @@ import { Head, Link, router } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { displayDate } from '@/lib/dates';
-import { Plus, Search, Eye, Settings } from '@lucide/vue';
+import { Plus, Search, Eye } from '@lucide/vue';
+import { IconWorkOrders } from '@/icons';
 
 const { t } = useI18n();
 
@@ -75,7 +76,7 @@ const thClass =
     <AppLayout table-page>
         <template #header>
             <div class="flex items-center gap-2 text-xs">
-                <span class="text-text-tertiary">{{ t('nav.sections.workspace') }}</span>
+                <span data-crumb-root class="text-text-tertiary">{{ t('nav.sections.workspace') }}</span>
                 <span class="text-text-tertiary">/</span>
                 <span class="font-medium text-text-primary">{{ t('nav.workOrders') }}</span>
             </div>
@@ -207,7 +208,7 @@ const thClass =
             </template>
             <template #empty>
                 <EmptyState
-                    :icon="Settings"
+                    :icon="IconWorkOrders"
                     :title="t('workOrders.noWorkOrders')"
                     :description="t('workOrders.noWorkOrdersHint')"
                     :filtered="Boolean(filters?.search || filters?.status)"

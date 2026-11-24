@@ -226,7 +226,7 @@ const thClass =
     <AppLayout table-page>
         <template #header>
             <div class="flex items-center gap-2 text-xs">
-                <span class="text-text-tertiary">{{ t('nav.sections.workspace') }}</span>
+                <span data-crumb-root class="text-text-tertiary">{{ t('nav.sections.workspace') }}</span>
                 <span class="text-text-tertiary">/</span>
                 <span class="font-medium text-text-primary">{{ t('products.title') }}</span>
             </div>
@@ -322,7 +322,7 @@ const thClass =
                         <td class="cell-wrap px-4 py-3">
                             <div class="flex items-center gap-3">
                                 <ProductThumb :product="product" :size="36" />
-                                <div class="min-w-0">
+                                <div class="min-w-0 flex-1">
                                     <Link :href="route('products.show', product.id)" class="font-medium text-text-primary hover:text-brand"><bdi>{{ product.display_name ?? product.name }}</bdi></Link>
                                     <p v-if="product.description" class="record-secondary truncate-fluid text-xs text-text-tertiary" :title="product.description">{{ product.description }}</p>
                                 </div>

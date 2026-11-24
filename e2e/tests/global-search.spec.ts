@@ -75,3 +75,46 @@ test('all result categories remain selectable and recent searches retain their r
         { id: 1, type: 'order' },
     ]);
 });
+
+test('"/" opens search on a plain page but not while typing or over an open dialog', async ({ page }) => {
+    const search = page.getByPlaceholder('Search products, orders, customers...');
+    await page.goto('/categories', { waitUntil: 'networkidle' });
+
+    // A plain page: focus on the body, "/" opens the palette. Blur rather than
+    // click, since any point on the page may be a link (at 1920px, (1, 1) is
+    // the sidebar logo, which navigates to the dashboard).
+    await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
+    await page.keyboard.press('/');
+    await expect(search).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(search).toHaveCount(0);
+    await expect(page.locator('dialog[open]')).toHaveCount(0);
+
+    // A native <dialog> opened with showModal() blocks the shortcut even
+    // when focus sits on one of its buttons rather than a field.
+    await page.getByRole('button', { name: 'Add Category', exact: true }).first().click();
+    const dialog = page.locator('dialog[open]').filter({ has: page.getByRole('heading', { name: 'Create Category' }) });
+    await expect(dialog).toHaveCount(1);
+    await dialog.getByRole('button', { name: 'Cancel' }).first().focus();
+    await page.keyboard.press('/');
+    // The palette mounts on the next render; give it time to appear before
+    // asserting that it did not.
+    await page.waitForTimeout(500);
+    await expect(search).toHaveCount(0);
+    await expect(page.locator('dialog[open]')).toHaveCount(1);
+    await expect(dialog.getByRole('heading', { name: 'Create Category' })).toBeVisible();
+
+    // Typing "/" into a field is just text. The category name field sits in
+    // the dialog, so close it and use a field on the page: the search box on
+    // the products list, which filters only when its form is submitted.
+    await page.keyboard.press('Escape');
+    await expect(page.locator('dialog[open]')).toHaveCount(0);
+    await page.goto('/products', { waitUntil: 'networkidle' });
+    const field = page.locator('input#search');
+    await field.click();
+    await page.keyboard.press('/');
+    await page.waitForTimeout(500);
+    await expect(search).toHaveCount(0);
+    await expect(page.locator('dialog[open]')).toHaveCount(0);
+    await expect(field).toHaveValue('/');
+});

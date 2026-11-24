@@ -10,8 +10,10 @@ import path from 'node:path';
 //   RESPONSIVE_AUDIT=1 RESPONSIVE_AUDIT_LABEL=before \
 //     npx playwright test e2e/tests/responsive-audit.spec.ts --project=setup --project=chromium
 //
-// Output: audit-artifacts/responsive/<label>/findings.json, plus full-page
-// screenshots at 1280px and 375px. Set RESPONSIVE_AUDIT_STRICT=1 to fail on
+// Output in audit-artifacts/responsive/<label>/: findings-light.json and
+// findings-dark.json (summary plus every result), one file per route as it
+// finishes under routes-light/ and routes-dark/ (so an interrupted sweep keeps
+// what it measured), plus full-page screenshots at 1280px and 375px. Set RESPONSIVE_AUDIT_STRICT=1 to fail on
 // any finding other than touch targets.
 test.skip(!process.env.RESPONSIVE_AUDIT, 'Run with RESPONSIVE_AUDIT=1');
 test.describe.configure({ retries: 0 });
@@ -34,9 +36,14 @@ async function settle(page: Page) {
     await page.evaluate(() => document.fonts.ready);
     await page.evaluate(async () => {
         await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
-        await Promise.allSettled(document.getAnimations()
-            .filter(animation => animation.effect?.getComputedTiming().iterations !== Infinity)
-            .map(animation => animation.finished));
+        // An animation that never finishes (paused, or restarted in a loop)
+        // must not hang the sweep: give up waiting after 2s.
+        await Promise.race([
+            Promise.allSettled(document.getAnimations()
+                .filter(animation => animation.effect?.getComputedTiming().iterations !== Infinity)
+                .map(animation => animation.finished)),
+            new Promise(resolve => setTimeout(resolve, 2000)),
+        ]);
     });
 }
 
@@ -293,17 +300,25 @@ async function sweep(page: Page, theme: 'light' | 'dark', sweepWidths: number[])
     await page.setViewportSize({ width: 1280, height: 800 });
     const results: PageResult[] = [];
     const errors: string[] = [];
+    const routeDir = path.join(out, `routes-${theme}`);
+    mkdirSync(routeDir, { recursive: true });
     for (const route of await routes(page)) {
+        const routeResults: PageResult[] = [];
+        const routeErrors: string[] = [];
         for (const width of sweepWidths) {
             await page.setViewportSize({ width, height: width < 768 ? 812 : 800 });
             try {
                 await page.goto(route.url, { waitUntil: 'networkidle' });
                 if (route.prepare) await route.prepare(page);
-                results.push(await measure(page, route, width, theme));
+                routeResults.push(await measure(page, route, width, theme));
             } catch (error) {
-                errors.push(`${route.name} at ${width}px: ${(error as Error).message.split('\n')[0]}`);
+                routeErrors.push(`${route.name} at ${width}px: ${(error as Error).message.split('\n')[0]}`);
             }
         }
+        results.push(...routeResults);
+        errors.push(...routeErrors);
+        const file = route.name.replace(/[^a-zA-Z0-9_-]/g, '-');
+        writeFileSync(path.join(routeDir, `${file}.json`), JSON.stringify({ route: route.name, theme, errors: routeErrors, results: routeResults }, null, 2));
     }
     const findings = results.flatMap(result => result.findings.map(finding => ({ page: result.name, theme, ...finding })));
     const counts: Record<string, number> = {};

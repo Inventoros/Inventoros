@@ -3,14 +3,20 @@ import { defineComponent, h } from 'vue';
 /*
  * Inventoros icon set.
  *
- * Drawn for Inventoros on one 24px grid: 1.75 stroke, round caps and joins,
- * 2px corner radii. Where it means something, an icon carries a small solid
- * dot, after the dot of the "i" in the logo (a tag's hole, a reserved
- * bookmark, a role's key).
+ * Drawn for Inventoros on one 24px grid: 1.75 stroke, round caps and joins.
+ * Corners vary with the shape: most rectangles use a 2px radius, the framed
+ * tiles (Customers, Stock adjustments) 4px, and a few outlines a 1px bend.
+ * Some icons carry a small solid dot, after the dot of the "i" in the logo:
+ * Inventory's box, the Orders bag, a tag's hole (Categories), a reserved
+ * bookmark (Reservations) and a role's key (Roles). The rest, the Returns
+ * parcel included, have none.
  *
  * Each export is a component with the same props as the Lucide icons used
- * elsewhere (`size`, `stroke-width`), so it can replace one in place:
+ * elsewhere (`size`, `stroke-width`, and `absolute-stroke-width`, accepted
+ * and ignored), so it can replace one in place:
  * <component :is="item.icon" :size="16" :stroke-width="1.65" />.
+ * Icons are decorative (aria-hidden) unless given an aria-label,
+ * aria-labelledby or title.
  */
 
 const dot = (cx, cy, r = 1.25) => ['circle', { cx, cy, r, fill: 'currentColor', stroke: 'none' }];
@@ -24,8 +30,12 @@ function icon(name, nodes) {
         props: {
             size: { type: [Number, String], default: 24 },
             strokeWidth: { type: [Number, String], default: 1.75 },
+            // Lucide's prop, accepted so it does not fall through onto the
+            // <svg>; these strokes are already drawn for their size.
+            absoluteStrokeWidth: { type: Boolean, default: false },
         },
-        setup(props) {
+        setup(props, { attrs }) {
+            const labelled = () => ['aria-label', 'ariaLabel', 'aria-labelledby', 'ariaLabelledby', 'title'].some((key) => attrs[key] != null && attrs[key] !== '');
             return () =>
                 h(
                     'svg',
@@ -39,7 +49,7 @@ function icon(name, nodes) {
                         'stroke-width': props.strokeWidth,
                         'stroke-linecap': 'round',
                         'stroke-linejoin': 'round',
-                        'aria-hidden': 'true',
+                        'aria-hidden': labelled() ? undefined : 'true',
                         class: 'inv-icon',
                     },
                     nodes.map(([tag, attrs]) => h(tag, attrs)),

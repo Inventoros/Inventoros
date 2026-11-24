@@ -532,11 +532,14 @@
         }
     }
     /* Beside the sidebar and centred search there is room for the trail but
-     * not its "Workspace" root, which every page shares; drop it first so the
-     * current page keeps its name. Tablets, with the sidebar open, show only
-     * the current page, like phones. */
+     * not its shared root ("Workspace", marked data-crumb-root where each page
+     * builds its crumbs) and the separator after it; drop those first so the
+     * current page keeps its name. Trails without a shared root keep every
+     * crumb. Tablets, with the sidebar open, show only the current page, like
+     * phones. */
     @media (min-width: 1024px) and (max-width: 1279.98px) {
-        .app-breadcrumb > * > :nth-child(-n + 2):nth-last-child(n + 2) {
+        .app-breadcrumb > * > [data-crumb-root]:not(:last-child),
+        .app-breadcrumb > * > [data-crumb-root]:not(:last-child) + :not(:last-child) {
             display: none;
         }
     }

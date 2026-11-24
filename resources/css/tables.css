@@ -165,6 +165,13 @@
         min-width: 10rem;
         white-space: normal;
     }
+    /* Prose inside a token cell still wraps: validation errors (the pages'
+     * shared "mt-1 text-xs text-status-danger" line), alerts, and help or
+     * hint lines marked .cell-note. A white-space utility on the element
+     * still wins. */
+    .table-viewport td :is(p.text-status-danger, [role="alert"], .field-error, .cell-note) {
+        white-space: normal;
+    }
     /* Emails and other long single tokens: one line, an ellipsis, and the
      * full value in a title attribute. */
     .cell-truncate {

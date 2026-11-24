@@ -69,7 +69,7 @@ const thClass =
     <AppLayout table-page>
         <template #header>
             <div class="flex items-center gap-2 text-xs">
-                <span class="text-text-tertiary">{{ t('nav.sections.workspace') }}</span>
+                <span data-crumb-root class="text-text-tertiary">{{ t('nav.sections.workspace') }}</span>
                 <span class="text-text-tertiary">/</span>
                 <span class="font-medium text-text-primary">{{ t('nav.stockAudits') }}</span>
             </div>
@@ -151,7 +151,7 @@ const thClass =
                         </td>
                         <td class="cell-wrap px-4 py-3">
                             <div class="font-medium text-text-primary">{{ audit.name }}</div>
-                            <div v-if="audit.description" class="truncate-fluid text-xs text-text-tertiary" :title="audit.description">{{ audit.description }}</div>
+                            <div v-if="audit.description" class="max-w-xs truncate text-xs text-text-tertiary" :title="audit.description">{{ audit.description }}</div>
                         </td>
                         <td class="px-4 py-3">
                             <Badge :variant="typeVariant(audit.audit_type)" size="sm">

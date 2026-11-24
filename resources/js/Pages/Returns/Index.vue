@@ -11,6 +11,7 @@ import { Head, Link, router } from '@inertiajs/vue3';
 import { ref, watch, onBeforeUnmount } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { Search, Eye, RotateCcw } from '@lucide/vue';
+import { IconReturns } from '@/icons';
 import { formatMoney, formatNumber } from '@/lib/money';
 import { displayDate } from '@/lib/dates';
 import { usePermissions } from '@/composables/usePermissions';
@@ -83,7 +84,7 @@ const selectClass =
     <AppLayout table-page>
         <template #header>
             <div class="flex items-center gap-2 text-xs">
-                <span class="text-text-tertiary">{{ t('nav.sections.workspace') }}</span>
+                <span data-crumb-root class="text-text-tertiary">{{ t('nav.sections.workspace') }}</span>
                 <span class="text-text-tertiary">/</span>
                 <span class="font-medium text-text-primary">{{ t('nav.returns') }}</span>
             </div>
@@ -211,7 +212,7 @@ const selectClass =
             </template>
             <template #empty>
                 <EmptyState
-                    :icon="RotateCcw"
+                    :icon="IconReturns"
                     :title="t('returns.index.empty')"
                     :filtered="Boolean(filters?.search || filters?.status || filters?.type)"
                     @clear="clearFilters"

@@ -9,6 +9,8 @@ const props = defineProps({
     size: { type: Number, default: 40 },
 });
 
+// Initials follow the name the list shows (display_name when the row has one).
+const label = computed(() => props.product.display_name ?? props.product.name ?? '');
 const failed = ref(false);
 const src = computed(() => (failed.value ? null : props.product.image_urls?.[0] || null));
 // A new photo (or another product) gets a fresh attempt.
@@ -23,7 +25,7 @@ watch(
 <template>
     <span class="product-thumb" :style="{ width: `${size}px`, height: `${size}px` }" aria-hidden="true">
         <img v-if="src" :src="src" alt="" loading="lazy" decoding="async" @error="failed = true" />
-        <span v-else class="product-thumb-initials" :style="{ fontSize: `${Math.round(size * 0.34)}px` }">{{ productInitials(product.name) }}</span>
+        <span v-else class="product-thumb-initials" :style="{ fontSize: `${Math.round(size * 0.34)}px` }">{{ productInitials(label) }}</span>
     </span>
 </template>
 

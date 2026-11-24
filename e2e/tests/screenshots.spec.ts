@@ -123,7 +123,6 @@ function frameHtml(png: Buffer, mode: 'light' | 'dark', url: string): string {
 const readmeShots = [
     { name: 'dashboard', path: '/dashboard', waitFor: 'h1' },
     { name: 'products', path: '/products', waitFor: 'table' },
-    { name: 'orders', path: '/orders', waitFor: 'table' },
     { name: 'reports', path: '/reports', waitFor: 'main' },
 ];
 
@@ -136,7 +135,10 @@ test.describe('README set', () => {
                 await page.emulateMedia({ colorScheme: mode });
                 await page.addInitScript((name) => localStorage.setItem('theme', name), mode);
                 await page.goto(shot.path, { waitUntil: 'networkidle' });
+                await expect(page.locator('h1')).toBeVisible();
                 await page.locator(shot.waitFor).first().waitFor({ state: 'visible' });
+                if (mode === 'dark') await expect(page.locator('html')).toHaveClass(/dark/);
+                else await expect(page.locator('html')).not.toHaveClass(/dark/);
                 await page.evaluate(() => document.fonts.ready);
                 // Product photos load lazily: wait (briefly) for the ones on screen.
                 // Images in collapsed or off-screen sections never load, so they are skipped.
@@ -148,6 +150,21 @@ test.describe('README set', () => {
                     const decoded = Promise.all(onScreen.map((img) => img.decode().catch(() => undefined)));
                     return Promise.race([decoded, new Promise((resolve) => setTimeout(resolve, 5000))]);
                 });
+                if (shot.name === 'products') {
+                    // Every on-screen product photo must have loaded: a broken
+                    // or still-pending thumbnail would ship in the README.
+                    const thumbs = await page.evaluate(() => [...document.querySelectorAll<HTMLImageElement>('.product-thumb img')]
+                        .filter((img) => {
+                            const r = img.getBoundingClientRect();
+                            return img.offsetParent !== null && r.bottom > 0 && r.top < window.innerHeight;
+                        })
+                        .map((img) => ({ src: img.currentSrc || img.src, complete: img.complete, width: img.naturalWidth })));
+                    expect(thumbs.length).toBeGreaterThan(0);
+                    for (const thumb of thumbs) {
+                        expect(thumb, thumb.src).toMatchObject({ complete: true });
+                        expect(thumb.width, thumb.src).toBeGreaterThan(0);
+                    }
+                }
                 await page.waitForTimeout(300);
                 const options = { animations: 'disabled' as const, caret: 'hide' as const };
                 const png = await page.screenshot(options);
