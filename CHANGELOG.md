@@ -24,6 +24,7 @@ This release adds one migration, which is additive. See the [2.7.0 release notes
 
 ### Changed
 
+- **Sizing at laptop and tablet widths (#476).** Order numbers, SKUs, dates, emails and money no longer wrap or break mid-word in tables; a table that cannot fit scrolls sideways inside its panel instead of crushing its columns, and long emails truncate with the full address on hover. Order line items are laid out by the room they have, so the product name and SKU stay readable at 1280px, and order forms and record pages use one column until 1280px. Icon buttons on phones have 44px tap areas.
 - **Colours (#471).** In the light theme, primary actions, links and selection use a deep blue, and every page sits on a soft grey behind white panels. In the dark theme, primary buttons and other filled controls are a solid blue with white text, and the page sits a step below its panels.
 - **Plugins:** filled surfaces (primary buttons, checked controls, the active page) now use the `bg-brand-solid`, `hover:bg-brand-solid-hover` and `text-brand-solid-foreground` classes. Plugin UIs that fill with `bg-brand` still work, but should switch to match core in dark mode (#471).
 - **Plugins:** the dashboard's `stockMovements` prop now covers 30 days, one entry per day (zero-filled), with `in`, `out` and `total` (net). It used to cover 7 days, only days with movement, and every adjustment type (#471).
