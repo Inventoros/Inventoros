@@ -7,11 +7,25 @@
 .workspace-section-label { letter-spacing: 0; padding-block: 2px; }
 .workspace-nav > div { margin-bottom: 15px; }
 .workspace-nav-item { border: 1px solid transparent; font-weight: 450; }
+.workspace-nav-item { position: relative; }
+/* Selected: a subtle tint and a narrow blue marker at the start edge. */
 .workspace-nav-item.is-active {
-    background: hsl(var(--surface-raised));
-    border-color: hsl(var(--border-subtle));
-    box-shadow: 0 1px 2px hsl(var(--text-primary) / 0.03);
-    font-weight: 550;
+    background: hsl(var(--accent-soft));
+    border-color: transparent;
+    font-weight: 500;
+}
+.workspace-nav-item.is-active::before {
+    content: "";
+    position: absolute;
+    inset-block: 6px;
+    inset-inline-start: -12px;
+    width: 3px;
+    border-radius: 0 3px 3px 0;
+    background: hsl(var(--accent));
+}
+[dir="rtl"] .workspace-nav-item.is-active::before { border-radius: 3px 0 0 3px; }
+@media (forced-colors: active) {
+    .workspace-nav-item.is-active::before { background: Highlight; }
 }
 .workspace-topbar { height: 48px; }
 .workspace-topbar .app-breadcrumb { font-size: 12px; }

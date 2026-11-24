@@ -7,7 +7,7 @@ import AppLayout from '@/Layouts/AppLayout.vue';
 import PluginSlot from '@/Components/PluginSlot.vue';
 import PluginWidgets from '@/Components/PluginWidgets.vue';
 import StockReview from '@/Components/Dashboard/StockReview.vue';
-import StockPosition from '@/Components/Dashboard/StockPosition.vue';
+import StockMeter from '@/Components/Dashboard/StockMeter.vue';
 import MetricCard from '@/Components/Dashboard/MetricCard.vue';
 import ProductThumb from '@/Components/Dashboard/ProductThumb.vue';
 import StockMovement from '@/Components/Dashboard/StockMovement.vue';
@@ -23,7 +23,7 @@ import { usePermissions } from '@/composables/usePermissions';
 import { useI18n } from 'vue-i18n';
 import { displayCalendarDate, displayDateTime } from '@/lib/dates';
 import { formatCompactMoney, formatMoney, formatNumber as formatPlainNumber } from '@/lib/money';
-import { categoryBreakdown, periodChange, stockLevel } from '@/lib/dashboard';
+import { categoryBreakdown, periodChange, stockLevel, stockUrgency } from '@/lib/dashboard';
 import { orderStatusLabel } from '@/lib/orderLabels';
 import axios from 'axios';
 import {
@@ -139,17 +139,8 @@ const headlineMetrics = computed(() => {
     ]
         .filter(Boolean)
         .join(' · ');
+    // Inventory value leads, as the one highlighted figure.
     return [
-        widgets.stats_overview &&
-            stats.totalProducts !== undefined && {
-                key: 'products',
-                label: t('dashboard.totalProducts'),
-                value: formatNumber(stats.totalProducts),
-                icon: Boxes,
-                context: counts,
-                detail: formatPlainNumber(stats.totalProducts),
-                href: optionalRoute('products.index'),
-            },
         widgets.stats_overview &&
             stats.totalValue !== undefined && {
                 key: 'value',
@@ -160,6 +151,17 @@ const headlineMetrics = computed(() => {
                 detail: formatCurrency(stats.totalValue),
                 extra: otherCurrencies('totalValue'),
                 href: optionalRoute('reports.inventory-valuation'),
+                featured: true,
+            },
+        widgets.stats_overview &&
+            stats.totalProducts !== undefined && {
+                key: 'products',
+                label: t('dashboard.totalProducts'),
+                value: formatNumber(stats.totalProducts),
+                icon: Boxes,
+                context: counts,
+                detail: formatPlainNumber(stats.totalProducts),
+                href: optionalRoute('products.index'),
             },
         widgets.revenue_chart &&
             stats.pendingOrders !== undefined && {
@@ -283,7 +285,7 @@ const ordersStatusIcon = (status) => (status === 'delivered' ? Check : status ==
                             t('dashboard.customize')
                         }}</span></Button
                     >
-                    <Button v-if="canVisit('orders.create')" size="sm" as="Link" :href="route('orders.create')"
+                    <Button v-if="canVisit('orders.create')" size="sm" as="Link" :href="route('orders.create')" class="dashboard-primary-action"
                         ><Plus :size="14" />{{ t('dashboard.newOrder') }}</Button
                     >
                 </div>
@@ -320,6 +322,11 @@ const ordersStatusIcon = (status) => (status === 'delivered' ? Check : status ==
                 class="dashboard-stock-grid"
                 :class="{ 'dashboard-one-column': !widgets.low_stock_alerts || !showMovement }"
             >
+            <StockMovement
+                v-if="showMovement"
+                :series="stockMovements"
+                :href="optionalRoute('stock-adjustments.index')"
+            />
             <section
                 v-if="widgets.low_stock_alerts"
                 class="dashboard-panel dashboard-replenishment"
@@ -328,7 +335,6 @@ const ordersStatusIcon = (status) => (status === 'delivered' ? Check : status ==
             >
                 <div class="dashboard-panel-heading">
                     <div class="dashboard-panel-title">
-                        <span class="dashboard-section-marker" aria-hidden="true"></span>
                         <h2 id="replenishment-title">{{ t('dashboard.design.replenishment') }}</h2>
                         <span v-if="stats.lowStockProducts" class="dashboard-warning-badge"
                             >{{ formatNumber(stats.lowStockProducts) }} {{ t('dashboard.lowStock') }}</span
@@ -367,22 +373,38 @@ const ordersStatusIcon = (status) => (status === 'delivered' ? Check : status ==
                                 </p>
                             </div>
                         </div>
-                        <StockPosition :product="product" />
-                        <p class="dashboard-shortfall">
-                            {{ t('dashboard.design.shortfall', { count: formatPlainNumber(stockLevel(product).shortfall) }) }}
-                        </p>
-                        <button type="button" class="dashboard-review ds-focus-ring" @click="reviewStock(product)">
-                            {{ t('dashboard.design.reviewStock')
-                            }}<ArrowRight :size="14" aria-hidden="true" />
-                        </button>
+                        <div class="dashboard-stock-level">
+                            <p class="dashboard-stock-figures">
+                                <strong
+                                    class="dashboard-stock-on-hand"
+                                    :class="{ 'dashboard-stock-critical': stockUrgency(stockLevel(product)) === 'critical' }"
+                                    >{{ formatPlainNumber(stockLevel(product).stock) }}</strong
+                                ><span class="dashboard-stock-minimum">/ {{ formatPlainNumber(stockLevel(product).minimum) }}</span>
+                            </p>
+                            <p class="dashboard-stock-labels" aria-hidden="true">
+                                <span>{{ t('warehouses.stockLevels.onHand') }}</span><span>{{ t('dashboard.design.minimum') }}</span>
+                            </p>
+                            <StockMeter
+                                :level="stockLevel(product)"
+                                :label="
+                                    t('dashboard.design.stockLevel', {
+                                        stock: formatPlainNumber(stockLevel(product).stock),
+                                        minimum: formatPlainNumber(stockLevel(product).minimum),
+                                    })
+                                "
+                            />
+                        </div>
+                        <div class="dashboard-stock-foot">
+                            <p class="dashboard-shortfall">
+                                {{ t('dashboard.design.shortfall', { count: formatPlainNumber(stockLevel(product).shortfall) }) }}
+                            </p>
+                            <Button size="sm" class="dashboard-primary-action" @click="reviewStock(product)"
+                                >{{ t('dashboard.design.reviewStock') }}<ArrowRight :size="14" aria-hidden="true"
+                            /></Button>
+                        </div>
                     </li>
                 </ul>
             </section>
-            <StockMovement
-                v-if="showMovement"
-                :series="stockMovements"
-                :href="optionalRoute('stock-adjustments.index')"
-            />
             </div>
 
             <div
