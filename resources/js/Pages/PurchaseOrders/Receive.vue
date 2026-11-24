@@ -232,7 +232,7 @@ const thClassCenter = 'px-4 py-2.5 text-center text-xs font-medium tracking-tigh
                                     class="border-b border-border-subtle transition-colors last:border-b-0 hover:bg-surface-overlay"
                                     :class="{ 'bg-status-success-soft': item.remaining === 0 }"
                                 >
-                                    <td role="cell" :id="fieldId('product', item)" class="receiving-product min-w-[12rem] px-4 py-3 text-sm text-text-primary">
+                                    <td role="cell" :id="fieldId('product', item)" class="receiving-product cell-wrap px-4 py-3 text-sm text-text-primary">
                                         {{ item.product_name }}
                                         <span v-if="item.receiving_location" class="block text-xs text-text-secondary">{{ t('variantReplenishment.receiveAt', { location: item.receiving_location.name, warehouse: item.receiving_location.warehouse?.name }) }}</span>
                                         <span v-if="item.variant_title" class="block text-xs text-text-secondary">{{ t('orders.create.variant') }}: {{ item.variant_title }}</span>

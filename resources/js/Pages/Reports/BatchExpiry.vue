@@ -97,7 +97,7 @@ const ariaSort = (key) => props.filters.sort_by !== key ? 'none' : (props.filter
                     </thead>
                     <tbody>
                         <tr v-for="batch in batches.data" :key="batch.id" class="border-b border-border-subtle last:border-0 hover:bg-surface-overlay">
-                            <td class="min-w-64 max-w-sm px-4 py-3">
+                            <td class="cell-wrap min-w-64 max-w-sm px-4 py-3">
                                 <span v-if="batch.archived" class="font-medium text-text-primary">{{ batch.product_name }}</span>
                                 <Link v-else :href="route('products.show', batch.product_id)" class="font-medium text-text-primary hover:text-brand">{{ batch.product_name }}</Link>
                                 <p class="font-mono text-xs text-text-tertiary">{{ batch.sku }}</p>

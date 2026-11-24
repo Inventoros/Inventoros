@@ -151,7 +151,7 @@ const thClass =
                                 {{ wo.work_order_number }}
                             </Link>
                         </td>
-                        <td class="px-4 py-3">
+                        <td class="cell-wrap px-4 py-3">
                             <div class="text-text-primary">{{ wo.product?.name || '-' }}</div>
                             <div class="text-xs text-text-tertiary">{{ wo.product?.sku || '' }}</div>
                         </td>

@@ -161,7 +161,7 @@ const thRightClass = 'px-4 py-2.5 text-end text-xs font-medium tracking-tight te
                                     :key="row.id"
                                     class="border-b border-border-subtle transition-colors last:border-b-0 hover:bg-surface-overlay"
                                 >
-                                    <td class="px-4 py-3">
+                                    <td class="cell-wrap px-4 py-3">
                                         <p class="font-medium text-text-primary">{{ row.name }}</p>
                                         <p class="font-mono text-xs text-text-tertiary">{{ row.sku }}</p>
                                     </td>

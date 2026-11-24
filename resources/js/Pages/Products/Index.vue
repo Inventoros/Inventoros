@@ -320,9 +320,9 @@ const thClass =
                         <td class="px-4 py-3">
                             <input type="checkbox" :aria-label="product.display_name ?? product.name" :checked="isSelected(product.id)" @change="toggleSelect(product.id)" class="rounded border-border-strong bg-surface-canvas text-brand focus:ring-brand" />
                         </td>
-                        <td class="px-4 py-3">
+                        <td class="cell-wrap px-4 py-3">
                             <Link :href="route('products.show', product.id)" class="font-medium text-text-primary hover:text-brand"><bdi>{{ product.display_name ?? product.name }}</bdi></Link>
-                            <p v-if="product.description" class="record-secondary max-w-xs truncate text-xs text-text-tertiary">{{ product.description }}</p>
+                            <p v-if="product.description" class="record-secondary truncate-fluid text-xs text-text-tertiary" :title="product.description">{{ product.description }}</p>
                         </td>
                         <td class="px-4 py-3">
                             <p class="font-mono text-xs text-text-secondary">{{ product.sku }}</p>

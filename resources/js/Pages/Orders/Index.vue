@@ -88,7 +88,7 @@ const paymentStatusVariant = (s) =>
 
 const columns = computed(() => ([
     { key: 'order_number', label: t('orders.orderCol') },
-    { key: 'customer_name', label: t('orders.customer') },
+    { key: 'customer_name', label: t('orders.customer'), class: 'cell-wrap' },
     { key: 'items', label: t('orders.itemsCol'), align: 'right' },
     { key: 'total', label: t('common.total'), align: 'right' },
     { key: 'status', label: t('common.status') },
@@ -198,7 +198,7 @@ const selectClass =
                 <template #cell-customer_name="{ row }">
                     <div class="flex flex-col">
                         <span class="text-text-primary">{{ row.customer_name }}</span>
-                        <span v-if="row.customer_email" class="text-xs text-text-tertiary">{{ row.customer_email }}</span>
+                        <span v-if="row.customer_email" class="truncate-fluid text-xs text-text-tertiary" :title="row.customer_email">{{ row.customer_email }}</span>
                     </div>
                 </template>
                 <template #cell-items="{ row }">

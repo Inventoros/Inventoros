@@ -155,7 +155,7 @@ const thClass =
                         </td>
                     </tr>
                     <tr v-for="reservation in reservations.data" :key="reservation.id" class="border-b border-border-subtle transition-colors last:border-b-0 hover:bg-surface-overlay">
-                        <td class="px-4 py-3">
+                        <td class="cell-wrap px-4 py-3">
                             <Link v-if="reservation.product" :href="route('products.show', reservation.product.id)" class="font-medium text-text-primary hover:text-brand">
                                 {{ reservation.product.name }}
                             </Link>

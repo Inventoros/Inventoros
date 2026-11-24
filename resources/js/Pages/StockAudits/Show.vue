@@ -711,7 +711,7 @@ const thClass = 'px-6 py-3 text-start text-xs font-medium uppercase tracking-wid
                         <template v-for="item in audit.items" :key="item.id">
                             <!-- Normal Row -->
                             <tr v-if="editingItemId !== item.id" :id="`audit-item-${item.id}`" class="border-b border-border-subtle transition-colors last:border-b-0 hover:bg-surface-overlay" :class="{ 'bg-brand-soft': highlightedItemId === item.id }">
-                                <td class="px-6 py-4 text-sm text-text-primary">
+                                <td class="cell-wrap px-6 py-4 text-sm text-text-primary">
                                     <div class="font-medium">{{ item.product?.name || '-' }}</div>
                                     <div class="text-xs text-text-tertiary">{{ item.variant?.title || '' }} {{ item.location?.name || '' }} | SKU: {{ item.variant?.sku || item.product?.sku || '-' }}</div>
                                     <Link v-if="item.counted_quantity !== null" :href="route('stock-audits.items.counts', { stockAudit: audit.id, item: item.id })" class="mt-1 inline-block text-xs text-brand hover:underline">{{ t('stockAudits.history.view') }}</Link>
@@ -758,7 +758,7 @@ const thClass = 'px-6 py-3 text-start text-xs font-medium uppercase tracking-wid
 
                             <!-- Inline Editing Row -->
                             <tr v-else :id="`audit-item-${item.id}`" class="border-b border-border-subtle bg-brand-soft last:border-b-0">
-                                <td class="px-6 py-4 text-sm text-text-primary">
+                                <td class="cell-wrap px-6 py-4 text-sm text-text-primary">
                                     <div class="font-medium">{{ item.product?.name || '-' }}</div>
                                     <div class="text-xs text-text-tertiary">{{ item.variant?.title || '' }} {{ item.location?.name || '' }} | SKU: {{ item.variant?.sku || item.product?.sku || '-' }}</div>
                                 </td>

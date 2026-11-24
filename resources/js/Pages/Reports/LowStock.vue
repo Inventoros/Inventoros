@@ -172,7 +172,7 @@ const thClassRight = 'px-4 py-2.5 text-end text-xs font-medium tracking-tight te
                                     {{ product.status.replace('_', ' ') }}
                                 </Badge>
                             </td>
-                            <td class="px-4 py-3">
+                            <td class="cell-wrap px-4 py-3">
                                 <p class="font-medium text-text-primary">{{ product.name }}</p>
                                 <p class="font-mono text-xs text-text-tertiary">SKU: {{ product.sku }}</p>
                             </td>

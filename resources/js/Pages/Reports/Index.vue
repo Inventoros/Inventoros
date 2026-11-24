@@ -176,7 +176,7 @@ const visibleReportCards = computed(() =>
                         </thead>
                         <tbody class="divide-y divide-border-subtle">
                             <tr v-for="report in savedReports" :key="report.id" class="transition-colors hover:bg-surface-overlay">
-                                <td class="px-6 py-4">
+                                <td class="cell-wrap px-6 py-4">
                                     <Link :href="route('reports.builder.show', report.id)" class="text-sm font-medium text-text-primary transition-colors hover:text-brand">
                                         {{ report.name }}
                                     </Link>

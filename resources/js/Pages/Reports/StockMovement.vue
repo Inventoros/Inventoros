@@ -193,7 +193,7 @@ const thClass =
                         <td class="whitespace-nowrap px-4 py-3 text-text-secondary">
                             {{ displayDate(adj.created_at) }}
                         </td>
-                        <td class="px-4 py-3">
+                        <td class="cell-wrap px-4 py-3">
                             <div class="font-medium text-text-primary">{{ adj.product.name }}</div>
                             <div class="text-xs text-text-tertiary">{{ adj.product.sku }}</div>
                         </td>

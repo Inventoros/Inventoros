@@ -121,9 +121,9 @@ const thClass =
                 </thead>
                 <tbody>
                     <tr v-for="warehouse in warehouses.data" :key="warehouse.id" class="border-b border-border-subtle transition-colors last:border-b-0 hover:bg-surface-overlay">
-                        <td class="px-4 py-3 text-text-primary">
+                        <td class="cell-wrap px-4 py-3 text-text-primary">
                             <div class="font-medium text-text-primary">{{ warehouse.name }}</div>
-                            <div v-if="warehouse.description" class="max-w-xs truncate text-xs text-text-tertiary">{{ warehouse.description }}</div>
+                            <div v-if="warehouse.description" class="truncate-fluid text-xs text-text-tertiary" :title="warehouse.description">{{ warehouse.description }}</div>
                         </td>
                         <td class="px-4 py-3">
                             <span class="rounded bg-surface-overlay px-2 py-0.5 font-mono text-xs text-text-secondary">{{ warehouse.code }}</span>

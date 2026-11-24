@@ -147,6 +147,46 @@
     font-weight: 500;
     box-shadow: inset 0 -1px 0 hsl(var(--border-subtle));
 }
+/* Cells keep identifiers, dates, money, statuses and actions on one line, so
+ * a table wider than its panel scrolls inside the viewport instead of
+ * crushing columns until "ORD-20261123-0001" or "Nov 23, 2026" breaks apart.
+ * The default sits in the base layer: a cell or child that sets its own
+ * white-space utility (whitespace-normal, truncate, whitespace-pre-wrap)
+ * still wins. Free-text columns opt back in to wrapping with .cell-wrap. */
+@layer base {
+    /* Cells spanning several columns carry messages and empty states. */
+    .table-viewport :is(th, td):not([colspan]) {
+        white-space: nowrap;
+    }
+}
+@layer components {
+    /* Names and descriptions wrap between words, never into a sliver. */
+    .table-viewport :is(th, td).cell-wrap {
+        min-width: 10rem;
+        white-space: normal;
+    }
+    /* Emails and other long single tokens: one line, an ellipsis, and the
+     * full value in a title attribute. */
+    .cell-truncate {
+        display: block;
+        max-width: 15rem;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    /* A secondary line under a primary value (the email under a customer
+     * name), or an email in a detail grid: it uses whatever width its box
+     * already has and never widens it, so the table or grid keeps fitting.
+     * Pair it with a title attribute holding the full value. */
+    .truncate-fluid {
+        display: block;
+        width: 0;
+        min-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+}
 /* Explicit column alignment wins over a shared text-start header class. */
 .table-viewport :is(th, td).text-end {
     text-align: end;

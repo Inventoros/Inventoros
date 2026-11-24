@@ -273,7 +273,7 @@ const thClass = 'px-4 py-2.5 text-start text-xs font-medium tracking-tight text-
                                     <td class="whitespace-nowrap px-4 py-3 text-end text-sm font-medium tabular-nums text-text-primary">
                                         {{ item.quantity }}
                                     </td>
-                                    <td class="px-4 py-3 text-sm text-text-tertiary">
+                                    <td class="cell-wrap px-4 py-3 text-sm text-text-tertiary">
                                         {{ item.notes || '-' }}
                                     </td>
                                 </tr>

@@ -137,7 +137,7 @@ const changeTextClass = computed(() => isIncrease.value ? 'text-status-success' 
                     <div>
                         <dt class="mb-1 text-xs text-text-tertiary">{{ t('stockAdjustments.show.adjustedBy') }}</dt>
                         <dd class="text-sm text-text-primary">{{ adjustment.user?.name || t('common.system') }}
-                        <p v-if="adjustment.user?.email" class="mt-1 text-xs text-text-tertiary">
+                        <p v-if="adjustment.user?.email" class="truncate-fluid mt-1 text-xs text-text-tertiary" :title="adjustment.user.email">
                             {{ adjustment.user.email }}
                         </p></dd>
                     </div>
