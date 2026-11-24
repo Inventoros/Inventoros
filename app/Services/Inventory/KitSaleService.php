@@ -5,9 +5,15 @@ declare(strict_types=1);
 namespace App\Services\Inventory;
 
 use App\Enums\TrackingType;
+use App\Exceptions\InsufficientStockException;
 use App\Exceptions\InvalidOrderItemException;
+use App\Models\Inventory\OrderItemKitComponent;
 use App\Models\Inventory\Product;
 use App\Models\Inventory\ProductComponent;
+use App\Models\Order\Order;
+use App\Models\Order\OrderItem;
+use App\Models\User;
+use App\Services\OrderService;
 use App\Services\StockReservationService;
 use Illuminate\Support\Collection;
 
@@ -63,10 +69,68 @@ class KitSaleService
             ->map(fn (ProductComponent $row) => [
                 'target' => $row->componentProduct,
                 'key' => 'p'.$row->component_product_id,
-                'per' => (int) round((float) $row->quantity),
+                'per' => self::perKit($row),
             ])
             ->values()
             ->all();
+    }
+
+    /**
+     * Take $kits kits' worth of components out of stock for a kit order line
+     * and record what was taken in the line's snapshot rows.
+     *
+     * $draws are the kit's draws as the caller resolved them (draws()) and
+     * checked against its running balances, with each target swapped for its
+     * locked row. take() moves exactly those draws and never re-reads the
+     * BOM, so a BOM edit committed after the caller's check cannot take a
+     * component that was never checked, or lock one out of id order.
+     *
+     * Each draw goes through OrderService::fulfilLine: its bins are drawn
+     * (the order's warehouse first), an `order_fulfillment` ledger row is
+     * written against the order, and the take is refused rather than letting
+     * stock go negative or into reserved units. The kit's own stock is never
+     * touched. One OrderItemKitComponent row per draw records
+     * quantity_per_kit and quantity_taken, which restocking reads instead of
+     * the current BOM.
+     *
+     * Must run inside the caller's transaction, with every draw target's
+     * product row already locked (with the order's other products, in id
+     * order).
+     *
+     * @param  array<int, array{target: Product, key: string, per: int}>  $draws
+     * @param  User|null  $actor  ledger attribution (see OrderService::fulfilLine)
+     * @param  User|null  $viewer  warehouse access scope (null = unrestricted)
+     *
+     * @throws InsufficientStockException When a component is short.
+     */
+    public function take(Order $order, OrderItem $kitLine, int $kits, array $draws, string $reason, ?User $actor, ?User $viewer): void
+    {
+        if ($kits <= 0) {
+            return;
+        }
+
+        foreach ($draws as $draw) {
+            if (! ($draw['target'] ?? null) instanceof Product || ! is_int($draw['per'] ?? null) || $draw['per'] < 1) {
+                throw new \InvalidArgumentException('Each kit draw needs a component Product target and a whole per-kit quantity of at least 1.');
+            }
+        }
+
+        $orders = app(OrderService::class);
+        foreach ($draws as $draw) {
+            $component = $draw['target'];
+            $per = $draw['per'];
+            $taken = $kits * $per;
+
+            $orders->fulfilLine($order, $component, null, $kitLine, $taken, $reason, $actor, $viewer);
+
+            OrderItemKitComponent::create([
+                'organization_id' => $order->organization_id,
+                'order_item_id' => $kitLine->id,
+                'component_product_id' => $component->id,
+                'quantity_per_kit' => $per,
+                'quantity_taken' => $taken,
+            ]);
+        }
     }
 
     /**
@@ -107,7 +171,7 @@ class KitSaleService
 
             $min = PHP_INT_MAX;
             foreach ($rows as $row) {
-                $per = (int) round((float) $row->quantity);
+                $per = self::perKit($row);
                 $free = (int) $row->componentProduct->stock - ($reserved[(int) $row->component_product_id] ?? 0);
                 $min = min($min, intdiv(max(0, $free), $per));
             }
@@ -134,10 +198,19 @@ class KitSaleService
             if ($price === null) {
                 return null;
             }
-            $cents += (int) round(((float) $price) * 100) * (int) round((float) $row->quantity);
+            $cents += (int) round(((float) $price) * 100) * self::perKit($row);
         }
 
         return number_format($cents / 100, 2, '.', '');
+    }
+
+    /**
+     * Whole units of the component per kit. Only meaningful for a row that
+     * passed inspect(), which refuses fractional and zero quantities.
+     */
+    private static function perKit(ProductComponent $row): int
+    {
+        return (int) round((float) $row->quantity);
     }
 
     /**
