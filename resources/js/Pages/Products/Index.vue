@@ -1,5 +1,6 @@
 <script setup>
 import { useId as useFieldId } from 'vue';
+import { IconInventory } from '@/icons';
 const fieldIdPrefix = useFieldId();
 import DialogSurface from '@/Components/DialogSurface.vue';
 import ProductThumb from '@/Components/ui/ProductThumb.vue';
@@ -12,10 +13,7 @@ import Button from '@/Components/ui/Button.vue';
 import EmptyState from '@/Components/ui/EmptyState.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { defineAsyncComponent, ref, onMounted, onUnmounted, watch, computed } from 'vue';
-import {
-    Plus, Search, Eye, Pencil, Trash2, Copy, Barcode, ScanLine,
-    AlertTriangle, Boxes, X, QrCode,
-} from '@lucide/vue';
+import { Plus, Search, Eye, Pencil, Trash2, Copy, Barcode, ScanLine, AlertTriangle, X, QrCode } from '@lucide/vue';
 
 // Defer the modal (which transitively imports html5-qrcode, ~200 KB)
 // until the user actually opens the scanner.
@@ -236,7 +234,7 @@ const thClass =
 
         <PluginSlot slot="header" :components="pluginComponents?.header" />
 
-        <PageHeader :title="t('products.title')" :description="t('products.subtitle')" :icon="Boxes" :count="products.total">
+        <PageHeader :title="t('products.title')" :description="t('products.subtitle')" :icon="IconInventory" :count="products.total">
             <template #actions>
                 <Button v-if="canVisit('variant-replenishment.index')" variant="secondary" size="sm" as="Link" :href="route('variant-replenishment.index')">{{ t('variantReplenishment.title') }}</Button>
                 <Button v-if="canResetStock" variant="secondary" size="sm" as="Link" :href="route('products.stock-reset.preview')">{{ t('stockReset.title') }}</Button>
@@ -389,7 +387,7 @@ const thClass =
             </template>
             <template #empty>
                 <EmptyState
-                    :icon="Boxes"
+                    :icon="IconInventory"
                     :title="t('products.noProductsFound')"
                     :filtered="Boolean(filters?.search || filters?.category || filters?.location || [true, 1, '1', 'true'].includes(filters?.low_stock))"
                     @clear="clearFilters"

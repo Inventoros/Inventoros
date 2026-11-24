@@ -1,5 +1,6 @@
 <script setup>
 import PluginSlot from '@/Components/PluginSlot.vue';
+import { IconStockAudits } from '@/icons';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import TableFilters from '@/Components/ui/TableFilters.vue';
 import TableViewport from '@/Components/ui/TableViewport.vue';
@@ -11,7 +12,7 @@ import { Head, Link, router } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { displayDate } from '@/lib/dates';
-import { Plus, Search, Eye, ClipboardList, CalendarClock } from '@lucide/vue';
+import { Plus, Search, Eye, CalendarClock } from '@lucide/vue';
 import { usePermissions } from '@/composables/usePermissions';
 
 const { canVisit } = usePermissions();
@@ -205,7 +206,7 @@ const thClass =
             </template>
             <template #empty>
                 <EmptyState
-                    :icon="ClipboardList"
+                    :icon="IconStockAudits"
                     :title="t('stockAudits.index.empty')"
                     :filtered="Boolean(filters?.search || filters?.status || filters?.audit_type)"
                     @clear="clearFilters"

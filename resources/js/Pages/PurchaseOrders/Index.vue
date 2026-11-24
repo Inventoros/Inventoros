@@ -1,5 +1,6 @@
 <script setup>
 import AppLayout from '@/Layouts/AppLayout.vue';
+import { IconPurchaseOrders } from '@/icons';
 import TableFilters from '@/Components/ui/TableFilters.vue';
 import PluginSlot from '@/Components/PluginSlot.vue';
 import PageHeader from '@/Components/ui/PageHeader.vue';
@@ -12,7 +13,7 @@ import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { displayCalendarDate } from '@/lib/dates';
 import { formatMoney } from '@/lib/money';
-import { Plus, Search, Eye, Pencil, Trash2, PackageCheck, ClipboardList } from '@lucide/vue';
+import { Plus, Search, Eye, Pencil, Trash2, PackageCheck } from '@lucide/vue';
 import { usePermissions } from '@/composables/usePermissions';
 
 const { hasPermission, canVisit } = usePermissions();
@@ -189,7 +190,7 @@ const selectClass =
                 </template>
                 <template #empty>
                     <EmptyState
-                        :icon="ClipboardList"
+                        :icon="IconPurchaseOrders"
                         :title="t('purchaseOrders.noPoFound')"
                         :description="canVisit('purchase-orders.create') ? t('purchaseOrders.getStarted') : null"
                         :filtered="Boolean(filters?.search || filters?.status || filters?.supplier_id)"

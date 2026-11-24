@@ -1,5 +1,6 @@
 <script setup>
 import PluginSlot from '@/Components/PluginSlot.vue';
+import { IconCustomers } from '@/icons';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import TableFilters from '@/Components/ui/TableFilters.vue';
 import TableViewport from '@/Components/ui/TableViewport.vue';
@@ -10,7 +11,7 @@ import Badge from '@/Components/ui/Badge.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { Plus, Search, Eye, Pencil, Trash2, Users } from '@lucide/vue';
+import { Plus, Search, Eye, Pencil, Trash2 } from '@lucide/vue';
 import { usePermissions } from '@/composables/usePermissions';
 
 const { hasPermission, canVisit } = usePermissions();
@@ -61,7 +62,7 @@ const thClass =
             </div>
         </template>
 
-        <PageHeader :title="t('customers.title')" :description="t('customers.index.description')" :icon="Users" :count="customers.total">
+        <PageHeader :title="t('customers.title')" :description="t('customers.index.description')" :icon="IconCustomers" :count="customers.total">
             <template #actions>
                 <Button v-if="canVisit('customers.create')" variant="default" size="sm" as="Link" :href="route('customers.create')">
                     <Plus :size="14" />
@@ -165,7 +166,7 @@ const thClass =
             </template>
             <template #empty>
                 <EmptyState
-                    :icon="Users"
+                    :icon="IconCustomers"
                     :title="t('customers.noCustomersFound')"
                     :description="canVisit('customers.create') ? t('customers.getStarted') : null"
                     :filtered="Boolean(filters?.search)"
