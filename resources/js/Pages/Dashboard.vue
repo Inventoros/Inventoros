@@ -9,7 +9,7 @@ import PluginWidgets from '@/Components/PluginWidgets.vue';
 import StockReview from '@/Components/Dashboard/StockReview.vue';
 import StockMeter from '@/Components/Dashboard/StockMeter.vue';
 import MetricCard from '@/Components/Dashboard/MetricCard.vue';
-import ProductThumb from '@/Components/Dashboard/ProductThumb.vue';
+import ProductThumb from '@/Components/ui/ProductThumb.vue';
 import StockMovement from '@/Components/Dashboard/StockMovement.vue';
 import Modal from '@/Components/Modal.vue';
 import Card from '@/Components/ui/Card.vue';
@@ -286,7 +286,7 @@ const ordersStatusIcon = (status) => (status === 'delivered' ? Check : status ==
                             t('dashboard.customize')
                         }}</span></Button
                     >
-                    <Button v-if="canVisit('orders.create')" size="sm" as="Link" :href="route('orders.create')" class="dashboard-primary-action"
+                    <Button v-if="canVisit('orders.create')" size="sm" as="Link" :href="route('orders.create')"
                         ><Plus :size="14" />{{ t('dashboard.newOrder') }}</Button
                     >
                 </div>
@@ -399,7 +399,7 @@ const ordersStatusIcon = (status) => (status === 'delivered' ? Check : status ==
                             <p class="dashboard-shortfall">
                                 {{ t('dashboard.design.shortfall', { count: formatPlainNumber(stockLevel(product).shortfall) }) }}
                             </p>
-                            <Button size="sm" class="dashboard-primary-action" @click="reviewStock(product)"
+                            <Button size="sm" @click="reviewStock(product)"
                                 >{{ t('dashboard.design.reviewStock') }}<ArrowRight :size="14" aria-hidden="true"
                             /></Button>
                         </div>

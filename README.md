@@ -19,8 +19,8 @@
 <br>
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="screenshots/dashboard.png">
-  <img src="screenshots/dashboard-light.png" alt="The Inventoros dashboard with stock value, low-stock alerts, recent orders and purchase orders" width="100%">
+  <source media="(prefers-color-scheme: dark)" srcset="screenshots/readme/dashboard-dark.png">
+  <img src="screenshots/readme/dashboard-light.png" alt="The Inventoros dashboard with stock value, low-stock alerts, recent orders and purchase orders" width="100%">
 </picture>
 
 ## What it does
@@ -51,16 +51,16 @@
     </td>
     <td width="60%">
       <picture>
-        <source media="(prefers-color-scheme: dark)" srcset="screenshots/products.png">
-        <img src="screenshots/products-light.png" alt="The inventory list with stock levels per product">
+        <source media="(prefers-color-scheme: dark)" srcset="screenshots/readme/products-dark.png">
+        <img src="screenshots/readme/products-light.png" alt="The inventory list with stock levels per product">
       </picture>
     </td>
   </tr>
   <tr>
     <td width="60%">
       <picture>
-        <source media="(prefers-color-scheme: dark)" srcset="screenshots/reports.png">
-        <img src="screenshots/reports-light.png" alt="The reports page with valuation, stock movement and sales reports">
+        <source media="(prefers-color-scheme: dark)" srcset="screenshots/readme/reports-dark.png">
+        <img src="screenshots/readme/reports-light.png" alt="The reports page with valuation, stock movement and sales reports">
       </picture>
     </td>
     <td width="40%">

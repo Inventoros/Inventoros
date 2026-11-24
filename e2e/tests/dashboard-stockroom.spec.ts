@@ -48,14 +48,14 @@ for (const width of [320, 375, 768, 1024, 1280, 1440, 1920, 3440]) {
             await expect(rows.nth(index).locator('.dashboard-shortfall')).toHaveText(`${gap} below minimum`);
         }
         // The list is capped by the server; the total must not become its length.
-        await expect(page.locator('.dashboard-warning-badge')).toHaveText('7 Low Stock');
+        await expect(page.locator('.dashboard-warning-badge')).toHaveText('7 low stock');
         await expect(page.getByTestId('dashboard-metric-value')).toHaveAttribute('title', '$94,390.62');
         expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBe(0);
-        const marker = await rows.nth(1).locator('.stock-position-head').boundingBox();
-        expect(marker!.width).toBe(8);
-        expect(marker!.height).toBe(8);
-        const ruler = await rows.nth(1).getByRole('img').boundingBox();
-        expect(Math.abs(marker!.x + 4 - ruler!.x - ruler!.width * 0.3)).toBeLessThan(1);
+        // The meter's fill is the stock there is: 3 of a minimum of 10.
+        const meter = await rows.nth(1).getByRole('img').boundingBox();
+        const fill = await rows.nth(1).locator('.stock-meter-fill').boundingBox();
+        expect(Math.abs(fill!.x - meter!.x)).toBeLessThan(1);
+        expect(Math.abs(fill!.width - meter!.width * 0.3)).toBeLessThan(1);
         const position = await page.locator('.dashboard-replenishment').boundingBox();
         const metrics = await page.locator('.dashboard-metrics').boundingBox();
         expect(metrics!.y + metrics!.height).toBeLessThanOrEqual(position!.y);
@@ -106,14 +106,16 @@ test('missing permission-gated totals are omitted, never displayed as zero', asy
     await expect(page.getByTestId('dashboard-metric-revenue')).toHaveCount(0);
 });
 
-test('Arabic reverses the quantity ruler and preserves narrow hit areas', async ({ page }) => {
+test('Arabic reverses the stock meter and preserves narrow hit areas', async ({ page }) => {
     await page.setViewportSize({ width: 320, height: 812 });
     await render(page, { locale: 'ar' });
     await expect(page.locator('html')).toHaveAttribute('dir', 'rtl');
     const row = page.locator('.dashboard-stock-row').nth(1);
-    const ruler = await row.getByRole('img').boundingBox();
-    const marker = await row.locator('.stock-position-head').boundingBox();
-    expect(Math.abs(marker!.x + 4 - ruler!.x - ruler!.width * 0.7)).toBeLessThan(1);
+    // The fill grows from the right in a right-to-left layout.
+    const meter = await row.getByRole('img').boundingBox();
+    const fill = await row.locator('.stock-meter-fill').boundingBox();
+    expect(Math.abs(fill!.x + fill!.width - (meter!.x + meter!.width))).toBeLessThan(1);
+    expect(Math.abs(fill!.width - meter!.width * 0.3)).toBeLessThan(1);
     expect((await row.getByRole('button').boundingBox())!.height).toBeGreaterThanOrEqual(44);
     expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBe(0);
 });
@@ -122,13 +124,12 @@ test('the stock workbench has no Axe violations and remains usable in high contr
     await render(page);
     expect((await new AxeBuilder({ page }).include('.dashboard-replenishment').analyze()).violations).toEqual([]);
     await page.emulateMedia({ forcedColors: 'active', reducedMotion: 'reduce' });
-    await page.locator('.dashboard-review').first().focus();
-    await expect(page.locator('.dashboard-review').first()).toBeFocused();
-    const colors = await page.locator('.stock-position-minimum').first().evaluate(e => ({
-        stroke: getComputedStyle(e).stroke,
-        text: getComputedStyle(e).color,
-    }));
-    expect(colors.stroke).toBe(colors.text);
+    const review = page.locator('.dashboard-stock-row').first().getByRole('button');
+    await review.focus();
+    await expect(review).toBeFocused();
+    // In forced colours the meter keeps a system-colour outline, so it stays visible.
+    const border = await page.locator('.stock-meter').first().evaluate(e => getComputedStyle(e).borderTopStyle);
+    expect(border).toBe('solid');
 });
 
 test('runtime stats extensions retain full-width placements', async ({ page }) => {
