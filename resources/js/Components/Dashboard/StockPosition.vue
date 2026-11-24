@@ -1,7 +1,7 @@
 <script setup>
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { stockLevel } from '@/lib/dashboard';
+import { stockLevel, stockUrgency } from '@/lib/dashboard';
 import { formatNumber } from '@/lib/money';
 
 const props = defineProps({ product: { type: Object, required: true } });
@@ -10,7 +10,7 @@ const level = computed(() => stockLevel(props.product));
 </script>
 
 <template>
-    <div class="stock-position" :class="{ 'stock-position-empty': level.stock <= 0 }">
+    <div class="stock-position" :class="{ 'stock-position-empty': level.stock <= 0, 'stock-position-critical': stockUrgency(level) === 'critical' }">
         <div class="stock-position-values">
             <span><strong>{{ formatNumber(level.stock) }}</strong>{{ t('warehouses.stockLevels.onHand') }}</span>
             <span><strong>{{ formatNumber(level.minimum) }}</strong>{{ t('dashboard.design.minimum') }}</span>
@@ -111,6 +111,18 @@ const level = computed(() => stockLevel(props.product));
 }
 .stock-position-empty .stock-position-head {
     background: hsl(var(--status-warning));
+}
+.stock-position-critical .stock-position-values > span:first-child strong {
+    color: hsl(var(--status-danger));
+}
+.stock-position-critical .stock-position-fill {
+    stroke: hsl(var(--status-danger));
+}
+.stock-position-critical .stock-position-head {
+    border-color: hsl(var(--status-danger));
+}
+.stock-position-critical.stock-position-empty .stock-position-head {
+    background: hsl(var(--status-danger));
 }
 [dir='rtl'] .stock-position-ruler svg {
     transform: scaleX(-1);

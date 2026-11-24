@@ -1,6 +1,6 @@
 <script setup>
 import { Link } from '@inertiajs/vue3';
-import { ArrowUpRight } from '@lucide/vue';
+import { ArrowUpRight, TrendingDown, TrendingUp } from '@lucide/vue';
 
 defineProps({
     label: { type: String, required: true },
@@ -10,6 +10,8 @@ defineProps({
     extra: { type: String, default: '' },
     href: { type: String, default: null },
     icon: { type: [Object, Function], required: true },
+    // { text, direction: 'up' | 'down' }, only from a real comparison.
+    trend: { type: Object, default: null },
 });
 </script>
 
@@ -29,5 +31,8 @@ defineProps({
         <p class="dashboard-metric-value">{{ value }}</p>
         <p v-if="context" class="dashboard-metric-context">{{ context }}</p>
         <p v-if="extra" class="dashboard-metric-context">{{ extra }}</p>
+        <p v-if="trend" class="dashboard-metric-trend" :class="`dashboard-metric-trend-${trend.direction}`">
+            <component :is="trend.direction === 'down' ? TrendingDown : TrendingUp" :size="13" aria-hidden="true" />{{ trend.text }}
+        </p>
     </component>
 </template>

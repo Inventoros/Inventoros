@@ -484,7 +484,14 @@
       "reviewSystem": "Controlla sistema",
       "saveError": "Impossibile salvare le preferenze. Riprova.",
       "shortfallHelp": "La carenza è la differenza rispetto alla scorta minima. Controlla il fornitore e le impostazioni di riordino prima di acquistare.",
-      "viewProduct": "Visualizza prodotto"
+      "viewProduct": "Visualizza prodotto",
+      "stockMovement": "Movimenti di magazzino",
+      "last30Days": "Ultimi 30 giorni",
+      "unitsIn": "Entrate",
+      "unitsOut": "Uscite",
+      "movementSummary": "{in} unità in entrata e {out} in uscita negli ultimi 30 giorni",
+      "noMovement": "Nessun movimento di magazzino negli ultimi 30 giorni.",
+      "vsLastMonth": "{change} rispetto agli stessi giorni del mese scorso"
     }
   },
   "products": {

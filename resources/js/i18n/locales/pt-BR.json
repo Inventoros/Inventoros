@@ -484,7 +484,14 @@
       "reviewSystem": "Revisar sistema",
       "saveError": "Não foi possível salvar as preferências. Tente novamente.",
       "shortfallHelp": "A falta é a diferença para o estoque mínimo. Confira o fornecedor e as configurações de reposição antes de comprar.",
-      "viewProduct": "Ver produto"
+      "viewProduct": "Ver produto",
+      "stockMovement": "Movimentação de estoque",
+      "last30Days": "Últimos 30 dias",
+      "unitsIn": "Entradas",
+      "unitsOut": "Saídas",
+      "movementSummary": "{in} unidades de entrada e {out} de saída nos últimos 30 dias",
+      "noMovement": "Nenhuma movimentação de estoque nos últimos 30 dias.",
+      "vsLastMonth": "{change} em relação aos mesmos dias do mês passado"
     }
   },
   "products": {

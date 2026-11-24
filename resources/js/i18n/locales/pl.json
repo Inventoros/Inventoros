@@ -484,7 +484,14 @@
       "reviewSystem": "Sprawdź system",
       "saveError": "Nie udało się zapisać preferencji. Spróbuj ponownie.",
       "shortfallHelp": "Niedobór to różnica względem minimalnego zapasu. Przed zakupem sprawdź dostawcę i ustawienia uzupełniania.",
-      "viewProduct": "Zobacz produkt"
+      "viewProduct": "Zobacz produkt",
+      "stockMovement": "Ruch magazynowy",
+      "last30Days": "Ostatnie 30 dni",
+      "unitsIn": "Przyjęcia",
+      "unitsOut": "Wydania",
+      "movementSummary": "{in} szt. przyjętych i {out} szt. wydanych w ostatnich 30 dniach",
+      "noMovement": "Brak ruchu magazynowego w ostatnich 30 dniach.",
+      "vsLastMonth": "{change} wobec tych samych dni zeszłego miesiąca"
     }
   },
   "products": {

@@ -484,7 +484,14 @@
       "reviewSystem": "システムを確認",
       "saveError": "設定を保存できませんでした。再度お試しください。",
       "shortfallHelp": "不足数は最低在庫との差です。購入前に仕入先と発注設定を確認してください。",
-      "viewProduct": "製品を表示"
+      "viewProduct": "製品を表示",
+      "stockMovement": "在庫の動き",
+      "last30Days": "過去30日間",
+      "unitsIn": "入庫",
+      "unitsOut": "出庫",
+      "movementSummary": "過去30日間の入庫 {in} 個、出庫 {out} 個",
+      "noMovement": "過去30日間に在庫の動きはありません。",
+      "vsLastMonth": "先月の同じ期間比 {change}"
     }
   },
   "products": {

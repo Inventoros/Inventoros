@@ -22,7 +22,6 @@ use App\Support\PaymentVisibility;
 use App\Support\SchedulerHealth;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -131,6 +130,22 @@ class DashboardController extends Controller
                 ->groupBy('currency')
                 ->selectRaw('currency, COALESCE(SUM(total), 0) as amount')
                 ->pluck('amount', 'currency'));
+
+            // The same days of last month (the 1st through today's day of the
+            // month, capped at its last day), so the revenue tile compares
+            // like with like instead of a part month against a whole one.
+            $lastMonthStart = $monthStart->copy()->subMonthNoOverflow();
+            $lastMonthCutoff = $lastMonthStart->copy()
+                ->addDays(now()->day - 1)
+                ->endOfDay()
+                ->min($lastMonthStart->copy()->endOfMonth());
+            $money('revenueSamePeriodLastMonth', Order::where('organization_id', $orgId)
+                ->where('status', '!=', 'cancelled')
+                ->where('order_date', '>=', $lastMonthStart)
+                ->where('order_date', '<=', $lastMonthCutoff)
+                ->groupBy('currency')
+                ->selectRaw('currency, COALESCE(SUM(total), 0) as amount')
+                ->pluck('amount', 'currency'));
         }
 
         // Stock idle for 90 days (no sale and no outbound movement), at cost.
@@ -175,7 +190,8 @@ class DashboardController extends Controller
             ->with(['category', 'location'])
             ->latest()
             ->limit(5)
-            ->get();
+            ->get()
+            ->each->append('image_urls');
 
         // Get low stock products
         $lowStockProducts = ! $canViewProducts ? collect() : Product::where('organization_id', $user->organization_id)
@@ -184,7 +200,8 @@ class DashboardController extends Controller
             ->with(['category', 'location'])
             ->orderBy('effective_stock', 'asc')
             ->limit(5)
-            ->get();
+            ->get()
+            ->each->append('image_urls');
 
         // Recent orders: the ones most recently entered (created_at), so a
         // backdated or imported order just added still shows; each row
@@ -277,19 +294,31 @@ class DashboardController extends Controller
                 ];
             });
 
-        // Get stock movements (last 7 days)
-        $stockMovements = ! $canViewProducts ? collect() : StockAdjustment::where('organization_id', $user->organization_id)
-            ->where('created_at', '>=', now()->subDays(7))
-            ->select(DB::raw('DATE(created_at) as date'), DB::raw('SUM(adjustment_quantity) as total'))
-            ->groupBy('date')
-            ->orderBy('date')
-            ->get()
-            ->map(function ($movement) {
-                return [
-                    'date' => $movement->date,
-                    'total' => $movement->total,
-                ];
+        // Stock movement over the last 30 days: units in and units out per
+        // day, one entry for every day so the chart has no gaps. Transfers
+        // between locations move stock without adding or removing any, so
+        // they are left out. `total` (net) is kept for plugins that read it.
+        $stockMovements = collect();
+        if ($canViewProducts) {
+            $since = now()->subDays(29)->startOfDay();
+            $byDay = StockAdjustment::where('organization_id', $user->organization_id)
+                ->where('created_at', '>=', $since)
+                ->where('type', '!=', 'transfer')
+                ->selectRaw('DATE(created_at) as date')
+                ->selectRaw('COALESCE(SUM(CASE WHEN adjustment_quantity > 0 THEN adjustment_quantity ELSE 0 END), 0) as units_in')
+                ->selectRaw('COALESCE(SUM(CASE WHEN adjustment_quantity < 0 THEN -adjustment_quantity ELSE 0 END), 0) as units_out')
+                ->groupBy('date')
+                ->get()
+                ->keyBy(fn ($row) => substr((string) $row->date, 0, 10));
+
+            $stockMovements = collect(range(29, 0))->map(function (int $daysAgo) use ($byDay) {
+                $date = now()->subDays($daysAgo)->toDateString();
+                $in = (int) ($byDay[$date]->units_in ?? 0);
+                $out = (int) ($byDay[$date]->units_out ?? 0);
+
+                return ['date' => $date, 'in' => $in, 'out' => $out, 'total' => $in - $out];
             });
+        }
 
         // Get top products by value
         $topProducts = ! $canViewProducts ? collect() : Product::where('organization_id', $user->organization_id)

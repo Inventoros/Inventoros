@@ -22,3 +22,39 @@ export function stockLevel(product) {
         percent: minimum > 0 ? Math.min(100, Math.max(0, (stock / minimum) * 100)) : 0,
     };
 }
+
+// Month to date against the same days of last month, as a percentage. Null
+// when last month has nothing to compare with, so no trend is shown rather
+// than an invented one.
+export function periodChange(current, previous) {
+    const now = Number(current);
+    const before = Number(previous);
+    if (!Number.isFinite(now) || !Number.isFinite(before) || before <= 0) return null;
+    return ((now - before) / before) * 100;
+}
+
+// A product at or below zero, or under a quarter of its minimum, is urgent.
+export function stockUrgency(level) {
+    return level.stock <= 0 || (level.minimum > 0 && level.percent < 25) ? 'critical' : 'low';
+}
+
+// Daily movement totals for the chart: the largest day sets the scale, and
+// the period totals feed the summary line.
+export function movementSummary(series = []) {
+    const days = series.map((day) => ({ ...day, in: Math.max(0, Number(day.in) || 0), out: Math.max(0, Number(day.out) || 0) }));
+    return {
+        days,
+        totalIn: days.reduce((sum, day) => sum + day.in, 0),
+        totalOut: days.reduce((sum, day) => sum + day.out, 0),
+        peak: days.reduce((max, day) => Math.max(max, day.in, day.out), 0),
+    };
+}
+
+// Two letters for a product with no photo: the first letters of its first
+// two words, or the first two letters of a one-word name.
+export function productInitials(name = '') {
+    const words = String(name).trim().split(/\s+/).filter(Boolean);
+    if (!words.length) return '?';
+    const letters = words.length > 1 ? words[0][0] + words[1][0] : words[0].slice(0, 2);
+    return letters.toUpperCase();
+}

@@ -9,6 +9,8 @@ import PluginWidgets from '@/Components/PluginWidgets.vue';
 import StockReview from '@/Components/Dashboard/StockReview.vue';
 import StockPosition from '@/Components/Dashboard/StockPosition.vue';
 import MetricCard from '@/Components/Dashboard/MetricCard.vue';
+import ProductThumb from '@/Components/Dashboard/ProductThumb.vue';
+import StockMovement from '@/Components/Dashboard/StockMovement.vue';
 import Modal from '@/Components/Modal.vue';
 import Card from '@/Components/ui/Card.vue';
 import CardHeader from '@/Components/ui/CardHeader.vue';
@@ -21,7 +23,7 @@ import { usePermissions } from '@/composables/usePermissions';
 import { useI18n } from 'vue-i18n';
 import { displayCalendarDate, displayDateTime } from '@/lib/dates';
 import { formatCompactMoney, formatMoney, formatNumber as formatPlainNumber } from '@/lib/money';
-import { categoryBreakdown, stockLevel } from '@/lib/dashboard';
+import { categoryBreakdown, periodChange, stockLevel } from '@/lib/dashboard';
 import { orderStatusLabel } from '@/lib/orderLabels';
 import axios from 'axios';
 import {
@@ -56,6 +58,7 @@ const props = defineProps({
     reorderSuggestions: { type: Array, default: () => [] },
     recentOrders: { type: Array, default: () => [] },
     stockByCategory: { type: Array, default: () => [] },
+    stockMovements: { type: Array, default: () => [] },
     widgetPreferences: { type: Object, default: () => ({}) },
     pluginComponents: { type: Object, default: () => ({}) },
     pluginWidgets: { type: Array, default: () => [] },
@@ -74,6 +77,7 @@ const widgetLabels = computed(() => ({
     stats_overview: t('dashboard.widgets.statsOverview'),
     revenue_chart: t('dashboard.widgets.revenueChart'),
     low_stock_alerts: t('dashboard.widgets.lowStockAlerts'),
+    stock_movements: t('dashboard.widgets.stockMovements'),
     recent_orders: t('dashboard.recentOrders'),
     recent_products: t('dashboard.recentProducts'),
     stock_by_category: t('dashboard.widgets.stockByCategory'),
@@ -108,6 +112,19 @@ const plusOthers = (values) => {
 };
 const otherCurrencies = (key) => plusOthers(props.stats.byCurrency?.[key]);
 const optionalRoute = (name, parameters) => (canVisit(name) ? route(name, parameters) : null);
+// Revenue against the same days of last month, in the organization's
+// currency. No comparison (and no trend line) when last month had none.
+const revenueTrend = computed(() => {
+    const change = periodChange(props.stats.revenueThisMonth, props.stats.revenueSamePeriodLastMonth);
+    if (change === null) return null;
+    return {
+        direction: change < 0 ? 'down' : 'up',
+        text: t('dashboard.design.vsLastMonth', {
+            change: n(change / 100, { style: 'percent', maximumFractionDigits: 0, signDisplay: 'exceptZero' }),
+        }),
+    };
+});
+const showMovement = computed(() => widgets.stock_movements && props.can.viewProducts);
 const headlineMetrics = computed(() => {
     const stats = props.stats;
     const counts = [
@@ -157,6 +174,7 @@ const headlineMetrics = computed(() => {
                 context: `${t('dashboard.design.monthToDate')} · ${props.currency}`,
                 detail: formatCurrency(stats.revenueThisMonth),
                 extra: otherCurrencies('revenueThisMonth'),
+                trend: revenueTrend.value,
                 href: optionalRoute('reports.sales-analysis'),
             },
     ].filter(Boolean);
@@ -291,6 +309,11 @@ const ordersStatusIcon = (status) => (status === 'delivered' ? Check : status ==
             <PluginSlot slot="after-stats" :components="pluginComponents.afterStats" />
             <PluginSlot slot="before-content" :components="pluginComponents.beforeContent" />
 
+            <div
+                v-if="widgets.low_stock_alerts || showMovement"
+                class="dashboard-stock-grid"
+                :class="{ 'dashboard-one-column': !widgets.low_stock_alerts || !showMovement }"
+            >
             <section
                 v-if="widgets.low_stock_alerts"
                 class="dashboard-panel dashboard-replenishment"
@@ -326,6 +349,7 @@ const ordersStatusIcon = (status) => (status === 'delivered' ? Check : status ==
                 <ul v-else class="dashboard-replenishment-list">
                     <li v-for="product in lowStockProducts" :key="product.id" class="dashboard-stock-row">
                         <div class="dashboard-product">
+                            <ProductThumb :product="product" :size="44" />
                             <div>
                                 <p v-if="product.sku" class="dashboard-stock-code">{{ product.sku }}</p>
                                 <Link :href="route('products.show', product.id)" class="dashboard-product-name ds-focus-ring"
@@ -348,6 +372,12 @@ const ordersStatusIcon = (status) => (status === 'delivered' ? Check : status ==
                     </li>
                 </ul>
             </section>
+            <StockMovement
+                v-if="showMovement"
+                :series="stockMovements"
+                :href="optionalRoute('stock-adjustments.index')"
+            />
+            </div>
 
             <div
                 v-if="widgets.recent_orders || widgets.stock_by_category || financialStats.length || quickActions.length"
@@ -519,9 +549,12 @@ const ordersStatusIcon = (status) => (status === 'delivered' ? Check : status ==
                 </div>
                 <ul v-else class="dashboard-product-list">
                     <li v-for="product in recentProducts" :key="product.id">
-                        <div>
+                        <div class="dashboard-recent-product">
+                            <ProductThumb :product="product" :size="32" />
+                            <div>
                             <Link :href="route('products.show', product.id)" class="dashboard-product-name">{{ product.name }}</Link>
                             <p class="dashboard-product-meta">{{ product.category?.name || t('products.show.uncategorized') }}</p>
+                            </div>
                         </div>
                         <div class="text-end">
                             <strong>{{ formatCurrency(product.price, product.currency) }}</strong>

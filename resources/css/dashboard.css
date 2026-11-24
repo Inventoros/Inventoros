@@ -237,21 +237,61 @@ a.dashboard-metric:hover {
     align-items: center;
     justify-content: center;
     gap: 7px;
-    min-height: 40px;
-    padding: 8px 10px;
-    border-radius: 4px;
-    color: hsl(var(--text-primary));
-    border: 1px solid hsl(var(--border-subtle));
-    background: hsl(var(--surface-raised));
+    min-height: 36px;
+    padding: 7px 11px;
+    border-radius: 5px;
+    color: hsl(var(--accent));
+    border: 1px solid hsl(var(--accent) / 0.4);
+    background: hsl(var(--accent) / 0.08);
     font-size: 12px;
-    font-weight: 500;
+    font-weight: 600;
+    white-space: nowrap;
 }
 .dashboard-review:hover {
-    background: hsl(var(--surface-overlay));
-    border-color: hsl(var(--border-strong));
+    background: hsl(var(--accent) / 0.16);
+    border-color: hsl(var(--accent) / 0.7);
 }
 .dashboard-review svg {
     flex-shrink: 0;
+}
+/* Replenishment takes the wider column; stock movement sits beside it. */
+.dashboard-stock-grid {
+    display: grid;
+    min-width: 0;
+    grid-template-columns: minmax(0, 1.6fr) minmax(300px, 1fr);
+    gap: var(--dashboard-gap);
+    align-items: stretch;
+    margin-bottom: var(--dashboard-gap);
+}
+.dashboard-stock-grid.dashboard-one-column {
+    grid-template-columns: minmax(0, 1fr);
+}
+.dashboard-stock-grid > .dashboard-replenishment {
+    margin-bottom: 0;
+}
+.dashboard-recent-product {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    min-width: 0;
+}
+.dashboard-recent-product > div {
+    min-width: 0;
+}
+.dashboard-metric-trend {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    margin-top: 8px;
+    font-size: 11px;
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+}
+.dashboard-metric-trend-up {
+    color: hsl(var(--status-success));
+}
+.dashboard-metric-trend-down {
+    color: hsl(var(--status-danger));
 }
 .dashboard-main-grid {
     display: grid;
@@ -444,7 +484,7 @@ a.dashboard-metric:hover {
     font-variant-numeric: tabular-nums;
 }
 .dashboard-share-track {
-    height: 3px;
+    height: 6px;
     margin-top: 10px;
     overflow: hidden;
     background: hsl(var(--surface-overlay));
@@ -453,7 +493,7 @@ a.dashboard-metric:hover {
 .dashboard-share-track > span {
     display: block;
     height: 100%;
-    background: hsl(var(--accent) / 0.6);
+    background: hsl(var(--accent) / 0.7);
     border-radius: 2px;
 }
 .dashboard-category-row:hover .dashboard-share-track > span,
@@ -642,6 +682,7 @@ a.dashboard-metric:hover {
     }
 }
 @media (max-width: 1023px) {
+    .dashboard-stock-grid,
     .dashboard-main-grid,
     .dashboard-bottom-grid {
         grid-template-columns: minmax(0, 1fr);
