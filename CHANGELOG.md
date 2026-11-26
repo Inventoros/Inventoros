@@ -6,6 +6,10 @@ Full release notes, with the pull request behind each change, are on [GitHub Rel
 
 ## [Unreleased]
 
+### Fixed
+
+- **Scan button no longer covers the pagination (#482).** On the Products page, the round barcode button fixed to the bottom corner sat on top of the pagination's Next button. It is now a Scan Barcode button in the page header, next to Add Product. Ctrl+B still opens the scanner.
+
 ## [2.8.0] - 2026-11-24
 
 No migrations. See the [2.8.0 release notes](docs/releases/2.8.0.md).
