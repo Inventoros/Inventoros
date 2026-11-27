@@ -7,6 +7,8 @@
 .workspace-shell {
     --workspace-rail-width: 56px;
     --workspace-panel-width: 184px;
+    --workspace-rail-logo-top: 12px;
+    --workspace-rail-logo-size: 38px;
     --workspace-sidebar-width: var(--workspace-rail-width);
     --rail-bg: 220 66% 21%;
     --rail-fg: 0 0% 100%;
@@ -35,7 +37,7 @@
     flex-direction: column;
     align-items: center;
     width: var(--workspace-rail-width);
-    padding-block: 12px 14px;
+    padding-block: var(--workspace-rail-logo-top) 14px;
     background: hsl(var(--rail-bg));
     color: hsl(var(--rail-fg));
 }
@@ -43,8 +45,8 @@
 .workspace-rail-logo {
     display: grid;
     place-items: center;
-    width: 38px;
-    height: 38px;
+    width: var(--workspace-rail-logo-size);
+    height: var(--workspace-rail-logo-size);
     margin-bottom: 18px;
     border-radius: 11px;
     background: hsl(var(--rail-logo-bg));
@@ -173,7 +175,12 @@
 @media (forced-colors: active) {
     .workspace-rail-button.is-selected { outline: 2px solid Highlight; }
 }
-.workspace-brand { height: 48px; letter-spacing: -0.035em; }
+/* The title row shares the rail logo's box so "Inventoros" sits level with the icon. */
+.workspace-brand {
+    height: var(--workspace-rail-logo-size);
+    margin-block-start: var(--workspace-rail-logo-top);
+    letter-spacing: -0.035em;
+}
 .workspace-context { border-bottom: 1px solid hsl(var(--border-subtle)); padding-block-end: 8px; }
 .workspace-section-label { letter-spacing: 0; padding-block: 2px; }
 .workspace-nav > div { margin-bottom: 15px; }
