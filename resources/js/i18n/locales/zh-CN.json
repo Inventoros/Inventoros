@@ -501,6 +501,8 @@
   "products": {
     "kit": {
       "canMake": "可组装 {count} 套",
+      "limitedBy": "受 {name} 限制",
+      "limitedByMany": "受 {name} 及另外 {count} 项限制",
       "notSellable": "无法销售"
     },
     "title": "库存",
@@ -628,7 +630,12 @@
         "addFailed": "添加组件失败",
         "updateQuantityFailed": "更新数量失败",
         "confirmRemove": "要从物料清单中移除此组件吗？",
-        "removeFailed": "移除组件失败"
+        "removeFailed": "移除组件失败",
+        "allowsKits": "可组装套数",
+        "limiting": "限制项",
+        "limitedBy": "受 {names} 限制。",
+        "nextKitNeeds": "再组装一套还需要：{list}。",
+        "moreOf": "{count} 个 {name}"
       }
     },
     "quickAddCategory": {

@@ -501,6 +501,8 @@
   "products": {
     "kit": {
       "canMake": "Można skompletować: {count}",
+      "limitedBy": "Ogranicza: {name}",
+      "limitedByMany": "Ogranicza: {name} i {count} inne",
       "notSellable": "Nie można sprzedać"
     },
     "title": "Magazyn",
@@ -628,7 +630,12 @@
         "addFailed": "Nie udało się dodać komponentu",
         "updateQuantityFailed": "Nie udało się zaktualizować ilości",
         "confirmRemove": "Usunąć ten komponent z zestawienia materiałów?",
-        "removeFailed": "Nie udało się usunąć komponentu"
+        "removeFailed": "Nie udało się usunąć komponentu",
+        "allowsKits": "Możliwe zestawy",
+        "limiting": "Ogranicza",
+        "limitedBy": "Ograniczają: {names}.",
+        "nextKitNeeds": "Do kolejnego zestawu brakuje: {list}.",
+        "moreOf": "{count} szt. {name}"
       }
     },
     "quickAddCategory": {

@@ -501,6 +501,8 @@
   "products": {
     "kit": {
       "canMake": "{count} 個作成可能",
+      "limitedBy": "{name} が上限",
+      "limitedByMany": "{name} ほか {count} 件が上限",
       "notSellable": "販売できません"
     },
     "title": "在庫",
@@ -628,7 +630,12 @@
         "addFailed": "構成部品の追加に失敗しました",
         "updateQuantityFailed": "数量の更新に失敗しました",
         "confirmRemove": "この構成部品を部品表から削除しますか？",
-        "removeFailed": "構成部品の削除に失敗しました"
+        "removeFailed": "構成部品の削除に失敗しました",
+        "allowsKits": "作成可能キット数",
+        "limiting": "上限要因",
+        "limitedBy": "{names} が上限です。",
+        "nextKitNeeds": "あと1キットには {list} が必要です。",
+        "moreOf": "{name} があと {count} 個"
       }
     },
     "quickAddCategory": {

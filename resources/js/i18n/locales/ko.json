@@ -501,6 +501,8 @@
   "products": {
     "kit": {
       "canMake": "{count}개 구성 가능",
+      "limitedBy": "제한 요소: {name}",
+      "limitedByMany": "제한 요소: {name} 외 {count}개",
       "notSellable": "판매할 수 없음"
     },
     "title": "재고",
@@ -628,7 +630,12 @@
         "addFailed": "구성품 추가에 실패했습니다",
         "updateQuantityFailed": "수량 업데이트에 실패했습니다",
         "confirmRemove": "자재 명세서에서 이 구성품을 제거하시겠습니까?",
-        "removeFailed": "구성품 제거에 실패했습니다"
+        "removeFailed": "구성품 제거에 실패했습니다",
+        "allowsKits": "구성 가능 키트",
+        "limiting": "제한 요소",
+        "limitedBy": "제한 요소: {names}.",
+        "nextKitNeeds": "키트 하나를 더 구성하려면 필요: {list}.",
+        "moreOf": "{name} {count}개"
       }
     },
     "quickAddCategory": {

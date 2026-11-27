@@ -6,8 +6,14 @@ Full release notes, with the pull request behind each change, are on [GitHub Rel
 
 ## [Unreleased]
 
+### Added
+
+- **What holds a kit back.** A kit now names the component that runs out first. The product list shows "Can make 3, limited by Part A" (or "and 2 more" when several components tie). The order product picker shows the same. The kit's components table gains an "Allows kits" column, marks the limiting components, and says how many more units one more kit needs. Free stock is on hand less reservations, as for "Can make".
+- **Kit availability over the API and MCP.** `GET /api/v1/products/{product}/components` for a kit adds `meta.kit`: `available`, `problem` (why the kit cannot be sold, or null), and per component `free`, `per_kit`, `allows`, `limiting` and `needed_for_next`. The `get_product` MCP tool returns the same as `kit` (null for other products).
+
 ### Fixed
 
+- The components table on a kit or assembly's product page showed "Unknown", no SKU and 0 stock for every component. It now shows each component's name, SKU and stock, and editing a component refreshes the kit's figures as well.
 - **Scan button no longer covers the pagination (#482).** On the Products page, the round barcode button fixed to the bottom corner sat on top of the pagination's Next button. It is now a Scan Barcode button in the page header, next to Add Product. Ctrl+B still opens the scanner.
 
 ## [2.8.0] - 2026-11-24

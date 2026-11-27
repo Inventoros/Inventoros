@@ -501,6 +501,8 @@
   "products": {
     "kit": {
       "canMake": "Se ne possono assemblare {count}",
+      "limitedBy": "Limitato da {name}",
+      "limitedByMany": "Limitato da {name} e altri {count}",
       "notSellable": "Non vendibile"
     },
     "title": "Inventario",
@@ -628,7 +630,12 @@
         "addFailed": "Impossibile aggiungere il componente",
         "updateQuantityFailed": "Impossibile aggiornare la quantità",
         "confirmRemove": "Rimuovere questo componente dalla distinta base?",
-        "removeFailed": "Impossibile rimuovere il componente"
+        "removeFailed": "Impossibile rimuovere il componente",
+        "allowsKits": "Kit possibili",
+        "limiting": "Limitante",
+        "limitedBy": "Limitato da {names}.",
+        "nextKitNeeds": "Per un altro kit servono: {list}.",
+        "moreOf": "{count} di {name}"
       }
     },
     "quickAddCategory": {

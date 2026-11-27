@@ -300,4 +300,33 @@ class ProductComponentApiTest extends TestCase
 
         $response->assertStatus(401);
     }
+
+    public function test_listing_a_kits_components_includes_its_availability_breakdown(): void
+    {
+        Sanctum::actingAs($this->admin);
+        $this->componentProductA->update(['stock' => 7]);
+        $this->componentProductB->update(['stock' => 20]);
+
+        ProductComponent::create([
+            'parent_product_id' => $this->kitProduct->id,
+            'component_product_id' => $this->componentProductA->id,
+            'quantity' => 2,
+            'sort_order' => 0,
+        ]);
+        ProductComponent::create([
+            'parent_product_id' => $this->kitProduct->id,
+            'component_product_id' => $this->componentProductB->id,
+            'quantity' => 1,
+            'sort_order' => 1,
+        ]);
+
+        $this->getJson("/api/v1/products/{$this->kitProduct->id}/components")
+            ->assertOk()
+            ->assertJsonPath('meta.kit.available', 3)
+            ->assertJsonPath('meta.kit.problem', null)
+            ->assertJsonPath('meta.kit.components.0.product_id', $this->componentProductA->id)
+            ->assertJsonPath('meta.kit.components.0.limiting', true)
+            ->assertJsonPath('meta.kit.components.0.needed_for_next', 1)
+            ->assertJsonPath('meta.kit.components.1.limiting', false);
+    }
 }

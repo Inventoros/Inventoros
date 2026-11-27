@@ -244,4 +244,62 @@ final class KitDisplayTest extends TestCase
             }
         }
     }
+
+    public function test_the_product_list_names_the_component_holding_each_kit_back(): void
+    {
+        $a = $this->makeProduct($this->org, ['name' => 'Part A', 'stock' => 4]);
+        $b = $this->makeProduct($this->org, ['name' => 'Part B', 'stock' => 6]);
+        $c = $this->makeProduct($this->org, ['name' => 'Part C', 'stock' => 50]);
+        $single = $this->makeKit([[$a, 2], [$c, 1]], ['name' => 'Single Kit']);
+        $tied = $this->makeKit([[$a, 2], [$b, 3], [$c, 1]], ['name' => 'Tied Kit']);
+        $bad = $this->makeKit([[$a, '1.5']], ['name' => 'Bad Kit']);
+
+        $this->get(route('products.index'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('kitLimitedBy', fn ($map) => collect($map)->map(fn ($v) => (array) $v)->all() == [
+                    $single->id => ['name' => 'Part A', 'others' => 0],
+                    $tied->id => ['name' => 'Part A', 'others' => 1],
+                ])
+                ->where('kitAvailable', fn ($map) => collect($map)->all() == [$single->id => 2, $tied->id => 2, $bad->id => 0]));
+    }
+
+    public function test_the_product_page_lists_what_each_component_allows_and_what_one_more_kit_needs(): void
+    {
+        $a = $this->makeProduct($this->org, ['name' => 'Part A', 'sku' => 'PA', 'stock' => 7]);
+        $b = $this->makeProduct($this->org, ['name' => 'Part B', 'sku' => 'PB', 'stock' => 20]);
+        $kit = $this->makeKit([[$a, 2], [$b, 1]]);
+
+        $this->get(route('products.show', $kit))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('kitAvailable', 3)
+                ->has('kitComponents', 2)
+                ->where('kitComponents.0.product_id', $a->id)
+                ->where('kitComponents.0.allows', 3)
+                ->where('kitComponents.0.limiting', true)
+                ->where('kitComponents.0.needed_for_next', 1)
+                ->where('kitComponents.1.allows', 20)
+                ->where('kitComponents.1.limiting', false));
+
+        $this->get(route('products.show', $a))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page->where('kitComponents', []));
+    }
+
+    public function test_the_order_form_says_which_component_limits_a_kit(): void
+    {
+        $a = $this->makeProduct($this->org, ['name' => 'Part A', 'stock' => 1]);
+        $b = $this->makeProduct($this->org, ['name' => 'Part B', 'stock' => 20]);
+        $kit = $this->makeKit([[$a, 2], [$b, 1]]);
+
+        $this->get(route('orders.create'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('products', fn ($products) => collect($products)->contains(
+                    fn ($p) => $p['id'] === $kit->id && $p['stock'] === 0 && $p['limited_by'] === 'Part A'
+                ) && collect($products)->contains(
+                    fn ($p) => $p['id'] === $a->id && $p['limited_by'] === null
+                )));
+    }
 }

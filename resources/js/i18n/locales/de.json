@@ -501,6 +501,8 @@
   "products": {
     "kit": {
       "canMake": "{count} herstellbar",
+      "limitedBy": "Begrenzt durch {name}",
+      "limitedByMany": "Begrenzt durch {name} und {count} weitere",
       "notSellable": "Nicht verkäuflich"
     },
     "title": "Bestand",
@@ -628,7 +630,12 @@
         "addFailed": "Komponente konnte nicht hinzugefügt werden",
         "updateQuantityFailed": "Menge konnte nicht aktualisiert werden",
         "confirmRemove": "Diese Komponente aus der Stückliste entfernen?",
-        "removeFailed": "Komponente konnte nicht entfernt werden"
+        "removeFailed": "Komponente konnte nicht entfernt werden",
+        "allowsKits": "Ergibt Kits",
+        "limiting": "Begrenzend",
+        "limitedBy": "Begrenzt durch {names}.",
+        "nextKitNeeds": "Für ein weiteres Kit fehlen: {list}.",
+        "moreOf": "{count} × {name}"
       }
     },
     "quickAddCategory": {

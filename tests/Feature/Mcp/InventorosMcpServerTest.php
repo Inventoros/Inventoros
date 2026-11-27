@@ -16,6 +16,7 @@ use App\Mcp\Tools\SearchProductsTool;
 use App\Mcp\Tools\WhoAmITool;
 use App\Models\Auth\Organization;
 use App\Models\Inventory\Product;
+use App\Models\Inventory\ProductComponent;
 use App\Models\Inventory\ProductLocation;
 use App\Models\Role;
 use App\Models\System\SystemSetting;
@@ -415,5 +416,21 @@ class InventorosMcpServerTest extends TestCase
                 'items' => [['product_id' => $product->id, 'quantity' => 1]],
             ])
             ->assertOk();
+    }
+
+    public function test_get_product_reports_a_kits_limiting_component(): void
+    {
+        $part = $this->product(['name' => 'Scarce Part', 'stock' => 3]);
+        $plenty = $this->product(['name' => 'Plenty Part', 'stock' => 40]);
+        $kit = $this->product(['name' => 'Gift Kit', 'type' => 'kit', 'stock' => 0]);
+        ProductComponent::create(['parent_product_id' => $kit->id, 'component_product_id' => $part->id, 'quantity' => 2, 'sort_order' => 0]);
+        ProductComponent::create(['parent_product_id' => $kit->id, 'component_product_id' => $plenty->id, 'quantity' => 1, 'sort_order' => 1]);
+
+        InventorosServer::actingAs($this->admin)
+            ->tool(GetProductTool::class, ['id' => $kit->id])
+            ->assertOk()
+            ->assertSee('"available":1')
+            ->assertSee('"needed_for_next":1')
+            ->assertSee('"limiting":true');
     }
 }
