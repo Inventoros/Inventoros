@@ -14,6 +14,7 @@ Full release notes, with the pull request behind each change, are on [GitHub Rel
 ### Fixed
 
 - The components table on a kit or assembly's product page showed "Unknown", no SKU and 0 stock for every component. It now shows each component's name, SKU and stock, and editing a component refreshes the kit's figures as well.
+- **Scan button no longer covers the pagination (#482).** On the Products page, the round barcode button fixed to the bottom corner sat on top of the pagination's Next button. It is now a Scan Barcode button in the page header, next to Add Product. Ctrl+B still opens the scanner.
 
 ## [2.8.0] - 2026-11-24
 

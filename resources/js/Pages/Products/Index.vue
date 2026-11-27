@@ -248,6 +248,10 @@ const thClass =
             <template #actions>
                 <Button v-if="canVisit('variant-replenishment.index')" variant="secondary" size="sm" as="Link" :href="route('variant-replenishment.index')">{{ t('variantReplenishment.title') }}</Button>
                 <Button v-if="canResetStock" variant="secondary" size="sm" as="Link" :href="route('products.stock-reset.preview')">{{ t('stockReset.title') }}</Button>
+                <Button v-if="hasPermission('view_products')" type="button" variant="secondary" size="sm" :title="t('products.scanBarcode')" data-testid="products-scan-button" @click="openScanner">
+                    <ScanLine :size="14" />
+                    {{ t('components.barcodeScanner.title') }}
+                </Button>
                 <Button v-if="canVisit('products.create')" variant="default" size="sm" as="Link" :href="route('products.create')">
                     <Plus :size="14" />
                     {{ t('products.addProduct') }}
@@ -467,16 +471,6 @@ const thClass =
                 </div>
             </div>
         </DialogSurface>
-
-        <!-- Floating barcode scan button -->
-        <button
-            v-if="hasPermission('view_products')"
-            @click="openScanner"
-            class="fixed bottom-6 end-6 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-brand-solid text-brand-solid-foreground shadow-md transition-colors duration-200 hover:bg-brand-solid-hover"
-            :title="t('products.scanBarcode')"
-        >
-            <ScanLine :size="24" />
-        </button>
 
         <!-- Barcode Scanner Modal -->
         <BarcodeScannerModal :show="showScannerModal" @close="closeScanner" @product-found="handleProductFound" @location-found="handleLocationFound" />
